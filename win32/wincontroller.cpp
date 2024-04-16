@@ -1261,6 +1261,72 @@ void gameWinController::parse_ctl_file(int devnum, const char* ctlname)
 
 void gameWinController::extctl_getpos(int id)
 {
+	tJoyPos ji;
+	float timer_val;
+	int i;
+
+	if (!m_JoyActive) 
+	{
+		return;
+	}
+
+	timer_val = timer_GetTime();
+
+	joy_GetRawPos((tJoystick)id, &ji);
+
+	//if(g_accum_frame_time == 0.0f) {
+	m_ExtCtlStates[id].x = (int)ji.x;
+	m_ExtCtlStates[id].y = (int)ji.y;
+	m_ExtCtlStates[id].z = (int)ji.z;
+	m_ExtCtlStates[id].r = (int)ji.r;
+	m_ExtCtlStates[id].u = (int)ji.u;
+	m_ExtCtlStates[id].v = (int)ji.v;
+
+	for (i = 0; i < JOYPOV_NUM; i++)
+	{
+		m_ExtCtlStates[id].last_pov[i] = m_ExtCtlStates[id].pov[i];
+		m_ExtCtlStates[id].pov[i] = ji.pov[i];
+
+		//	when pov changes position and new position is not in center, then set a new start time.
+		int pov_index = m_ExtCtlStates[id].pov[i] / (JOYPOV_MAXVAL / JOYPOV_DIR);
+		int last_pov_index = m_ExtCtlStates[id].last_pov[i] / (JOYPOV_MAXVAL / JOYPOV_DIR);
+
+		if (m_ExtCtlStates[id].pov[i] != m_ExtCtlStates[id].last_pov[i])
+		{
+			if (m_ExtCtlStates[id].pov[i] != JOYPOV_CENTER)
+				m_ExtCtlStates[id].povstarts[i][pov_index] = timer_val;
+			if (m_ExtCtlStates[id].last_pov[i] != JOYPOV_CENTER)
+				m_ExtCtlStates[id].povtimes[i][last_pov_index] = timer_val - m_ExtCtlStates[id].povstarts[i][last_pov_index];
+			m_ExtCtlStates[id].povpresses[i][pov_index]++;
+		}
+
+		if (m_ExtCtlStates[id].pov[i] != JOYPOV_CENTER)
+		{
+			m_ExtCtlStates[id].povtimes[i][pov_index] = timer_val - m_ExtCtlStates[id].povstarts[i][pov_index];
+		}
+
+	}
+	//}
+
+//	handle buttons
+	for (int i = 0; i < CT_MAX_BUTTONS; i++)
+	{
+		//	case if we read time before doing this again.
+		if ((ji.buttons & (1 << i)) && (m_ExtCtlStates[id].btnstarts[i] == (float)0.0))
+			m_ExtCtlStates[id].btnstarts[i] = timer_val;
+		if ((ji.buttons & (1 << i)) && !(m_ExtCtlStates[id].buttons & (1 << i))) {
+			m_ExtCtlStates[id].btnpresses[i]++;
+			m_ExtCtlStates[id].btnstarts[i] = timer_val;
+			//	mprintf((0, "Start time for %d = %f\n", i, timer_val));
+		}
+
+		if (ji.buttons & (1 << i))						// if button is down
+			m_ExtCtlStates[id].btntimes[i] = timer_val - m_ExtCtlStates[id].btnstarts[i];
+		else if (m_ExtCtlStates[id].buttons & (1 << i))	// if button is up and last pass it was down.
+			m_ExtCtlStates[id].btntimes[i] = timer_val - m_ExtCtlStates[id].btnstarts[i];
+	}
+
+	m_ExtCtlStates[id].buttons = ji.buttons;
 }
 
 void gameWinController::extctl_geteval(int id)
@@ -1269,6 +1335,24 @@ void gameWinController::extctl_geteval(int id)
 
 void gameWinController::mouse_geteval()
 {
+	int x, y, dx, dy;	//,z;
+	unsigned btnmask;
+
+	if (!m_MouseActive) {
+		return;
+	}
+
+	if (g_accum_frame_time != 0.0f) return;
+
+	btnmask = (unsigned)ddio_MouseGetState(&x, &y, &dx, &dy);
+
+	m_MseState.m_deltaX = dx;
+	m_MseState.m_deltaY = dy;
+	m_MseState.m_deltaZ = 0;
+	m_MseState.m_absX = x;
+	m_MseState.m_absY = y;
+
+	m_MseState.m_buttonMask = btnmask;
 }
 
 gameController* CreateController(int num_funcs, ct_function* funcs, char* remote_ip)

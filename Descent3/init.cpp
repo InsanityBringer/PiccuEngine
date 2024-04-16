@@ -1719,7 +1719,7 @@ void InitIOSystems(bool editor)
 		Error("I/O initialization failed.");
 	} 
 
-	if( !editor && !FindArg("-windowed") )
+	if( !editor /*&& !FindArg("-windowed") */) //[ISB] disable windowed standard mode for now
 	{
 		if (Dedicated_server)
 		{
@@ -2650,7 +2650,7 @@ void RestartD3()
 		Error("I/O initialization failed.");
 	} 
 
-	if( !FindArg("-windowed") )
+	//if( !FindArg("-windowed") )
 	{
 		if (Dedicated_server)
 		{
