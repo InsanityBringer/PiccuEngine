@@ -35,7 +35,7 @@
 #include "gamefont.h"
 #include "game.h"
 
-
+#define NO_MOVIES
 
 namespace {
 	MovieFrameCallback_fp Movie_callback = NULL;	
