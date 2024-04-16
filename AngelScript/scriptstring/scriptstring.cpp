@@ -562,6 +562,7 @@ static void StringResize_Generic(asIScriptGeneric *gen)
 // This is where we register the string type
 void RegisterScriptString_Native(asIScriptEngine *engine)
 {
+#if 0
 	int r;
 
 	// Register the type
@@ -627,6 +628,7 @@ void RegisterScriptString_Native(asIScriptEngine *engine)
 	r = engine->RegisterObjectMethod("string", "string &opAddAssign(uint)", asFUNCTION(AddAssignUIntToString), asCALL_CDECL_OBJLAST); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("string", "string@ opAdd(uint) const", asFUNCTION(AddStringUInt), asCALL_CDECL_OBJFIRST); assert( r >= 0 );
 	r = engine->RegisterObjectMethod("string", "string@ opAdd_r(uint) const", asFUNCTION(AddUIntString), asCALL_CDECL_OBJLAST); assert( r >= 0 );
+#endif
 }
 
 void RegisterScriptString_Generic(asIScriptEngine *engine)

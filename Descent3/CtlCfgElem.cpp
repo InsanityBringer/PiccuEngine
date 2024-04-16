@@ -236,7 +236,6 @@ extern char Ctltext_PovBindings[][16];
 extern char Ctltext_MseBtnBindings[][32];
 extern char Ctltext_MseAxisBindings[][32];
 
-
 void Localize_ctl_bindings()
 {
 	char **strtable;

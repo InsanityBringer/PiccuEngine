@@ -47,7 +47,7 @@
 int FindArg(char *);
 void rend_SetLightingState(light_state state);
 
-#define CHANGE_RESOLUTION_IN_FULLSCREEN
+//#define CHANGE_RESOLUTION_IN_FULLSCREEN
 
 // The font characteristics
 static float rend_FontRed[4],rend_FontBlue[4],rend_FontGreen[4],rend_FontAlpha[4];

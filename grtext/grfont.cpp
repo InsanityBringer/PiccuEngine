@@ -461,7 +461,7 @@ bool grfont_LoadTemplate(char *fname, tFontTemplate *ft)
 	FONTFILE ff;
 	char fontname[32];
 	short ft_width, ft_height, ft_flags, ft_minasc, ft_maxasc, num_char, i;
-	tFontFileInfo2 ffi2;
+	tFontFileInfo2 ffi2 = {}; //[ISB] uninitialized
 
 //	open file.
 	ff = OPEN_FONT(fname);

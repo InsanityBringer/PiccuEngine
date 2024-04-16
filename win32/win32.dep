@@ -1,0 +1,51 @@
+# Microsoft Developer Studio Generated Dependency File, included by win32.mak
+
+.\winapp.cpp : \
+	"..\lib\AppConsole.h"\
+	"..\lib\Application.h"\
+	"..\lib\Debug.h"\
+	"..\lib\mono.h"\
+	"..\lib\networking.h"\
+	"..\lib\pserror.h"\
+	"..\lib\pstypes.h"\
+	"..\lib\win\Win32App.h"\
+	"e:\program files\microsoft visual studio\vc98\include\basetsd.h"\
+	
+
+.\wincon.cpp : \
+	"..\lib\AppConsole.h"\
+	"..\lib\Application.h"\
+	"..\lib\DDAccess.h"\
+	"..\lib\pstring.h"\
+	"..\lib\pstypes.h"\
+	"..\lib\TaskSystem.h"\
+	"..\lib\win\Win32App.h"\
+	"e:\program files\microsoft visual studio\vc98\include\basetsd.h"\
+	
+
+.\windata.cpp : \
+	"..\lib\AppDatabase.h"\
+	"..\lib\Debug.h"\
+	"..\lib\mono.h"\
+	"..\lib\pserror.h"\
+	"..\lib\pstypes.h"\
+	"..\lib\win\Win32Database.h"\
+	"e:\program files\microsoft visual studio\vc98\include\basetsd.h"\
+	
+
+.\windebug.cpp : \
+	"..\lib\Debug.h"\
+	"..\lib\mono.h"\
+	"..\lib\pstypes.h"\
+	"e:\program files\microsoft visual studio\vc98\include\basetsd.h"\
+	
+
+.\wintask.cpp : \
+	"..\lib\DDAccess.h"\
+	"..\lib\Debug.h"\
+	"..\lib\mono.h"\
+	"..\lib\pserror.h"\
+	"..\lib\pstypes.h"\
+	"..\lib\TaskSystem.h"\
+	"e:\program files\microsoft visual studio\vc98\include\basetsd.h"\
+	
