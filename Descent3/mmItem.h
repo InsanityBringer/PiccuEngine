@@ -54,7 +54,7 @@
 #include "psclass.h"
 #include "gamefont.h"
 #if ( (!defined(OEM)) && (!defined(DEMO)) )
-#define MOVIE_MENU
+//#define MOVIE_MENU //[ISB]
 #endif
 #define MMITEM_ALPHA		192						// default alpha
 #define MMITEM_SAT		0							// default saturation
