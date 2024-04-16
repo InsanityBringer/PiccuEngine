@@ -872,7 +872,7 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 		int orgY = (mHeight / 2 - height / 2);
 		RECT rect = { orgX, orgY, orgX + width, orgY + height };
 		AdjustWindowRectEx(&rect, WS_CAPTION, FALSE, 0);
-		MoveWindow((HWND)hOpenGLWnd, rect.left, rect.top, rect.right - rect.left + 1, rect.bottom - rect.top + 1, TRUE);
+		MoveWindow((HWND)hOpenGLWnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
 	}
 	else
 	{
