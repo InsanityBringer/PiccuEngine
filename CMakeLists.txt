@@ -40,7 +40,7 @@ ENDIF()
 
 IF (WIN32)
 	SET(D3_GAMEDIR "c:/games/Descent3/")	
-	set (CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "lib/win" "lib/win/directx") 
+	set (CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "lib/win" "lib/win/directx" "thirdparty/OpenAL/libs/Win32") 
 	SET(CMAKE_CXX_FLAGS_DEBUG "/Od /Gm /EHsc /RTC1 /MTd  /W3 /nologo /c /ZI /TP /errorReport:prompt")
 	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL /FD /EHsc /MT /W3 /nologo /c /Zi /TP /errorReport:prompt")
 	
@@ -49,7 +49,7 @@ IF (WIN32)
 	SET(CMAKE_MODULE_LINKER_FLAGS "/SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
 	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DMONO -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
 
-	SET(PLATFORM_INCLUDES "lib/win/directx" "lib/win")
+	SET(PLATFORM_INCLUDES "lib/win/directx" "lib/win" "thirdparty/OpenAL/include" )
 	
 	SET(CMAKE_FIND_LIBRARY_PREFIXES "")
 	SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
@@ -58,6 +58,8 @@ IF (WIN32)
 	FIND_LIBRARY(DINPUT_LIBRARY NAMES dinput "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
 	FIND_LIBRARY(DXGUID_LIBRARY NAMES dxguid "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
 	FIND_LIBRARY(DDRAW_LIBRARY NAMES ddraw "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
+	#TODO: May need to find OpenAL64 eventually
+	FIND_LIBRARY(OPENAL_LIBRARY NAMES openal32 "${CMAKE_SOURCE_DIR}/thirdparty/OpenAL/libs" "${CMAKE_SOURCE_DIR}/thirdparty/OpenAL/libs/Win32")
 ENDIF ()
 
 MESSAGE("Install will copy files to ${D3_GAMEDIR}")
