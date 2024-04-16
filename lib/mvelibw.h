@@ -345,5 +345,5 @@ char* __cdecl MVE_strerror(int code);
 #endif
 
 #else
-#include "../libmve/mvelibl.h"
+//#include "../libmve/mvelibl.h"
 #endif
