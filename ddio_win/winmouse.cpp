@@ -123,7 +123,8 @@ bool ddio_MouseInit()
 
 	// see if we need to emulate directinput.
 	os = oeWin32Application::version(&major, &minor);
-	DDIO_mouse_state.emulated = (os == WinNT && major < 5) ? true : false;
+	//DDIO_mouse_state.emulated = (os == WinNT && major < 5) ? true : false;
+	DDIO_mouse_state.emulated = true; //[ISB] DirectInput is a pain atm
 	DDIO_mouse_state.lpdimse = NULL;
 	if (w32_mouseman_hack)
 	{

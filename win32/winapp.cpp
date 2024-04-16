@@ -200,11 +200,13 @@ void oeWin32Application::init()
 	if (!m_WasCreated) 
 		return;
 
-	if (m_Flags & OEAPP_CONSOLE) {
+	if (m_Flags & OEAPP_CONSOLE || m_Flags & OEAPP_WINDOWED) 
+	{
 		style = 0;
 		winstyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_BORDER | WS_MINIMIZEBOX;
 	}
-	else {
+	else 
+	{
 		style = (m_Flags & OEAPP_TOPMOST) ? WS_EX_TOPMOST : 0;
 		winstyle = WS_POPUP | WS_SYSMENU;
 	}
@@ -246,7 +248,7 @@ void oeWin32Application::get_info(void *info)
 
 int oeWin32Application::flags(void) const
 {
-	return 0;
+	return m_Flags;
 }
 
 

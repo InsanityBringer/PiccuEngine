@@ -664,10 +664,11 @@ int PASCAL HandledWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine,
 #endif
 
 #ifndef GAMEGAUGE
+	/*
 	if (! FindArg("-launched") && !FindArg("-dedicated") && !FindArg("-timetest") ) {
 		MessageBox(NULL,"You cannot run this program directly.  Please run \"" PRODUCT_NAME ".exe\".",PRODUCT_NAME " Error",MB_OK);
 		return 0;					// pre init return
-	}
+	}*/
 #endif
 
 	if (Dedicated_server)

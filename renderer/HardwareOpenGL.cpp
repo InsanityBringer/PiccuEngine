@@ -848,7 +848,7 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 
 	if (WindowGL)
 	{
-		RECT rect;
+		/*RECT rect;
 		POINT topLeft;
 		GetClientRect( (HWND)hOpenGLWnd, &rect );
 
@@ -859,7 +859,20 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 		width   = rect.right - rect.left + 1;
 		height  = rect.bottom - rect.top + 1;
 		windowX = topLeft.x;
-		windowY = topLeft.y;
+		windowY = topLeft.y;*/
+
+		width = OpenGL_preferred_state.width;
+		height = OpenGL_preferred_state.height;
+
+		//[ISB] center window on launch
+		int mWidth = GetSystemMetrics(SM_CXSCREEN);
+		int mHeight = GetSystemMetrics(SM_CYSCREEN);
+
+		int orgX = (mWidth / 2 - width / 2);
+		int orgY = (mHeight / 2 - height / 2);
+		RECT rect = { orgX, orgY, orgX + width, orgY + height };
+		AdjustWindowRectEx(&rect, WS_CAPTION, FALSE, 0);
+		MoveWindow((HWND)hOpenGLWnd, rect.left, rect.top, rect.right - rect.left + 1, rect.bottom - rect.top + 1, TRUE);
 	}
 	else
 	{
