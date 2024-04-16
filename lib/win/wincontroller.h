@@ -146,6 +146,11 @@ const int CTID_KEYBOARD = -1,			// always -1 for keyboards
 		CTID_MOUSE = -2,					// always -2 for mice
 		CTID_INVALID = -3;				// invalid controller
 
+//[ISB] temp solution for getting Descent3Heh code working. 
+#define CONTROLLER_KEYBOARD 0
+#define CONTROLLER_MOUSE 1
+#define NUM_FIXED_CONTROLLERS 2
+
 //	External controls
 //		these are standard controllers handled through DDIO interface
 //		like joysticks, etc.
