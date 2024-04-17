@@ -418,7 +418,8 @@ bool InitNewMouse() {
     return true;
 }
 
-bool ddio_MouseInit() {
+bool ddio_MouseInit() 
+{
     tWin32OS os;
     int major, minor;
 
@@ -444,6 +445,7 @@ bool ddio_MouseInit() {
     DDIO_mouse_init = true;
 
     return true;
+
 }
 
 // here we deinitialize our Mouse from DirectInput.

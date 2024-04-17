@@ -663,6 +663,8 @@ bool Directplay_lobby_launched_game = false;
 #include "d3music.h"
 #include "newui_core.h"
 #include <string.h>
+#include <thread>
+#include <future>
 #define IDV_QUIT				0xff
 //	Menu Item Defines
 #define IDV_NEWGAME			10
@@ -1105,7 +1107,8 @@ bool ProcessCommandLine()
 #define UID_MSNLB	100
 #define UID_MSNINFO		0x1000
 #define TRAINING_MISSION_NAME		"Pilot Training"
-inline int count_missions(const char *pathname, const char *wildcard)
+
+static int count_missions_worker(const char* pathname, const char* wildcard)
 {
 	int c = 0;
 	char fullpath[_MAX_PATH];
@@ -1114,63 +1117,94 @@ inline int count_missions(const char *pathname, const char *wildcard)
 	filename[0] = 0;
 	ddio_MakePath(fullpath, pathname, wildcard, NULL);
 
-	if (ddio_FindFileStart(fullpath, filename)) {	
+	if (ddio_FindFileStart(fullpath, filename)) 
+	{
 		do
 		{
-			char *name;
+			char* name;
 			ddio_MakePath(fullpath, pathname, filename, NULL);
-			
-			if(strcmpi("d3_2.mn3",filename)==0)
+
+			if (strcmpi("d3_2.mn3", filename) == 0)
 				continue;
-			mprintf((0, "Mission path:%s\n", fullpath));
+			//mprintf((0, "Mission path:%s\n", fullpath)); //don't know the thread safetiness of mprintf atm
 			name = GetMissionName(filename);
 			GetMissionInfo(filename, &msninfo);
-			if (name && name[0] && msninfo.single) {
-				mprintf((0, "Name:%s\n", name));
+			if (name && name[0] && msninfo.single) 
+			{
+				//mprintf((0, "Name:%s\n", name));
 				c++;
-				if (!(c %2)) DoWaitMessage(true);
 			}
-			else {
-				mprintf((0, "Illegal mission:%s\n", fullpath));
+			else 
+			{
+				//mprintf((0, "Illegal mission:%s\n", fullpath));
 			}
 			filename[0] = 0;
-		}
-		while (ddio_FindNextFile(filename));
+		} while (ddio_FindNextFile(filename));
 		ddio_FindFileClose();
 	}
 	return c;
 }
-inline int generate_mission_listbox(newuiListBox *lb, int n_maxfiles, char **filelist, const char *pathname, const char *wildcard)
+
+inline int count_missions(const char *pathname, const char *wildcard)
+{
+	std::future<int> c = std::async(std::launch::async, count_missions_worker, pathname, wildcard);
+
+	for (;;)
+	{
+		if (c.wait_for(std::chrono::milliseconds(50)) == std::future_status::ready)
+			break;
+
+		DoWaitMessage(true);
+	}
+	
+	return c.get();
+}
+
+static int generate_mission_listbox_worker(newuiListBox* lb, int n_maxfiles, char** filelist, const char* pathname, const char* wildcard)
 {
 	int c = 0;
 	char fullpath[_MAX_PATH];
 	char filename[PSPATHNAME_LEN];
 	ddio_MakePath(fullpath, pathname, wildcard, NULL);
-	
-	if (ddio_FindFileStart(fullpath, filename)) {	
+
+	if (ddio_FindFileStart(fullpath, filename)) 
+	{
 		do
 		{
 			tMissionInfo msninfo;
 			if (n_maxfiles > c) {
 				ddio_MakePath(fullpath, pathname, filename, NULL);
-				if(strcmpi("d3_2.mn3",filename)==0)
+				if (strcmpi("d3_2.mn3", filename) == 0)
 					continue;
 				if (GetMissionInfo(filename, &msninfo) && msninfo.name[0] && msninfo.single) {
 					//if (!msninfo.training || (msninfo.training && Current_pilot.find_mission_data(TRAINING_MISSION_NAME)!= -1)) {
-						filelist[c] = mem_strdup(filename);
-						lb->AddItem(msninfo.name);
-						filename[0] = 0;
-						c++;
-						if (!(c %2)) DoWaitMessage(true);
+					filelist[c] = mem_strdup(filename);
+					lb->AddItem(msninfo.name);
+					filename[0] = 0;
+					c++;
 					//}
 				}
 			}
-		}
-		while (ddio_FindNextFile(filename));
+		} while (ddio_FindNextFile(filename));
 		ddio_FindFileClose();
-		
 	}
+
 	return c;
+}
+
+inline int generate_mission_listbox(newuiListBox *lb, int n_maxfiles, char **filelist, const char *pathname, const char *wildcard)
+{
+	std::future<int> c = std::async(std::launch::async, generate_mission_listbox_worker, lb, n_maxfiles, filelist, pathname, wildcard);
+
+	for (;;)
+	{
+		if (c.wait_for(std::chrono::milliseconds(50)) == std::future_status::ready)
+			break;
+
+		DoWaitMessage(true);
+	}
+	
+	return c.get();
 }
 extern bool Skip_next_movie;
 #define OEM_TRAINING_FILE	"training.mn3"
@@ -1267,6 +1301,7 @@ bool MenuNewGame()
 // add mission names to listbox
 // count valid mission files.
 // add a please wait dialog here.
+	//[ISB] Wait, isn't this a massice race condition?
 	n_missions = 0;
 #ifndef RELEASE
 	n_missions = count_missions(LocalLevelsDir, "*.msn");

@@ -1743,7 +1743,7 @@ void RenderFogFaces (room *rp)
 			g3Point *p = &pointbuffer[vn];
   			pointlist[vn] = p;
 			
-			float mag;
+			float mag = 1.f; //[ISB] Initialize this so we don't get junk data, but I can't tell if we'd get in there -1
 	
 			if (Room_fog_plane_check==0)
 			{

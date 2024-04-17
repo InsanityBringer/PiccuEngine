@@ -99,7 +99,7 @@ bool timer_Init(int preemptive,bool force_lores)
 
 //	Initialize Win32 Timer system
 	timeGetDevCaps(&tc, sizeof(tc));
-	if (tc.wPeriodMin < 50) tc.wPeriodMin = 50;
+	//if (tc.wPeriodMin < 50) tc.wPeriodMin = 50;
 
 	Timer_resolution = tc.wPeriodMin;
 

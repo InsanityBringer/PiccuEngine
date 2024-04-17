@@ -507,6 +507,9 @@ void rend_Close ();
 // NOTE: scripts are expecting the old prototype that has a zvalue (which is ignored) before color
 void rend_DrawScaledBitmap (int x1,int y1,int x2,int y2,int bm,float u0,float v0,float u1,float v1,int color=-1,float *alphas=NULL);
 
+void rend_DrawScaledBitmapWithZ(int x1, int y1, int x2, int y2,
+	int bm, float u0, float v0, float u1, float v1, float zval, int color, float* alphas = nullptr);
+
 // Sets the state of bilinear filtering for our textures
 void rend_SetFiltering (sbyte state);
 

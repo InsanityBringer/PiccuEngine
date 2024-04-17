@@ -2760,6 +2760,72 @@ void rend_DrawScaledBitmap(int x1,int y1,int x2,int y2,
 	rend_DrawPolygon2D( bm, ptr_pnts, 4 );
 }
 
+void rend_DrawScaledBitmapWithZ(int x1, int y1, int x2, int y2,
+	int bm, float u0, float v0, float u1, float v1, float zval, int color, float* alphas)
+{
+	g3Point* ptr_pnts[4];
+	g3Point pnts[4];
+	float r, g, b;
+
+	if (color != -1)
+	{
+		r = GR_COLOR_RED(color) / 255.0;
+		g = GR_COLOR_GREEN(color) / 255.0;
+		b = GR_COLOR_BLUE(color) / 255.0;
+	}
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (color == -1)
+			pnts[i].p3_l = 1.0;
+		else
+		{
+			pnts[i].p3_r = r;
+			pnts[i].p3_g = g;
+			pnts[i].p3_b = b;
+		}
+
+		if (alphas)
+		{
+			pnts[i].p3_a = alphas[i];
+		}
+
+		pnts[i].p3_z = zval;
+		pnts[i].p3_flags = PF_PROJECTED;
+	}
+
+
+
+	pnts[0].p3_sx = x1;
+	pnts[0].p3_sy = y1;
+	pnts[0].p3_u = u0;
+	pnts[0].p3_v = v0;
+
+	pnts[1].p3_sx = x2;
+	pnts[1].p3_sy = y1;
+	pnts[1].p3_u = u1;
+	pnts[1].p3_v = v0;
+
+	pnts[2].p3_sx = x2;
+	pnts[2].p3_sy = y2;
+	pnts[2].p3_u = u1;
+	pnts[2].p3_v = v1;
+
+	pnts[3].p3_sx = x1;
+	pnts[3].p3_sy = y2;
+	pnts[3].p3_u = u0;
+	pnts[3].p3_v = v1;
+
+	ptr_pnts[0] = &pnts[0];
+	ptr_pnts[1] = &pnts[1];
+	ptr_pnts[2] = &pnts[2];
+	ptr_pnts[3] = &pnts[3];
+
+	rend_SetTextureType(TT_LINEAR);
+	rend_DrawPolygon3D(bm, ptr_pnts, 4);
+}
+
+
 // Sets where the software renderer should write to
 void rend_SetSoftwareParameters(float aspect,int width,int height,int pitch,ubyte *framebuffer)
 {

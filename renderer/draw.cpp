@@ -145,10 +145,6 @@ int Triangulate_test = 0;
 // Returns 0 if clipped away
 int g3_DrawPoly(int nv,g3Point **pointlist,int bm,int map_type,g3Codes *clip_codes)
 {
-	//rend_DrawPolygon3D( bm, pointlist, nv, map_type );
-	//return 1;
-
-	
 	int i;
 	g3Codes cc;
 	bool was_clipped=0;
@@ -251,115 +247,159 @@ void g3_DrawSphere(ddgr_color color,g3Point *pnt,float rad)
 // See Jason for explaination
 void g3_DrawBitmap(vector *pos,float width,float height,int bm,int color)
 {
-	// get the view orientation
-	matrix viewOrient;
-	g3_GetUnscaledMatrix( &viewOrient );
+	g3Point pnt;
+	float w, h;
+	int dx, dy, dw, dh;
+	float u0 = 0.0, u1 = 1.0;
+	float v0 = 0.0, v1 = 1.0;
 
-	// break down the color into components
-	float r, g, b;
-	if( color != -1 )
+	if (g3_RotatePoint(&pnt, pos) & CC_BEHIND)
+		return;
+
+	if (pnt.p3_codes & CC_OFF_FAR)
+		return;
+
+
+	g3_ProjectPoint(&pnt);
+
+	// Calculate the 4 corners of this bitmap
+
+	w = (width * Window_w2) / pnt.p3_z * Matrix_scale.x;
+	h = (height * Window_h2) / pnt.p3_z * Matrix_scale.y;
+
+	dw = w;	//should round, right?
+	dh = h;
+
+	if (dw == 0 && dh == 0)
+		return;
+
+	dx = pnt.p3_sx - dw;
+	dy = pnt.p3_sy - dh;
+
+	// Now clip to make sure we're on screen
+
+	int x1 = dx;
+	int y1 = dy;
+	int x2 = dx + dw * 2;
+	int y2 = dy + dh * 2;
+
+	if (x2 - x1 == 0)
+		return;
+	if (y2 - y1 == 0)
+		return;
+
+	float xstep = (u1 - u0) / (x2 - x1);
+	float ystep = (v1 - v0) / (y2 - y1);
+
+	// Clip x dimension
+	if (x1 < 0)
 	{
-		float scale = 1.0f / 255.0f;
-		r = GR_COLOR_RED(color)   * scale;
-		g = GR_COLOR_GREEN(color) * scale;
-		b = GR_COLOR_BLUE(color)  * scale;
+		u0 = (xstep * (-x1));
+		x1 = 0;
 	}
+	else if (x1 > (Window_width - 1))
+		return;
 
-	// calculate the four corners
-	g3Point corners[4], *pts[4];
-	int i;
-	for( i = 0; i < 4; ++i )
+	if (x2 > (Window_width - 1))
 	{
-		pts[i] = &corners[i];
-
-		// calculate the offset for this corner
-		float cornerScaleU = ((i&1) ^ ((i&2)>>1)) ? 1.0f : -1.0f;
-		float cornerScaleV = (i&2) ? 1.0f : -1.0f;
-
-		// find the point (parallel to the view frame)
-		vector cornerPos = *pos + (viewOrient.uvec * (height * -cornerScaleV)) + (viewOrient.rvec * (width * cornerScaleU));
-		corners[i].p3_codes = 0;
-		g3_RotatePoint( pts[i], &cornerPos );
-
-		// setup the flags, UVs and colors
-		corners[i].p3_flags |= PF_UV;
-		corners[i].p3_uvl.u = (cornerScaleU * 0.5f) + 0.5f;
-		corners[i].p3_uvl.v = (cornerScaleV * 0.5f) + 0.5f;
-		if( color == -1 )
-		{
-			corners[i].p3_flags |= PF_L;
-			corners[i].p3_uvl.l = 1.0f;
-		}
-		else
-		{
-			corners[i].p3_flags |= PF_RGBA;
-			corners[i].p3_uvl.r = r;
-			corners[i].p3_uvl.g = g;
-			corners[i].p3_uvl.b = b;
-		}
-		corners[i].p3_uvl.a = 1.0f;
+		u1 -= (xstep * (x2 - (Window_width - 1)));
+		x2 = Window_width - 1;
 	}
+	else if (x2 < 0)
+		return;
 
-	rend_SetTextureType( TT_LINEAR );
-	rend_DrawPolygon3D( bm, pts, 4 );
+	// Clip y dimension
+	if (y1 < 0)
+	{
+		v0 = (ystep * (-y1));
+		y1 = 0;
+	}
+	else if (y1 > (Window_height - 1))
+		return;
+
+	if (y2 > (Window_height - 1))
+	{
+		v1 -= (ystep * (y2 - (Window_height - 1)));
+		y2 = (Window_height - 1);
+	}
+	else if (y2 < 0)
+		return;
+
+	// And draw!!
+	rend_DrawScaledBitmapWithZ(x1, y1, x2, y2, bm, u0, v0, u1, v1, pnt.p3_z, color);
 }
 
 // Draws a bitmap that has been rotated about its center.  Angle of rotation is passed as 'rot_angle'
 void g3_DrawRotatedBitmap(vector *pos,angle rot_angle,float width,float height,int bm,int color)
 {
-	// get the view orientation
-	matrix viewOrient;
-	g3_GetUnscaledMatrix( &viewOrient );
-
-	matrix rot_matrix;
-	vm_AnglesToMatrix( &rot_matrix, 0, 0, rot_angle );
-
-	float w = width;
-	float h = height;
-
+	g3Point pnt, rot_points[8], * pntlist[8];
 	vector rot_vectors[4];
-	rot_vectors[0].x = -w; 
+	matrix rot_matrix;
+	float w, h;
+	int i;
+
+	if (g3_RotatePoint(&pnt, pos) & CC_BEHIND)
+		return;
+
+	if (pnt.p3_codes & CC_OFF_FAR)
+		return;
+
+	vm_AnglesToMatrix(&rot_matrix, 0, 0, rot_angle);
+
+	rot_matrix.rvec *= Matrix_scale.x;
+	rot_matrix.uvec *= Matrix_scale.y;
+
+
+	w = width;
+	h = height;
+
+	rot_vectors[0].x = -w;
 	rot_vectors[0].y = h;
 
-	rot_vectors[1].x = w; 
+	rot_vectors[1].x = w;
 	rot_vectors[1].y = h;
 
-	rot_vectors[2].x = w; 
+	rot_vectors[2].x = w;
 	rot_vectors[2].y = -h;
 
-	rot_vectors[3].x = -w; 
+	rot_vectors[3].x = -w;
 	rot_vectors[3].y = -h;
 
-	g3Point rot_points[8], *pntlist[8];
-	int i;
-	for( i = 0; i < 4; ++i )
+	for (i = 0; i < 4; i++)
 	{
-		vector offset;
-		rot_vectors[i].z = 0.0f;
-		vm_MatrixMulVector( &offset, &rot_vectors[i], &rot_matrix );
+		rot_vectors[i].z = 0;
+		vm_MatrixMulVector(&rot_points[i].p3_vec, &rot_vectors[i], &rot_matrix);
 
-		vector cornerPos = *pos + (viewOrient.uvec * offset.y) + (viewOrient.rvec * offset.x);
-		rot_points[i].p3_codes = 0;
-		g3_RotatePoint( &rot_points[i], &cornerPos );
+		rot_points[i].p3_flags = PF_UV | PF_RGBA;
+		rot_points[i].p3_l = 1.0;
+		rot_points[i].p3_vec += pnt.p3_vec;
 
-		rot_points[i].p3_flags |= PF_UV|PF_RGBA;
-		rot_points[i].p3_l     = 1.0f;
-		rot_points[i].p3_uvl.u = ((i&1) ^ ((i&2)>>1)) ? 1.0f : 0.0f;
-		rot_points[i].p3_uvl.v = (i&2) ? 1.0f : 0.0f;
-
+		g3_CodePoint(&rot_points[i]);
 		pntlist[i] = &rot_points[i];
 	}
 
-	// And draw!!
-	rend_SetTextureType( TT_LINEAR );
+	rot_points[0].p3_u = 0;
+	rot_points[0].p3_v = 0;
 
-	if( color != -1 )
+	rot_points[1].p3_u = 1;
+	rot_points[1].p3_v = 0;
+
+	rot_points[2].p3_u = 1;
+	rot_points[2].p3_v = 1;
+
+	rot_points[3].p3_u = 0;
+	rot_points[3].p3_v = 1;
+
+	// And draw!!
+	rend_SetTextureType(TT_LINEAR);
+
+	if (color != -1)
 	{
-		rend_SetLighting( LS_FLAT_GOURAUD );
-		rend_SetFlatColor( color );
+		rend_SetLighting(LS_FLAT_GOURAUD);
+		rend_SetFlatColor(color);
 	}
 
-	g3_DrawPoly( 4, pntlist, bm );
+	g3_DrawPoly(4, pntlist, bm);
 }
 
 // Draws a bitmap on a specific plane.  Also does rotation.  Angle of rotation is passed as 'rot_angle'
