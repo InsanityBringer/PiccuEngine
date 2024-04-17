@@ -1,9 +1,6 @@
-#include "RendererConfig.h"
-#ifdef USE_SOFTWARE_TNL
-
 #include "pserror.h"
 #include "3d.h"
-#include "SoftwareInternal.h"
+#include "HardwareInternal.h"
 
 static int free_point_num = -1;
 static g3Point temp_points[MAX_POINTS_IN_POLY];
@@ -431,5 +428,3 @@ void g3_SetCustomClipPlane(ubyte state,vector *pnt,vector *normal)
 		vm_NormalizeVector(&Clip_plane);
 	}
 }
-
-#endif

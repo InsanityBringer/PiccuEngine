@@ -1,6 +1,3 @@
-#include "RendererConfig.h"
-#ifndef USE_SOFTWARE_TNL
-
 #include "3d.h"
 #include "pserror.h"
 #include "HardwareInternal.h"
@@ -91,7 +88,7 @@ void g3_ForceTransformRefresh(void)
 
 void g3_RefreshTransforms(bool usePassthru)
 {
-	if( sUseTransformPassthru == 1 && usePassthru )
+	/*if( sUseTransformPassthru == 1 && usePassthru )
 	{
 		// we don't have to do anything because we are already setup for pass-thru
 		return;
@@ -116,7 +113,5 @@ void g3_RefreshTransforms(bool usePassthru)
 	}
 
 	// store the pass-thru
-	sUseTransformPassthru = (usePassthru) ? 1 : 0;
+	sUseTransformPassthru = (usePassthru) ? 1 : 0;*/
 }
-
-#endif

@@ -1250,14 +1250,19 @@ void StartFrame(bool clear)
 	StartFrame(Game_window_x, Game_window_y, Game_window_x+Game_window_w,Game_window_y+Game_window_h, clear);
 }
 
+constexpr float ASPECT_4_3 = (4.f / 3.f);
+
 void StartFrame(int x, int y, int x2, int y2, bool clear,bool push_on_stack)
 {
 	static float last_fov=-1;
-	// Check to see if our FOV has changed since last frame
 	if (last_fov!=Render_FOV)
 	{
-		// Figure out new zoom factor
-		float num=(Render_FOV/2);
+		/*
+		float vert_43 = tan(Render_FOV * 3.1415927 / 360.f);
+		Render_zoom = vert_43 * rend_GetAspectRatio(); //Aspect ratio is desired aspect / (4/3)
+		*/
+
+		float num=(Render_FOV / 2);
 		num=(3.14*(float)num/180.0);
 		Render_zoom=tan(num);
 

@@ -1,8 +1,5 @@
-#include "RendererConfig.h"
-#ifdef USE_SOFTWARE_TNL
-
 #include "3d.h"
-#include "SoftwareInternal.h"
+#include "HardwareInternal.h"
 #include <string.h>
 
 extern vector Clip_plane_point;
@@ -38,8 +35,10 @@ ubyte g3_CodePoint(g3Point *p)
 		vec.z/=Matrix_scale.z;
 
 		float dp=vec*Clip_plane;
-		if (dp<-.005)
-			cc|=CC_OFF_CUSTOM;
+		if( dp < -0.005f )
+		{
+			cc |= CC_OFF_CUSTOM;
+		}
 	}
 
 	return p->p3_codes = cc;
@@ -83,7 +82,7 @@ void g3_Point2Vec(vector *v,short sx,short sy)
 
 	tempv.x =  (((sx - Window_w2) / Window_w2) * Matrix_scale.z / Matrix_scale.x);
 	tempv.y = -(((sy - Window_h2) / Window_h2) * Matrix_scale.z / Matrix_scale.y);
-	tempv.z = 1.0;
+	tempv.z = 1.0f;
 
 	vm_NormalizeVector(&tempv);
 
@@ -143,5 +142,3 @@ float g3_CalcPointDepth(vector *pnt)
 		((pnt->y - View_position.y) * View_matrix.fvec.y) +
 		((pnt->z - View_position.z) * View_matrix.fvec.z);
 }
-
-#endif

@@ -90,6 +90,9 @@ void GameFrame(void);
 //					rear_view - if true, we're looking out the rear of this object
 void GameRenderWorld(object *viewer,vector *viewer_eye,int viewer_roomnum,matrix *viewer_orient,float zoom,bool rear_view);
 
+//[ISB] User's desired FOV. 
+extern float Render_FOV_desired;
+
 extern float Render_zoom;
 extern float Render_FOV;
 

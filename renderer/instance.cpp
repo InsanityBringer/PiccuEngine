@@ -1,8 +1,5 @@
-#include "RendererConfig.h"
-#ifdef USE_SOFTWARE_TNL
-
 #include "3d.h"
-#include "SoftwareInternal.h"
+#include "HardwareInternal.h"
 #include <string.h>
 
 struct InstanceContext
@@ -14,20 +11,20 @@ struct InstanceContext
 };
 
 #define MAX_INSTANCE_DEPTH	30
-static InstanceContext gInstanceStack[MAX_INSTANCE_DEPTH];
-static int gInstanceDepth = 0;
+static InstanceContext sInstanceStack[MAX_INSTANCE_DEPTH];
+static int sInstanceDepth = 0;
 
 //instance at specified point with specified orientation
 void g3_StartInstanceMatrix( vector *pos, matrix *orient )
 {
 	ASSERT( orient != NULL );
-	ASSERT( gInstanceDepth < MAX_INSTANCE_DEPTH );
+	ASSERT( sInstanceDepth < MAX_INSTANCE_DEPTH );
 
-	gInstanceStack[gInstanceDepth].m_viewMatrix     = View_matrix;
-	gInstanceStack[gInstanceDepth].m_viewPosition   = View_position;
-	gInstanceStack[gInstanceDepth].m_unscaledMatrix = Unscaled_matrix;
-	memcpy( gInstanceStack[gInstanceDepth].m_modelView, gTransformModelView, sizeof(gTransformModelView) );
-	++gInstanceDepth;
+	sInstanceStack[sInstanceDepth].m_viewMatrix     = View_matrix;
+	sInstanceStack[sInstanceDepth].m_viewPosition   = View_position;
+	sInstanceStack[sInstanceDepth].m_unscaledMatrix = Unscaled_matrix;
+	memcpy( sInstanceStack[sInstanceDepth].m_modelView, gTransformModelView, sizeof(gTransformModelView) );
+	++sInstanceDepth;
 
 	//step 1: subtract object position from view position
 	vector tempv = View_position - *pos;
@@ -71,14 +68,12 @@ void g3_StartInstanceAngles(vector *pos,angvec *angles)
 //pops the old context
 void g3_DoneInstance()
 {
-	--gInstanceDepth;
-	ASSERT( gInstanceDepth >= 0 );
+	--sInstanceDepth;
+	ASSERT( sInstanceDepth >= 0 );
 
-	View_position   = gInstanceStack[gInstanceDepth].m_viewPosition;
-	View_matrix     = gInstanceStack[gInstanceDepth].m_viewMatrix;
-	Unscaled_matrix = gInstanceStack[gInstanceDepth].m_unscaledMatrix;
-	memcpy( gTransformModelView, gInstanceStack[gInstanceDepth].m_modelView, sizeof(gTransformModelView) );
+	View_position   = sInstanceStack[sInstanceDepth].m_viewPosition;
+	View_matrix     = sInstanceStack[sInstanceDepth].m_viewMatrix;
+	Unscaled_matrix = sInstanceStack[sInstanceDepth].m_unscaledMatrix;
+	memcpy( gTransformModelView, sInstanceStack[sInstanceDepth].m_modelView, sizeof(gTransformModelView) );
 	g3_UpdateFullTransform();
 }
-
-#endif

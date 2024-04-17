@@ -866,8 +866,10 @@
 
 extern bool Display_renderer_stats;
 
+float Render_FOV_desired = 72;
+
 //Current zoom factor (this is the tan of 29.25, which is half our FOV of 58.5)
-float Render_FOV	= D3_DEFAULT_FOV;
+float Render_FOV	= Render_FOV_desired;
 float Render_zoom = D3_DEFAULT_ZOOM;
 
 //How long (in seconds) the last frame took
@@ -2259,7 +2261,7 @@ void ProcessTestKeys(int key)
 			break;
 
 		case KEY_8:
-			Render_FOV=D3_DEFAULT_FOV;
+			Render_FOV=Render_FOV_desired;
 			AddHUDMessage ("FOV has been reset to %f",Render_FOV);
 			break;
 

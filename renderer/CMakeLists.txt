@@ -1,26 +1,16 @@
 SET (HEADERS 
 		dyna_gl.h
 		HardwareInternal.h
-		RendererConfig.h
-		SoftwareInternal.h)
+		RendererConfig.h)
 SET (CPPS
-		HardwareClipper.cpp
-		HardwareDraw.cpp
-		HardwareGlobalVars.cpp
-		HardwareInstance.cpp
-		HardwareOpenGL.cpp
-		HardwarePoints.cpp
-		HardwareSetup.cpp
-		HardwareTransforms.cpp
-	
-		SoftwareClipper.cpp
-		SoftwareDraw.cpp
-		SoftwareGlobalVars.cpp
-		SoftwareInstance.cpp
-		SoftwareOpenGL.cpp
-		SoftwareOpenGLMeshBuilder.cpp
-		SoftwarePoints.cpp
-		SoftwareSetup.cpp)
+		clipper.cpp
+		draw.cpp
+		globalvars.cpp
+		instance.cpp
+		opengl.cpp
+		points.cpp
+		setup.cpp
+		transforms.cpp)
 
 IF(UNIX)
 

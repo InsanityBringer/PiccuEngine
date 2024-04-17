@@ -1,8 +1,8 @@
 #include "RendererConfig.h"
-#ifdef USE_SOFTWARE_TNL
+#ifndef USE_SOFTWARE_TNL
 
 #include "3d.h"
-#include "SoftwareInternal.h"
+#include "HardwareInternal.h"
 #include "renderer.h"
 
 #define round(v) ( (int)( ((v) + 0.5f) ) )
@@ -145,78 +145,77 @@ int Triangulate_test = 0;
 // Returns 0 if clipped away
 int g3_DrawPoly(int nv,g3Point **pointlist,int bm,int map_type,g3Codes *clip_codes)
 {
+	//rend_DrawPolygon3D( bm, pointlist, nv, map_type );
+	//return 1;
+
+	
 	int i;
 	g3Codes cc;
 	bool was_clipped=0;
 
-	if (Triangulate_test)
+	if( Triangulate_test && (nv > 3) )
 	{
-		if (nv > 3) 
+		g3Point *tripoints[3];
+		int sum=0;
+
+		for (i=0;i<nv-2;i++) 
 		{
-			g3Point *tripoints[3];
-			int sum=0;
-
-			for (i=0;i<nv-2;i++) 
-			{
-				tripoints[0] = pointlist[0];
-				tripoints[1] = pointlist[i+1];
-				tripoints[2] = pointlist[i+2];
-				sum+=g3_DrawPoly(3,tripoints,bm,map_type);
-			}
-
-			return sum;
+			tripoints[0] = pointlist[0];
+			tripoints[1] = pointlist[i+1];
+			tripoints[2] = pointlist[i+2];
+			sum += g3_DrawPoly( 3, tripoints, bm, map_type );
 		}
+
+		return sum;
 	}
 
 	//Initialize or just used the ones passed in
-	if (clip_codes)
+	if( clip_codes )
 	{
-		cc=*clip_codes;
+		cc = *clip_codes;
 	}
 	else
 	{
-		cc.cc_or = 0; cc.cc_and = 0xff;
+		cc.cc_or  = 0;
+		cc.cc_and = 0xff;
 
 		//Get codes for this polygon, and copy uvls into points
-		for (i=0;i<nv;i++) 
+		for( i = 0; i < nv; ++i ) 
 		{
-			ubyte c;
-
-			c = pointlist[i]->p3_codes;
-
+			ubyte c = pointlist[i]->p3_codes;
 			cc.cc_and &= c;
 			cc.cc_or  |= c;
 		}
 	}
 
 	//All points off screen?
-	if (cc.cc_and)
+	if( cc.cc_and )
 		return 0;
 
 	//One or more point off screen, so clip
-	if (cc.cc_or) 
+	if( cc.cc_or )
 	{
-
 		//Clip the polygon, getting pointer to new buffer
-		pointlist = g3_ClipPolygon(pointlist,&nv,&cc);
+		pointlist = g3_ClipPolygon( pointlist, &nv, &cc );
 
 		//Flag as clipped so temp points will be freed
 		was_clipped = 1;
 
 		//Check for polygon clipped away, or clip otherwise failed
-		if ((nv==0) || (cc.cc_or&CC_BEHIND) || cc.cc_and)
+		if( (nv==0) || (cc.cc_or&CC_BEHIND) || cc.cc_and )
 			goto free_points;
 	}
 
 	//Make list of 2d coords (& check for overflow)
-	for (i=0;i<nv;i++)
+	for( i = 0; i < nv; ++i )
 	{
 		g3Point *p = pointlist[i];
 
 		//Project if needed
-		if (!(p->p3_flags&PF_PROJECTED))
+		if( !(p->p3_flags&PF_PROJECTED) )
+		{
 			g3_ProjectPoint(p);
-
+		}
 	}
 
 	//Draw!
@@ -225,8 +224,10 @@ int g3_DrawPoly(int nv,g3Point **pointlist,int bm,int map_type,g3Codes *clip_cod
 free_points:;
 
 	//If was clipped, free temp points
-	if (was_clipped)
-		g3_FreeTempPoints(pointlist,nv);
+	if( was_clipped )
+	{
+		g3_FreeTempPoints( pointlist, nv );
+	}
 
 	return 1;
 }
@@ -306,139 +307,121 @@ void g3_DrawBitmap(vector *pos,float width,float height,int bm,int color)
 // Draws a bitmap that has been rotated about its center.  Angle of rotation is passed as 'rot_angle'
 void g3_DrawRotatedBitmap(vector *pos,angle rot_angle,float width,float height,int bm,int color)
 {
-	g3Point pnt,rot_points[8],*pntlist[8];
-	vector rot_vectors[4];
+	// get the view orientation
+	matrix viewOrient;
+	g3_GetUnscaledMatrix( &viewOrient );
+
 	matrix rot_matrix;
-	float w,h;
+	vm_AnglesToMatrix( &rot_matrix, 0, 0, rot_angle );
+
+	float w = width;
+	float h = height;
+
+	vector rot_vectors[4];
+	rot_vectors[0].x = -w; 
+	rot_vectors[0].y = h;
+
+	rot_vectors[1].x = w; 
+	rot_vectors[1].y = h;
+
+	rot_vectors[2].x = w; 
+	rot_vectors[2].y = -h;
+
+	rot_vectors[3].x = -w; 
+	rot_vectors[3].y = -h;
+
+	g3Point rot_points[8], *pntlist[8];
 	int i;
-
-	if (g3_RotatePoint(&pnt,pos) & CC_BEHIND)
-		return;
-
-	if (pnt.p3_codes & CC_OFF_FAR)
-		return;
-
-	vm_AnglesToMatrix (&rot_matrix,0,0,rot_angle);
-
-	rot_matrix.rvec*=Matrix_scale.x;
-	rot_matrix.uvec*=Matrix_scale.y;
-
-
-	w = width;
-	h = height;
-
-	rot_vectors[0].x=-w; 
-	rot_vectors[0].y=h;
-
-	rot_vectors[1].x=w; 
-	rot_vectors[1].y=h;
-
-	rot_vectors[2].x=w; 
-	rot_vectors[2].y=-h;
-
-	rot_vectors[3].x=-w; 
-	rot_vectors[3].y=-h;
-
-	for (i=0;i<4;i++)
+	for( i = 0; i < 4; ++i )
 	{
-		rot_vectors[i].z=0;
-		vm_MatrixMulVector (&rot_points[i].p3_vec,&rot_vectors[i],&rot_matrix);
+		vector offset;
+		rot_vectors[i].z = 0.0f;
+		vm_MatrixMulVector( &offset, &rot_vectors[i], &rot_matrix );
 
-		rot_points[i].p3_flags=PF_UV|PF_RGBA;
-		rot_points[i].p3_l=1.0;
-		rot_points[i].p3_vec+=pnt.p3_vec;
+		vector cornerPos = *pos + (viewOrient.uvec * offset.y) + (viewOrient.rvec * offset.x);
+		rot_points[i].p3_codes = 0;
+		g3_RotatePoint( &rot_points[i], &cornerPos );
 
-		g3_CodePoint (&rot_points[i]);
-		pntlist[i]=&rot_points[i];
+		rot_points[i].p3_flags |= PF_UV|PF_RGBA;
+		rot_points[i].p3_l     = 1.0f;
+		rot_points[i].p3_uvl.u = ((i&1) ^ ((i&2)>>1)) ? 1.0f : 0.0f;
+		rot_points[i].p3_uvl.v = (i&2) ? 1.0f : 0.0f;
+
+		pntlist[i] = &rot_points[i];
 	}
-
-	rot_points[0].p3_u=0;
-	rot_points[0].p3_v=0;
-
-	rot_points[1].p3_u=1;
-	rot_points[1].p3_v=0;
-
-	rot_points[2].p3_u=1;
-	rot_points[2].p3_v=1;
-
-	rot_points[3].p3_u=0;
-	rot_points[3].p3_v=1;
 
 	// And draw!!
-	rend_SetTextureType (TT_LINEAR);
+	rend_SetTextureType( TT_LINEAR );
 
-	if (color!=-1)
+	if( color != -1 )
 	{
-		rend_SetLighting (LS_FLAT_GOURAUD);
-		rend_SetFlatColor (color);
+		rend_SetLighting( LS_FLAT_GOURAUD );
+		rend_SetFlatColor( color );
 	}
 
-	g3_DrawPoly (4,pntlist,bm);
+	g3_DrawPoly( 4, pntlist, bm );
 }
 
 // Draws a bitmap on a specific plane.  Also does rotation.  Angle of rotation is passed as 'rot_angle'
-void g3_DrawPlanarRotatedBitmap (vector *pos,vector *norm,angle rot_angle,float width,float height,int bm)
+void g3_DrawPlanarRotatedBitmap(vector *pos,vector *norm,angle rot_angle,float width,float height,int bm)
 {
-	g3Point rot_points[8],*pntlist[8];
-	vector rot_vectors[4];
 	matrix rot_matrix;
+	vm_VectorToMatrix( &rot_matrix, norm, NULL, NULL );
+	vm_TransposeMatrix( &rot_matrix );
+
 	matrix twist_matrix;
-	float w,h;
+	vm_AnglesToMatrix( &twist_matrix, 0, 0, rot_angle );
+
+	float w = width;
+	float h = height;
+
+	vector rot_vectors[4];
+	rot_vectors[0] =  (twist_matrix.rvec * -w);
+	rot_vectors[0] += (twist_matrix.uvec * h); 
+
+	rot_vectors[1] =  (twist_matrix.rvec * w);
+	rot_vectors[1] += (twist_matrix.uvec * h);
+
+	rot_vectors[2] =  (twist_matrix.rvec * w);
+	rot_vectors[2] -= (twist_matrix.uvec * h);
+
+	rot_vectors[3] =  (twist_matrix.rvec * -w);
+	rot_vectors[3] -= (twist_matrix.uvec * h);
+
 	int i;
-
-	vm_VectorToMatrix (&rot_matrix,norm,NULL,NULL);
-	vm_TransposeMatrix (&rot_matrix);
-
-	vm_AnglesToMatrix (&twist_matrix,0,0,rot_angle);
-
-	w = width;
-	h = height;
-
-	rot_vectors[0]=(twist_matrix.rvec*-w); 
-	rot_vectors[0]+=(twist_matrix.uvec*h); 
-
-	rot_vectors[1]=(twist_matrix.rvec*w); 
-	rot_vectors[1]+=(twist_matrix.uvec*h); 
-
-	rot_vectors[2]=(twist_matrix.rvec*w); 
-	rot_vectors[2]-=(twist_matrix.uvec*h); 
-
-	rot_vectors[3]=(twist_matrix.rvec*-w); 
-	rot_vectors[3]-=(twist_matrix.uvec*h); 
-
-	for (i=0;i<4;i++)
+	for( i = 0; i < 4; ++i )
 	{	
-		vector temp_vec=rot_vectors[i];
-		vm_MatrixMulVector (&rot_vectors[i],&temp_vec,&rot_matrix);
+		vector temp_vec = rot_vectors[i];
+		vm_MatrixMulVector( &rot_vectors[i], &temp_vec, &rot_matrix );
 	}
 
-	for (i=0;i<4;i++)
+	g3Point rot_points[8],*pntlist[8];
+	for( i = 0; i < 4; ++i )
 	{		
-		rot_vectors[i]+=*pos;
+		rot_vectors[i] += *pos;
 
-		g3_RotatePoint (&rot_points[i],&rot_vectors[i]);
+		g3_RotatePoint( &rot_points[i], &rot_vectors[i] );
+		rot_points[i].p3_flags |= PF_UV|PF_L;
+		rot_points[i].p3_l     = 1.0f;
 
-		rot_points[i].p3_flags|=PF_UV|PF_RGBA;
-		rot_points[i].p3_l=1.0;
-
-		pntlist[i]=&rot_points[i];
+		pntlist[i] = &rot_points[i];
 	}
 
-	rot_points[0].p3_u=0;
-	rot_points[0].p3_v=0;
+	rot_points[0].p3_u = 0.0f;
+	rot_points[0].p3_v = 0.0f;
 
-	rot_points[1].p3_u=1;
-	rot_points[1].p3_v=0;
+	rot_points[1].p3_u = 1.0f;
+	rot_points[1].p3_v = 0.0f;
 
-	rot_points[2].p3_u=1;
-	rot_points[2].p3_v=1;
+	rot_points[2].p3_u = 1.0f;
+	rot_points[2].p3_v = 1.0f;
 
-	rot_points[3].p3_u=0;
-	rot_points[3].p3_v=1;
+	rot_points[3].p3_u = 0.0f;
+	rot_points[3].p3_v = 1.0f;
 
 	// And draw!!
-	rend_SetTextureType (TT_LINEAR);
-	g3_DrawPoly (4,pntlist,bm);
+	rend_SetTextureType( TT_LINEAR );
+	g3_DrawPoly( 4, pntlist, bm );
 }
 
 

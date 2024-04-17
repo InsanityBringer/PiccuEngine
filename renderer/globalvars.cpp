@@ -1,8 +1,5 @@
-#include "RendererConfig.h"
-#ifdef USE_SOFTWARE_TNL
-
 #include "3d.h"
-#include "SoftwareInternal.h"
+#include "HardwareInternal.h"
 #include <float.h>
 
 vector	View_position;
@@ -29,5 +26,3 @@ float gTransformViewPort[4][4];
 float gTransformProjection[4][4];
 float gTransformModelView[4][4];
 float gTransformFull[4][4];
-
-#endif

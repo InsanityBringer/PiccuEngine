@@ -1,92 +1,101 @@
+#include <algorithm>
+
+#include "byteswap.h"
 #if defined(WIN32)
-#include <windows.h>
-#include "ddraw.h"
+#	include <windows.h>
+#	include "ddraw.h"
 #elif defined(__LINUX__)
-#include "linux/linux_fix.h"
-#include "linux/dyna_xext.h"
-#include "lnxscreenmode.h"
-#include <X11/Xatom.h>
-#define min(a,b) (((a)<(b))?(a):(b))
-#define max(a,b) (((a)>(b))?(a):(b))
+#	include "linux/linux_fix.h"
+#	include "linux/dyna_xext.h"
+#	include "lnxscreenmode.h"
+#	define min(a,b) (((a)<(b))?(a):(b))
+#	define max(a,b) (((a)>(b))?(a):(b))
 #else
 #endif
 
-#include "DDAccess.h"				// Device Dependent access level module
-
+#include "DDAccess.h"
 #include "pstypes.h"
 #include "pserror.h"
-#include "application.h"
-#include "renderer.h"
+#include "mono.h"
 #include "3d.h"
+#include "renderer.h"
+#include "ddvid.h"
+#include "ddio.h"
+#include "application.h"
 #include "bitmap.h"
 #include "lightmap.h"
 #include "rend_opengl.h"
 #include "grdefs.h"
-#include <gl/gl.h>
-#include <gl/glu.h>
 #include "mem.h"
 #include "rtperformance.h"
-#include "dyna_gl.h"
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include "HardwareInternal.h"
+#include "../Descent3/args.h"
+
+#define DECLARE_OPENGL
+#include "dyna_gl.h"
 
 #if defined(WIN32)
 #include "win/arb_extensions.h"
 #endif
 
-extern int FindArg(char *);
+#undef min
+#undef max
 
-#if defined(WIN32)
-extern int WindowGL;
-#else
-#define WindowGL 0
+int FindArg(char *);
+void rend_SetLightingState(light_state state);
+
+//#define CHANGE_RESOLUTION_IN_FULLSCREEN
+
+// The font characteristics
+static float rend_FontRed[4],rend_FontBlue[4],rend_FontGreen[4],rend_FontAlpha[4];
+char Renderer_error_message[256]="Generic renderer error";
+// The following values are referenced by the game code, but only
+// UseMultitexture is actually referenced and used in this code - and
+// even that can probably go away and we just assume there is more than
+// one texture unit (which, since I believe OpenGL 1.2 is a requirement)
+bool UseHardware     = true;
+bool NoLightmaps     = false;
+bool StateLimited    = false;
+bool UseMultitexture = false;
+bool UseWBuffer      = false;
+
+// General renderer states
+int Overlay_map             = -1;
+int Bump_map                = 0;
+int Bumpmap_ready           = 0;
+ubyte Overlay_type          = OT_NONE;
+float Z_bias                = 0.0f;
+ubyte Renderer_close_flag   = 0;
+ubyte Renderer_initted      = 0;
+renderer_type Renderer_type = RENDERER_OPENGL;
+int WindowGL                = 0;
+
+extern matrix Unscaled_matrix;
+extern vector View_position;
+
+#ifndef GL_UNSIGNED_SHORT_5_5_5_1
+#define GL_UNSIGNED_SHORT_5_5_5_1 0x8034
 #endif
 
-
-// JEFF: I PUT THIS IN TO MAKE THINGS A LITTLE BRIGHTER SO I CAN SEE WHILE TESTING
-#define BRIGHTNESS_HACK 1.6f
-
-/*
-#ifndef NDEBUG
-	GLenum GL_error_code;
-	const ubyte *GL_error_string;
-	#define CHECK_ERROR(x)	{	GL_error_code=dglGetError ();\
-									if (GL_error_code!=GL_NO_ERROR)\
-									{\
-										GL_error_string=gluErrorString (GL_error_code);\
-										mprintf ((0,"GL_ERROR: id=%d code=%d String=%s\n",x,GL_error_code,GL_error_string));\
-									}\
-									}
-#else
-	#define CHECK_ERROR(x)	
-#endif*/
+#ifndef GL_UNSIGNED_SHORT_4_4_4_4
+#define GL_UNSIGNED_SHORT_4_4_4_4 0x8033
+#endif
 
 #define CHECK_ERROR(x)	
 
 #if defined(WIN32)
-//	Moved from DDGR library
-static HWND hOpenGLWnd = NULL;
-static HDC hOpenGLDC = NULL;
-HGLRC ResourceContext;
-static WORD Saved_gamma_values[256*3];
+	//	Moved from DDGR library
+	static HWND hOpenGLWnd = NULL;
+	static HDC hOpenGLDC   = NULL;
+	HGLRC ResourceContext;
+	static WORD Saved_gamma_values[256*3];
 #elif defined(__LINUX__)
-static Display *OpenGL_Display=NULL;
-static Window OpenGL_Window;
-static XVisualInfo OpenGL_VisualInfo;
-static GLXContext OpenGL_Context;
-static bool OpenGL_TextureHack = false;
-static bool OpenGL_UseLists = false;
-static oeLnxApplication *OpenGL_LinuxApp = NULL;
-
-//void CreateFullScreenWindow(Display *dpy,Window rootwin,Window window,int DisplayScreen,int DisplayWidth,int DisplayHeight);
-
-#define glXQueryExtension dglXQueryExtension
-#define glXCreateContext dglXCreateContext
-#define glXMakeCurrent dglXMakeCurrent
-#define glXSwapBuffers dglXSwapBuffers 
-#define glXDestroyContext dglXDestroyContext
-#define glXWaitGL dglXWaitGL
+	char loadedLibrary[_MAX_PATH];
 #else
 #endif
 
@@ -97,14 +106,12 @@ static oeLnxApplication *OpenGL_LinuxApp = NULL;
 #define SET_FILTER_STATE(x,s) {x&=0xF0; x|=(s);}
 
 //	OpenGL Stuff
-#define UNSIGNED_SHORT_5_5_5_1_EXT 0x8034
-#define UNSIGNED_SHORT_4_4_4_4_EXT 0x8033
+static int OpenGL_window_initted=0;
 static int OpenGL_polys_drawn=0;
 static int OpenGL_verts_processed=0;
 static int OpenGL_uploads=0;
 static int OpenGL_sets_this_frame[10];
 static int OpenGL_packed_pixels=0;
-static int OpenGL_multitexture=0;
 static int Cur_texture_object_num=1;
 static int OpenGL_cache_initted=0;
 static int OpenGL_last_bound[2];
@@ -115,27 +122,33 @@ static int OpenGL_last_uploaded=0;
 static float OpenGL_Alpha_factor=1.0f;
 
 #ifndef RELEASE
-// This is for the Microsoft OpenGL reference driver
-// Setting this will turn off bilinear filtering and zbuffer so we can get decent 
-// framerates to discern driver problems
-static ubyte Fast_test_render=0;
+	// This is for the Microsoft OpenGL reference driver
+	// Setting this will turn off bilinear filtering and zbuffer so we can get decent 
+	// framerates to discern driver problems
+	static ubyte Fast_test_render=0;
 #endif
 
-ushort *OpenGL_bitmap_remap;
-ushort *OpenGL_lightmap_remap;
-ubyte *OpenGL_bitmap_states;
-ubyte *OpenGL_lightmap_states;
+#if defined(_USE_OGL_ACTIVE_TEXTURES)
+	PFNGLACTIVETEXTUREARBPROC       oglActiveTextureARB       = NULL;
+	PFNGLCLIENTACTIVETEXTUREARBPROC oglClientActiveTextureARB = NULL;
+	PFNGLMULTITEXCOORD4FARBPROC     oglMultiTexCoord4f        = NULL;
+#endif
 
-uint *opengl_Upload_data=NULL;
-uint *opengl_Translate_table=NULL;
-uint *opengl_4444_translate_table=NULL;
+ushort *OpenGL_bitmap_remap                = NULL;
+ushort *OpenGL_lightmap_remap              = NULL;
+ubyte *OpenGL_bitmap_states                = NULL;
+ubyte *OpenGL_lightmap_states              = NULL;
 
-ushort *opengl_packed_Upload_data=NULL;
-ushort *opengl_packed_Translate_table=NULL;
-ushort *opengl_packed_4444_translate_table=NULL;
+uint *opengl_Upload_data                   = NULL;
+uint *opengl_Translate_table               = NULL;
+uint *opengl_4444_translate_table          = NULL;
+
+ushort *opengl_packed_Upload_data          = NULL;
+ushort *opengl_packed_Translate_table      = NULL;
+ushort *opengl_packed_4444_translate_table = NULL;
 
 rendering_state OpenGL_state;
-static float Alpha_multiplier=1.0;
+static float Alpha_multiplier = 1.0f;
 
 renderer_preferred_state OpenGL_preferred_state={0,1,1.5}; 
 
@@ -151,7 +164,6 @@ typedef struct
 	float s,t,r,w;
 } tex_array;
 
-
 vector GL_verts[100];
 color_array GL_colors[100];
 tex_array GL_tex_coords[100];
@@ -162,61 +174,98 @@ module *OpenGLDLLHandle=NULL;
 int Already_loaded=0;
 bool opengl_Blending_on=0;
 
-static oeApplication *ParentApplication;
+static oeApplication *ParentApplication = NULL;
 
 
-#if defined(WIN32)
-PFNGLACTIVETEXTUREARBPROC oglActiveTextureARB;
-PFNGLCLIENTACTIVETEXTUREARBPROC oglClientActiveTextureARB;
-PFNGLMULTITEXCOORD4FARBPROC oglMultiTexCoord4f;
+#if 0
+int checkForGLErrors( char *file, int line )
+{
+  /*
+  int errors = 0 ;
+  int counter = 0 ;
+  static int errcnt = 0;
+  if(!dglGetError)
+    return 0;
+  while ( counter < 1000 )
+    {
+      GLenum x = dglGetError() ;
+
+      if ( x == GL_NO_ERROR )
+        return errors ;
+
+      printf( "%s:%d OpenGL error: %s [%08x]\n", file,line, gluErrorString ( x ), errcnt++ ) ;
+      errors++ ;
+      counter++ ;
+    }
+  */
+  char *sdlp = SDL_GetError();
+  if(sdlp && *sdlp)
+    mprintf((0,"SDL: %s",sdlp));
+	return 1;
+}
 #endif
 
-//Sets up multitexturing using ARB extensions
-void opengl_GetDLLFunctions ()
+//Sets up multi-texturing using ARB extensions
+void opengl_GetDLLFunctions(void)
 {
 #if defined(WIN32)
-	oglActiveTextureARB=(PFNGLACTIVETEXTUREARBPROC)dwglGetProcAddress ("glActiveTextureARB");
+	oglActiveTextureARB=(PFNGLACTIVETEXTUREARBPROC)dwglGetProcAddress( "glActiveTextureARB" );
 	if (!oglActiveTextureARB)
 		goto dll_error;
 
-	oglClientActiveTextureARB=(PFNGLCLIENTACTIVETEXTUREARBPROC)dwglGetProcAddress ("glClientActiveTextureARB");
+	oglClientActiveTextureARB=(PFNGLCLIENTACTIVETEXTUREARBPROC)dwglGetProcAddress( "glClientActiveTextureARB" );
 	if (!oglClientActiveTextureARB)
 		goto dll_error;
 
-
-	oglMultiTexCoord4f=(PFNGLMULTITEXCOORD4FARBPROC)dwglGetProcAddress ("glMultiTexCoord4f");
+	oglMultiTexCoord4f=(PFNGLMULTITEXCOORD4FARBPROC)dwglGetProcAddress( "glMultiTexCoord4f" );
 	if (!oglMultiTexCoord4f)
 		goto dll_error;
+#else
+	#define mod_GetSymbol(x, funcStr, y) __SDL_mod_GetSymbol(funcStr)
 
+	oglActiveTextureARB       = (PFNGLACTIVETEXTUREARBPROC) mod_GetSymbol(OpenGLDLLHandle,"glActiveTextureARB",255);
+	oglClientActiveTextureARB = (PFNGLCLIENTACTIVETEXTUREARBPROC) mod_GetSymbol(OpenGLDLLHandle,"glClientActiveTextureARB",255);
+	oglMultiTexCoord4f        = (PFNGLMULTITEXCOORD4FARBPROC) mod_GetSymbol(OpenGLDLLHandle,"glMultiTexCoord4f",255);
+	if( !oglMultiTexCoord4f )
+	{
+		oglMultiTexCoord4f = (PFNGLMULTITEXCOORD4FARBPROC) mod_GetSymbol(OpenGLDLLHandle,"glMultiTexCoord4fARB",255);
+	}
+	if (oglActiveTextureARB == NULL || oglClientActiveTextureARB == NULL || oglMultiTexCoord4f == NULL)
+	{
+		goto dll_error;
+	}
+
+	#undef mod_GetSymbol
+#endif
+
+	UseMultitexture = true;
 	return;
 
-	dll_error:
-#endif
-		OpenGL_multitexture=0;
+dll_error:
+	oglActiveTextureARB       = NULL;
+	oglClientActiveTextureARB = NULL;
+	oglMultiTexCoord4f        = NULL;
+	UseMultitexture           = false;
 }
 
-
 // returns true if the passed in extension name is supported
-int opengl_CheckExtension( char *extName )
+bool opengl_CheckExtension( char *extName )
 {
-	char *p = (char *) dglGetString(GL_EXTENSIONS);
-	char *end;
-	int extNameLen;
+	char *p = (char *)dglGetString(GL_EXTENSIONS);	
+	int extNameLen = strlen(extName);
+	char *end = p + strlen(p);
 
-	extNameLen = strlen(extName);
-	end = p + strlen(p);
-    
-	while (p < end) 
+	while( p < end )
 	{
 		int n = strcspn(p, " ");
 		if ((extNameLen == n) && (strncmp(extName, p, n) == 0)) 
-			return 1;
-	
+			return true;
+
 		p += (n + 1);
 	}
-	return 0;
-}
 
+	return false;
+}
 
 // Gets some specific information about this particular flavor of opengl
 void opengl_GetInformation ()
@@ -226,15 +275,16 @@ void opengl_GetInformation ()
 	mprintf ((0,"OpenGL Version: %s\n",dglGetString(GL_VERSION)));
 	mprintf ((0,"OpenGL Extensions: %s\n",dglGetString (GL_EXTENSIONS)));
 
-/*	#ifndef RELEASE
-		// If this is the microsoft driver, then make stuff go faster
-		const ubyte *renderer=dglGetString(GL_RENDERER);
-		if (!(strnicmp ((const char *)renderer,"GDI",3)))
-			Fast_test_render=1;
-		else
-			Fast_test_render=0;
-	#endif*/
-	
+	/*
+	#ifndef RELEASE
+	// If this is the microsoft driver, then make stuff go faster
+	const ubyte *renderer=dglGetString(GL_RENDERER);
+	if (!(strnicmp ((const char *)renderer,"GDI",3)))
+		Fast_test_render=1;
+	else
+		Fast_test_render=0;
+	#endif
+	*/
 }
 
 int opengl_MakeTextureObject (int tn)
@@ -243,12 +293,12 @@ int opengl_MakeTextureObject (int tn)
 
 	Cur_texture_object_num++;
 
-	if (OpenGL_multitexture && Last_texel_unit_set!=tn)
+	if (UseMultitexture && Last_texel_unit_set!=tn)
 	{
-	#if defined(WIN32)
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
 		oglActiveTextureARB (GL_TEXTURE0_ARB+tn);
 		Last_texel_unit_set=tn;
-	#endif
+#endif
 	}
 
 	dglBindTexture (GL_TEXTURE_2D,num);
@@ -259,7 +309,7 @@ int opengl_MakeTextureObject (int tn)
 
 	dglTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	dglTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	
+
 	//glTexEnvf (GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
 
 	CHECK_ERROR(2)
@@ -267,8 +317,9 @@ int opengl_MakeTextureObject (int tn)
 	return num;
 }
 
-int opengl_InitCache ()
+int opengl_InitCache(void)
 {
+
 	OpenGL_bitmap_remap=(ushort *)mem_malloc (MAX_BITMAPS*2);
 	ASSERT (OpenGL_bitmap_remap);
 	OpenGL_lightmap_remap=(ushort *)mem_malloc (MAX_LIGHTMAPS*2);
@@ -280,7 +331,8 @@ int opengl_InitCache ()
 	ASSERT (OpenGL_lightmap_states);
 
 	Cur_texture_object_num=1;
-// Setup textures and cacheing
+
+	// Setup textures and cacheing
 	int i;
 	for (i=0;i<MAX_BITMAPS;i++)
 	{
@@ -288,6 +340,7 @@ int opengl_InitCache ()
 		OpenGL_bitmap_states[i]=255;
 		GameBitmaps[i].flags|=BF_CHANGED|BF_BRAND_NEW;
 	}
+
 	for (i=0;i<MAX_LIGHTMAPS;i++)
 	{
 		OpenGL_lightmap_remap[i]=65535;
@@ -297,13 +350,13 @@ int opengl_InitCache ()
 
 	dglTexEnvf (GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
 
-	if (OpenGL_multitexture)
+	if (UseMultitexture)
 	{
-	#if defined(WIN32)
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
 		oglActiveTextureARB (GL_TEXTURE0_ARB+1);
 		dglTexEnvf (GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
 		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
-	#endif
+#endif
 	}
 
 	CHECK_ERROR(3)
@@ -333,30 +386,27 @@ void opengl_SetDefaults()
 	dglEnable (GL_DITHER);
 	opengl_Blending_on=true;
 
-	#ifndef RELEASE
-		if (Fast_test_render)
-			dglDisable (GL_DITHER);
-	#endif
+#ifndef RELEASE
+	if (Fast_test_render)
+	{
+		dglDisable (GL_DITHER);
+	}
+#endif
 
-	opengl_SetAlphaType (AT_ALWAYS);
-	opengl_SetAlphaValue (255);
-	opengl_SetFiltering (1);
-	opengl_SetLightingState (LS_NONE);
-	opengl_SetTextureType (TT_FLAT);
-	opengl_SetColorModel (CM_RGB);
-	opengl_SetZBufferState (1);
-	opengl_SetZValues (0,3000);
+	rend_SetAlphaType(AT_ALWAYS);
+	rend_SetAlphaValue(255);
+	rend_SetFiltering(1);
+	rend_SetLightingState(LS_NONE);
+	rend_SetTextureType(TT_FLAT);
+	rend_SetColorModel(CM_RGB);
+	rend_SetZBufferState(1);
+	rend_SetZValues(0,3000);
 	opengl_SetGammaValue (OpenGL_preferred_state.gamma);
 	OpenGL_last_bound[0]=9999999;
 	OpenGL_last_bound[1]=9999999;
 	Last_texel_unit_set=-1;
 	OpenGL_multitexture_state=false;
 
-#ifdef __LINUX__
-	OpenGL_UseLists = (FindArg("-gllists"))?true:false;
-	if(OpenGL_UseLists)
-	{
-#endif	
 	dglEnableClientState (GL_VERTEX_ARRAY);
 	dglEnableClientState (GL_COLOR_ARRAY);
 	dglEnableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -364,29 +414,26 @@ void opengl_SetDefaults()
 	dglVertexPointer (3,GL_FLOAT,0,GL_verts);
 	dglColorPointer (4,GL_FLOAT,0,GL_colors);
 	dglTexCoordPointer (4,GL_FLOAT,0,GL_tex_coords);
-#ifdef __LINUX__
-	}
-#endif
-	
+
 	dglHint (GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST);
-	dglHint (GL_FOG_HINT,GL_FASTEST);
+	dglHint (GL_FOG_HINT,GL_NICEST);
 	dglEnable (GL_SCISSOR_TEST);
 	dglScissor (0,0,OpenGL_state.screen_width,OpenGL_state.screen_height);
 	dglDisable (GL_SCISSOR_TEST);
 	dglDepthRange(0.0f,1.0f);
 
-	if (OpenGL_multitexture)
+	if (UseMultitexture)
 	{
-	#if defined(WIN32)
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
 		oglActiveTextureARB (GL_TEXTURE0_ARB+1);
 		oglClientActiveTextureARB (GL_TEXTURE0_ARB+1);
 		dglEnableClientState (GL_TEXTURE_COORD_ARRAY);
 		dglTexCoordPointer (4,GL_FLOAT,0,GL_tex_coords2);
 		dglHint (GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST);
-		dglHint (GL_FOG_HINT,GL_FASTEST);
+		dglHint (GL_FOG_HINT,GL_NICEST);
 
 		oglClientActiveTextureARB (GL_TEXTURE0_ARB+0);
-		
+
 		dglDisable (GL_TEXTURE_2D);
 		dglAlphaFunc (GL_GREATER,0);
 		dglEnable (GL_ALPHA_TEST);
@@ -394,7 +441,7 @@ void opengl_SetDefaults()
 		dglEnable (GL_DITHER);
 		dglBlendFunc (GL_DST_COLOR,GL_ZERO);
 		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
-	#endif
+#endif
 	}
 }
 
@@ -415,7 +462,7 @@ int opengl_Setup(HDC glhdc)
 	// Finds an acceptable pixel format to render to
 	PIXELFORMATDESCRIPTOR pfd, pfd_copy;
 	int pf;
-	
+
 	memset(&pfd, 0, sizeof(pfd));
 	pfd.nSize        = sizeof(pfd);
 	pfd.nVersion     = 1;
@@ -424,28 +471,28 @@ int opengl_Setup(HDC glhdc)
 
 	/*if (!WindowGL)
 	{
-		if (OpenGL_preferred_state.bit_depth==32)
-		{
-			pfd.cColorBits   = 32;
-			pfd.cDepthBits   = 32;
-		}
-		else
-		{
-			pfd.cColorBits   = OpenGL_preferred_state.bit_depth;
-			pfd.cDepthBits   =OpenGL_preferred_state.bit_depth;
-		}
-
-		pfd.cColorBits   = 16;
-		pfd.cDepthBits   =16;
-		
+	if (OpenGL_preferred_state.bit_depth==32)
+	{
+	pfd.cColorBits   = 32;
+	pfd.cDepthBits   = 32;
 	}
 	else
 	{
-		pfd.cColorBits   = 16;
-		pfd.cDepthBits   =16;
+	pfd.cColorBits   = OpenGL_preferred_state.bit_depth;
+	pfd.cDepthBits   =OpenGL_preferred_state.bit_depth;
+	}
+
+	pfd.cColorBits   = 16;
+	pfd.cDepthBits   =16;
+
+	}
+	else
+	{
+	pfd.cColorBits   = 16;
+	pfd.cDepthBits   =16;
 	}*/
 
-	
+
 	// Find the user's "best match" PFD 
 	pf = ChoosePixelFormat(glhdc, &pfd);
 	if (pf == 0) 
@@ -456,7 +503,7 @@ int opengl_Setup(HDC glhdc)
 	} 
 
 	mprintf ((0,"Choose pixel format successful!\n"));
- 
+
 	// Try and set the new PFD
 	if (SetPixelFormat(glhdc, pf, &pfd) == FALSE) 
 	{
@@ -498,44 +545,91 @@ int opengl_Setup(HDC glhdc)
 	dwglMakeCurrent((HDC)glhdc, ResourceContext);
 
 	Already_loaded=1;
-	
+
 	return 1;
-	
+
 }
 #elif defined(__LINUX__)
-bool opengl_GetXConfig(Display *dpy,XVisualInfo *vis,int attrib,int *value)
+
+#ifdef __CHECK_FOR_TOO_SLOW_RENDERING__
+static long minimumAcceptableRender = -1;
+static Uint32 lastSwapTicks = 0;
+static int tooSlowCount = 0;
+static int tooSlowChecksLeft = 0;
+
+void setMinimumAcceptableRenderTime(int ms)
 {
-	int res;
+    if (nofpscheck)
+        return;
 
-	res = dglXGetConfig( dpy, vis , attrib, value );
-
-	if(res==0)
-		return true;
-
-	switch(res)
-	{
-	case GLX_NO_EXTENSION:
-		fprintf(stdout,"GLX: Display does not support the GLX extension (%d)\n",attrib);
-		break;
-	case GLX_BAD_SCREEN:
-		fprintf(stdout,"GLX: The screen of the vis does not correspond to a screen (%d)\n",attrib);
-		break;
-	case GLX_BAD_ATTRIBUTE:
-		fprintf(stdout,"GLX: Bad Attribute (%d\%d)\n",attrib,*value);
-		break;
-	case GLX_BAD_VISUAL:
-		fprintf(stdout,"GLX: Bad Visual on non GLX_USE_GL call (%d)\n",attrib);
-		break;
-	default:
-		fprintf(stdout,"GLX: Unknown error (%d)\n",attrib);
-		break;
-	}
-
-	return false;
+    minimumAcceptableRender = ms;
+    lastSwapTicks = SDL_GetTicks();
+    tooSlowCount = 0;
+    tooSlowChecksLeft = 15; // check 15 frames.
 }
+#endif
+
+extern bool linux_permit_gamma;
+extern renderer_preferred_state Render_preferred_state;
+extern bool ddio_mouseGrabbed;
+int d3SDLEventFilter(const SDL_Event *event);
 
 int opengl_Setup(oeApplication *app,int *width,int *height)
 {
+    // rcg11192000 don't check for FPS.
+    #ifdef __CHECK_FOR_TOO_SLOW_RENDERING__
+ 	nofpscheck = (FindArgChar("-nofpscheck", 'H') != 0);
+
+    //rcg01252000 reset these, so they don't barf if we change
+    // video modes for a movie or whatnot in the middle of
+    // checking rendering speed...
+    minimumAcceptableRender = -1;
+    lastSwapTicks = 0;
+    tooSlowCount = 0;
+    tooSlowChecksLeft = 0;
+    #endif
+
+// rcg09182000 don't need to quitsubsystem anymore...
+//    SDL_QuitSubSystem(SDL_INIT_VIDEO);  // here goes nothing...
+//    Already_loaded = false;
+    SDL_ClearError();
+    int rc = SDL_Init(SDL_INIT_VIDEO);
+    if (rc != 0)
+    {
+  		char buffer[512];
+        snprintf(buffer, sizeof(buffer),
+                    "SDL_GetError() reports \"%s\".\n", SDL_GetError());
+        fprintf(stderr, "SDL: SDL_Init() failed! rc == (%d).\n", rc);
+        fprintf(stderr, "%s", buffer);
+  		rend_SetErrorMessage(buffer);
+        return(0);
+    } // if
+    SDL_SetEventFilter(d3SDLEventFilter);
+
+    bool fullscreen = false;
+  	char *env = getenv("MESA_GLX_FX");   
+
+    if ((!env) || (*env=='f')) // Full screen Mesa mode    !!! needs more.
+	{
+        fullscreen = true;
+	}
+
+    if (FindArgChar("-fullscreen", 'f'))
+	{
+        fullscreen = true;
+	}
+    else if (FindArgChar("-windowed", 'w'))
+	{
+        fullscreen = false;
+	}
+
+   	if (env == NULL)
+	{
+        putenv((char*)(fullscreen ? "MESA_GLX_FX=f" : "MESA_GLX_FX=w"));
+	}
+
+    putenv("FX_GLIDE_NO_SPLASH=1");
+
 	if (!Already_loaded)
 	{
 		#define MAX_ARGS			30
@@ -544,158 +638,118 @@ int opengl_Setup(oeApplication *app,int *width,int *height)
 		
 		char gl_library[256];
 		int arg;
-		arg = FindArg("-gllibrary");
+		arg = FindArgChar("-gllibrary", 'g');
 		if(arg!=0)
 		{
-			strcpy(gl_library,GameArgs[arg+1]);
-			fprintf(stdout,"OpenGL: Loading %s library\n",gl_library);
-		}else
+           	strcpy(gl_library,GameArgs[arg+1]);
+		}
+		else
 		{
+#if defined(MACOSX)
+			strcpy(gl_library,"/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib");
+#else
 			strcpy(gl_library,"libGL.so");
+#endif
 		}
-		if (!(OpenGLDLLHandle=LoadOpenGLDLL(gl_library)))
-		{
+		
+		mprintf((0, "OpenGL: Attempting to use \"%s\" for OpenGL\n", gl_library));
+		putenv("MESA_FX_NO_SIGNALS=ihatesegfaults");
+
+		// ryan's adds. 04/18/2000...SDL stuff on 04/25/2000
+        bool success = true;
+
+		OpenGLDLLHandle=LoadOpenGLDLL(gl_library);
+		if (!(OpenGLDLLHandle))
+        {
+			// rcg07072000 last ditch effort...
+			OpenGLDLLHandle=LoadOpenGLDLL("libGL.so.1");
+    		if (!(OpenGLDLLHandle))
+			{
+                success = false;
+			}
+        } // if
+
+        if (success == false)
+        {
 			char buffer[512];
-			sprintf(buffer,"Failed to load %s!\n",gl_library);
-			fprintf(stderr,buffer);
-			rend_SetErrorMessage(buffer);			
-			Int3();
+			sprintf(buffer,"Failed to load library [%s].\n",gl_library);
+			fprintf(stderr,"%s",buffer);
+			rend_SetErrorMessage(buffer);
 			return 0;
-		}
+        } // if
 	}
 
-	int dummy;
+    #ifdef __PERMIT_GL_LOGGING
+        if (FindArg("-gllogging"))
+        {
+            printf("\n"
+               "************************************************************\n"
+               "************************************************************\n"
+               "************************************************************\n"
+               "************************************************************\n"
+               "************************************************************\n"
+               "********   GL LOGGING ENABLED.   ***************************\n"
+               "************************************************************\n"
+               "************************************************************\n"
+               "************************************************************\n"
+               "************************************************************\n"
+               "************************************************************\n"
+               "\n");
+            DGL_EnableLogging(1);
+            __glLog = true;
+        } // if
+    #endif
 
-	OpenGL_TextureHack = (FindArg("-gltexturehack"))?true:false;
+    SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
+    SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
+    SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
+    SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
+    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+    int flags = SDL_OPENGL;
 
-	if(app)
+	if( fullscreen )
 	{
-		tLnxAppInfo app_info;
-		OpenGL_LinuxApp = (oeLnxApplication *)app;
-
-		app->get_info((void *)&app_info);
-
-		OpenGL_Display = app_info.m_Display;
-		OpenGL_Window = app_info.m_window;
-		memcpy(&OpenGL_VisualInfo,&app_info.m_VisualInfo,sizeof(XVisualInfo));
-	}else
-	{
-		// since the application object wasn't passed in, make sure
-		// this isn't the first init
-		if(!OpenGL_Display)
-		{
-			// ACK!
-			fprintf(stdout,"OGL: Error in opengl_Setup().  Application object not specified\n");
-			return 0;
-		}
+		flags |= SDL_FULLSCREEN;
 	}
 
-	// we need to destroy the OpenGL window
-	XUnmapWindow(OpenGL_Display,OpenGL_Window);
-	XDestroyWindow(OpenGL_Display,OpenGL_Window);
-
-	// Make sure OpenGL's GLX extension is supported.  The glXQueryExtension also returns
-	// the GLX extension's error base and event base.  For almost all OpenGL programs,
-	// this information is irrelevant.
-	if(!glXQueryExtension(OpenGL_Display,&dummy,&dummy))
+	if( !FindArg("-nomousecap") )
 	{
-		fprintf(stderr,"GLX extension not supported by Display\n");
-		Int3();
-		return 0;
+		// ShowCursor(0) and input grabbing need to be done before setting
+		//  the video mode, or the Voodoo 3 gets a hardware cursor stuck
+		//  on the screen.
+		SDL_ShowCursor( 0 );
+		SDL_WM_GrabInput(SDL_GRAB_ON);
 	}
 
-	// Choose our visual
-	int screen_num = DefaultScreen(OpenGL_Display);
-	int vis_attrib[] = {GLX_RGBA, 
-					GLX_RED_SIZE, 1, 
-					GLX_GREEN_SIZE, 1, 
-					GLX_BLUE_SIZE, 1 , 
-					GLX_DEPTH_SIZE, 16,
-					GLX_DOUBLEBUFFER,
-					None};
-	XVisualInfo *new_vis = dglXChooseVisual(OpenGL_Display,screen_num,vis_attrib);
-	if(!new_vis)
+	// Should we shoot for 32-bpp if available?  !!!
+    SDL_Surface *surface = SDL_SetVideoMode( *width, *height, 32, flags );
+    mprintf((0, "OpenGL: SDL GL surface is %sNULL.", (surface == NULL) ? "" : "NOT "));
+
+    if (ddio_mouseGrabbed == false)
 	{
-		fprintf(stdout,"OpenGL: glXChooseVisual returned NULL\n");
-		Int3();
-		return 0;
+        SDL_WM_GrabInput(SDL_GRAB_OFF);
 	}
+    
+    SDL_WM_SetCaption( "Descent 3", "Descent3" );
 
-	// Create an OpenGL rendering context
-	OpenGL_Context = glXCreateContext(OpenGL_Display,new_vis,None,True);
-	if(OpenGL_Context==NULL)
+        //rcg09182000 gamma fun.
+        //rcg01112000 --nogamma fun.
+    if (FindArgChar("-nogamma", 'M'))
 	{
-		fprintf(stderr,"OpenGL: Unable to create GLX Context\n");
-		Int3();
-		return 0;
+        linux_permit_gamma = false;
 	}
-	
-	// Create a new window
-	XSetWindowAttributes swa;
-	swa.override_redirect = true;
-	swa.border_pixel = 0;
-	swa.event_mask = ExposureMask|StructureNotifyMask|KeyPressMask|KeyReleaseMask|PointerMotionMask|ButtonPressMask|ButtonReleaseMask;
+    else
+    {
+        float f = Render_preferred_state.gamma;
+        bool gammarc = SDL_SetGamma(f, f, f);
+        linux_permit_gamma = (gammarc == 0);
+    } // else
 
-	OpenGL_Window = XCreateWindow(OpenGL_Display,RootWindow(OpenGL_Display,OpenGL_VisualInfo.screen),0,0,*width,*height,0,OpenGL_VisualInfo.depth,
-					InputOutput,OpenGL_VisualInfo.visual,CWBorderPixel|CWEventMask,&swa);
-
-	XSizeHints sizeHints = {0};
-	sizeHints.flags |= USSize|USPosition|PAspect;
-	sizeHints.width = *width;
-	sizeHints.height = *height;
-	sizeHints.x = 0;
-	sizeHints.y = 0;
-	sizeHints.min_aspect.x = sizeHints.max_aspect.x = *width;
-	sizeHints.min_aspect.y = sizeHints.max_aspect.y = *height;
-
-	char *argv[1];
-	XWMHints *wmHints;
-	Atom wmDeleteWindow;
-
-	argv[0] = strdup("opengl");
-			
-	XSetStandardProperties(OpenGL_Display,OpenGL_Window,"","",None,(char **)argv,0,&sizeHints);
-	free(argv[0]);
-
-	wmHints = XAllocWMHints();
-	wmHints->initial_state = NormalState;
-	wmHints->flags = StateHint;
-			
-	XSetWMHints(OpenGL_Display,OpenGL_Window,wmHints);
-	wmDeleteWindow = XInternAtom(OpenGL_Display,"WM_DELETE_WINDOW",False);
-	XSetWMProtocols(OpenGL_Display,OpenGL_Window,&wmDeleteWindow,1);
-	
-	// move and resize the application window
-	XMoveResizeWindow(OpenGL_Display,OpenGL_Window,0,0,*width,*height);
-
-	OpenGL_LinuxApp->set_sizepos(0,0,*width,*height);
-	OpenGL_LinuxApp->set_windowinfo(OpenGL_Display,OpenGL_Window);
-	OpenGL_LinuxApp->hide_mouse();
-	OpenGL_LinuxApp->clear_window();
-
-	//	warp the mouse to 0,0 to start so our screen is in full view
-	XWarpPointer(OpenGL_Display,None,OpenGL_Window,0,0,0,0,*width/2,*height/2);
-
-	XStoreName(OpenGL_Display, OpenGL_Window, OpenGL_LinuxApp->get_window_name());
-	XSetIconName(OpenGL_Display, OpenGL_Window, OpenGL_LinuxApp->get_window_name());
-
-	XMapWindow(OpenGL_Display,OpenGL_Window);	
-
-	bool wait_for_draw = false;
-	XEvent event;
-	while (!wait_for_draw)
-	{
-		XNextEvent(OpenGL_Display, &event);
-		if (event.type == Expose && !event.xexpose.count)
-			wait_for_draw = true;
-	}
-
-	XRaiseWindow(OpenGL_Display,OpenGL_Window);
-
-	// Bind the rendering context
-	glXMakeCurrent(OpenGL_Display,OpenGL_Window,OpenGL_Context);
-
-	XSync(OpenGL_Display,False);
+    if (ParentApplication)
+    {
+		reinterpret_cast<oeLnxApplication*>(ParentApplication)->set_sizepos(0,0,*width,*height);
+		SDL_FillRect(SDL_GetVideoSurface(),NULL,SDL_MapRGB(SDL_GetVideoSurface()->format,255,0,0));
+    }
 
 	Already_loaded = 1;
 	return 1;
@@ -716,19 +770,22 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 	{
 		OpenGL_preferred_state=*pref_state;
 	}
+	
+	if( app != NULL )
+	{
+		ParentApplication = app;
+	}
 
 	int windowX = 0, windowY = 0;
 #if defined(WIN32)
-/***********************************************************
- *               WINDOWS OPENGL
- ***********************************************************
- */
-	static HWND hwnd;
-
-	if (app!=NULL)
+	/***********************************************************
+	*               WINDOWS OPENGL
+	***********************************************************
+	*/
+	static HWnd hwnd = NULL;
+	if( ParentApplication != NULL )
 	{
-		ParentApplication=app;
-		hwnd=(HWND)((oeWin32Application *)app)->m_hWnd;	
+		hwnd = static_cast<HWnd>( reinterpret_cast<oeWin32Application*>(ParentApplication)->m_hWnd );
 	}
 
 	if (!WindowGL)
@@ -745,8 +802,11 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 		devmode.dmPelsHeight=OpenGL_preferred_state.height;
 		devmode.dmFields=DM_BITSPERPEL|DM_PELSWIDTH|DM_PELSHEIGHT;
 
-		int retval=ChangeDisplaySettings(&devmode,0);
-
+#ifdef CHANGE_RESOLUTION_IN_FULLSCREEN
+		int retval = ChangeDisplaySettings(&devmode,0);
+#else
+		int retval = DISP_CHANGE_SUCCESSFUL;
+#endif
 		if (retval!=DISP_CHANGE_SUCCESSFUL)
 		{
 			mprintf ((0,"Display mode change failed (err=%d), trying default!\n",retval));
@@ -762,7 +822,8 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 				mprintf ((0,"OpenGL_INIT:Change display setting failed failed!\n"));
 				rend_SetErrorMessage ("OGL: ChangeDisplaySettings failed.  Make sure your desktop is set to 16bit mode!");
 				ChangeDisplaySettings(NULL,0);
-				goto D3DError;
+				opengl_Close();
+				return 0;
 			}
 			else
 			{
@@ -772,23 +833,24 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 			}
 		}
 		else
+		{
 			mprintf ((0,"Setdisplaymode to %d x %d (%d bits) is successful!\n",OpenGL_preferred_state.width,OpenGL_preferred_state.height,OpenGL_preferred_state.bit_depth));
-		
+		}
 	}
 
 	memset (&OpenGL_state,0,sizeof(rendering_state));
 
-//	These values are set here - samir
+	//	These values are set here - samir
 	if (app!=NULL)
 	{
 		hOpenGLWnd = (HWND)((oeWin32Application *)app)->m_hWnd;
 	}
-	
+
 	hOpenGLDC = GetDC(hOpenGLWnd);
-	
+
 	if (WindowGL)
 	{
-		RECT rect;
+		/*RECT rect;
 		POINT topLeft;
 		GetClientRect( (HWND)hOpenGLWnd, &rect );
 
@@ -799,7 +861,20 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 		width   = rect.right - rect.left + 1;
 		height  = rect.bottom - rect.top + 1;
 		windowX = topLeft.x;
-		windowY = topLeft.y;
+		windowY = topLeft.y;*/
+
+		width = OpenGL_preferred_state.width;
+		height = OpenGL_preferred_state.height;
+
+		//[ISB] center window on launch
+		int mWidth = GetSystemMetrics(SM_CXSCREEN);
+		int mHeight = GetSystemMetrics(SM_CYSCREEN);
+
+		int orgX = (mWidth / 2 - width / 2);
+		int orgY = (mHeight / 2 - height / 2);
+		RECT rect = { orgX, orgY, orgX + width, orgY + height };
+		AdjustWindowRectEx(&rect, WS_CAPTION, FALSE, 0);
+		MoveWindow((HWND)hOpenGLWnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
 	}
 	else
 	{
@@ -815,59 +890,95 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 	OpenGL_state.screen_height=height;
 
 	if (!opengl_Setup(hOpenGLDC))
-		goto D3DError;
-		
+	{
+		opengl_Close();
+		return 0;
+	}
+
+	//[ISB] the hardware t&l code is AWFUL and the software t&l code won't compile. 
+	// Reverting it back to only ever using passthrough. 
+	// Projection
+	dglMatrixMode(GL_PROJECTION);
+	dglLoadIdentity();
+	dglOrtho((GLfloat)0.0f, (GLfloat)(width), (GLfloat)(height), (GLfloat)0.0f, 0.0f, 1.0f);
+
+	// Viewport
+	dglViewport(0, 0, width, height);
+
+	// ModelView
+	dglMatrixMode(GL_MODELVIEW);
+	dglLoadIdentity();
+	
 	// Save gamma values for later
 	GetDeviceGammaRamp(hOpenGLDC,(LPVOID)Saved_gamma_values);
 
 #elif defined(__LINUX__)
-/***********************************************************
- *               LINUX OPENGL
- ***********************************************************
- */
- 	// Setup OpenGL_state.screen_width & OpenGL_state.screen_height & width & height
- 	width = OpenGL_preferred_state.width;
- 	height = OpenGL_preferred_state.height;
+	/***********************************************************
+	*               LINUX OPENGL
+	***********************************************************
+	*/
+	// Setup OpenGL_state.screen_width & OpenGL_state.screen_height & width & height
+	width = OpenGL_preferred_state.width;
+	height = OpenGL_preferred_state.height;
 
 	if(!opengl_Setup(app,&width,&height))
-		goto D3DError;
-	
+	{
+		opengl_Close();
+		return 0;
+	}
+
 	memset (&OpenGL_state,0,sizeof(rendering_state));
 	OpenGL_state.screen_width = width;
 	OpenGL_state.screen_height = height;
 #else
- 	// Setup OpenGL_state.screen_width & OpenGL_state.screen_height & width & height
+	// Setup OpenGL_state.screen_width & OpenGL_state.screen_height & width & height
 
 #endif
 	// Get some info
 	opengl_GetInformation();
-	
-	mprintf ((0,"Setting up projection matrix\n"));
-	
-	dglMatrixMode(GL_PROJECTION);	
-	dglLoadIdentity();
-	dglOrtho( (GLfloat)0.0f, (GLfloat)(width), (GLfloat)(height), (GLfloat)0.0f, 0.0f, 1.0f);
-	dglViewport( 0, 0, width, height);   
-	dglMatrixMode(GL_MODELVIEW);
-	dglLoadIdentity();
 
-	opengl_InitCache();
+	mprintf ((0,"Setting up multitexture...\n"));
+
+	// Determine if Multitexture is supported
+	bool supportsMultiTexture = opengl_CheckExtension ("GL_ARB_multitexture");
+	if (!supportsMultiTexture)
+	{
+		supportsMultiTexture = opengl_CheckExtension ("GL_SGIS_multitexture");
+	}
 	
-	OpenGL_multitexture=opengl_CheckExtension ("GL_ARB_multitexture");
-	
-	if (!OpenGL_multitexture)
-		OpenGL_multitexture=opengl_CheckExtension ("GL_SGIS_multitexture");
-
-	OpenGL_packed_pixels=opengl_CheckExtension ("GL_EXT_packed_pixels");
-
-	opengl_GetDLLFunctions();
-
 	if (FindArg ("-NoMultitexture"))
-		OpenGL_multitexture=false;
+	{
+		supportsMultiTexture = false;
+	}
 	
+	if( supportsMultiTexture )
+	{
+		// attempt to grab Multitexture functions
+		opengl_GetDLLFunctions();
+	}
+	else
+	{
+		// No multitexture at all
+		UseMultitexture = false;
+	}
+	
+	// Do we have packed pixel formats?
+	OpenGL_packed_pixels=opengl_CheckExtension ("GL_EXT_packed_pixels");
+	
+	opengl_InitCache();
+		
+	if(UseMultitexture)
+	{
+		mprintf((0,"Using multitexture."));
+	}
+	else
+	{
+		mprintf((0,"Not using multitexture."));
+	}
+
 	if (OpenGL_packed_pixels)
 	{
-		opengl_packed_Upload_data=(ushort *)mem_malloc (256*256*2);
+		opengl_packed_Upload_data=(ushort *)mem_malloc (2048*2048*2);
 		opengl_packed_Translate_table=(ushort *)mem_malloc (65536*2);
 		opengl_packed_4444_translate_table=(ushort *)mem_malloc (65536*2);
 
@@ -883,17 +994,17 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 			int g=(i>>5) & 0x1f;
 			int b=i & 0x1f;
 
-			#ifdef BRIGHTNESS_HACK
+#ifdef BRIGHTNESS_HACK
 			r *= BRIGHTNESS_HACK;
 			g *= BRIGHTNESS_HACK;
 			b *= BRIGHTNESS_HACK;
 			if( r > 0x1F ) r = 0x1F;
 			if( g > 0x1F ) g = 0x1F;
 			if( b > 0x1F ) b = 0x1F;
-			#endif
-			
+#endif
+
 			ushort pix;
-		
+
 			if (!(i & OPAQUE_FLAG))
 			{
 				pix=0;
@@ -903,7 +1014,7 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 				pix=(r<<11) | (g<<6) | (b<<1) | 1;
 			}
 
-			opengl_packed_Translate_table[i]=pix;
+			opengl_packed_Translate_table[i]=INTEL_INT(pix);
 
 			// 4444 table
 			int a=(i>>12) & 0xf;
@@ -911,15 +1022,13 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 			g=(i>>4) & 0xf;
 			b=i & 0xf;
 
-			pix=(r<<12) | (g<<8) | (b<<4) | a;
-
-			opengl_packed_4444_translate_table[i]=pix;
-
+			pix = (r<<12) | (g<<8) | (b<<4) | a;
+			opengl_packed_4444_translate_table[i] = INTEL_INT(pix);
 		}
 	}
 	else
 	{
-		opengl_Upload_data=(uint *)mem_malloc (256*256*4);
+		opengl_Upload_data=(uint *)mem_malloc (2048*2048*4);
 		opengl_Translate_table=(uint *)mem_malloc (65536*4);
 		opengl_4444_translate_table=(uint *)mem_malloc (65536*4);
 
@@ -936,29 +1045,33 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 			int g=(i>>5) & 0x1f;
 			int b=i & 0x1f;
 
-			#ifdef BRIGHTNESS_HACK
+#ifdef BRIGHTNESS_HACK
 			r *= BRIGHTNESS_HACK;
 			g *= BRIGHTNESS_HACK;
 			b *= BRIGHTNESS_HACK;
 			if( r > 0x1F ) r = 0x1F;
 			if( g > 0x1F ) g = 0x1F;
 			if( b > 0x1F ) b = 0x1F;
-			#endif
+#endif
 
-			float fr=(float)r/31.0;
-			float fg=(float)g/31.0;
-			float fb=(float)b/31.0;
+			float fr=(float)r/31.0f;
+			float fg=(float)g/31.0f;
+			float fb=(float)b/31.0f;
 
 			r=255*fr;
 			g=255*fg;
 			b=255*fb;
 
 			if (!(i & OPAQUE_FLAG))
+			{
 				pix=0;
+			}
 			else
+			{
 				pix=(255<<24) | (b<<16) | (g<<8) | (r);
+			}
 
-			opengl_Translate_table[i]=pix;
+			opengl_Translate_table[i]=INTEL_INT(pix);
 
 			// Do 4444
 			int a=(i>>12) & 0xf;
@@ -966,10 +1079,10 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 			g=(i>>4) & 0xf;
 			b=i & 0xf;
 
-			float fa=(float)a/15.0;
-			fr=(float)r/15.0;
-			fg=(float)g/15.0;
-			fb=(float)b/15.0;
+			float fa=(float)a/15.0f;
+			fr=(float)r/15.0f;
+			fg=(float)g/15.0f;
+			fb=(float)b/15.0f;
 
 			a=255*fa;
 			r=255*fr;
@@ -978,30 +1091,21 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 
 			pix=(a<<24) | (b<<16) | (g<<8) | (r);
 
-			opengl_4444_translate_table[i]=pix;
+			opengl_4444_translate_table[i]=INTEL_INT(pix);
 		}
 	}
 
 	opengl_SetDefaults();
-	
+
+	//g3_ForceTransformRefresh();
 
 	CHECK_ERROR(4)
 
-	// Tell our app to use multitexture
-	if (OpenGL_multitexture)
-		UseMultitexture=true;
-
 	OpenGL_state.initted = 1;
-	
+
 	mprintf ((0,"OpenGL initialization at %d x %d was successful.\n",width,height));
 
-
-
 	return retval;
-
-	D3DError:
-		opengl_Close();
-		return 0;
 }
 
 // Releases the rendering context
@@ -1009,7 +1113,7 @@ void opengl_Close ()
 {
 	CHECK_ERROR(5)
 
-	uint *delete_list=(uint *)mem_malloc (Cur_texture_object_num*sizeof(int));
+		uint *delete_list=(uint *)mem_malloc (Cur_texture_object_num*sizeof(int));
 	ASSERT (delete_list);
 	for (int i=1;i<Cur_texture_object_num;i++)
 		delete_list[i]=i;
@@ -1028,18 +1132,13 @@ void opengl_Close ()
 
 	// Change our display back
 	if (!WindowGL)
-		ChangeDisplaySettings(NULL,0);
-#elif defined(__LINUX__)
-	// Restore our video mode
-	LinuxVideoMode.Lock(false);
-	LinuxVideoMode.RestoreVideoMode();	
-	if(OpenGL_Display)
 	{
-		if(dglXMakeCurrent)
-			glXMakeCurrent(OpenGL_Display,OpenGL_Window,NULL);
-		if(dglXDestroyContext)
-			glXDestroyContext(OpenGL_Display,OpenGL_Context);
-	}	
+#ifdef CHANGE_RESOLUTION_IN_FULLSCREEN
+		ChangeDisplaySettings(NULL,0);
+#endif
+	}
+#elif defined(__LINUX__)
+	// SDL_Quit() handles this for us.
 #else
 
 #endif
@@ -1047,11 +1146,17 @@ void opengl_Close ()
 	if (OpenGL_packed_pixels)
 	{
 		if (opengl_packed_Upload_data)
+		{
 			mem_free (opengl_packed_Upload_data);
+		}
 		if (opengl_packed_Translate_table)
+		{
 			mem_free (opengl_packed_Translate_table);
+		}
 		if (opengl_packed_4444_translate_table)
+		{
 			mem_free (opengl_packed_4444_translate_table);
+		}
 		opengl_packed_Upload_data=NULL;
 		opengl_packed_Translate_table=NULL;
 		opengl_packed_4444_translate_table=NULL;
@@ -1081,7 +1186,7 @@ void opengl_Close ()
 #if defined(WIN32)
 	// Restore gamma values
 	SetDeviceGammaRamp(hOpenGLDC,(LPVOID)Saved_gamma_values);
-//	I'm freeing the DC here - samir
+	//	I'm freeing the DC here - samir
 	ReleaseDC(hOpenGLWnd, hOpenGLDC);
 #elif defined(__LINUX__)
 
@@ -1089,7 +1194,6 @@ void opengl_Close ()
 
 #endif
 	//mod_FreeModule (OpenGLDLLHandle);
-	
 	OpenGL_state.initted = 0;
 }
 
@@ -1101,14 +1205,14 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 	int w,h;
 	int size;
 
-	if (OpenGL_multitexture && Last_texel_unit_set!=tn)
+	if (UseMultitexture && Last_texel_unit_set!=tn)
 	{
-	#if defined(WIN32)
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
 		oglActiveTextureARB (GL_TEXTURE0_ARB+tn);
 		Last_texel_unit_set=tn;
-	#endif
+#endif
 	}
-	
+
 	if (map_type==MAP_TYPE_LIGHTMAP)
 	{
 		if (GameLightmaps[bm_handle].flags & LF_BRAND_NEW)
@@ -1141,14 +1245,14 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 	}
 
 	int i;
-	
+
 	if (OpenGL_packed_pixels)
 	{
 		if (map_type==MAP_TYPE_LIGHTMAP)
-		{	
+		{
 			ushort *left_data=(ushort *)opengl_packed_Upload_data;
 			int bm_left=0;
-						
+
 			for (int i=0;i<h;i++,left_data+=size,bm_left+=w)
 			{
 				ushort *dest_data=left_data;
@@ -1159,20 +1263,26 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 			}
 
 			if (replace)
-			{
-				dglTexSubImage2D (GL_TEXTURE_2D,0,0,0,size,size,GL_RGBA,UNSIGNED_SHORT_5_5_5_1_EXT,opengl_packed_Upload_data);
+			{				
+				dglTexSubImage2D (GL_TEXTURE_2D,0,0,0,size,size,GL_RGBA,GL_UNSIGNED_SHORT_5_5_5_1,opengl_packed_Upload_data);
 			}
 			else
-				dglTexImage2D (GL_TEXTURE_2D,0,GL_RGB5_A1,size,size,0,GL_RGBA,UNSIGNED_SHORT_5_5_5_1_EXT,opengl_packed_Upload_data);
+			{
+				dglTexImage2D (GL_TEXTURE_2D,0,GL_RGB5_A1,size,size,0,GL_RGBA,GL_UNSIGNED_SHORT_5_5_5_1,opengl_packed_Upload_data);
+			}
 		}
 		else
 		{
 			int limit=0;
 
 			if (bm_mipped(bm_handle))
+			{
 				limit=NUM_MIP_LEVELS+3;
+			}
 			else
+			{
 				limit=1;
+			}
 
 			for (int m=0;m<limit;m++)
 			{
@@ -1191,15 +1301,14 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 					w>>=m-(NUM_MIP_LEVELS-1);
 					h>>=m-(NUM_MIP_LEVELS-1);
 
-					if (w<1)
+					if ((w < 1) || (h < 1))
 						continue;
 
 				}
-				
+
 				if (bm_format(bm_handle)==BITMAP_FORMAT_4444)
 				{
 					// Do 4444
-
 					if (bm_mipped(bm_handle))
 					{
 						for (i=0;i<w*h;i++)
@@ -1212,26 +1321,33 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 					}
 
 					if (replace)
-						dglTexSubImage2D (GL_TEXTURE_2D,m,0,0,w,h,GL_RGBA,UNSIGNED_SHORT_4_4_4_4_EXT,opengl_packed_Upload_data);
+					{
+						dglTexSubImage2D (GL_TEXTURE_2D,m,0,0,w,h,GL_RGBA,GL_UNSIGNED_SHORT_4_4_4_4,opengl_packed_Upload_data);
+					}
 					else
-						dglTexImage2D (GL_TEXTURE_2D,m,GL_RGBA4,w,h,0,GL_RGBA,UNSIGNED_SHORT_4_4_4_4_EXT,opengl_packed_Upload_data);
+					{
+						dglTexImage2D (GL_TEXTURE_2D,m,GL_RGBA4,w,h,0,GL_RGBA,GL_UNSIGNED_SHORT_4_4_4_4,opengl_packed_Upload_data);
+					}
 				}
 				else
 				{
 					// Do 1555
 					for (i=0;i<w*h;i++)
+					{
 						opengl_packed_Upload_data[i]=opengl_packed_Translate_table[bm_ptr[i]];
+					}
 
 					if (replace)
-						dglTexSubImage2D (GL_TEXTURE_2D,m,0,0,w,h,GL_RGBA,UNSIGNED_SHORT_5_5_5_1_EXT,opengl_packed_Upload_data);
+					{
+						dglTexSubImage2D (GL_TEXTURE_2D,m,0,0,w,h,GL_RGBA,GL_UNSIGNED_SHORT_5_5_5_1,opengl_packed_Upload_data);
+					}
 					else
-						dglTexImage2D (GL_TEXTURE_2D,m,GL_RGB5_A1,w,h,0,GL_RGBA,UNSIGNED_SHORT_5_5_5_1_EXT,opengl_packed_Upload_data);
+					{
+						dglTexImage2D (GL_TEXTURE_2D,m,GL_RGB5_A1,w,h,0,GL_RGBA,GL_UNSIGNED_SHORT_5_5_5_1,opengl_packed_Upload_data);
+					}
 				}
 			}
 		}
-
-		
-		
 	}
 	else
 	{
@@ -1239,7 +1355,7 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 		{	
 			uint *left_data=(uint *)opengl_Upload_data;
 			int bm_left=0;
-		
+
 			for (int i=0;i<h;i++,left_data+=size,bm_left+=w)
 			{
 				uint *dest_data=left_data;
@@ -1248,20 +1364,30 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 					*dest_data++=opengl_Translate_table[bm_ptr[bm_left+t]];
 				}
 			}
-
-			if (replace)
-				dglTexSubImage2D (GL_TEXTURE_2D,0,0,0,size,size,GL_RGBA,GL_UNSIGNED_BYTE,opengl_Upload_data);
-			else
-				dglTexImage2D (GL_TEXTURE_2D,0,GL_RGBA,size,size,0,GL_RGBA,GL_UNSIGNED_BYTE,opengl_Upload_data);
+			if(size>0)
+			{
+				if (replace)
+				{
+					dglTexSubImage2D (GL_TEXTURE_2D,0,0,0,size,size,GL_RGBA,GL_UNSIGNED_BYTE,opengl_Upload_data);
+				}
+				else
+				{
+					dglTexImage2D (GL_TEXTURE_2D,0,GL_RGBA,size,size,0,GL_RGBA,GL_UNSIGNED_BYTE,opengl_Upload_data);
+				}
+			}
 		}
 		else
 		{
 			int limit=0;
 
 			if (bm_mipped(bm_handle))
-				limit=NUM_MIP_LEVELS;
+			{
+				limit=NUM_MIP_LEVELS+3;  // ryan added +3.
+			}
 			else
+			{
 				limit=1;
+			}
 
 			for (int m=0;m<limit;m++)
 			{
@@ -1276,7 +1402,7 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 					if (bm_mipped(bm_handle))
 					{
 						for (i=0;i<w*h;i++)
-							opengl_Upload_data[i]=(255<<24)|opengl_4444_translate_table[bm_ptr[i]];
+						  opengl_Upload_data[i]=INTEL_INT((255<<24))|opengl_4444_translate_table[bm_ptr[i]];
 					}
 					else
 					{
@@ -1292,31 +1418,35 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 						opengl_Upload_data[i]=opengl_Translate_table[bm_ptr[i]];
 				}
 
-				if (replace)
-					dglTexSubImage2D (GL_TEXTURE_2D,m,0,0,w,h,GL_RGBA,GL_UNSIGNED_BYTE,opengl_Upload_data);
-				else
-					dglTexImage2D (GL_TEXTURE_2D,m,GL_RGBA,w,h,0,GL_RGBA,GL_UNSIGNED_BYTE,opengl_Upload_data);
-				
+				//rcg06262000 my if wrapper.
+                if ((w > 0) && (h > 0))
+                {
+					if (replace)
+					{
+						dglTexSubImage2D (GL_TEXTURE_2D,m,0,0,w,h,GL_RGBA,GL_UNSIGNED_BYTE,opengl_Upload_data);
+					}
+					else
+					{
+						dglTexImage2D (GL_TEXTURE_2D,m,GL_RGBA,w,h,0,GL_RGBA,GL_UNSIGNED_BYTE,opengl_Upload_data);
+					}
+				}
 			}
-
-
-			
 		}
-		
-		
 	}
-
 
 	//mprintf ((1,"Doing slow upload to opengl!\n"));
 
 	if (map_type==MAP_TYPE_LIGHTMAP)
+	{
 		GameLightmaps[bm_handle].flags&=~LF_LIMITS;
+	}
 
 	CHECK_ERROR(6)
-
 	OpenGL_uploads++;
 }
+
 extern bool Force_one_texture;
+
 // Utilizes a LRU cacheing scheme to select/upload textures the opengl driver
 int opengl_MakeBitmapCurrent (int handle,int map_type,int tn)
 {
@@ -1330,14 +1460,16 @@ int opengl_MakeBitmapCurrent (int handle,int map_type,int tn)
 	}
 	else
 	{
-		if (Force_one_texture)
+		if(Force_one_texture)
+		{
 			handle=0;
+		}
 
 		w=bm_w(handle,0);
 		h=bm_h(handle,0);
 	}
 
-	if (w!=h)
+	if( w != h )
 	{
 		mprintf ((0,"Can't use non-square textures with OpenGL!\n"));
 		return 0;
@@ -1374,21 +1506,23 @@ int opengl_MakeBitmapCurrent (int handle,int map_type,int tn)
 		else
 		{
 			texnum=OpenGL_bitmap_remap[handle];
-			if (GameBitmaps[handle].flags & BF_CHANGED)
+			if( GameBitmaps[handle].flags & BF_CHANGED )
+			{
 				opengl_TranslateBitmapToOpenGL(texnum,handle,map_type,1,tn);
+			}
 		}
 	}
 
 	if (OpenGL_last_bound[tn]!=texnum)
 	{
-		if (OpenGL_multitexture && Last_texel_unit_set!=tn)
+		if (UseMultitexture && Last_texel_unit_set!=tn)
 		{
-		#if defined(WIN32)
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
 			oglActiveTextureARB (GL_TEXTURE0_ARB+tn);
 			Last_texel_unit_set=tn;
-		#endif
+#endif
 		}
-	
+
 		dglBindTexture (GL_TEXTURE_2D,texnum);
 		OpenGL_last_bound[tn]=texnum;
 		OpenGL_sets_this_frame[0]++;
@@ -1398,9 +1532,8 @@ int opengl_MakeBitmapCurrent (int handle,int map_type,int tn)
 	return 1;
 }
 
-
 // Sets up an appropriate wrap type for the current bound texture
-void opengl_MakeWrapTypeCurrent (int handle,int map_type,int tn)
+void opengl_MakeWrapTypeCurrent(int handle,int map_type,int tn)
 {
 	int uwrap;
 	wrap_type dest_wrap;
@@ -1418,16 +1551,16 @@ void opengl_MakeWrapTypeCurrent (int handle,int map_type,int tn)
 	if (uwrap==dest_wrap)
 		return;
 
-	if (OpenGL_multitexture && Last_texel_unit_set!=tn)
+	if (UseMultitexture && Last_texel_unit_set!=tn)
 	{
-	#if defined(WIN32)
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
 		oglActiveTextureARB (GL_TEXTURE0_ARB+tn);
 		Last_texel_unit_set=tn;
-	#endif
+#endif
 	}
 
 	OpenGL_sets_this_frame[1]++;
-		
+
 	if (OpenGL_state.cur_wrap_type==WT_CLAMP)
 	{
 		dglTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP);
@@ -1455,11 +1588,10 @@ void opengl_MakeWrapTypeCurrent (int handle,int map_type,int tn)
 	}
 
 	CHECK_ERROR(8)
-	
 }
 
 // Chooses the correct filter type for the currently bound texture
-void opengl_MakeFilterTypeCurrent (int handle,int map_type,int tn)
+void opengl_MakeFilterTypeCurrent(int handle,int map_type,int tn)
 {
 	int magf;
 	sbyte dest_state;
@@ -1479,14 +1611,13 @@ void opengl_MakeFilterTypeCurrent (int handle,int map_type,int tn)
 
 	if (magf==dest_state)
 		return;
-
-	if (OpenGL_multitexture && Last_texel_unit_set!=tn)
+    #if (defined(_USE_OGL_ACTIVE_TEXTURES))
+	if (UseMultitexture && Last_texel_unit_set!=tn)
 	{
-	#if defined(WIN32)
 		oglActiveTextureARB (GL_TEXTURE0_ARB+tn);
 		Last_texel_unit_set=tn;
-	#endif
 	}
+	#endif
 
 	OpenGL_sets_this_frame[2]++;
 
@@ -1531,48 +1662,42 @@ void opengl_MakeFilterTypeCurrent (int handle,int map_type,int tn)
 }
 
 // returns the alpha that we should use
-float opengl_GetAlphaMultiplier ()
+float opengl_GetAlphaMultiplier(void)
 {
-	switch (OpenGL_state.cur_alpha_type)
+	switch(OpenGL_state.cur_alpha_type)
 	{
-		case AT_ALWAYS:
-			return 1.0;
-		case AT_CONSTANT:
-			return OpenGL_state.cur_alpha/255.0;
-		case AT_TEXTURE:
-			return 1.0;
-		case AT_CONSTANT_TEXTURE:
-			return OpenGL_state.cur_alpha/255.0;
-		case AT_VERTEX:
-			return 1.0;
-		case AT_CONSTANT_TEXTURE_VERTEX:
-		case AT_CONSTANT_VERTEX:
-			return OpenGL_state.cur_alpha/255.0;
-		case AT_TEXTURE_VERTEX:
-			return 1.0;
-		case AT_LIGHTMAP_BLEND:
-		case AT_LIGHTMAP_BLEND_SATURATE:
-			return OpenGL_state.cur_alpha/255.0;
-		case AT_SATURATE_TEXTURE:
-			return OpenGL_state.cur_alpha/255.0;
-		case AT_SATURATE_VERTEX:
-			return 1.0;
-		case AT_SATURATE_CONSTANT_VERTEX:
-			return OpenGL_state.cur_alpha/255.0;
-		case AT_SATURATE_TEXTURE_VERTEX:
-			return 1.0;
-		case AT_SPECULAR:
-			return 1.0;
-		default:
-			//Int3();		// no type defined,get jason
-			return 0;
+	case AT_ALWAYS:
+		return 1.0;
+	case AT_CONSTANT:
+		return OpenGL_state.cur_alpha/255.0;
+	case AT_TEXTURE:
+		return 1.0;
+	case AT_CONSTANT_TEXTURE:
+		return OpenGL_state.cur_alpha/255.0;
+	case AT_VERTEX:
+		return 1.0;
+	case AT_CONSTANT_TEXTURE_VERTEX:
+	case AT_CONSTANT_VERTEX:
+		return OpenGL_state.cur_alpha/255.0;
+	case AT_TEXTURE_VERTEX:
+		return 1.0;
+	case AT_LIGHTMAP_BLEND:
+	case AT_LIGHTMAP_BLEND_SATURATE:
+		return OpenGL_state.cur_alpha/255.0;
+	case AT_SATURATE_TEXTURE:
+		return OpenGL_state.cur_alpha/255.0;
+	case AT_SATURATE_VERTEX:
+		return 1.0;
+	case AT_SATURATE_CONSTANT_VERTEX:
+		return OpenGL_state.cur_alpha/255.0;
+	case AT_SATURATE_TEXTURE_VERTEX:
+		return 1.0;
+	case AT_SPECULAR:
+		return 1.0;
+	default:
+		//Int3();		// no type defined,get jason
+		return 0;
 	}
-}
-
-// Sets the alpha multiply factor
-void opengl_SetAlphaMultiplier ()
-{
-	Alpha_multiplier=opengl_GetAlphaMultiplier();
 }
 
 // Turns on/off multitexture blending
@@ -1580,43 +1705,40 @@ void opengl_SetMultitextureBlendMode (bool state)
 {
 	if (OpenGL_multitexture_state==state)
 		return;
-
 	OpenGL_multitexture_state=state;
-
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
 	if (state)
 	{
-	#if defined(WIN32)
-		oglClientActiveTextureARB (GL_TEXTURE0_ARB+1);
-		oglActiveTextureARB (GL_TEXTURE0_ARB+1);
-		dglEnableClientState (GL_TEXTURE_COORD_ARRAY);
-		dglEnable (GL_TEXTURE_2D);
 
-		/*if (Overlay_type==OT_BLEND_SATURATE)
-			glBlendFunc (GL_SRC_ALPHA,GL_ONE);
-		else
-			glBlendFunc (GL_DST_COLOR,GL_ZERO);*/
+		oglActiveTextureARB( GL_TEXTURE1_ARB );
+		oglClientActiveTextureARB( GL_TEXTURE1_ARB );
+		dglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+		dglEnable( GL_TEXTURE_2D );
 
-		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
-		Last_texel_unit_set=0;
-	#endif
+		oglActiveTextureARB( GL_TEXTURE0_ARB );
+		oglClientActiveTextureARB( GL_TEXTURE0_ARB );
+		Last_texel_unit_set = 0;
+
 	}	
 	else
 	{
-	#if defined(WIN32)
-		oglClientActiveTextureARB (GL_TEXTURE0_ARB+1);
-		oglActiveTextureARB (GL_TEXTURE0_ARB+1);
-		dglDisableClientState (GL_TEXTURE_COORD_ARRAY);
-		dglDisable (GL_TEXTURE_2D);
-		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
-		Last_texel_unit_set=0;
-	#endif
-	}
-}
 
+		oglActiveTextureARB( GL_TEXTURE1_ARB );
+ 		oglClientActiveTextureARB( GL_TEXTURE1_ARB ); 		
+ 		dglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+ 		dglDisable( GL_TEXTURE_2D );
+
+		oglActiveTextureARB( GL_TEXTURE0_ARB );
+		oglClientActiveTextureARB( GL_TEXTURE0_ARB );
+		Last_texel_unit_set = 0;
+
+	}
+#endif
+}
 
 // Takes nv vertices and draws the polygon defined by those vertices.  Uses bitmap "handle"
 // as a texture
-void opengl_DrawMultitexturePolygon (int handle,g3Point **p,int nv,int map_type)
+void opengl_DrawMultitexturePolygon3D(int handle,g3Point **p,int nv,int map_type)
 {
 	g3Point *pnt;
 	int i,fr,fg,fb;
@@ -1624,15 +1746,15 @@ void opengl_DrawMultitexturePolygon (int handle,g3Point **p,int nv,int map_type)
 	vector *vertp;
 	color_array *colorp;
 	tex_array *texp,*texp2;
+
 	float one_over_square_res=1.0/GameLightmaps[Overlay_map].square_res;
-	
 	float xscalar=(float)GameLightmaps[Overlay_map].width*one_over_square_res;
 	float yscalar=(float)GameLightmaps[Overlay_map].height*one_over_square_res;
-	
+
 	ASSERT (nv<100);
 
-	int x_add=OpenGL_state.clip_x1;
-	int y_add=OpenGL_state.clip_y1;
+	int x_add = OpenGL_state.clip_x1;
+	int y_add = OpenGL_state.clip_y1;
 
 	if (OpenGL_state.cur_light_state==LS_NONE)
 	{
@@ -1640,7 +1762,7 @@ void opengl_DrawMultitexturePolygon (int handle,g3Point **p,int nv,int map_type)
 		fg=GR_COLOR_GREEN(OpenGL_state.cur_color);
 		fb=GR_COLOR_BLUE(OpenGL_state.cur_color);
 	}
-		
+
 	alpha=Alpha_multiplier*OpenGL_Alpha_factor;
 
 	vertp=&GL_verts[0];
@@ -1652,10 +1774,10 @@ void opengl_DrawMultitexturePolygon (int handle,g3Point **p,int nv,int map_type)
 	for (i=0;i<nv;i++,vertp++,texp++,colorp++,texp2++)
 	{
 		pnt=p[i];
-			
+
 		if (OpenGL_state.cur_alpha_type & ATF_VERTEX)
 			alpha=pnt->p3_a*Alpha_multiplier*OpenGL_Alpha_factor;
-	
+
 		// If we have a lighting model, apply the correct lighting!
 		if (OpenGL_state.cur_light_state!=LS_NONE)
 		{
@@ -1682,7 +1804,8 @@ void opengl_DrawMultitexturePolygon (int handle,g3Point **p,int nv,int map_type)
 			colorp->b=1;
 			colorp->a=alpha;
 		}
-	
+
+		
 		// Texture this polygon!
 		float texw=1.0/(pnt->p3_z+Z_bias);
 		texp->s=pnt->p3_u*texw;
@@ -1694,14 +1817,25 @@ void opengl_DrawMultitexturePolygon (int handle,g3Point **p,int nv,int map_type)
 		texp2->t=pnt->p3_v2*yscalar*texw;
 		texp2->r=0;
 		texp2->w=texw;
-	
+		
+		/*texp->s = pnt->p3_u;
+		texp->t = pnt->p3_v;
+		texp->r = 0.0f;
+		texp->w = 1.0f;
+
+		texp2->s = pnt->p3_u2 * xscalar;
+		texp2->t = pnt->p3_v2 * yscalar;
+		texp2->r = 0.0f;
+		texp2->w = 1.0f;*/
+
+
 		// Finally, specify a vertex
+		
 		vertp->x=pnt->p3_sx+x_add;
 		vertp->y=pnt->p3_sy+y_add;
+		vertp->z = -std::max(0.,std::min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
 		
-		//@@vertp->z=-((pnt->p3_z+Z_bias)/OpenGL_state.cur_far_z);
-		vertp->z = -max(0,min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
-		
+		//*vertp = pnt->p3_vecPreRot;
 	}
 
 	// make sure our bitmap is ready to be drawn
@@ -1715,44 +1849,24 @@ void opengl_DrawMultitexturePolygon (int handle,g3Point **p,int nv,int map_type)
 	opengl_MakeFilterTypeCurrent(Overlay_map,MAP_TYPE_LIGHTMAP,1);
 
 	opengl_SetMultitextureBlendMode (true);
-	
-	// And draw!
-#ifdef __LINUX__
-	if(OpenGL_UseLists)
-	{
-#endif
-	dglDrawArrays (GL_POLYGON,0,nv);
-#ifdef __LINUX__
-	}else
-	{
-		dglBegin(GL_POLYGON);
-			for(i=0;i<nv;i++)
-			{
-				dglTexCoord4fv((GLfloat *)&GL_tex_coords[i]);
-				dglColor4fv((GLfloat *)&GL_colors[i]);
-				dglVertex3fv((GLfloat *)&GL_verts[i]);
-			}
-		dglEnd();
-	}
-#endif
 
+	// And draw!
+	dglDrawArrays (GL_POLYGON,0,nv);
 	OpenGL_polys_drawn++;
 	OpenGL_verts_processed+=nv;
 
 	CHECK_ERROR(10)
-		
-	
 }
 
-void opengl_DrawFlatPolygon (g3Point **p,int nv)
+void opengl_DrawFlatPolygon3D(g3Point **p,int nv)
 {
-	int x_add=OpenGL_state.clip_x1;
-	int y_add=OpenGL_state.clip_y1;
 	float fr,fg,fb;
 	int i;
 
-	if (OpenGL_multitexture)
+	if (UseMultitexture)
+	{
 		opengl_SetMultitextureBlendMode (false);
+	}
 
 	float alpha=Alpha_multiplier*OpenGL_Alpha_factor;
 
@@ -1763,6 +1877,9 @@ void opengl_DrawFlatPolygon (g3Point **p,int nv)
 	fg/=255.0;
 	fb/=255.0;
 
+	int x_add = OpenGL_state.clip_x1;
+	int y_add = OpenGL_state.clip_y1;
+
 	// And draw!
 	dglBegin (GL_POLYGON);
 	for (i=0;i<nv;i++)
@@ -1771,7 +1888,7 @@ void opengl_DrawFlatPolygon (g3Point **p,int nv)
 
 		if (OpenGL_state.cur_alpha_type & ATF_VERTEX)
 			alpha=pnt->p3_a*Alpha_multiplier*OpenGL_Alpha_factor;
-		
+
 		// If we have a lighting model, apply the correct lighting!
 		if (OpenGL_state.cur_light_state!=LS_NONE)
 		{
@@ -1782,863 +1899,34 @@ void opengl_DrawFlatPolygon (g3Point **p,int nv)
 			{
 				dglColor4f (pnt->p3_r,pnt->p3_g,pnt->p3_b,alpha);
 			}
-			
+
 		}
 		else
-			dglColor4f (fr,fg,fb,alpha);
-				
+		{
+			dglColor4f( fr,fg,fb,alpha );
+		}
+
+		
 		// Finally, specify a vertex
-		//@@dglVertex3f (pnt->p3_sx+x_add,pnt->p3_sy+y_add,-(pnt->p3_z/OpenGL_state.cur_far_z));
-		float z = max(0,min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
+		float z = std::max(0.,std::min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
 		dglVertex3f (pnt->p3_sx+x_add,pnt->p3_sy+y_add,-z);
+		
+		//dglVertex3f( pnt->p3_vecPreRot.x, pnt->p3_vecPreRot.y, pnt->p3_vecPreRot.z );
 	}
 
 	dglEnd();
 	CHECK_ERROR(11)
-	OpenGL_polys_drawn++;
+		OpenGL_polys_drawn++;
 	OpenGL_verts_processed+=nv;
 }
-
-extern matrix Unscaled_matrix;
-extern vector View_position;
-
-// Takes nv vertices and draws the polygon defined by those vertices.  Uses bitmap "handle"
-// as a texture
-void opengl_DrawPolygon (int handle,g3Point **p,int nv,int map_type)
-{
-	g3Point *pnt;
-	int i;
-	float fr,fg,fb;
-	float alpha;
-	vector *vertp;
-	color_array *colorp;
-	tex_array *texp;
-	
-	ASSERT (nv<100);
-
-	if (OpenGL_state.cur_texture_quality==0)
-	{
-		opengl_DrawFlatPolygon (p,nv);
-		return;
-	}
-
-	if (Overlay_type!=OT_NONE && OpenGL_multitexture)
-	{
-		opengl_DrawMultitexturePolygon (handle,p,nv,map_type);
-		return;
-	}
-
-	int x_add=OpenGL_state.clip_x1;
-	int y_add=OpenGL_state.clip_y1;
-
-	if (OpenGL_state.cur_light_state==LS_FLAT_GOURAUD)
-	{
-		fr=GR_COLOR_RED(OpenGL_state.cur_color)/255.0;
-		fg=GR_COLOR_GREEN(OpenGL_state.cur_color)/255.0;
-		fb=GR_COLOR_BLUE(OpenGL_state.cur_color)/255.0;
-	}
-
-	if (OpenGL_multitexture)
-		opengl_SetMultitextureBlendMode (false);
-	
-	// make sure our bitmap is ready to be drawn
-	opengl_MakeBitmapCurrent (handle,map_type,0);
-	opengl_MakeWrapTypeCurrent (handle,map_type,0);
-	opengl_MakeFilterTypeCurrent(handle,map_type,0);
-
-	alpha=Alpha_multiplier*OpenGL_Alpha_factor;
-
-	vertp=&GL_verts[0];
-	texp=&GL_tex_coords[0];
-	colorp=&GL_colors[0];
-
-	// Specify our coordinates
-	for (i=0;i<nv;i++,vertp++,texp++,colorp++)
-	{
-		pnt=p[i];
-
-
-		////////////////////////////////////////////
-		if( pnt->p3_flags&PF_ORIGPOINT )
-		{
-			// get the original point
-			float origPoint[4];
-			origPoint[0] = pnt->p3_vecPreRot.x;
-			origPoint[1] = pnt->p3_vecPreRot.y;
-			origPoint[2] = pnt->p3_vecPreRot.z;
-			origPoint[3] = 1.0f;
-
-			// transform by the full transform
-			float view[4];
-			g3_TransformVert( view, origPoint, gTransformFull );
-
-
-			vector tempv = pnt->p3_vecPreRot - View_position;
-			vector testPt = tempv * Unscaled_matrix;
-
-			float screenX = pnt->p3_sx + x_add;
-			float screenY = pnt->p3_sy + y_add;
-
-			// normalize
-			float oOW = 1.0f / view[3];
-			view[0] *= oOW;
-			view[1] *= oOW;
-			view[2] *= oOW;
-
-			oOW *= 1.0f;
-		}
-		////////////////////////////////////////////
-			
-		if (OpenGL_state.cur_alpha_type & ATF_VERTEX)
-			alpha=pnt->p3_a*Alpha_multiplier*OpenGL_Alpha_factor;
-	
-		// If we have a lighting model, apply the correct lighting!
-		if (OpenGL_state.cur_light_state!=LS_NONE)
-		{
-			if (OpenGL_state.cur_light_state==LS_FLAT_GOURAUD)
-			{
-				colorp->r=fr;
-				colorp->g=fg;
-				colorp->b=fb;
-				colorp->a=alpha;
-			}
-			else
-
-			// Do lighting based on intesity (MONO) or colored (RGB)
-			if (OpenGL_state.cur_color_model==CM_MONO)
-			{
-				colorp->r=pnt->p3_l;
-				colorp->g=pnt->p3_l;
-				colorp->b=pnt->p3_l;
-				colorp->a=alpha;
-			}
-			else
-			{
-				colorp->r=pnt->p3_r;
-				colorp->g=pnt->p3_g;
-				colorp->b=pnt->p3_b;
-				colorp->a=alpha;
-			}
-		}
-		else
-		{
-			colorp->r=1;
-			colorp->g=1;
-			colorp->b=1;
-			colorp->a=alpha;
-		}
-
-#ifdef __LINUX__
-//MY TEST HACK...MAYBE BAD DRIVERS? OR MAYBE THIS IS
-//HOW IT SHOULD BE DONE (STILL BUGGY)
-		// Texture this polygon!
-		float texw=1.0/(pnt->p3_z+Z_bias);
-		if(OpenGL_TextureHack)
-		{
-			texp->s=pnt->p3_u;
-			texp->t=pnt->p3_v;
-		}else
-		{
-			texp->s=pnt->p3_u*texw;
-			texp->t=pnt->p3_v*texw;
-		}
-		texp->r=0;
-		texp->w=texw;
-#else
-		// Texture this polygon!
-		float texw=1.0/(pnt->p3_z+Z_bias);
-		texp->s=pnt->p3_u*texw;
-		texp->t=pnt->p3_v*texw;
-		texp->r=0;
-		texp->w=texw;
-#endif
-		// Finally, specify a vertex
-		vertp->x=pnt->p3_sx+x_add;
-		vertp->y=pnt->p3_sy+y_add;
-
-		//@@float z=(pnt->p3_z+Z_bias)/OpenGL_state.cur_far_z;
-		float z = max(0,min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
-		vertp->z=-z;
-	}
-	
-	// And draw!
-#ifdef __LINUX__
-	if(OpenGL_UseLists)
-	{
-#endif
-	dglDrawArrays (GL_POLYGON,0,nv);
-#ifdef __LINUX__
-	}else
-	{
-		dglBegin(GL_POLYGON);
-			for(i=0;i<nv;i++)
-			{
-				dglTexCoord4fv((GLfloat *)&GL_tex_coords[i]);
-				dglColor4fv((GLfloat *)&GL_colors[i]);
-				dglVertex3fv((GLfloat *)&GL_verts[i]);
-			}
-		dglEnd();
-	}
-#endif
-	OpenGL_polys_drawn++;
-	OpenGL_verts_processed+=nv;
-
-	CHECK_ERROR(10)
-		
-	// If there is a lightmap to draw, draw it as well
-	if (Overlay_type!=OT_NONE)
-	{
-		return;	// Temp fix until I figure out whats going on
-		Int3();	// Shouldn't reach here
-	}
-}
-
-
-void opengl_BeginFrame (int x1,int y1,int x2,int y2,int clear_flags)
-{
-	if (clear_flags & RF_CLEAR_ZBUFFER)
-		dglClear(GL_DEPTH_BUFFER_BIT);
-		
-
-	OpenGL_state.clip_x1=x1;
-	OpenGL_state.clip_y1=y1;
-	OpenGL_state.clip_x2=x2;
-	OpenGL_state.clip_y2=y2;
-
-}
-
-void opengl_EndFrame()
-{
-	
-}
-
-// Takes a screenshot of the frontbuffer and puts it into the passed bitmap handle
-void opengl_Screenshot (int bm_handle)
-{
-	ushort *dest_data;
-	uint *temp_data;
-	int i,t;
-	int total=OpenGL_state.screen_width*OpenGL_state.screen_height;
-
-	ASSERT ((bm_w(bm_handle,0))==OpenGL_state.screen_width);
-	ASSERT ((bm_h(bm_handle,0))==OpenGL_state.screen_height);
-
-	int w=bm_w(bm_handle,0);
-	int h=bm_h(bm_handle,0);
-
-	temp_data=(uint *)mem_malloc (total*4);
-	ASSERT (temp_data);	// Ran out of memory?
-
-	dest_data=bm_data (bm_handle,0);
-
-	dglReadPixels (0,0,OpenGL_state.screen_width,OpenGL_state.screen_height,GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid *)temp_data);
-
-	
-	for (i=0;i<h;i++)
-	{
-		for (t=0;t<w;t++)
-		{
-			uint spix=temp_data[i*w+t];
-
-			int r=spix & 0xff;
-			int g=(spix>>8) & 0xff;
-			int b=(spix>>16) & 0xff;
-	
-			dest_data[(((h-1)-i)*w)+t]=GR_RGB16(r,g,b);
-		}
-	}
-
-	mem_free (temp_data);
-}
-
-
-
-// Flips the screen
-void opengl_Flip()
-{
-	#ifndef RELEASE
-		int i;
-
-		RTP_INCRVALUE(texture_uploads,OpenGL_uploads);
-		RTP_INCRVALUE(polys_drawn,OpenGL_polys_drawn);
-
-		mprintf_at ((1,1,0,"Uploads=%d    Polys=%d   Verts=%d   ",OpenGL_uploads,OpenGL_polys_drawn,OpenGL_verts_processed));
-		mprintf_at ((1,2,0,"Sets= 0:%d   1:%d   2:%d   3:%d   ",OpenGL_sets_this_frame[0],OpenGL_sets_this_frame[1],OpenGL_sets_this_frame[2],OpenGL_sets_this_frame[3]));
-		mprintf_at ((1,3,0,"Sets= 4:%d   5:%d  ",OpenGL_sets_this_frame[4],OpenGL_sets_this_frame[5]));
-		for (i=0;i<10;i++)
-			OpenGL_sets_this_frame[i]=0;
-	#endif
-
-	OpenGL_last_frame_polys_drawn = OpenGL_polys_drawn;
-	OpenGL_last_frame_verts_processed = OpenGL_verts_processed;
-	OpenGL_last_uploaded = OpenGL_uploads;
-
-	OpenGL_uploads=0;
-	OpenGL_polys_drawn=0;
-	OpenGL_verts_processed=0;
-
-#if defined(WIN32)	
-	SwapBuffers ((HDC)hOpenGLDC);
-#elif defined(__LINUX__)
-	glXWaitGL();
-	glXSwapBuffers(OpenGL_Display,OpenGL_Window);
-#endif
-}
-
-void opengl_SetTextureType (texture_type state)
-{
-	if (state==OpenGL_state.cur_texture_type)
-		return;	// No redundant state setting
-
-	if (OpenGL_multitexture && Last_texel_unit_set!=0)
-	{
-	#if defined(WIN32)
-		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
-		Last_texel_unit_set=0;
-	#endif
-	}
-
-	OpenGL_sets_this_frame[3]++;
-
-	switch (state)
-	{
-		case TT_FLAT:
-			dglDisable (GL_TEXTURE_2D);
-			OpenGL_state.cur_texture_quality=0;
-			break;
-		case TT_LINEAR:
-		case TT_LINEAR_SPECIAL:
-		case TT_PERSPECTIVE:
-		case TT_PERSPECTIVE_SPECIAL:
-			dglEnable (GL_TEXTURE_2D);
-			OpenGL_state.cur_texture_quality=2;
-			break;
-		default:
-			Int3();	// huh? Get Jason
-			break;
-	}
-
-	CHECK_ERROR(12)
-	OpenGL_state.cur_texture_type=state;
-
-}
-
-
-
-// Sets the lighting state of opengl
-void opengl_SetLightingState (light_state state)
-{
-	if (state==OpenGL_state.cur_light_state)
-		return;	// No redundant state setting
-
-	if (OpenGL_multitexture && Last_texel_unit_set!=0)
-	{
-	#if defined(WIN32)
-		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
-		Last_texel_unit_set=0;
-	#endif
-	}
-
-	OpenGL_sets_this_frame[4]++;
-
-	switch (state)
-	{
-		case LS_NONE:
-			dglShadeModel (GL_SMOOTH);
-			OpenGL_state.cur_light_state=LS_NONE;
-			break;
-		case LS_FLAT_GOURAUD:
-			dglShadeModel (GL_SMOOTH);
-			OpenGL_state.cur_light_state=LS_FLAT_GOURAUD;
-			break;
-		case LS_GOURAUD:
-		case LS_PHONG:
-			dglShadeModel (GL_SMOOTH);
-			OpenGL_state.cur_light_state=LS_GOURAUD;
-			break;
-		default:
-			Int3();
-			break;
-	}
-
-	CHECK_ERROR(13)
-}
-
-// Sets the opengl color model (either rgb or mono)
-void opengl_SetColorModel (color_model state)
-{
-	switch (state)
-	{
-		case CM_MONO:
-			OpenGL_state.cur_color_model=CM_MONO;
-			break;
-		case CM_RGB:
-			OpenGL_state.cur_color_model=CM_RGB;
-			break;
-		default:
-			Int3();
-			break;
-	}
-}
-
-// Sets the state of bilinear filtering for our textures
-void opengl_SetFiltering (sbyte state)
-{
-	#ifndef RELEASE
-		if (Fast_test_render)
-			state=0;
-	#endif
-
-	OpenGL_state.cur_bilinear_state=state;
-}
-
-// Sets the state of zbuffering to on or off
-void opengl_SetZBufferState  (sbyte state)
-{
-	#ifndef RELEASE
-		if (Fast_test_render)
-			state=0;
-	#endif
-
-	if (state==OpenGL_state.cur_zbuffer_state)
-		return;	// No redundant state setting
-
-	OpenGL_sets_this_frame[5]++;
-	OpenGL_state.cur_zbuffer_state=state;
-
-	//mprintf ((0,"OPENGL: Setting zbuffer state to %d.\n",state)); 
-
-	if (state)
-	{
-		dglEnable (GL_DEPTH_TEST);
-		dglDepthFunc (GL_LEQUAL);
-	}
-	else
-		dglDisable (GL_DEPTH_TEST);
-
-	CHECK_ERROR(14)
-}
-
-void opengl_SetZValues (float nearz,float farz)
-{
-	OpenGL_state.cur_near_z=nearz;
-	OpenGL_state.cur_far_z=farz;
-
-	//mprintf ((0,"OPENGL:Setting depth range to %f - %f\n",nearz,farz));
-
-	//JEFF: glDepthRange must take parameters [0,1]
-	//It is set in init
-	//@@dglDepthRange (0,farz);	
-}
-
-// Clears the display to a specified color
-void opengl_ClearScreen (ddgr_color color)
-{
-	int r=(color>>16 & 0xFF);
-	int g=(color>>8 & 0xFF);
-	int b=(color & 0xFF);
-
-	dglClearColor ((float)r/255.0,(float)g/255.0,(float)b/255.0,0);
-
-	dglClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-}
-
-// Clears the zbuffer
-void opengl_ClearZBuffer ()
-{
-	dglClear (GL_DEPTH_BUFFER_BIT);
-}
-
-// Fills a rectangle on the display
-void opengl_FillRect (ddgr_color color,int x1,int y1,int x2,int y2)
-{
-	int r=GR_COLOR_RED(color);
-	int g=GR_COLOR_GREEN(color);
-	int b=GR_COLOR_BLUE(color);
-
-	int width=x2-x1;
-	int height=y2-y1;
-
-	x1+=OpenGL_state.clip_x1;
-	y1+=OpenGL_state.clip_y1;
-
-	
-	dglEnable (GL_SCISSOR_TEST);
-	dglScissor (x1,OpenGL_state.screen_height-(height+y1),width,height);
-	dglClearColor ((float)r/255.0,(float)g/255.0,(float)b/255.0,0);
-	dglClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
-	width=OpenGL_state.clip_x2-OpenGL_state.clip_x1;
-	height=OpenGL_state.clip_y2-OpenGL_state.clip_y1;
-
-	dglScissor (OpenGL_state.clip_x1,OpenGL_state.screen_height-(OpenGL_state.clip_y1+height),width,height);
-	dglDisable (GL_SCISSOR_TEST);
-}
-
-// Sets a pixel on the display
-void opengl_SetPixel (ddgr_color color,int x,int y)
-{
-	int r=(color>>16 & 0xFF);
-	int g=(color>>8 & 0xFF);
-	int b=(color & 0xFF);
-	
-	dglColor3ub (r,g,b);
-	
-	dglBegin (GL_POINTS);
-	dglVertex2i (x,y);
-	dglEnd();
-}
-
-// Returns the pixel color at x,y
-ddgr_color opengl_GetPixel (int x,int y)
-{
-	ddgr_color color[4];
-
-	dglReadPixels (x,(OpenGL_state.screen_height-1)-y,1,1,GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid *)color);
-
-	return color[0];
-}
-
-
-
-// Sets the color that opengl uses for fog
-void opengl_SetFogColor (ddgr_color color)
-{
-	if (color==OpenGL_state.cur_fog_color)
-		return;
-
-	float fc[4];
-	fc[0]=GR_COLOR_RED(color);
-	fc[1]=GR_COLOR_GREEN(color);
-	fc[2]=GR_COLOR_BLUE(color);
-	fc[3]=1;
-
-	fc[0]/=255.0;
-	fc[1]/=255.0;
-	fc[2]/=255.0;
-	
-
-	dglFogfv (GL_FOG_COLOR,fc);
-}
-
-// Sets the near and far plane of fog
-// Note, the opengl_Far_z variable must be valid for this function to work correctly
-void opengl_SetFogBorders (float nearz,float farz)
-{
-	float fog_start,fog_end;
-
-	fog_start = max(0,min(1.0,1.0-(1.0/nearz)));
-	fog_end = max(0,min(1.0,1.0-(1.0/farz)));
-
-	OpenGL_state.cur_fog_start=fog_start;
-	OpenGL_state.cur_fog_end=fog_end;
-		
-	dglFogi (GL_FOG_MODE,GL_LINEAR);
-	dglFogf (GL_FOG_START,fog_start);
-	dglFogf (GL_FOG_END,fog_end);
-}
-
-// Sets the fog state to on or off
-void opengl_SetFogState (sbyte state)
-{
-	if (state==OpenGL_state.cur_fog_state)
-		return;	// No redundant state setting
-
-	OpenGL_state.cur_fog_state=state;
-
-	if (state==1)
-	{
-		dglEnable(GL_FOG);
-	}
-	else
-	{
-		dglDisable (GL_FOG);
-	}
-}
-
-// Fills in projection variables
-void opengl_GetProjectionParameters(int *width,int *height)
-{
-	*width=OpenGL_state.clip_x2-OpenGL_state.clip_x1;
-	*height=OpenGL_state.clip_y2-OpenGL_state.clip_y1;
-}
-
-void opengl_GetProjectionScreenParameters( int &screenLX, int &screenTY, int &screenW, int &screenH )
-{
-	screenLX = OpenGL_state.clip_x1;
-	screenTY = OpenGL_state.clip_y1;
-	screenW  = OpenGL_state.clip_x2 - OpenGL_state.clip_x1;
-	screenH  = OpenGL_state.clip_y2 - OpenGL_state.clip_y1;
-}
-
-// Returns the aspect ratio of the physical screen
-float opengl_GetAspectRatio ()
-{
-	float aspect_ratio = (float)((3.0 * OpenGL_state.screen_width)/(4.0 * OpenGL_state.screen_height));
-	return aspect_ratio;
-}
-
-// Sets the type of alpha blending you want
-void opengl_SetAlphaType (sbyte atype)
-{
-	if (atype==OpenGL_state.cur_alpha_type)
-		return;		// don't set it redundantly
-
-	if (OpenGL_multitexture && Last_texel_unit_set!=0)
-	{
-	#if defined(WIN32)
-		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
-		Last_texel_unit_set=0;
-	#endif
-	}
-
-	OpenGL_sets_this_frame[6]++;
-
-	if (atype==AT_ALWAYS)
-	{
-		if (opengl_Blending_on)
-		{
-			dglDisable (GL_BLEND);
-			opengl_Blending_on=false;
-		}
-	}
-	else
-	{
-		if (!opengl_Blending_on)
-		{
-			dglEnable (GL_BLEND);
-			opengl_Blending_on=true;
-		}
-	}
-
-	switch (atype)
-	{
-		case AT_ALWAYS:
-			opengl_SetAlphaValue (255);
-			dglBlendFunc (GL_ONE,GL_ZERO);
-			break;
-		case AT_CONSTANT:
-			dglBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-			break;
-		case AT_TEXTURE:
-			opengl_SetAlphaValue (255);
-			dglBlendFunc (GL_ONE,GL_ZERO);
-			break;
-		case AT_CONSTANT_TEXTURE:
-			dglBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-			break;
-		case AT_VERTEX:
-			dglBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-			break;
-		case AT_CONSTANT_TEXTURE_VERTEX:
-		case AT_CONSTANT_VERTEX:
-			dglBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-			break;
-		case AT_TEXTURE_VERTEX:
-			dglBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-			break;
-		case AT_LIGHTMAP_BLEND:
-			dglBlendFunc (GL_DST_COLOR,GL_ZERO);
-			break;
-		case AT_SATURATE_TEXTURE:
-		case AT_LIGHTMAP_BLEND_SATURATE:
-			dglBlendFunc (GL_SRC_ALPHA,GL_ONE);
-			
-			break;
-		case AT_SATURATE_VERTEX:
-			dglBlendFunc (GL_SRC_ALPHA,GL_ONE);
-			break;
-		case AT_SATURATE_CONSTANT_VERTEX:
-			dglBlendFunc (GL_SRC_ALPHA,GL_ONE);
-			break;
-		case AT_SATURATE_TEXTURE_VERTEX:
-			dglBlendFunc (GL_SRC_ALPHA,GL_ONE);
-			break;
-		case AT_SPECULAR:
-			break;
-		default:
-			Int3();		// no type defined,get jason
-			break;
-	}
-	OpenGL_state.cur_alpha_type=atype;
-	opengl_SetAlphaMultiplier();
-	CHECK_ERROR(15)
-}
-
-
-// Sets texture wrapping type
-void opengl_SetWrapType (wrap_type val)
-{
-	OpenGL_state.cur_wrap_type=val;
-}
-
-// Sets whether or not to write into the zbuffer
-void opengl_SetZBufferWriteMask (int state)
-{
-	OpenGL_sets_this_frame[5]++;
-	if (state)
-	{
-		dglDepthMask (GL_TRUE);
-	}
-	else
-	{
-		dglDepthMask (GL_FALSE);
-	}
-}
-
-void opengl_SetFlatColor (ddgr_color color)
-{
-	OpenGL_state.cur_color=color;
-}
-
-// Sets the constant alpha value
-void opengl_SetAlphaValue (ubyte val)
-{
-	OpenGL_state.cur_alpha=val;
-	opengl_SetAlphaMultiplier();
-}
-
-// Sets the overall alpha scale factor (all alpha values are scaled by this value)
-// usefull for motion blur effect
-void opengl_SetAlphaFactor(float val)
-{
-	OpenGL_Alpha_factor = val;
-}
-
-// Returns the current Alpha factor
-float opengl_GetAlphaFactor(void)
-{
-	return OpenGL_Alpha_factor;
-}
-
-// Gets the current state of the renderer
-void opengl_GetRenderState (rendering_state *rstate)
-{
-	memcpy (rstate,&OpenGL_state,sizeof(rendering_state));
-}
-
-
-// draws a line
-void opengl_DrawLine (int x1,int y1,int x2,int y2)
-{
-	sbyte atype;
-	light_state ltype;
-	texture_type ttype;
-	int color=OpenGL_state.cur_color;
-
-	int r=GR_COLOR_RED(color);
-	int g=GR_COLOR_GREEN(color);
-	int b=GR_COLOR_BLUE(color);
-		
-	
-	atype=OpenGL_state.cur_alpha_type;					
-	ltype=OpenGL_state.cur_light_state;					
-	ttype=OpenGL_state.cur_texture_type;
-
-	rend_SetAlphaType (AT_ALWAYS);
-	rend_SetLighting (LS_NONE);
-	rend_SetTextureType (TT_FLAT);
-	
-		
-	dglBegin (GL_LINES);
-	dglColor4ub (r,g,b,255);
-	dglVertex2i (x1+OpenGL_state.clip_x1,y1+OpenGL_state.clip_y1);
-	dglColor4ub (r,g,b,255);
-	dglVertex2i (x2+OpenGL_state.clip_x1,y2+OpenGL_state.clip_y1);
-	dglEnd();
-
-	rend_SetAlphaType (atype);
-	rend_SetLighting(ltype);
-	rend_SetTextureType (ttype);
-}
-
-// draws a line
-void opengl_DrawSpecialLine (g3Point *p0,g3Point *p1)
-{
-	int x_add=OpenGL_state.clip_x1;
-	int y_add=OpenGL_state.clip_y1;
-	float fr,fg,fb,alpha;
-	int i;
-
-	fr=GR_COLOR_RED(OpenGL_state.cur_color);
-	fg=GR_COLOR_GREEN(OpenGL_state.cur_color);
-	fb=GR_COLOR_BLUE(OpenGL_state.cur_color);
-
-	fr/=255.0;
-	fg/=255.0;
-	fb/=255.0;
-		
-	alpha=Alpha_multiplier*OpenGL_Alpha_factor;
-
-	// And draw!
-	dglBegin (GL_LINES);
-	for (i=0;i<2;i++)
-	{
-		g3Point *pnt=p0;
-		
-		if (i==1)
-			pnt=p1;
-
-		if (OpenGL_state.cur_alpha_type & ATF_VERTEX)
-			alpha=pnt->p3_a*Alpha_multiplier*OpenGL_Alpha_factor;
-		
-		// If we have a lighting model, apply the correct lighting!
-		if (OpenGL_state.cur_light_state!=LS_NONE)
-		{
-			if (OpenGL_state.cur_light_state==LS_FLAT_GOURAUD)
-			{
-				dglColor4f (fr,fg,fb,alpha);
-			}
-			else
-			{
-				// Do lighting based on intesity (MONO) or colored (RGB)
-				if (OpenGL_state.cur_color_model==CM_MONO)
-					dglColor4f (pnt->p3_l,pnt->p3_l,pnt->p3_l,alpha);
-				else
-				{
-					dglColor4f (pnt->p3_r,pnt->p3_g,pnt->p3_b,alpha);
-				}
-			}
-		}
-		else
-		{
-			dglColor4f (fr,fg,fb,alpha);
-		}
-		
-		// Finally, specify a vertex
-		//@@float z=(pnt->p3_z+Z_bias)/OpenGL_state.cur_far_z;
-		float z = max(0,min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
-		dglVertex3f (pnt->p3_sx+x_add,pnt->p3_sy+y_add,-z);
-	}
-
-	dglEnd();
-}
-
-
-// Sets the coplanar z bias for rendered polygons
-void opengl_SetCoplanarPolygonOffset (float factor)
-{
-	
-	if (factor==0)
-	{
-		dglDisable (GL_POLYGON_OFFSET_FILL);
-	}
-	else
-	{
-		dglEnable (GL_POLYGON_OFFSET_FILL);
-		dglPolygonOffset (-1.0,-1.0);
-	}
-}
-
 
 // Sets the gamma correction value
-void opengl_SetGammaValue (float val)
+void opengl_SetGammaValue( float val )
 {
-	if (WindowGL)
-		return;
+//	if( WindowGL )
+//		return;
 
-	OpenGL_preferred_state.gamma=val;
-
+	OpenGL_preferred_state.gamma = val;
 	mprintf ((0,"Setting gamma to %f\n",val));
 
 #if defined(WIN32)
@@ -2651,9 +1939,9 @@ void opengl_SetGammaValue (float val)
 		float newval = powf(norm,1.0f/val);
 
 		newval*=65535;
-		
-		newval=min(65535,newval);
-		
+
+		newval=std::min(65535.f,newval);
+
 		rampvals[i]=newval;
 		rampvals[i+256]=newval;
 		rampvals[i+512]=newval;
@@ -2663,60 +1951,15 @@ void opengl_SetGammaValue (float val)
 #endif
 }
 
-
-// Sets up a some global preferences for openGL
-int opengl_SetPreferredState (renderer_preferred_state *pref_state)
-{
-	int retval=1;
-	renderer_preferred_state old_state=OpenGL_preferred_state;
-	
-	OpenGL_preferred_state=*pref_state;
-
-	if (OpenGL_state.initted)
-	{
-		int reinit=0;
-
-		mprintf ((0,"Inside pref state!\n"));
-
-		
-		// Change gamma if needed
-		if (pref_state->width!=OpenGL_state.screen_width || pref_state->height!=OpenGL_state.screen_height || old_state.bit_depth!=pref_state->bit_depth)
-			reinit=1;
-
-		if (reinit)
-		{
-			opengl_Close();
-			retval=opengl_Init(NULL,&OpenGL_preferred_state);
-		}
-		else
-		{
-			if (old_state.gamma !=pref_state->gamma)
-			{
-				opengl_SetGammaValue (pref_state->gamma);
-			}
-
-			/*if (old_state.mipping!=pref_state->mipping)
-			{
-				opengl_SetMipState (pref_state->mipping);
-			}*/
-		}
-	}
-	else
-		OpenGL_preferred_state=*pref_state;
-
-	return retval;
-
-}
-
 // Resets the texture cache
-void opengl_ResetCache ()
+void opengl_ResetCache(void)
 {
-	if (OpenGL_cache_initted)
+	if( OpenGL_cache_initted )
 	{
-		mem_free (OpenGL_lightmap_remap);
-		mem_free (OpenGL_bitmap_remap);
-		mem_free (OpenGL_lightmap_states);
-		mem_free (OpenGL_bitmap_states);
+		mem_free(OpenGL_lightmap_remap);
+		mem_free(OpenGL_bitmap_remap);
+		mem_free(OpenGL_lightmap_states);
+		mem_free(OpenGL_bitmap_states);
 		OpenGL_cache_initted=0;
 	}
 
@@ -2736,15 +1979,15 @@ void opengl_ChangeChunkedBitmap(int bm_handle, chunked_bitmap *chunk)
 	int iopt;
 
 	//find the smallest dimension and base off that
-	int smallest = min(bw,bh);
+	int smallest = std::min(bw,bh);
 
 	if(smallest<=32)
 		fopt=32;
 	else
-	if(smallest<=64)
-		fopt=64;
-	else
-		fopt=128;	
+		if(smallest<=64)
+			fopt=64;
+		else
+			fopt=128;	
 
 	iopt=(int)fopt;
 
@@ -2761,7 +2004,7 @@ void opengl_ChangeChunkedBitmap(int bm_handle, chunked_bitmap *chunk)
 
 	ASSERT (how_many_across>0);
 	ASSERT (how_many_down>0);
-	
+
 	// Now go through our big bitmap and partition it into pieces
 	ushort *src_data=bm_data(bm_handle,0);
 	ushort *sdata;
@@ -2823,211 +2066,1589 @@ void opengl_ChangeChunkedBitmap(int bm_handle, chunked_bitmap *chunk)
 }
 
 
-// Takes a bitmap and blits it to the screen using linear frame buffer stuff
-// X and Y are the destination X,Y
-void opengl_CopyBitmapToFramebuffer (int bm_handle,int x,int y)
+// Tells the software renderer whether or not to use mipping
+void rend_SetMipState( sbyte mipstate )
 {
-	ASSERT (opengl_Framebuffer_ready);
+}
 
-	if (opengl_Framebuffer_ready==1)
+// Init our renderer
+int rend_Init(renderer_type state, oeApplication *app,renderer_preferred_state *pref_state)
+{
+#ifndef DEDICATED_ONLY
+	int retval=0;
+	rend_SetRendererType( state );
+	if( !Renderer_initted )
 	{
-		bm_CreateChunkedBitmap (bm_handle,&opengl_Chunked_bitmap);
-		opengl_Framebuffer_ready=2;
+		if( !Renderer_close_flag )
+		{
+			atexit( rend_Close );
+			Renderer_close_flag = 1;
+		}
+
+		Renderer_initted=1;
+	}
+
+	if( OpenGL_window_initted )
+	{
+		rend_CloseOpenGLWindow();
+		OpenGL_window_initted=0;
+	}
+
+	mprintf ((0,"Renderer init is set to %d\n",Renderer_initted));
+
+#ifndef OEM_V3
+	int flags = app->flags();
+	if( flags & OEAPP_WINDOWED )
+	{
+		// initialize for windowed
+		retval = rend_InitOpenGLWindow( app, pref_state );
 	}
 	else
 	{
-		opengl_ChangeChunkedBitmap (bm_handle,&opengl_Chunked_bitmap);
+		// initialize for full screen
+		retval=opengl_Init( app, pref_state );
+	}
+#endif
+
+	return retval;
+#else
+	return 0;
+#endif //#ifdef DEDICATED_ONLY
+}
+
+void rend_Close(void)
+{
+	mprintf((0,"CLOSE:Renderer init is set to %d\n",Renderer_initted));
+	if(!Renderer_initted)
+		return;
+
+	if( OpenGL_window_initted )
+	{
+		if( Renderer_type == RENDERER_OPENGL )
+		{
+			rend_CloseOpenGLWindow();
+		}
+		OpenGL_window_initted = 0;
 	}
 
-	rend_DrawChunkedBitmap (&opengl_Chunked_bitmap,0,0,255);
+	opengl_Close();
+
+	Renderer_initted=0;
+}
+
+#ifdef DEDICATED_ONLY
+
+void rend_DrawPolygon3D( int , g3Point **, int , int ){ }
+void rend_DrawPolygon2D( int , g3Point **, int , int ){ }
+
+#else
+
+
+static inline float __recip(float x)
+{
+#if MACOSX
+    __asm__ __volatile__ (
+        "fres %0, %1  \n\t"
+            : "=f" (x) : "f" (x)
+    );
+    return(x);
+#else
+    return(1.0f / x);
+#endif
+}
+
+// Takes nv vertices and draws the 3D polygon defined by those vertices.
+// Uses bitmap "handle" as a texture
+void rend_DrawPolygon3D( int handle, g3Point **p, int nv, int map_type )
+{
+	g3Point *pnt;
+	int i;
+	float fr,fg,fb;
+	float alpha;
+	vector *vertp;
+	color_array *colorp;
+	tex_array *texp;
+
+	ASSERT (nv<100);
+
+	if (OpenGL_state.cur_texture_quality==0)
+	{
+		opengl_DrawFlatPolygon3D(p,nv);
+		return;
+	}
+
+	if (Overlay_type!=OT_NONE && UseMultitexture)
+	{
+		opengl_DrawMultitexturePolygon3D(handle,p,nv,map_type);
+		return;
+	}
+
+	int x_add = OpenGL_state.clip_x1;
+	int y_add = OpenGL_state.clip_y1;
+
+	if (OpenGL_state.cur_light_state==LS_FLAT_GOURAUD)
+	{
+		fr=GR_COLOR_RED(OpenGL_state.cur_color)/255.0;
+		fg=GR_COLOR_GREEN(OpenGL_state.cur_color)/255.0;
+		fb=GR_COLOR_BLUE(OpenGL_state.cur_color)/255.0;
+	}
+
+	if (UseMultitexture)
+	{
+		opengl_SetMultitextureBlendMode (false);
+	}
+
+	// make sure our bitmap is ready to be drawn
+	opengl_MakeBitmapCurrent (handle,map_type,0);
+	opengl_MakeWrapTypeCurrent (handle,map_type,0);
+	opengl_MakeFilterTypeCurrent(handle,map_type,0);
+
+	alpha=Alpha_multiplier*OpenGL_Alpha_factor;
+
+	vertp=&GL_verts[0];
+	texp=&GL_tex_coords[0];
+	colorp=&GL_colors[0];
+
+	// Specify our coordinates
+	for (i=0;i<nv;i++,vertp++,texp++,colorp++)
+	{
+		pnt = p[i];
+
+		////////////////////////////////////////////
+		/*if( pnt->p3_flags&PF_ORIGPOINT )
+		{
+			if( !(pnt->p3_flags&PF_PROJECTED) )
+			{
+				g3_ProjectPoint( pnt );
+			}
+
+			// get the original point
+			float origPoint[4];
+			origPoint[0] = pnt->p3_vecPreRot.x;
+			origPoint[1] = pnt->p3_vecPreRot.y;
+			origPoint[2] = pnt->p3_vecPreRot.z;
+			origPoint[3] = 1.0f;
+
+			// transform by the full transform
+			float view[4];
+			g3_TransformVert( view, origPoint, gTransformFull );
+
+			vector tempv = pnt->p3_vecPreRot - View_position;
+			vector testPt = tempv * Unscaled_matrix;
+
+			float screenX = pnt->p3_sx + OpenGL_state.clip_x1;
+			float screenY = pnt->p3_sy + OpenGL_state.clip_y1;
+
+			// normalize
+			float oOW = 1.0f / view[3];
+			view[0] *= oOW;
+			view[1] *= oOW;
+			view[2] *= oOW;
+
+			oOW *= 1.0f;
+		}*/
+		////////////////////////////////////////////
+
+		if (OpenGL_state.cur_alpha_type & ATF_VERTEX)
+		{
+			alpha=pnt->p3_a*Alpha_multiplier*OpenGL_Alpha_factor;
+		}
+
+		// If we have a lighting model, apply the correct lighting!
+		if (OpenGL_state.cur_light_state!=LS_NONE)
+		{
+			if (OpenGL_state.cur_light_state==LS_FLAT_GOURAUD)
+			{
+				colorp->r=fr;
+				colorp->g=fg;
+				colorp->b=fb;
+				colorp->a=alpha;
+			}
+			else
+			{
+				// Do lighting based on intesity (MONO) or colored (RGB)
+				if (OpenGL_state.cur_color_model==CM_MONO)
+				{
+					colorp->r=pnt->p3_l;
+					colorp->g=pnt->p3_l;
+					colorp->b=pnt->p3_l;
+					colorp->a=alpha;
+				}
+				else
+				{
+					colorp->r=pnt->p3_r;
+					colorp->g=pnt->p3_g;
+					colorp->b=pnt->p3_b;
+					colorp->a=alpha;
+				}
+			}
+		}
+		else
+		{
+			colorp->r=1;
+			colorp->g=1;
+			colorp->b=1;
+			colorp->a=alpha;
+		}
+
+		/*
+#ifdef __LINUX__
+		//MY TEST HACK...MAYBE BAD DRIVERS? OR MAYBE THIS IS
+		//HOW IT SHOULD BE DONE (STILL BUGGY)
+		// Texture this polygon!
+		float texw=1.0/(pnt->p3_z+Z_bias);
+		if(OpenGL_TextureHack)
+		{
+			texp->s=pnt->p3_u;
+			texp->t=pnt->p3_v;
+		}else
+		{
+			texp->s=pnt->p3_u*texw;
+			texp->t=pnt->p3_v*texw;
+		}
+		texp->r=0;
+		texp->w=texw;
+#endif
+		*/
+		// Texture this polygon!
+		float texw=1.0/(pnt->p3_z+Z_bias);
+		texp->s=pnt->p3_u*texw;
+		texp->t=pnt->p3_v*texw;
+		texp->r=0;
+		texp->w=texw;
+		
+		/*texp->s = pnt->p3_u;
+		texp->t = pnt->p3_v;
+		texp->r = 0.0f;
+		texp->w = 1.0f;*/
+
+		// Finally, specify a vertex
+		
+		vertp->x=pnt->p3_sx+x_add;
+		vertp->y=pnt->p3_sy+y_add;
+
+		float z = std::max(0.0,std::min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
+		vertp->z=-z;
+		
+		//*vertp = pnt->p3_vecPreRot;
+	}
+
+	// And draw!
+	dglDrawArrays (GL_POLYGON,0,nv);
+	OpenGL_polys_drawn++;
+	OpenGL_verts_processed+=nv;
+
+	CHECK_ERROR(10)
+
+	// If there is a lightmap to draw, draw it as well
+	if (Overlay_type!=OT_NONE)
+	{
+		return;	// Temp fix until I figure out whats going on
+		Int3();	// Shouldn't reach here
+	}
+}
+
+// Takes nv vertices and draws the 2D polygon defined by those vertices.
+// Uses bitmap "handle" as a texture
+void rend_DrawPolygon2D( int handle, g3Point **p, int nv )
+{
+	ASSERT( nv < 100 );
+	ASSERT( Overlay_type == OT_NONE );
+
+	if( UseMultitexture )
+	{
+		opengl_SetMultitextureBlendMode( false );
+	}
+
+	int xAdd = OpenGL_state.clip_x1;
+	int yAdd = OpenGL_state.clip_y1;
+
+	float fr,fg,fb;
+	if( OpenGL_state.cur_light_state == LS_FLAT_GOURAUD || OpenGL_state.cur_texture_quality == 0 )
+	{
+		float scale = 1.0f / 255.0f;
+		fr = GR_COLOR_RED(OpenGL_state.cur_color)   * scale;
+		fg = GR_COLOR_GREEN(OpenGL_state.cur_color) * scale;
+		fb = GR_COLOR_BLUE(OpenGL_state.cur_color)  * scale;
+	}
+
+	// make sure our bitmap is ready to be drawn
+	opengl_MakeBitmapCurrent( handle, MAP_TYPE_BITMAP, 0 );
+	opengl_MakeWrapTypeCurrent( handle, MAP_TYPE_BITMAP, 0 );
+	opengl_MakeFilterTypeCurrent( handle, MAP_TYPE_BITMAP, 0 );
+
+	float alpha = Alpha_multiplier * OpenGL_Alpha_factor;
+
+	vector *vertp       = &GL_verts[0];
+	tex_array *texp     = &GL_tex_coords[0];
+	color_array *colorp = &GL_colors[0];
+
+	// Specify our coordinates
+	int i;
+	for( i = 0; i < nv; ++i, ++vertp, ++texp, ++colorp )
+	{
+		g3Point *pnt = p[i];
+
+		if( OpenGL_state.cur_alpha_type & ATF_VERTEX )
+		{
+			// the alpha should come from the vertex
+			alpha = pnt->p3_a * Alpha_multiplier * OpenGL_Alpha_factor;
+		}
+
+		// If we have a lighting model, apply the correct lighting!
+		if( OpenGL_state.cur_light_state == LS_FLAT_GOURAUD || OpenGL_state.cur_texture_quality == 0 )
+		{
+			// pull the color from the constant color data
+			colorp->r=fr;
+			colorp->g=fg;
+			colorp->b=fb;
+			colorp->a=alpha;
+		}
+		else if( OpenGL_state.cur_light_state != LS_NONE )
+		{
+			// Do lighting based on intensity (MONO) or colored (RGB)
+			if( OpenGL_state.cur_color_model == CM_MONO )
+			{
+				colorp->r=pnt->p3_l;
+				colorp->g=pnt->p3_l;
+				colorp->b=pnt->p3_l;
+				colorp->a=alpha;
+			}
+			else
+			{
+				colorp->r=pnt->p3_r;
+				colorp->g=pnt->p3_g;
+				colorp->b=pnt->p3_b;
+				colorp->a=alpha;
+			}
+		}
+		else
+		{
+			// force white
+			colorp->r=1.0f;
+			colorp->g=1.0f;
+			colorp->b=1.0f;
+			colorp->a=alpha;
+		}
+
+		texp->s = pnt->p3_u;
+		texp->t = pnt->p3_v;
+		texp->r = 0.0f;
+		texp->w = 1.0f;
+
+		// Finally, specify a vertex
+		vertp->x = pnt->p3_sx + xAdd;
+		vertp->y = pnt->p3_sy + yAdd;
+		vertp->z = 0.0f;
+	}
+
+	// And draw!
+	if( OpenGL_state.cur_texture_quality == 0 )
+	{
+		// force disable textures
+		dglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	}
+
+	// draw the data in the arrays
+	dglDrawArrays( GL_POLYGON, 0, nv );
+
+	if( OpenGL_state.cur_texture_quality == 0 )
+	{
+		// re-enable textures
+		dglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	}
+
+	OpenGL_polys_drawn++;
+	OpenGL_verts_processed+=nv;
+
+	CHECK_ERROR(10)
+}
+
+#endif // DEDICATED_ONLY
+
+void rend_SetFlatColor( ddgr_color color )
+{
+	OpenGL_state.cur_color=color;
+}
+
+// Sets the fog state to TRUE or FALSE
+void rend_SetFogState(sbyte state)
+{
+	if( state==OpenGL_state.cur_fog_state )
+		return;
+
+	OpenGL_state.cur_fog_state = state;
+	if( state == 1 )
+	{
+		dglEnable(GL_FOG);
+	}
+	else
+	{
+		dglDisable(GL_FOG);
+	}
+}
+
+// Sets the near and far plane of fog
+void rend_SetFogBorders(float nearz, float farz)
+{
+	// Sets the near and far plane of fog
+	float fogStart = nearz;
+	float fogEnd   = farz;
+
+	OpenGL_state.cur_fog_start = fogStart;
+	OpenGL_state.cur_fog_end   = fogEnd;
+
+	dglFogi( GL_FOG_MODE, GL_LINEAR );
+	dglFogf( GL_FOG_START, fogStart );
+	dglFogf( GL_FOG_END, fogEnd );
+}
+
+void rend_SetRendererType(renderer_type state)
+{
+	Renderer_type=state;
+	mprintf((0,"RendererType is set to %d.\n",state));
+}
+
+void rend_SetLighting(light_state state)
+{
+	if (state==OpenGL_state.cur_light_state)
+		return;	// No redundant state setting
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
+	if (UseMultitexture && Last_texel_unit_set!=0)
+	{
+		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
+		Last_texel_unit_set=0;
+	}
+#endif
+
+	OpenGL_sets_this_frame[4]++;
+
+	switch (state)
+	{
+	case LS_NONE:
+		dglShadeModel (GL_SMOOTH);
+		OpenGL_state.cur_light_state=LS_NONE;
+		break;
+	case LS_FLAT_GOURAUD:
+		dglShadeModel (GL_SMOOTH);
+		OpenGL_state.cur_light_state=LS_FLAT_GOURAUD;
+		break;
+	case LS_GOURAUD:
+	case LS_PHONG:
+		dglShadeModel (GL_SMOOTH);
+		OpenGL_state.cur_light_state=LS_GOURAUD;
+		break;
+	default:
+		Int3();
+		break;
+	}
+
+	CHECK_ERROR(13)
+}
+
+void rend_SetColorModel(color_model state)
+{
+	switch (state)
+	{
+	case CM_MONO:
+		OpenGL_state.cur_color_model=CM_MONO;
+		break;
+	case CM_RGB:
+		OpenGL_state.cur_color_model=CM_RGB;
+		break;
+	default:
+		Int3();
+		break;
+	}
+}
+
+void rend_SetTextureType(texture_type state)
+{
+	if (state==OpenGL_state.cur_texture_type)
+		return;	// No redundant state setting
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
+	if (UseMultitexture && Last_texel_unit_set!=0)
+	{
+		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
+		Last_texel_unit_set=0;
+	}
+#endif
+	OpenGL_sets_this_frame[3]++;
+
+	switch (state)
+	{
+	case TT_FLAT:
+		dglDisable (GL_TEXTURE_2D);
+		OpenGL_state.cur_texture_quality=0;
+		break;
+	case TT_LINEAR:
+	case TT_LINEAR_SPECIAL:
+	case TT_PERSPECTIVE:
+	case TT_PERSPECTIVE_SPECIAL:
+		dglEnable (GL_TEXTURE_2D);
+		OpenGL_state.cur_texture_quality=2;
+		break;
+	default:
+		Int3();	// huh? Get Jason
+		break;
+	}
+
+	CHECK_ERROR(12)
+	OpenGL_state.cur_texture_type=state;
+}
+
+void rend_StartFrame(int x1,int y1,int x2,int y2,int clear_flags)
+{
+	if( clear_flags & RF_CLEAR_ZBUFFER )
+	{
+		dglClear(GL_DEPTH_BUFFER_BIT);
+	}
+	OpenGL_state.clip_x1=x1;
+	OpenGL_state.clip_y1=y1;
+	OpenGL_state.clip_x2=x2;
+	OpenGL_state.clip_y2=y2;
+}
+
+
+#ifdef __CHECK_FOR_TOO_SLOW_RENDERING__
+static void slownessAbort(void)
+{
+
+    #ifdef __LINUX__
+        SDL_Surface *surface = SDL_GetVideoSurface();
+        SDL_SetVideoMode(surface->w, surface->h, surface->format->BitsPerPixel,
+                        surface->flags & ~SDL_OPENGL);
+    
+        sdl_ShowMessage("Your OpenGL driver is too slow to play this game.\n"
+                        "Driver used: [ %s ]\n"
+                        "Please change your driver!\n"
+                        "Email support@lokigames.com for help,\n"
+                        "or call 1-714-508-2140 (9-5 PM US Pacific Time).\n",
+                            loadedLibrary);
+
+        SDL_GL_SwapBuffers();
+        Sleep(10000);
+        SDL_Quit();
+        _exit(99);
+    #else
+        #error Fill in an aborting notice for your platform.
+    #endif
+
+} // slownessAbort
+#endif
+
+// Flips the screen
+void rend_Flip(void)
+{
+#ifndef RELEASE
+	int i;
+
+	RTP_INCRVALUE(texture_uploads,OpenGL_uploads);
+	RTP_INCRVALUE(polys_drawn,OpenGL_polys_drawn);
+
+	mprintf_at ((1,1,0,"Uploads=%d    Polys=%d   Verts=%d   ",OpenGL_uploads,OpenGL_polys_drawn,OpenGL_verts_processed));
+	mprintf_at ((1,2,0,"Sets= 0:%d   1:%d   2:%d   3:%d   ",OpenGL_sets_this_frame[0],OpenGL_sets_this_frame[1],OpenGL_sets_this_frame[2],OpenGL_sets_this_frame[3]));
+	mprintf_at ((1,3,0,"Sets= 4:%d   5:%d  ",OpenGL_sets_this_frame[4],OpenGL_sets_this_frame[5]));
+	for (i=0;i<10;i++)
+	{
+		OpenGL_sets_this_frame[i]=0;
+	}
+#endif
+
+	OpenGL_last_frame_polys_drawn     = OpenGL_polys_drawn;
+	OpenGL_last_frame_verts_processed = OpenGL_verts_processed;
+	OpenGL_last_uploaded              = OpenGL_uploads;
+
+	OpenGL_uploads         = 0;
+	OpenGL_polys_drawn     = 0;
+	OpenGL_verts_processed = 0;
+
+#if defined(WIN32)	
+	SwapBuffers ((HDC)hOpenGLDC);
+#elif defined(__LINUX__)
+	SDL_GL_SwapBuffers();
+#endif
+
+#ifdef __PERMIT_GL_LOGGING
+	if (__glLog == true)
+	{
+		DGL_LogNewFrame();
+	}
+#endif
+
+#ifdef __CHECK_FOR_TOO_SLOW_RENDERING__
+	if (minimumAcceptableRender > 0)
+	{
+		Uint32 newticks = SDL_GetTicks();
+		if ((newticks - lastSwapTicks) > minimumAcceptableRender)
+		{
+			tooSlowCount++;
+			if (tooSlowCount >= 3)
+			{
+				slownessAbort();
+			} // if
+		} // if
+
+		// disable check?
+		tooSlowChecksLeft--;
+		if (tooSlowChecksLeft <= 0)
+		{
+			minimumAcceptableRender = -1;
+		}
+		lastSwapTicks = newticks;
+	} // if
+#endif
+}
+
+void rend_EndFrame(void)
+{
+}
+
+// draws a scaled 2d bitmap to our buffer
+void rend_DrawScaledBitmap(int x1,int y1,int x2,int y2,
+							int bm,float u0,float v0,float u1,float v1,int color,float *alphas)
+{
+	g3Point *ptr_pnts[4];
+	g3Point pnts[4];
+	float r,g,b;
+	if (color!=-1)
+	{
+		r=GR_COLOR_RED(color)/255.0;
+		g=GR_COLOR_GREEN(color)/255.0;
+		b=GR_COLOR_BLUE(color)/255.0;
+	}
+	for (int i=0;i<4;i++)
+	{
+		if (color==-1)
+			pnts[i].p3_l=1.0;
+		else
+		{
+			pnts[i].p3_r=r;
+			pnts[i].p3_g=g;
+			pnts[i].p3_b=b;
+		}
+		if (alphas)
+		{
+			pnts[i].p3_a=alphas[i];
+		}
+
+		pnts[i].p3_z=1.0f;	
+		pnts[i].p3_flags=PF_PROJECTED;
+	}
+
+	pnts[0].p3_sx=x1;
+	pnts[0].p3_sy=y1;
+	pnts[0].p3_u=u0;
+	pnts[0].p3_v=v0;
+	pnts[1].p3_sx=x2;
+	pnts[1].p3_sy=y1;
+	pnts[1].p3_u=u1;
+	pnts[1].p3_v=v0;
+	pnts[2].p3_sx=x2;
+	pnts[2].p3_sy=y2;
+	pnts[2].p3_u=u1;
+	pnts[2].p3_v=v1;
+	pnts[3].p3_sx=x1;
+	pnts[3].p3_sy=y2;
+	pnts[3].p3_u=u0;
+	pnts[3].p3_v=v1;
+	ptr_pnts[0]=&pnts[0];
+	ptr_pnts[1]=&pnts[1];
+	ptr_pnts[2]=&pnts[2];
+	ptr_pnts[3]=&pnts[3];
+	rend_SetTextureType( TT_LINEAR );
+	rend_DrawPolygon2D( bm, ptr_pnts, 4 );
+}
+
+// Sets where the software renderer should write to
+void rend_SetSoftwareParameters(float aspect,int width,int height,int pitch,ubyte *framebuffer)
+{
+}
+
+// Sets the state of bilinear filtering for our textures
+void rend_SetFiltering(sbyte state)
+{
+#ifndef RELEASE
+	if (Fast_test_render)
+	{
+		state=0;
+	}
+#endif
+
+	OpenGL_state.cur_bilinear_state=state;
+}
+
+// Sets the state of z-buffering to on or off
+void rend_SetZBufferState(sbyte state)
+{
+#ifndef RELEASE
+	if (Fast_test_render)
+	{
+		state=0;
+	}
+#endif
+
+	if (state==OpenGL_state.cur_zbuffer_state)
+		return;	// No redundant state setting
+
+	OpenGL_sets_this_frame[5]++;
+	OpenGL_state.cur_zbuffer_state=state;
+
+	//	mprintf ((0,"OPENGL: Setting zbuffer state to %d.\n",state)); 
+
+	if (state)
+	{
+		dglEnable (GL_DEPTH_TEST);
+		dglDepthFunc (GL_LEQUAL);
+	}
+	else
+	{
+		dglDisable (GL_DEPTH_TEST);
+	}
+
+	CHECK_ERROR(14)
+}
+
+// Sets the near and far planes for z buffer
+void rend_SetZValues(float nearz,float farz)
+{
+	OpenGL_state.cur_near_z = nearz;
+	OpenGL_state.cur_far_z  = farz;
+//	mprintf ((0,"OPENGL:Setting depth range to %f - %f\n",nearz,farz));
+
+	//JEFF: glDepthRange must take parameters [0,1]
+	//It is set in init
+	//@@dglDepthRange (0,farz);	
+}
+
+// Sets a bitmap as a overlay map to rendered on top of the next texture map
+// a -1 value indicates no overlay map
+void rend_SetOverlayMap(int handle)
+{
+	Overlay_map=handle;
+}
+
+void rend_SetOverlayType(ubyte type)
+{
+	Overlay_type=type;
+}
+
+// Clears the display to a specified color
+void rend_ClearScreen(ddgr_color color)
+{
+	int r=(color>>16 & 0xFF);
+	int g=(color>>8 & 0xFF);
+	int b=(color & 0xFF);
+
+	dglClearColor ((float)r/255.0f,(float)g/255.0f,(float)b/255.0f,0);
+
+	dglClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+}
+
+// Clears the zbuffer for the screen
+void rend_ClearZBuffer(void)
+{
+	dglClear(GL_DEPTH_BUFFER_BIT);
+}
+
+// Clears the zbuffer for the screen
+void rend_ResetCache(void)
+{
+	mprintf((0,"Resetting texture cache!\n"));
+	opengl_ResetCache ();
+}
+
+// Fills a rectangle on the display
+void rend_FillRect(ddgr_color color,int x1,int y1,int x2,int y2)
+{
+	int r=GR_COLOR_RED(color);
+	int g=GR_COLOR_GREEN(color);
+	int b=GR_COLOR_BLUE(color);
+
+	int width=x2-x1;
+	int height=y2-y1;
+
+	x1+=OpenGL_state.clip_x1;
+	y1+=OpenGL_state.clip_y1;
+
+	dglEnable (GL_SCISSOR_TEST);
+	dglScissor (x1,OpenGL_state.screen_height-(height+y1),width,height);
+	dglClearColor ((float)r/255.0,(float)g/255.0,(float)b/255.0,0);
+	dglClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+	width=OpenGL_state.clip_x2-OpenGL_state.clip_x1;
+	height=OpenGL_state.clip_y2-OpenGL_state.clip_y1;
+
+	dglScissor (OpenGL_state.clip_x1,OpenGL_state.screen_height-(OpenGL_state.clip_y1+height),width,height);
+	dglDisable (GL_SCISSOR_TEST);
+}
+
+// Sets a pixel on the display
+void rend_SetPixel(ddgr_color color,int x,int y)
+{
+	int r=(color>>16 & 0xFF);
+	int g=(color>>8 & 0xFF);
+	int b=(color & 0xFF);
+
+	dglColor3ub (r,g,b);
+
+	dglBegin (GL_POINTS);
+	dglVertex2i (x,y);
+	dglEnd();
+}
+
+// Sets a pixel on the display
+ddgr_color rend_GetPixel(int x,int y)
+{
+	ddgr_color color[4];
+	dglReadPixels (x,(OpenGL_state.screen_height-1)-y,1,1,GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid *)color);
+	return color[0];
+}
+
+void rend_FillCircle(ddgr_color col, int x, int y, int rad)
+{
+}
+
+void rend_DrawCircle(int x, int y, int rad)
+{
+}
+
+// Sets up a font character to draw.  We draw our fonts as pieces of textures
+void rend_DrawFontCharacter(int bm_handle,int x1,int y1,int x2,int y2,float u,float v,float w,float h)
+{
+	g3Point *ptr_pnts[4];
+	g3Point pnts[4];
+	for (int i=0;i<4;i++)
+	{
+		pnts[i].p3_z=1;	// Make REALLY close!
+		pnts[i].p3_flags=PF_PROJECTED;
+		ptr_pnts[i]=&pnts[i];
+	}
+	pnts[0].p3_sx=x1;
+	pnts[0].p3_sy=y1;
+	pnts[0].p3_u=u;
+	pnts[0].p3_v=v;
+	pnts[1].p3_sx=x2;
+	pnts[1].p3_sy=y1;
+	pnts[1].p3_u=u+w;
+	pnts[1].p3_v=v;
+	pnts[2].p3_sx=x2;
+	pnts[2].p3_sy=y2;
+	pnts[2].p3_u=u+w;
+	pnts[2].p3_v=v+h;
+	pnts[3].p3_sx=x1;
+	pnts[3].p3_sy=y2;
+	pnts[3].p3_u=u;
+	pnts[3].p3_v=v+h;
+	rend_DrawPolygon2D(bm_handle,ptr_pnts,4);
+}
+
+// Draws a line
+void rend_DrawLine(int x1,int y1,int x2,int y2)
+{
+	sbyte atype;
+	light_state ltype;
+	texture_type ttype;
+	int color=OpenGL_state.cur_color;
+
+	int r=GR_COLOR_RED(color);
+	int g=GR_COLOR_GREEN(color);
+	int b=GR_COLOR_BLUE(color);
+
+	atype=OpenGL_state.cur_alpha_type;					
+	ltype=OpenGL_state.cur_light_state;					
+	ttype=OpenGL_state.cur_texture_type;
+
+	rend_SetAlphaType (AT_ALWAYS);
+	rend_SetLighting (LS_NONE);
+	rend_SetTextureType (TT_FLAT);
+
+
+	dglBegin (GL_LINES);
+	dglColor4ub (r,g,b,255);
+	dglVertex2i (x1+OpenGL_state.clip_x1,y1+OpenGL_state.clip_y1);
+	dglColor4ub (r,g,b,255);
+	dglVertex2i (x2+OpenGL_state.clip_x1,y2+OpenGL_state.clip_y1);
+	dglEnd();
+
+	rend_SetAlphaType (atype);
+	rend_SetLighting(ltype);
+	rend_SetTextureType (ttype);
+}
+
+// Sets the argb characteristics of the font characters.  color1 is the upper left and proceeds clockwise
+void rend_SetCharacterParameters (ddgr_color color1,ddgr_color color2,ddgr_color color3,ddgr_color color4)
+{
+	rend_FontRed[0]=(float)(GR_COLOR_RED(color1)/255.0f);
+	rend_FontRed[1]=(float)(GR_COLOR_RED(color2)/255.0f);
+	rend_FontRed[2]=(float)(GR_COLOR_RED(color3)/255.0f);
+	rend_FontRed[3]=(float)(GR_COLOR_RED(color4)/255.0f);
+	rend_FontGreen[0]=(float)(GR_COLOR_GREEN(color1)/255.0f);
+	rend_FontGreen[1]=(float)(GR_COLOR_GREEN(color2)/255.0f);
+	rend_FontGreen[2]=(float)(GR_COLOR_GREEN(color3)/255.0f);
+	rend_FontGreen[3]=(float)(GR_COLOR_GREEN(color4)/255.0f);
+	rend_FontBlue[0]=(float)(GR_COLOR_BLUE(color1)/255.0f);
+	rend_FontBlue[1]=(float)(GR_COLOR_BLUE(color2)/255.0f);
+	rend_FontBlue[2]=(float)(GR_COLOR_BLUE(color3)/255.0f);
+	rend_FontBlue[3]=(float)(GR_COLOR_BLUE(color4)/255.0f);
+	rend_FontAlpha[0]=(color1>>24)/255.0f;
+	rend_FontAlpha[1]=(color2>>24)/255.0f;
+	rend_FontAlpha[2]=(color3>>24)/255.0f;
+	rend_FontAlpha[3]=(color4>>24)/255.0f;
+}
+
+// Sets the color of fog
+void rend_SetFogColor(ddgr_color color)
+{
+	if (color==OpenGL_state.cur_fog_color)
+		return;
+
+	float fc[4];
+	fc[0]=GR_COLOR_RED(color);
+	fc[1]=GR_COLOR_GREEN(color);
+	fc[2]=GR_COLOR_BLUE(color);
+	fc[3]=1;
+
+	fc[0]/=255.0f;
+	fc[1]/=255.0f;
+	fc[2]/=255.0f;
+
+	dglFogfv (GL_FOG_COLOR,fc);
+}
+
+// Sets the lighting state of opengl
+void rend_SetLightingState(light_state state)
+{
+	if (state==OpenGL_state.cur_light_state)
+		return;	// No redundant state setting
+
+	if (UseMultitexture && Last_texel_unit_set!=0)
+	{
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
+		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
+		Last_texel_unit_set=0;
+#endif
+	}
+
+	OpenGL_sets_this_frame[4]++;
+
+	switch (state)
+	{
+	case LS_NONE:
+		dglShadeModel (GL_SMOOTH);
+		OpenGL_state.cur_light_state=LS_NONE;
+		break;
+	case LS_FLAT_GOURAUD:
+		dglShadeModel (GL_SMOOTH);
+		OpenGL_state.cur_light_state=LS_FLAT_GOURAUD;
+		break;
+	case LS_GOURAUD:
+	case LS_PHONG:
+		dglShadeModel (GL_SMOOTH);
+		OpenGL_state.cur_light_state=LS_GOURAUD;
+		break;
+	default:
+		Int3();
+		break;
+	}
+
+	CHECK_ERROR(13)
+}
+
+void rend_SetAlphaType(sbyte atype)
+{
+	if (atype==OpenGL_state.cur_alpha_type)
+		return;		// don't set it redundantly
+#if (defined(_USE_OGL_ACTIVE_TEXTURES))
+	if (UseMultitexture && Last_texel_unit_set!=0)
+	{
+		oglActiveTextureARB (GL_TEXTURE0_ARB+0);
+		Last_texel_unit_set=0;
+
+	}
+#endif
+	OpenGL_sets_this_frame[6]++;
+
+	if (atype==AT_ALWAYS)
+	{
+		if (opengl_Blending_on)
+		{
+			dglDisable (GL_BLEND);
+			opengl_Blending_on=false;
+		}
+	}
+	else
+	{
+		if (!opengl_Blending_on)
+		{
+			dglEnable (GL_BLEND);
+			opengl_Blending_on=true;
+		}
+	}
+
+	switch (atype)
+	{
+	case AT_ALWAYS:
+		rend_SetAlphaValue (255);
+		dglBlendFunc (GL_ONE,GL_ZERO);
+		break;
+	case AT_CONSTANT:
+		dglBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+		break;
+	case AT_TEXTURE:
+		rend_SetAlphaValue (255);
+		dglBlendFunc (GL_ONE,GL_ZERO);
+		break;
+	case AT_CONSTANT_TEXTURE:
+		dglBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+		break;
+	case AT_VERTEX:
+		dglBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+		break;
+	case AT_CONSTANT_TEXTURE_VERTEX:
+	case AT_CONSTANT_VERTEX:
+		dglBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+		break;
+	case AT_TEXTURE_VERTEX:
+		dglBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+		break;
+	case AT_LIGHTMAP_BLEND:
+		dglBlendFunc (GL_DST_COLOR,GL_ZERO);
+		break;
+	case AT_SATURATE_TEXTURE:
+	case AT_LIGHTMAP_BLEND_SATURATE:
+		dglBlendFunc (GL_SRC_ALPHA,GL_ONE);
+		break;
+	case AT_SATURATE_VERTEX:
+		dglBlendFunc (GL_SRC_ALPHA,GL_ONE);
+		break;
+	case AT_SATURATE_CONSTANT_VERTEX:
+		dglBlendFunc (GL_SRC_ALPHA,GL_ONE);
+		break;
+	case AT_SATURATE_TEXTURE_VERTEX:
+		dglBlendFunc (GL_SRC_ALPHA,GL_ONE);
+		break;
+	case AT_SPECULAR:
+		break;
+	default:
+		Int3();		// no type defined,get jason
+		break;
+	}
+	OpenGL_state.cur_alpha_type=atype;
+	Alpha_multiplier=opengl_GetAlphaMultiplier();
+	CHECK_ERROR(15)
+}
+
+// Sets the alpha value for constant alpha
+void rend_SetAlphaValue(ubyte val)
+{
+	OpenGL_state.cur_alpha=val;
+	Alpha_multiplier=opengl_GetAlphaMultiplier();
+}
+
+// Sets the overall alpha scale factor (all alpha values are scaled by this value)
+// usefull for motion blur effect
+void rend_SetAlphaFactor(float val)
+{
+	if(val<0.0f) val = 0.0f;
+	if(val>1.0f) val = 1.0f;
+	OpenGL_Alpha_factor = val;
+}
+
+// Returns the current Alpha factor
+float rend_GetAlphaFactor(void)
+{
+	return OpenGL_Alpha_factor;
+}
+
+// Sets the texture wrapping type
+void rend_SetWrapType(wrap_type val)
+{
+	OpenGL_state.cur_wrap_type=val;
+}
+
+// Draws a line using the states of the renderer
+void rend_DrawSpecialLine(g3Point *p0,g3Point *p1)
+{
+	int x_add=OpenGL_state.clip_x1;
+	int y_add=OpenGL_state.clip_y1;
+	float fr,fg,fb,alpha;
+	int i;
+
+	fr=GR_COLOR_RED(OpenGL_state.cur_color);
+	fg=GR_COLOR_GREEN(OpenGL_state.cur_color);
+	fb=GR_COLOR_BLUE(OpenGL_state.cur_color);
+
+	fr/=255.0f;
+	fg/=255.0f;
+	fb/=255.0f;
+
+	alpha=Alpha_multiplier*OpenGL_Alpha_factor;
+
+	// And draw!
+	dglBegin (GL_LINES);
+	for (i=0;i<2;i++)
+	{
+		g3Point *pnt=p0;
+
+		if (i==1)
+			pnt=p1;
+
+		if (OpenGL_state.cur_alpha_type & ATF_VERTEX)
+			alpha=pnt->p3_a*Alpha_multiplier*OpenGL_Alpha_factor;
+
+		// If we have a lighting model, apply the correct lighting!
+		if (OpenGL_state.cur_light_state!=LS_NONE)
+		{
+			if (OpenGL_state.cur_light_state==LS_FLAT_GOURAUD)
+			{
+				dglColor4f (fr,fg,fb,alpha);
+			}
+			else
+			{
+				// Do lighting based on intesity (MONO) or colored (RGB)
+				if (OpenGL_state.cur_color_model==CM_MONO)
+					dglColor4f (pnt->p3_l,pnt->p3_l,pnt->p3_l,alpha);
+				else
+				{
+					dglColor4f (pnt->p3_r,pnt->p3_g,pnt->p3_b,alpha);
+				}
+			}
+		}
+		else
+		{
+			dglColor4f (fr,fg,fb,alpha);
+		}
+
+		// Finally, specify a vertex
+		float z = std::max(0.,std::min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
+		dglVertex3f (pnt->p3_sx+x_add,pnt->p3_sy+y_add,-z);
+	}
+
+	dglEnd();
+}
+
+// Takes a screenshot of the current frame and puts it into the handle passed
+void rend_Screenshot(int bm_handle)
+{
+	ushort *dest_data;
+	uint *temp_data;
+	int i,t;
+	int total=OpenGL_state.screen_width*OpenGL_state.screen_height;
+
+	ASSERT((bm_w(bm_handle,0))==OpenGL_state.screen_width);
+	ASSERT((bm_h(bm_handle,0))==OpenGL_state.screen_height);
+
+	int w=bm_w(bm_handle,0);
+	int h=bm_h(bm_handle,0);
+
+	temp_data=(uint *)mem_malloc (total*4);
+	ASSERT (temp_data);	// Ran out of memory?
+
+	dest_data=bm_data (bm_handle,0);
+
+	dglReadPixels (0,0,OpenGL_state.screen_width,OpenGL_state.screen_height,GL_RGBA,GL_UNSIGNED_BYTE,(GLvoid *)temp_data);
+
+	for (i=0;i<h;i++)
+	{
+		for (t=0;t<w;t++)
+		{
+			uint spix=temp_data[i*w+t];
+
+			int r=spix & 0xff;
+			int g=(spix>>8) & 0xff;
+			int b=(spix>>16) & 0xff;
+
+			dest_data[(((h-1)-i)*w)+t]=GR_RGB16(r,g,b);
+		}
+	}
+
+	mem_free(temp_data);
+}
+
+void rend_SetZBias(float z_bias)
+{
+	if( Z_bias != z_bias )
+	{
+		Z_bias=z_bias;
+		
+		// Force refresh our transforms to take the Zbias into account		
+		/*g3_GetModelViewMatrix( &View_position, &Unscaled_matrix, (float*)gTransformModelView );		
+		g3_UpdateFullTransform();		
+		g3_ForceTransformRefresh();*/
+	}
+}
+
+// Enables/disables writes the depth buffer
+void rend_SetZBufferWriteMask(int state)
+{
+	OpenGL_sets_this_frame[5]++;
+	if(state)
+	{
+		dglDepthMask(GL_TRUE);
+	}
+	else
+	{
+		dglDepthMask(GL_FALSE);
+	}
+}
+
+// Gets a pointer to a linear frame buffer
+void rend_GetLFBLock(renderer_lfb *lfb)
+{
+}
+
+// Releases an lfb lock
+void rend_ReleaseLFBLock(renderer_lfb *lfb)
+{
+}
+
+// Returns the aspect ratio of the physical screen
+void rend_GetProjectionParameters(int *width,int *height)
+{
+	*width=OpenGL_state.clip_x2-OpenGL_state.clip_x1;
+	*height=OpenGL_state.clip_y2-OpenGL_state.clip_y1;
+}
+
+void rend_GetProjectionScreenParameters( int &screenLX, int &screenTY, int &screenW, int &screenH )
+{
+	screenLX = OpenGL_state.clip_x1;
+	screenTY = OpenGL_state.clip_y1;
+	screenW  = OpenGL_state.clip_x2 - OpenGL_state.clip_x1 + 1;
+	screenH  = OpenGL_state.clip_y2 - OpenGL_state.clip_y1 + 1;
+}
+
+// Returns the aspect ratio of the physical screen
+float rend_GetAspectRatio(void)
+{
+	float aspect_ratio = (float)((3.0f * OpenGL_state.screen_width)/(4.0f * OpenGL_state.screen_height));
+	return aspect_ratio;
+}
+
+// Given a source x,y and width,height, draws any sized bitmap into the renderer lfb
+void rend_DrawLFBBitmap(int sx,int sy,int w,int h,int dx,int dy,ushort *data,int rowsize)
+{
+}
+
+//	given a chunked bitmap, renders it.
+void rend_DrawChunkedBitmap(chunked_bitmap *chunk, int x, int y, ubyte alpha)
+{
+	int *bm_array = chunk->bm_array;
+	int w = chunk->w;
+	int h = chunk->h;
+	int piece_w=bm_w(bm_array[0],0);
+	int piece_h=bm_h(bm_array[0],0);
+	int screen_w, screen_h;
+	int i,t;
+	rend_SetZBufferState (0);
+	rend_GetProjectionParameters(&screen_w, &screen_h);
+	for (i=0;i<h;i++)
+	{
+		for (t=0;t<w;t++)
+		{
+			int dx=x+(piece_w*t);
+			int dy=y+(piece_h*i);
+			int dw,dh;
+			if ((dx+piece_w)>screen_w)
+				dw=piece_w-((dx+piece_w)-screen_w);
+			else
+				dw=piece_w;
+			if ((dy+piece_h)>screen_h)
+				dh=piece_h-((dy+piece_h)-screen_h);
+			else
+				dh=piece_h;
+
+			float u2=(float)dw/(float)piece_w;
+			float v2=(float)dh/(float)piece_h;
+			rend_DrawSimpleBitmap(bm_array[i*w+t],dx,dy);
+		}
+	}
+	rend_SetZBufferState (1);
+}
+
+//	given a chunked bitmap, renders it.scaled
+void rend_DrawScaledChunkedBitmap(chunked_bitmap *chunk, int x, int y, int neww, int newh, ubyte alpha)
+{
+	int *bm_array = chunk->bm_array;
+	int w = chunk->w;
+	int h = chunk->h;
+	int piece_w;
+	int piece_h;
+	int screen_w, screen_h;
+	int i,t;
+
+	float scalew,scaleh;
+
+	scalew = ((float)neww)/((float)chunk->pw);
+	scaleh = ((float)newh)/((float)chunk->ph);
+	piece_w = scalew * ((float)bm_w(bm_array[0],0));
+	piece_h = scaleh * ((float)bm_h(bm_array[0],0));
+	rend_GetProjectionParameters(&screen_w, &screen_h);
+	rend_SetOverlayType (OT_NONE);
+	rend_SetLighting (LS_NONE);
+	rend_SetColorModel (CM_MONO);
+	rend_SetZBufferState (0);
+	rend_SetAlphaType (AT_CONSTANT_TEXTURE);
+	rend_SetAlphaValue (alpha);
+	rend_SetWrapType (WT_WRAP);
+	for (i=0;i<h;i++)
+	{
+		for (t=0;t<w;t++)
+		{
+			int dx=x+(piece_w*t);
+			int dy=y+(piece_h*i);
+			int dw,dh;
+			if ((dx+piece_w)>screen_w)
+				dw=piece_w-((dx+piece_w)-screen_w);
+			else
+				dw=piece_w;
+			if ((dy+piece_h)>screen_h)
+				dh=piece_h-((dy+piece_h)-screen_h);
+			else
+				dh=piece_h;
+
+			float u2=(float)dw/(float)piece_w;
+			float v2=(float)dh/(float)piece_h;
+			rend_DrawScaledBitmap(dx,dy,dx+dw,dy+dh,bm_array[i*w+t],0,0,u2,v2);
+
+		}
+	}
+	rend_SetZBufferState (1);
+}
+
+// Sets some global preferences for the renderer
+int rend_SetPreferredState(renderer_preferred_state *pref_state)
+{
+	int retval = 1;
+	renderer_preferred_state old_state = OpenGL_preferred_state;
+
+	OpenGL_preferred_state = *pref_state;
+	if( OpenGL_state.initted )
+	{
+		int reinit = 0;
+		mprintf ((0,"Inside pref state!\n"));
+
+		// Change gamma if needed
+		if( pref_state->width!=OpenGL_state.screen_width || pref_state->height!=OpenGL_state.screen_height || old_state.bit_depth!=pref_state->bit_depth)
+		{
+			reinit=1;
+		}
+
+		if( reinit )
+		{
+			opengl_Close();
+			retval = opengl_Init( NULL, &OpenGL_preferred_state );
+		}
+		else
+		{
+			if( old_state.gamma !=pref_state->gamma )
+			{
+				opengl_SetGammaValue( pref_state->gamma );
+			}
+		}
+	}
+	else
+	{
+		OpenGL_preferred_state = *pref_state;
+	}
+
+	return retval;
+}
+
+// Sets the gamma for this display
+void rend_SetGammaValue(float val)
+{
+}
+
+// Draws a simple bitmap at the specified x,y location
+void rend_DrawSimpleBitmap(int bm_handle,int x,int y)
+{
+	rend_SetAlphaType(AT_CONSTANT_TEXTURE);
+	rend_SetAlphaValue(255);
+	rend_SetLighting(LS_NONE);
+	rend_SetColorModel(CM_MONO);
+	rend_SetOverlayType(OT_NONE);
+	rend_SetFiltering(0);
+	rend_DrawScaledBitmap(x,y,x+bm_w(bm_handle,0),y+bm_h(bm_handle,0),bm_handle,0,0,1,1);
+	rend_SetFiltering(1);
+}
+
+// Fills in the passed in pointer with the current rendering state
+void rend_GetRenderState(rendering_state *rstate)
+{
+	memcpy( rstate, &OpenGL_state, sizeof(rendering_state) );
+}
+
+// Takes a bitmap and blits it to the screen using linear frame buffer stuff
+// X and Y are the destination X,Y
+void rend_CopyBitmapToFramebuffer(int bm_handle,int x,int y)
+{
+	ASSERT( opengl_Framebuffer_ready );
+
+	if( opengl_Framebuffer_ready == 1 )
+	{
+		bm_CreateChunkedBitmap( bm_handle, &opengl_Chunked_bitmap );
+		opengl_Framebuffer_ready = 2;
+	}
+	else
+	{
+		opengl_ChangeChunkedBitmap( bm_handle, &opengl_Chunked_bitmap );
+	}
+
+	rend_DrawChunkedBitmap( &opengl_Chunked_bitmap, 0, 0, 255 );
 }
 
 // Gets a renderer ready for a framebuffer copy, or stops a framebuffer copy
-void opengl_SetFrameBufferCopyState (bool state)
+void rend_SetFrameBufferCopyState(bool state)
 {
-	if (state)
+	if( state )
 	{
-		ASSERT (opengl_Framebuffer_ready==0);
-		opengl_Framebuffer_ready=1;
+		ASSERT( opengl_Framebuffer_ready == 0 );
+		opengl_Framebuffer_ready = 1;
 	}
 	else
 	{
-		ASSERT (opengl_Framebuffer_ready!=0);
-		opengl_Framebuffer_ready=0;
+		ASSERT( opengl_Framebuffer_ready != 0 );
+		opengl_Framebuffer_ready = 0;
 
-		if (opengl_Framebuffer_ready==2)
+		if( opengl_Framebuffer_ready == 2 )
 		{
-			bm_DestroyChunkedBitmap (&opengl_Chunked_bitmap);
+			bm_DestroyChunkedBitmap( &opengl_Chunked_bitmap );
 			opengl_ResetCache();
 		}
-		
-		
 	}
+}
+
+// Changes the resolution of the renderer
+void rend_SetResolution(int width,int height)
+{
+}
+
+// Gets OpenGL ready to work in a window
+int rend_InitOpenGLWindow (oeApplication *app,renderer_preferred_state *pref_state)
+{
+	WindowGL = 1;
+	return opengl_Init( app, pref_state );
+}
+
+// Shuts down OpenGL in a window
+void rend_CloseOpenGLWindow(void)
+{
+	opengl_Close();
+	WindowGL=0;
+	OpenGL_window_initted=0;
+	mprintf ((1,"SHUTTING DOWN WINDOWED OPENGL!"));
+}
+
+// Sets the hardware bias level for coplanar polygons
+// This helps reduce z buffer artifacts
+void rend_SetCoplanarPolygonOffset(float factor)
+{
+	if( factor == 0.0f )
+	{
+		dglDisable( GL_POLYGON_OFFSET_FILL );
+	}
+	else
+	{
+		dglEnable( GL_POLYGON_OFFSET_FILL );
+		dglPolygonOffset( -1.0f, -1.0f );
+	}
+}
+
+// Preuploads a texture to the video card
+void rend_PreUploadTextureToCard(int handle,int map_type)
+{
+}
+
+// Frees an uploaded texture from the video card
+void rend_FreePreUploadedTexture(int handle,int map_type)
+{
+}
+
+// Retrieves an error message
+char *rend_GetErrorMessage ()
+{	
+	return (char *)Renderer_error_message;
+}
+
+// Sets an error message
+void rend_SetErrorMessage (char *str)
+{
+	ASSERT( strlen(str) < 256 );
+	strcpy( Renderer_error_message, str );
+}
+
+// Returns 1 if there is mid video memory, 2 if there is low vid memory, or 0 if there is large vid memory
+int rend_LowVidMem(void)
+{
+	return 0;
+}
+
+// Returns 1 if the renderer supports bumpmapping
+int rend_SupportsBumpmapping(void)
+{
+	return 0;
+}
+
+// Sets a bumpmap to be rendered, or turns off bumpmapping altogether
+void rend_SetBumpmapReadyState(int state,int map)
+{
+}
+
+// returns the direct draw object 
+void *rend_RetrieveDirectDrawObj(void **frontsurf, void **backsurf)
+{
+	*frontsurf = NULL;
+	*backsurf = NULL;
+	return NULL;
 }
 
 // returns rendering statistics for the frame
-void opengl_GetStatistics(tRendererStats *stats)
+void rend_GetStatistics(tRendererStats *stats)
 {
-	stats->poly_count = OpenGL_last_frame_polys_drawn;
-	stats->vert_count = OpenGL_last_frame_verts_processed;
-	stats->texture_uploads = OpenGL_last_uploaded;
+	if( Renderer_initted )
+	{
+		stats->poly_count      = OpenGL_last_frame_polys_drawn;
+		stats->vert_count      = OpenGL_last_frame_verts_processed;
+		stats->texture_uploads = OpenGL_last_uploaded;
+	}
+	else
+	{
+		memset( stats, 0, sizeof(tRendererStats) );
+	}
 }
 
-#ifdef __LINUX__
-void CreateFullScreenWindow(Display *dpy,Window rootwin,Window window,int DisplayScreen,int DisplayWidth,int DisplayHeight)
+void rend_TransformSetToPassthru(void)
 {
-	// see if a motif based window manager is running.  do this by   
-	// getting the _MOTIF_WM_INFO property on the root window.  if   
-	// it exists then make sure the window it refers to also exists.   
-	Bool noWM,isMWMRunning = False;
-	Atom a = XInternAtom(dpy, "_MOTIF_WM_INFO", True);   
-	if (a)
-	{
-		struct BzfPropMotifWmInfo
-		{
-		public:
-			long  flags;
-			Window  wmWindow;
-		};
+	int width  = OpenGL_state.screen_width;
+	int height = OpenGL_state.screen_height;
 
-		Atom type;
-		int format;
-		unsigned long nitems;
-		unsigned long bytes_after;
-		long* mwmInfo;
+	// Projection
+	dglMatrixMode(GL_PROJECTION);
+	dglLoadIdentity();
+	dglOrtho( (GLfloat)0.0f, (GLfloat)(width), (GLfloat)(height), (GLfloat)0.0f, 0.0f, 1.0f);
 
-		XGetWindowProperty(dpy,rootwin,a, 0, 4, False,a, &type, &format, &nitems, &bytes_after,(unsigned char**)&mwmInfo);
-		
-		if (mwmInfo)
-		{
-			// get the mwm window from the properties
-			const Window mwmWindow = ((BzfPropMotifWmInfo*)mwmInfo)->wmWindow;
-			XFree(mwmInfo);
+	// Viewport
+	dglViewport( 0, 0, width, height);
 
-			// verify that window is a child of the root window
-			Window root, parent, *children;
-			unsigned int numChildren;
-			if (XQueryTree(dpy, mwmWindow, &root, &parent,   &children, &numChildren)) 
-			{
-				XFree(children);
-				if (parent == rootwin)
-					isMWMRunning = True;
-			}
-		}
-	}
-
-	// turning off decorations is window manager dependent
-	if (isMWMRunning)
-	{
-		fprintf(stdout,"Motif Window Manager\n");
-		// it's a Motif based window manager
-		long hints[4];
-		hints[0] = 0;
-		hints[1] = 0;
-		hints[2] = 0;
-		hints[3] = 0;
-		long* xhints;
-		
-		a = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
-		
-		{
-			// get current hints
-			Atom type;
-			int format;
-			unsigned long nitems;
-			unsigned long bytes_after;
-
-			XGetWindowProperty(dpy, window, a, 0, 4, False,a, &type, &format, &nitems, &bytes_after,(unsigned char**)&xhints);
-
-			if (xhints)
-			{
-				hints[0] = xhints[0];
-				hints[1] = xhints[1];
-				hints[2] = xhints[2];
-				hints[3] = xhints[3];
-				XFree(xhints);
-			}
-		}
-
-		hints[0] |= 2;  // MWM_HINTS_DECORATIONS flag
-		hints[2] = 0;  // no decorations
-
-		XChangeProperty(dpy, window, a, a, 32,PropModeReplace, (unsigned char*)&hints, 4);
-
-		noWM = False;
-	}else
-	{
-		// non-motif window manager.  use override redirect to prevent window     
-		// manager from messing with our appearance.  unfortunately, the user     
-		// can't move or iconify the window either.
-		XSetWindowAttributes attr;
-		attr.override_redirect = True;
-		XChangeWindowAttributes(dpy,window, CWOverrideRedirect, &attr);
-		noWM = True;
-	}
-
-	// now set position and size
-	long dummy;
-	XSizeHints xsh;
-	XGetWMNormalHints(dpy, window, &xsh, &dummy);   
-	xsh.x = 0;
-	xsh.y = 0;
-	xsh.base_width = DisplayWidth;
-	xsh.base_height = DisplayHeight;
-	xsh.flags |= USPosition | PPosition | PBaseSize;
-
-	{
-		char *env;
-
-		env=getenv("MESA_GLX_FX");
-		if (env && *env=='f') // Full screen Mesa mode
-		{
-			xsh.base_width=640;
-			xsh.base_height=480;
-		}else
-		{
-			// Check if we have the XF86 vidmode extension, for virtual roots
-			if (LinuxVideoMode.QueryExtension(dpy))
-			{
-				int dotclock;
-				XF86VidModeModeLine modeline;
-
-				LinuxVideoMode.GetModeLine(dpy,DisplayScreen,&dotclock,&modeline);
-
-				xsh.base_width=modeline.hdisplay;
-				xsh.base_height=modeline.vdisplay;
-				
-				//if (modeline.c_private)
-				//	XFree(modeline.c_private);
-			}
-		}
-	}
- 
-	// set the window manager hints for the window and move and resize
-	// the window (overriding the window manager).  we have to override
-	// the window manager for the move and resize because the window
-	// *must* be the correct size when we first bind the OpenGL context
-	// for the 3Dfx driver since it cannot handle later resizes.  if we
-	// don't override the window manager, our move and resize will
-	// probably be ignored.
-	if (!noWM)
-	{
-		XSetWindowAttributes attr;
-		attr.override_redirect = True;
-		XChangeWindowAttributes(dpy,window, CWOverrideRedirect, &attr);
-	}
-
-	XSetWMNormalHints(dpy, window, &xsh);
-	XMoveResizeWindow(dpy, window, xsh.x, xsh.y, xsh.base_width, xsh.base_height);
-
-	if (!noWM)
-	{
-		XSetWindowAttributes attr;
-		attr.override_redirect = False;
-		XChangeWindowAttributes(dpy,window, CWOverrideRedirect, &attr);
-	}
-
-	XSync(dpy, False);
-
+	// ModelView
+	dglMatrixMode(GL_MODELVIEW);
+	dglLoadIdentity();
 }
-#endif
+
+void rend_TransformSetViewport( int lx, int ty, int width, int height )
+{
+	dglViewport( lx, OpenGL_state.screen_height - (ty + height - 1), width, height);
+}
+
+void rend_TransformSetProjection( float trans[4][4] )
+{
+	dglMatrixMode( GL_PROJECTION );
+	dglLoadMatrixf( &trans[0][0] );
+}
+
+void rend_TransformSetModelView( float trans[4][4] )
+{
+	dglMatrixMode( GL_MODELVIEW );
+	dglLoadMatrixf( &trans[0][0] );
+}
