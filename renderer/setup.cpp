@@ -98,19 +98,24 @@ void g3_StartFrame(vector *view_pos,matrix *view_matrix,float zoom)
 		//check for user override
 		screen_aspect = screen_aspect * 4.0f / 3.0f / sAspect;
 	}
-	float s = screen_aspect * (float) Window_height / (float) Window_width;
+	//float s = screen_aspect * (float) Window_height / (float) Window_width;
+	//[ISB] Just use the aspect of the window, the screen aspect is not important since pixels are all square
+	float s = ((float)Window_width / Window_height);// / (4.f / 3.f);
 
 	if( s <= 1.0f )
 	{
 		//scale x
-		Matrix_scale.x = s;
-		Matrix_scale.y = 1.0f;
+		Matrix_scale.x = 1.0f;
+		Matrix_scale.y = s;
 	}
 	else 
 	{
-		Matrix_scale.y = 1.0f / s;
-		Matrix_scale.x = 1.0f;
+		Matrix_scale.y = 1.0f;
+		Matrix_scale.x = 1.0f / s;
 	}
+
+	//Convert zoom into vertical FOV for my convenience, since I'm locking the Y FOV when the screen gets wider. 
+	zoom *= 3.f / 4.f;
 
 	Matrix_scale.z = 1.0f;
 
