@@ -1276,9 +1276,10 @@ float	ComputeDefaultSizeFunc(int handle, float *size_ptr, vector *offset_ptr, bo
 	}
 
 	if(offset_ptr)
-	{
-		vector min_xyz;
-		vector max_xyz;
+	{ 
+		//[ISB] initialize these, because some models have a first submodel with 0 verts. 
+		vector min_xyz = {};
+		vector max_xyz = {};
 
 		for(n = start_frame; n <= end_frame; n++)
 		{
