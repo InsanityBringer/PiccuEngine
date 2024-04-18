@@ -447,9 +447,22 @@ void opengl_SetDefaults()
 }
 
 #if defined(WIN32)
+static HMODULE glDllhandle = nullptr;
 static GLADapiproc opengl_GLADLoad(const char* name)
 {
-	return (GLADapiproc)wglGetProcAddress(name);
+	if (!glDllhandle)
+	{
+		glDllhandle = LoadLibrary("opengl32.dll");
+		if (!glDllhandle)
+			Error("opengl_GLADLoad: failed to load opengl32.dll!");
+	}
+	void* ptr = wglGetProcAddress(name);
+	//I love OpenGL btw
+	if (!ptr)
+	{
+		ptr = GetProcAddress(glDllhandle, name);
+	}
+	return (GLADapiproc)ptr;
 }
 
 // Check for OpenGL support, 
@@ -514,7 +527,8 @@ int opengl_Setup(HDC glhdc)
 
 	ASSERT (ResourceContext!=NULL);
 	mprintf ((0,"Making context current\n"));
-	wglMakeCurrent((HDC)glhdc, ResourceContext);
+	if (!wglMakeCurrent((HDC)glhdc, ResourceContext))
+		Int3();
 
 	if (!Already_loaded)
 	{
