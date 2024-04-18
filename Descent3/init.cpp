@@ -1570,18 +1570,6 @@ void LoadGameSettings()
 
 	Database->read_int("PredefDetailSetting",&level);
 	ConfigSetDetailLevel(level);
-	int widtharg = FindArg("-Width");
-	int heightarg = FindArg("-Height");
-	if(widtharg)
-	{
-		Video_res_list[N_SUPPORTED_VIDRES-1].width = atoi(GameArgs[widtharg+1]);
-		Game_video_resolution = N_SUPPORTED_VIDRES-1;
-	}
-	if(heightarg)
-	{
-		Video_res_list[N_SUPPORTED_VIDRES-1].height = atoi(GameArgs[heightarg+1]);
-		Game_video_resolution = N_SUPPORTED_VIDRES-1;
-	}
 
 	// Motion blur
 	Use_motion_blur = 0;

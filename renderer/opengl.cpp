@@ -775,16 +775,17 @@ static void opengl_UpdateWindow()
 	}
 	else
 	{
-		//TODO: needs to be made able to use other displays. 
-		OpenGL_state.view_width = GetSystemMetrics(SM_CXSCREEN);
-		OpenGL_state.view_height = GetSystemMetrics(SM_CYSCREEN);
-		//SetWindowPos(hOpenGLWnd, HWND_TOPMOST, 0, 0, OpenGL_preferred_state.width, OpenGL_preferred_state.height, SWP_FRAMECHANGED);
-		width = OpenGL_preferred_state.width;
-		height = OpenGL_preferred_state.height;
+		ParentApplication->set_flags(OEAPP_FULLSCREEN);
+
 		RECT rect;
 		GetWindowRect((HWND)hOpenGLWnd, &rect);
 		mprintf((0, "rect=%d %d %d %d\n", rect.top, rect.right, rect.bottom, rect.left));
-		ParentApplication->set_flags(OEAPP_FULLSCREEN);
+
+		OpenGL_state.view_width = rect.right - rect.left;
+		OpenGL_state.view_height = rect.bottom - rect.top;
+
+		width = OpenGL_preferred_state.width;
+		height = OpenGL_preferred_state.height;
 	}
 
 	float baseAspect = width / (float)height;

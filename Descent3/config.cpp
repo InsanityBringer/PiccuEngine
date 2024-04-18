@@ -306,16 +306,38 @@
 
 #define STAT_SCORE STAT_TIMER
 
-tVideoResolution Video_res_list[N_SUPPORTED_VIDRES] = {
-	{512,384},
-	{640,480},
-	{800,600},
-	{960,720},
-	{1024,768},
-	{1280,960},
-	{1600,1200},
-	{640,480}			// custom
+struct newVideoResolution
+{
+	int width;
+	int height;
+	const char* name;
+} New_video_res_list[] = {
+	{512,384, "512x384"},
+	{640,480, "640x480"},
+	{800,600, "800x600"},
+	{960,720, "960x720"},
+	{1024,768, "1024x768"},
+	{1280,960, "1280x960"},
+	{1600,1200, "1600x1200"},
+	//16:9
+	{1280,720, "1280x720"},
+	{1366,768, "1366x768"},
+	{1368,768, "1368x768"},
+	{1920,1080, "1920x1080"},
+	{2560,1440, "2560x1440"},
+	{3840,2160, "3840x2160"},
+	//16:10
+	{1280,800, "1280x800"},
+	{1920,1200, "1920x1200"},
+	{2560,1600, "2560x1600"},
+	//Ultrawide
+	{2560,1080, "2560x1080"},
+	{2880,1200, "2800x1200"},
+	{3440,1440, "3440x1440"},
+	{3840,1600, "3840x1600"}
 };
+
+#define NUM_RESOLUTION sizeof(New_video_res_list) / sizeof(New_video_res_list[0])
 
 int Game_video_resolution = 1;
 int Game_window_res_width = 640, Game_window_res_height = 480;
@@ -737,6 +759,7 @@ void config_gamma()
 //
 #define RESBUFFER_SIZE 50
 #define IDV_CHANGEWINDOW 10
+#define UID_RESOLUTION 110
 struct video_menu
 {
 	newuiSheet *sheet;
@@ -855,6 +878,63 @@ struct video_menu
 	{
 		switch (res)
 		{
+		case IDV_CHANGEWINDOW:
+		{
+			newuiTiledWindow menu;
+			newuiSheet* select_sheet;
+			newuiListBox* resolution_list;
+
+			menu.Create("Resolution", 0, 0, 300, 384);
+			select_sheet = menu.GetSheet();
+			select_sheet->NewGroup(NULL, 10, 0);
+			resolution_list = select_sheet->AddListBox(208, 256, UID_RESOLUTION, UILB_NOSORT);
+			select_sheet->NewGroup(NULL, 100, 280, NEWUI_ALIGN_HORIZ);
+			select_sheet->AddButton(TXT_OK, UID_OK);
+			select_sheet->AddButton(TXT_CANCEL, UID_CANCEL);
+
+			for (int i = 0; i < NUM_RESOLUTION; i++)
+			{
+				resolution_list->AddItem(New_video_res_list[i].name);
+			}
+
+			menu.Open();
+
+			//I think this needs to be done after the sheet is realized.
+			for (int i = 0; i < NUM_RESOLUTION; i++)
+			{
+				if (Game_window_res_width == New_video_res_list[i].width &&
+					Game_window_res_height == New_video_res_list[i].height)
+				{
+					resolution_list->SetCurrentIndex(i);
+					break;
+				}
+			}
+
+			int res;
+			do
+			{
+				res = menu.DoUI();
+			} while (res != UID_OK && res != UID_CANCEL);
+
+			if (res == UID_OK)
+			{
+				int newindex = resolution_list->GetCurrentIndex();
+				if (newindex < NUM_RESOLUTION) //for custom items
+				{
+					newVideoResolution& res = New_video_res_list[resolution_list->GetCurrentIndex()];
+					window_width = res.width;
+					window_height = res.height;
+				}
+
+				snprintf(buffer, RESBUFFER_SIZE, "%d x %d", window_width, window_height);
+				
+			}
+
+			menu.Close();
+			menu.Destroy();
+
+		}
+		break;
 		case IDV_AUTOGAMMA:
 			config_gamma();
 			break;
