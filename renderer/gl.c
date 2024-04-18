@@ -1743,11 +1743,17 @@ static int glad_gl_find_core_gl(void) {
     return GLAD_MAKE_VERSION(major, minor);
 }
 
+extern void ErrorToC(char* string);
+
 int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
     int version;
 
     glad_glGetString = (PFNGLGETSTRINGPROC) load(userptr, "glGetString");
-    if(glad_glGetString == NULL) return 0;
+    if(glad_glGetString == NULL) 
+    {
+        ErrorToC("Failed to load glGetString!");
+        return 0;
+    }
     version = glad_gl_find_core_gl();
 
     glad_gl_load_GL_VERSION_1_0(load, userptr);
@@ -1763,7 +1769,11 @@ int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
     glad_gl_load_GL_VERSION_3_2(load, userptr);
     glad_gl_load_GL_VERSION_3_3(load, userptr);
 
-    if (!glad_gl_find_extensions_gl()) return 0;
+    if (!glad_gl_find_extensions_gl()) 
+    {
+        ErrorToC("Failed to find extensions!");
+        return 0;
+    }
     glad_gl_load_GL_ARB_multitexture(load, userptr);
 
 

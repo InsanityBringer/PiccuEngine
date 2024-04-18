@@ -41,6 +41,14 @@
 #undef min
 #undef max
 
+extern "C"
+{
+	void ErrorToC(char* string)
+	{
+		Error(string);
+	}
+}
+
 int FindArg(char *);
 void rend_SetLightingState(light_state state);
 

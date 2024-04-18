@@ -27,7 +27,7 @@ typedef struct {
 	char	name[PSFILENAME_LEN+1];	//just the filename part
 	int	offset;						//offset into library file
 	int	length;						//length of this file
-	ulong	timestamp;					//time and date of file
+	uint	timestamp;					//time and date of file
 	int	flags;						//misc flags
 } library_entry;
 typedef struct library {
