@@ -781,28 +781,16 @@ struct video_menu
 		int iTemp;
 		sheet = menu->AddOption(IDV_VCONFIG, TXT_OPTVIDEO, NEWUIMENU_MEDIUM);
 
-	// video resolution
-		/*iTemp = Game_video_resolution;
-		sheet->NewGroup(TXT_RESOLUTION, 0, 0);
-		resolution = sheet->AddFirstLongRadioButton("512x384");
-		sheet->AddLongRadioButton("640x480");
-		sheet->AddLongRadioButton("800x600");
-		sheet->AddLongRadioButton("960x720");
-		sheet->AddLongRadioButton("1024x768");
-		sheet->AddLongRadioButton("1280x960");
-		sheet->AddLongRadioButton("1600x1200");
-		*resolution = iTemp;*/
-
 		sheet->NewGroup(TXT_RESOLUTION, 0, 0);
 		buffer = sheet->AddChangeableText(RESBUFFER_SIZE);
 		snprintf(buffer, RESBUFFER_SIZE, "%d x %d", Game_window_res_width, Game_window_res_height);
 		sheet->AddLongButton("Change...", IDV_CHANGEWINDOW);
 		fullscreen = sheet->AddLongCheckBox("Fullscreen", Game_fullscreen);
 		tSliderSettings settings = {};
-		settings.min_val.f = 72.f;
+		settings.min_val.f = D3_DEFAULT_FOV;
 		settings.max_val.f = 90.f;
 		settings.type = SLIDER_UNITS_FLOAT;
-		fov = sheet->AddSlider("FOV", 90-72, Render_FOV_desired, &settings);
+		fov = sheet->AddSlider("FOV", settings.max_val.f - settings.min_val.f, Render_FOV_desired - D3_DEFAULT_FOV, &settings);
 
 		window_width = Game_window_res_width;
 		window_height = Game_window_res_height;
@@ -831,15 +819,7 @@ struct video_menu
 		if (vsync) 
 			Render_preferred_state.vsync_on = (*vsync) ? 1 : 0;
 
-		
-		/*if (bitdepth) 
-			Render_preferred_bitdepth = (*bitdepth)==1 ? 32 : 16;
-		if (GetScreenMode()==SM_GAME) {
-			Render_preferred_state.bit_depth = Render_preferred_bitdepth;
-			rend_SetPreferredState(&Render_preferred_state);
-		}*/
-
-		Render_FOV_desired = fov[0];
+		Render_FOV_desired = fov[0] + D3_DEFAULT_FOV;
 		if (Render_FOV != Render_FOV_desired)
 			Render_FOV = Render_FOV_desired; //this may cause discontinuities if FOV is changed while zoomed. hmm. 
 
@@ -852,6 +832,7 @@ struct video_menu
 			Game_window_res_height = window_height;
 
 			SetScreenMode(GetScreenMode(), true);
+			Current_pilot.set_hud_data(NULL, NULL, NULL, &window_width, &window_height);
 		}
 
 		/*if ((*resolution) != Game_video_resolution) {

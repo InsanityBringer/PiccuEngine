@@ -146,7 +146,6 @@ typedef struct tVideoResolution
 }
 tVideoResolution;
 
-extern tVideoResolution Video_res_list[];
 extern int Game_video_resolution;
 extern int Game_window_res_width, Game_window_res_height;
 extern bool Game_fullscreen;

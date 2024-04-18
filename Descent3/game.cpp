@@ -1269,11 +1269,6 @@ void StartFrame(int x, int y, int x2, int y2, bool clear,bool push_on_stack)
 	static float last_fov=-1;
 	if (last_fov!=Render_FOV)
 	{
-		/*
-		float vert_43 = tan(Render_FOV * 3.1415927 / 360.f);
-		Render_zoom = vert_43 * rend_GetAspectRatio(); //Aspect ratio is desired aspect / (4/3)
-		*/
-
 		float num=(Render_FOV / 2);
 		num=(3.14*(float)num/180.0);
 		Render_zoom=tan(num);

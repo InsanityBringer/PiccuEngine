@@ -2964,7 +2964,7 @@ void DoZoomEffect (player_weapon *pw,ubyte clear)
 	float norm=(pw->firing_time-.5)*2;
 
 	Render_FOV=(ZOOM_FOV_TARGET*norm)+((1.0-norm)*Render_FOV_desired);
-	
+	mprintf((0, "%f\n", Render_FOV));
 
 	return;
 }
