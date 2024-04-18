@@ -356,11 +356,12 @@ unsigned oeWin32Application::defer()
 // system mouse info.
 	w32_msewhl_delta = 0;
 
+	int num_defers = 0;
 	do
 	{
 		result = defer_block();
 	}
-	while ((result == DEFER_PROCESS_ACTIVE) || (result == DEFER_PROCESS_INPUT_IDLE));
+	while ((result == DEFER_PROCESS_ACTIVE) || (result == DEFER_PROCESS_INPUT_IDLE) && ++num_defers < 6);
 
 	return 0;
 }
