@@ -221,34 +221,13 @@ static		int				DDIO_key_language = KBLANG_AMERICAN;
 
 
 ///////////////////////////////////////////////////////////////////////////////
-//	Initializes DirectInputDevice keyboard if we are under Win9x or at least NT5
-//	we set the cooperative level, etc.
-LPDIRECTINPUTDEVICE dikey_Init(LPDIRECTINPUT lpdi, HWND hwnd);
-
-//	Shutsdown DirectInputDevice keyboard if passed device is valid.
-void dikey_Shutdown(LPDIRECTINPUTDEVICE lpdikey);
-
-// sets up preemptive keyboard handling.
-HANDLE dikey_EnableNotify(LPDIRECTINPUTDEVICE lpdikey);
-
-//	disables event based notification.
-bool dikey_DisableNotify(LPDIRECTINPUTDEVICE lpdikey, HANDLE evthandle);
-
-//	acquires or unacquires device
-// returns device acquisition state.
-bool dikey_Acquire(LPDIRECTINPUTDEVICE lpdikey, bool acquire);
-
 // emulated keyboard functionality
 bool ddio_Win_KeyInit();
 void ddio_Win_KeyClose();
 
 int ddio_KeyHandler(HWnd wnd, unsigned msg, unsigned wParam, long lParam);
 
-void CALLBACK key_TimerProc(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2);
 LRESULT CALLBACK KeyboardProc( int code, WPARAM wParam, LPARAM lParam);
-
-// DirectInput Keyboard Thread
-void __cdecl dikey_Thread(void *dp);
 
 // translates scan code to foreign equivs.
 ubyte xlate_scancode(ubyte scan_code);
@@ -264,111 +243,15 @@ ubyte xlate_scancode(ubyte scan_code);
 // it falls back to the old keyboard hook (less reliable but works.)
 bool ddio_InternalKeyInit(ddio_init_info *init_info)
 {
-	bool emulated = init_info->key_emulation;
-	
-	LPDIRECTINPUTDEVICE lpdikey = NULL;
-	int i;
-
-// reset key list
-	for (i = 0; i < DDIO_MAX_KEYS; i++)
-	{
-		WKeys[i].down_ticks = 0;
-		WKeys[i].up_ticks = 0;
-		WKeys[i].status = false;
-	}
-
-// start init.
-	if (!emulated) {
-		lpdikey = dikey_Init(DInputData.lpdi, (HWND)DInputData.app->m_hWnd);
-	}
-
-retry_key_init:
-	if (lpdikey) {
-	//	direct input keyboard can work, so we initialize preemptive handling of the keyboard 
-		HANDLE hevt = dikey_EnableNotify(lpdikey);
-
-		if (hevt) {
-		// event handling will work, so let's create the keyboard thread.
-			bool acquired = dikey_Acquire(lpdikey, true);
-			if (acquired) {
-			//	create keyboard thread
-				unsigned long thrid;
-				WKD.thread_active = true;
-				WKD.lpdikey = lpdikey;
-				WKD.thread = 0;
-				WKD.evtnotify = hevt;
-				WKD.acquired = acquired;
-				WKD.winhook = NULL;
-				WKD.suspended = false;
-				WKD.nextframe = false;
-				thrid = _beginthread(dikey_Thread, 0, NULL);
-				if (thrid == (unsigned long)(-1)) {
-					mprintf((0, "DDIO: DI_Keyboard thread failed to initialize.\n"));
-					WKD.thread_active = false;
-					WKD.lpdikey = NULL;
-					WKD.thread = 0xffffffff;
-					WKD.evtnotify = NULL;
-					WKD.acquired = false;
-					WKD.winhook = NULL;
-					WKD.suspended = false;
-					acquired = dikey_Acquire(lpdikey, false);
-					dikey_DisableNotify(lpdikey, hevt);
-					dikey_Shutdown(lpdikey);
-					lpdikey = NULL;
-				}
-				else {
-				// success!  init data.
-				// set priority of thread too.
-					WKD.thread = thrid;
-					if (SetThreadPriority((HANDLE)thrid, THREAD_PRIORITY_TIME_CRITICAL) == FALSE) {
-						SetThreadPriority((HANDLE)thrid, THREAD_PRIORITY_HIGHEST);
-					}
-					mprintf((0, "DDIO: DI_Keyboard initialized.\n"));
-				}
-			}
-			else {
-			// failed to acquire device? can't do.
-				dikey_DisableNotify(lpdikey, hevt);
-				dikey_Shutdown(lpdikey);
-				lpdikey = NULL;
-			}
-		}
-		else {
-		// somehow event notification failed, can't do.
-			dikey_Shutdown(lpdikey);
-			lpdikey = NULL;
-		}
-
-		if (lpdikey == NULL) {
-			goto retry_key_init;
-		}
-	}
-	else {
-	// here, initialize hook procedure.
-		return ddio_Win_KeyInit();
-	}
-
-	return true;
+	return ddio_Win_KeyInit();
 }
 
 
 //	this will shutdown direct input or the windows hook, whichever was chosen.
 void ddio_InternalKeyClose()
 {
-	if (WKD.lpdikey) {
-	// deactivate thread and free it, then unacquire device, disable event notification, and shutdown!
-		WKD.thread_active = false;
-		SetEvent(WKD.evtnotify);
-		Sleep(500);
-		WKD.acquired = dikey_Acquire(WKD.lpdikey, false);
-		dikey_DisableNotify(WKD.lpdikey, WKD.evtnotify);
-		dikey_Shutdown(WKD.lpdikey);
-		WKD.thread = 0xffffffff;
-		WKD.evtnotify = NULL;
-		WKD.lpdikey = NULL;
-		mprintf((0, "DDIO: DI_Keyboard shutdown.\n"));
-	}
-	if (WKD.winhook) {
+	if (WKD.winhook) 
+	{
 		ddio_Win_KeyClose();
 	}
 }
@@ -482,252 +365,16 @@ ubyte xlate_scancode(ubyte scan_code)
 	return code;
 }
 
-
-
-//////////////////////////////////////////////////////////////////////////////
-//	DirectInput Functions
-//////////////////////////////////////////////////////////////////////////////
-
-inline bool IS_NT4_OR_LOWER()
-{
-	int maj,min;
-	tWin32OS os = oeWin32Application::version(&maj,&min);
-	return (os == WinNT && maj < 5) ? true : false;
-}
-
-
-//	Initializes DirectInputDevice keyboard if we are under Win9x or at least NT5
-//	we set the cooperative level, etc.
-LPDIRECTINPUTDEVICE dikey_Init(LPDIRECTINPUT lpdi, HWND hwnd)
-{
-	LPDIRECTINPUTDEVICE lpdikey;
-	HRESULT hr;
-
-	if (IS_NT4_OR_LOWER()) {
-		return NULL;
-	}
-
-// see if we can get the keyboard device.
-	hr = lpdi->CreateDevice(GUID_SysKeyboard, &lpdikey, NULL);
-	if (hr != DI_OK) {
-		DDIO_MESSAGE((hr, "DI_Keyboard initialization failed."));
-		return NULL;
-	}
-
-	hr = lpdikey->SetDataFormat(&c_dfDIKeyboard);
-	if (hr != DI_OK) {
-		DDIO_MESSAGE((hr, "DI_Keyboard data format specification failed."));
-		lpdikey->Release();
-		return NULL;
-	}
-
-   hr = lpdikey->SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);	
-	if (hr != DI_OK) {
-		DDIO_MESSAGE((hr, "DI_Keyboard set cooperative level failed."));
-		lpdikey->Release();
-		return NULL;
-	}
-
-	return lpdikey;
-}
-
-
-//	Shutsdown DirectInputDevice keyboard if passed device is valid.
-void dikey_Shutdown(LPDIRECTINPUTDEVICE lpdikey) 
-{
-	if (lpdikey) {
-		lpdikey->Release();
-	}
-}
-
-
-// sets up preemptive keyboard handling.
-HANDLE dikey_EnableNotify(LPDIRECTINPUTDEVICE lpdikey)
-{
-	if (lpdikey) {
-		HANDLE hEvt = CreateEvent(NULL, TRUE, FALSE, "DDIOKeyEvent");	
-		HRESULT hr;
-		DIPROPDWORD dipropdw = {
-			{	
-				sizeof(DIPROPDWORD),
-				sizeof(DIPROPHEADER),
-				0,
-				DIPH_DEVICE,
-			},
-	   	DIKEY_BUFFER_SIZE,
-		};
-	
-		if (!hEvt) {
-			DDIO_MESSAGE((0, "DI_Keyboard failed to init system event."));
-			return NULL;
-		}
-
-	// set event
-		hr = lpdikey->SetEventNotification(hEvt);
-		if (hr != DI_OK) {
-			DDIO_MESSAGE((hr, "DI_Keyboard failed to set preemptive key event notification."));
-			CloseHandle(hEvt);
-			return NULL;
-		}
-
-	// set key buffer size
-		hr = lpdikey->SetProperty(DIPROP_BUFFERSIZE, &dipropdw.diph);
-		if (FAILED(hr)) {
-			DDIO_MESSAGE((hr, "DI_keyboard buffering failed."));
-			lpdikey->SetEventNotification(NULL);
-			CloseHandle(hEvt);
-			return NULL;
-		}
-
-		return hEvt;
-	}
-
-	return NULL;
-}
-
-
-//	disables event based notification.
-bool dikey_DisableNotify(LPDIRECTINPUTDEVICE lpdikey, HANDLE evthandle)
-{
-	if (lpdikey) {
-		lpdikey->SetEventNotification(NULL);
-		CloseHandle(evthandle);
-		return true;
-	}
-
-	return false;
-}
-
-
-//	acquires or unacquires device
-// returns device acquisition state.
-bool dikey_Acquire(LPDIRECTINPUTDEVICE lpdikey, bool acquire)
-{
-	HRESULT hr = acquire ? lpdikey->Acquire() : lpdikey->Unacquire();
-
-	if (FAILED(hr)) {
-		DDIO_MESSAGE((hr, "DI_keyboard acquire/unacquire fail."));
-		return !acquire;
-	}
-
-	return acquire;
-}
-
-
-// DirectInput Keyboard Thread
-void __cdecl dikey_Thread(void *dp)
-{
-	unsigned event_count = 0;
-
-	GetAsyncKeyState(VK_PAUSE);					// this will tell if the 'pause' key is toggled
-	
-	while (WKD.thread_active)
-	{
-	// this thread will hold until the direct input key event has been signaled by the OS.
-	//	after this, we will get all the keys in the io buffer and register them with the
-	// key system.
-
-		switch (WaitForSingleObject(WKD.evtnotify, INFINITE))
-		{
-		case WAIT_TIMEOUT:							// this shouldn't happen, but if it does, no big deal.
-			break;
-		case WAIT_ABANDONED:							// usually means calling thread quit.
-			WKD.thread_active = false;
-			break;
-		case WAIT_OBJECT_0:							// event was signalled normally
-			{
-				DIDEVICEOBJECTDATA diobjdata[DIKEY_BUFFER_SIZE];
-				DWORD diobjitems = DIKEY_BUFFER_SIZE;
-				HRESULT hr;
-			//	SHORT async_key_state;
-				ubyte key;
-
-				int i;
-				
-			// don't read if suspended!
-				if (WKD.suspended) {
-					break;
-				}
-
-				event_count++;
-
-			// attempt acquisition if keyboard not already acquired
-				if (!WKD.acquired) {
-					WKD.acquired = dikey_Acquire(WKD.lpdikey, true);
-				}
-				if (WKD.acquired) {
-					hr = WKD.lpdikey->GetDeviceData(sizeof(DIDEVICEOBJECTDATA), diobjdata, &diobjitems, 0);
-					if (SUCCEEDED(hr)) {
-					// the pause is key under Windows seems to act kinda strange.  it's a toggle button
-					// and USUALLY is preceeded by a KEY_LCTRL press.  If a pause toggle was indicated, flush the
-					// keyboard and quit.
-
-					//	note that dwOfs is the acutal key that is either down or up, and dwData tells us if
-					//	it is up or down.  So place on key array, and in queue.
-						for (i =0; i < (int)diobjitems; i++)
-						{
-							key = xlate_scancode((ubyte)(diobjdata[i].dwOfs));
-							if (diobjdata[i].dwData & 0x80) {
-								if (WKeys[key].status) {
-									WKeys[key].up_ticks = 0;
-								}
-								WKeys[key].down_ticks = diobjdata[i].dwTimeStamp;
-								WKeys[key].status = true;
-								if (key == KEY_LCTRL) {
-									WKeys[key].mutex_flag = true;
-								}
-								mprintf((0, "dkey=%x\n", key));
-							}
-							else {
-								if (WKeys[key].status) {
-									WKeys[key].up_ticks = diobjdata[i].dwTimeStamp;
-									WKeys[key].status = false;
-									mprintf((0, "ukey=%x\n", key));
-								}
-							}
-
-							ddio_UpdateKeyState(key,WKeys[key].status);
-						}
-					}
-					else {
-						if (hr == DIERR_INPUTLOST) {
-							WKD.acquired = dikey_Acquire(WKD.lpdikey, true);
-						}
-						else {
-							DDIO_MESSAGE((hr, "DI_keyboard unable to read."));
-						}
-					}
-				}
-			}
-			break;
-		}
-
-		ResetEvent(WKD.evtnotify);
-	}
-
-	DDIO_MESSAGE((0, "DI_Keyboard thread ended."));
-}
-
-
 void ddio_InternalKeySuspend()
 {
-	if (WKD.lpdikey && WKD.acquired) {
-		WKD.acquired = dikey_Acquire(WKD.lpdikey, false);
-	}
 	WKD.suspended = true;
 }
 
 
 void ddio_InternalKeyResume()
 {
-	if (WKD.lpdikey && !WKD.acquired) {
-		WKD.acquired = dikey_Acquire(WKD.lpdikey, true);
-	}
 	WKD.suspended = false;
 }
-
-
-
 
 //	Win32 non-threaded version
 
@@ -760,8 +407,6 @@ void ddio_Win_KeyClose()
 // ----------------------------------------------------------------------------
 //	non DirectInput keyboard handler
 // ----------------------------------------------------------------------------
-
-
 LRESULT CALLBACK KeyboardProc( int code, WPARAM wParam, LPARAM lParam)
 {
 	int res;

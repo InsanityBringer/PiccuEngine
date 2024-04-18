@@ -298,6 +298,7 @@
 #include "sounds.h"
 #include "ctlconfig.h"
 #include "d3music.h"
+#include "gameloop.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -305,25 +306,6 @@
 
 #define STAT_SCORE STAT_TIMER
 
-#ifdef MACINTOSH
-#include "macdisplays.h"
-
-tVideoResolution Video_res_list[N_SUPPORTED_VIDRES] = {
-	#ifdef USE_OPENGL
-	{640,480},
-	{800,600},
-	{1024,768},
-//	{1152,870},
-//	{1280,960}
-	#else
-//	{512,384},
-	{640,480},
-	{800,600},
-	{960,720},
-//	{1024,768}
-	#endif
-	};
-#else
 tVideoResolution Video_res_list[N_SUPPORTED_VIDRES] = {
 	{512,384},
 	{640,480},
@@ -334,9 +316,11 @@ tVideoResolution Video_res_list[N_SUPPORTED_VIDRES] = {
 	{1600,1200},
 	{640,480}			// custom
 };
-#endif
 
 int Game_video_resolution = 1;
+int Game_window_res_width = 640, Game_window_res_height = 480;
+bool Game_fullscreen = false;
+float Render_FOV_desired = 72;
 
 tDetailSettings Detail_settings;
 int Default_detail_level = DETAIL_LEVEL_MED;
@@ -748,13 +732,11 @@ void config_gamma()
 }
 #endif 
 
-#ifdef MACINTOSH
-#pragma mark video --
-#endif
-
 //////////////////////////////////////////////////////////////////
 // VIDEO MENU
 //
+#define RESBUFFER_SIZE 50
+#define IDV_CHANGEWINDOW 10
 struct video_menu
 {
 	newuiSheet *sheet;
@@ -763,8 +745,12 @@ struct video_menu
 	bool *mipmapping;
 	bool *vsync;
 
-	int *bitdepth;										// bitdepths
 	int *resolution;									// all resolutions
+	short* fov;
+	char* buffer;
+	bool* fullscreen;
+
+	int window_width, window_height;
 
 // sets the menu up.
 	newuiSheet *setup(newuiMenu *menu)
@@ -773,31 +759,8 @@ struct video_menu
 		sheet = menu->AddOption(IDV_VCONFIG, TXT_OPTVIDEO, NEWUIMENU_MEDIUM);
 
 	// video resolution
-		iTemp = Game_video_resolution;
+		/*iTemp = Game_video_resolution;
 		sheet->NewGroup(TXT_RESOLUTION, 0, 0);
-#ifdef MACINTOSH
-	#ifdef USE_OPENGL
-		resolution = sheet->AddFirstLongRadioButton("640x480");
-		if(gDSpContext[DSP_800x600])
-			sheet->AddLongRadioButton("800x600");
-		if(gDSpContext[DSP_1024x768])
-			sheet->AddLongRadioButton("1024x768");
-//		if(gDSpContext[DSP_1152x870])
-//			sheet->AddLongRadioButton("1152x870");
-//		if(gDSpContext[DSP_1280x960])
-//			sheet->AddLongRadioButton("1280x960");
-	#else
-//		resolution = sheet->AddFirstLongRadioButton("512x384");
-//		sheet->AddLongRadioButton("640x480");
-		resolution = sheet->AddFirstLongRadioButton("640x480");
-		extern int Glide_num_texelfx;
-		if(Glide_num_texelfx > 1) {
-			sheet->AddLongRadioButton("800x600");
-			sheet->AddLongRadioButton("960x720");
-		}
-//		sheet->AddLongRadioButton("1024x768");
-	#endif
-#else
 		resolution = sheet->AddFirstLongRadioButton("512x384");
 		sheet->AddLongRadioButton("640x480");
 		sheet->AddLongRadioButton("800x600");
@@ -805,27 +768,22 @@ struct video_menu
 		sheet->AddLongRadioButton("1024x768");
 		sheet->AddLongRadioButton("1280x960");
 		sheet->AddLongRadioButton("1600x1200");
-#endif
-		*resolution = iTemp;
-		
-#if    !(defined(MACINTOSH)||defined(__LINUX__))
-	// renderer bit depth
-		switch(Render_preferred_bitdepth){
-			case 16:	iTemp = 0;	break;
-			case 32:	iTemp = 1; break;
-			default: iTemp = -1;
-		}
+		*resolution = iTemp;*/
 
-		if ((PreferredRenderer==RENDERER_DIRECT3D || PreferredRenderer==RENDERER_OPENGL) && iTemp != -1) {
-			sheet->NewGroup(TXT_CFG_BITDEPTH, 200, 0);
-			bitdepth = sheet->AddFirstRadioButton(TXT_CFG_SIXTEENBIT);
-			sheet->AddRadioButton(TXT_CFG_THIRTYTWOBIT);
-			*bitdepth = iTemp;
-		}
-		else {
-			bitdepth = NULL;
-		}
-#endif
+		sheet->NewGroup(TXT_RESOLUTION, 0, 0);
+		buffer = sheet->AddChangeableText(RESBUFFER_SIZE);
+		snprintf(buffer, RESBUFFER_SIZE, "%d x %d", Game_window_res_width, Game_window_res_height);
+		sheet->AddLongButton("Change...", IDV_CHANGEWINDOW);
+		fullscreen = sheet->AddLongCheckBox("Fullscreen", Game_fullscreen);
+		tSliderSettings settings = {};
+		settings.min_val.f = 72.f;
+		settings.max_val.f = 90.f;
+		settings.type = SLIDER_UNITS_FLOAT;
+		fov = sheet->AddSlider("FOV", 90-72, Render_FOV_desired, &settings);
+
+		window_width = Game_window_res_width;
+		window_height = Game_window_res_height;
+
 	// video settings
 		sheet->NewGroup(TXT_TOGGLES, 0,120);
 		filtering = sheet->AddLongCheckBox(TXT_BILINEAR, (Render_preferred_state.filtering!=0));
@@ -833,12 +791,10 @@ struct video_menu
 
 		sheet->NewGroup(TXT_MONITOR, 0, 180);
 		vsync = sheet->AddLongCheckBox(TXT_CFG_VSYNCENABLED, (Render_preferred_state.vsync_on!=0));
-#ifndef __LINUX__
-#if !(defined( MACINTOSH ) && defined (USE_OPENGL))
+
 		sheet->AddText("");
 		sheet->AddLongButton(TXT_AUTO_GAMMA, IDV_AUTOGAMMA);
-#endif
-#endif
+
 		return sheet;
 	};
 
@@ -851,16 +807,31 @@ struct video_menu
 			Render_preferred_state.mipping = (*mipmapping) ? 1 : 0;
 		if (vsync) 
 			Render_preferred_state.vsync_on = (*vsync) ? 1 : 0;
-#if !(defined(MACINTOSH)||defined(__LINUX__))
-		if (bitdepth) 
+
+		
+		/*if (bitdepth) 
 			Render_preferred_bitdepth = (*bitdepth)==1 ? 32 : 16;
-#endif
 		if (GetScreenMode()==SM_GAME) {
 			Render_preferred_state.bit_depth = Render_preferred_bitdepth;
 			rend_SetPreferredState(&Render_preferred_state);
+		}*/
+
+		Render_FOV_desired = fov[0];
+		if (Render_FOV != Render_FOV_desired)
+			Render_FOV = Render_FOV_desired; //this may cause discontinuities if FOV is changed while zoomed. hmm. 
+
+		if (window_width != Game_window_res_width ||
+			window_height != Game_window_res_height ||
+			*fullscreen != Game_fullscreen)
+		{
+			Game_fullscreen = *fullscreen;
+			Game_window_res_width = window_width;
+			Game_window_res_height = window_height;
+
+			SetScreenMode(GetScreenMode(), true);
 		}
 
-		if ((*resolution) != Game_video_resolution) {
+		/*if ((*resolution) != Game_video_resolution) {
 		// if in game, do resolution change.
 			int temp_w, temp_h;
 			int old_sm = GetScreenMode();
@@ -874,7 +845,7 @@ struct video_menu
 			temp_w = Video_res_list[Game_video_resolution].width;
 			temp_h = Video_res_list[Game_video_resolution].height;
 			Current_pilot.set_hud_data(NULL, NULL, NULL, &temp_w, &temp_h);
-		}
+		}*/
 
 		sheet = NULL;
 	};
@@ -882,16 +853,12 @@ struct video_menu
 // process
 	void process(int res)
 	{
-#ifndef __LINUX__
-#if !(defined( MACINTOSH ) && defined (USE_OPENGL))
 		switch (res)
 		{
 		case IDV_AUTOGAMMA:
 			config_gamma();
 			break;
 		}
-#endif
-#endif
 	};
 };
 

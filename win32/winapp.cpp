@@ -217,6 +217,43 @@ void oeWin32Application::init()
 	UpdateWindow((HWND)m_hWnd);
 }
 
+void oeWin32Application::change_window()
+{
+	if (m_Flags & OEAPP_FULLSCREEN) 
+	{
+		SetWindowLongPtr((HWND)m_hWnd, GWL_STYLE, 0);
+		SetWindowLongPtr((HWND)m_hWnd, GWL_EXSTYLE, WS_EX_TOPMOST);
+
+		RECT r{};
+		GetWindowRect((HWND)m_hWnd, &r);
+
+		m_X = r.left;
+		m_Y = r.top;
+		m_W = r.right - r.left;
+		m_H = r.bottom - r.top;
+
+		SetWindowPos((HWND)m_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+		ShowWindow((HWND)m_hWnd, SW_SHOWMAXIMIZED);
+	}
+	else 
+	{
+		SetWindowLongPtr((HWND)m_hWnd, GWL_STYLE, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_BORDER | WS_MINIMIZEBOX);
+		SetWindowLongPtr((HWND)m_hWnd, GWL_EXSTYLE, 0);
+
+		ShowWindow((HWND)m_hWnd, SW_NORMAL);
+		SetWindowPos((HWND)m_hWnd, HWND_TOP, m_X, m_Y, m_W, m_H, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+	}
+}
+
+void oeWin32Application::set_flags(int newflags)
+{
+	int oldflags = m_Flags;
+	m_Flags = newflags;
+
+	if (m_Flags != oldflags)
+		change_window();
+}
+
 
 //	Function to retrieve information from object through a platform defined structure.
 void oeWin32Application::get_info(void *info)

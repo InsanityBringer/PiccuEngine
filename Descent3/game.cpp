@@ -961,8 +961,10 @@ void SetScreenMode(int sm, bool force_res_change)
 
 		if (sm == SM_GAME) 
 		{
-			scr_width = Video_res_list[Game_video_resolution].width;
-			scr_height = Video_res_list[Game_video_resolution].height;
+			//scr_width = Video_res_list[Game_video_resolution].width;
+			//scr_height = Video_res_list[Game_video_resolution].height;
+			scr_width = Game_window_res_width;
+			scr_height = Game_window_res_height;
 			scr_bitdepth = Render_preferred_bitdepth;
 #ifdef MACINTOSH
 			SwitchDSpContex(Game_video_resolution);
@@ -983,6 +985,10 @@ void SetScreenMode(int sm, bool force_res_change)
 			Render_preferred_state.width=scr_width;
 			Render_preferred_state.height=scr_height;
 			Render_preferred_state.bit_depth=scr_bitdepth;
+			Render_preferred_state.fullscreen = Game_fullscreen;
+			Render_preferred_state.window_width = Game_window_res_width;
+			Render_preferred_state.window_height = Game_window_res_height;
+			Render_preferred_state.fullscreen = Game_fullscreen;
 
 			rend_initted = rend_Init (PreferredRenderer, Descent,&Render_preferred_state);
 			rend_width = rend_height = 0;
@@ -1017,11 +1023,17 @@ void SetScreenMode(int sm, bool force_res_change)
 				scr_height=480;
 			}
 		
-			if (rend_width != scr_width || rend_height != scr_height) 
+			if (rend_width != scr_width || rend_height != scr_height
+				|| Game_window_res_width != Render_preferred_state.window_width
+				|| Game_window_res_height != Render_preferred_state.window_height
+				|| Game_fullscreen != Render_preferred_state.fullscreen) 
 			{
 				Render_preferred_state.width=scr_width;
 				Render_preferred_state.height=scr_height;
 				Render_preferred_state.bit_depth=scr_bitdepth;
+				Render_preferred_state.window_width = Game_window_res_width;
+				Render_preferred_state.window_height = Game_window_res_height;
+				Render_preferred_state.fullscreen = Game_fullscreen;
 
 				mprintf ((0,"Setting rend_width=%d height=%d\n",scr_width,scr_height));
 				int retval=rend_SetPreferredState (&Render_preferred_state);

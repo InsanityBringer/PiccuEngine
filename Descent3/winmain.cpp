@@ -12,6 +12,8 @@
 #include "init.h"
 #include "dedicated_server.h"
 #include "resource.h"
+#include "config.h"
+#include "ddio.h"
 
 const char *English_strings[] = {
 	"Descent 3 under Windows NT requires version 4.0 or greater of NT to run.",
@@ -165,24 +167,13 @@ public:
 			{
 				if (wParam == false)
 				{
-					this->deactivate();
-
-					if (!shutdown)
-					{
-						ShutdownD3();
-						shutdown = true;
-						ShowWindow((HWND)hwnd, SW_MINIMIZE);
-					}
+					ddio_MouseMode(MOUSE_STANDARD_MODE);
 				}
 				else
 				{
-					this->activate();
-		
-					if (shutdown)
+					if (!(flags() & OEAPP_CONSOLE))
 					{
-						ShowWindow((HWND)hwnd, SW_RESTORE);
-						RestartD3();
-						shutdown = false;
+						ddio_MouseMode(MOUSE_EXCLUSIVE_MODE);
 					}
 				}
 			}break;
@@ -677,8 +668,11 @@ int PASCAL HandledWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine,
 	}
 	else
 	{
+		if (FindArg("-windowed"))
+			Game_fullscreen = false;
+
 		unsigned int flags = OEAPP_FULLSCREEN;
-		if( FindArg("-windowed") )
+		if(!Game_fullscreen)
 		{
 			// switch to windowed mode instead
 			flags = OEAPP_WINDOWED;

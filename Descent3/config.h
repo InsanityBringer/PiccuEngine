@@ -148,7 +148,8 @@ tVideoResolution;
 
 extern tVideoResolution Video_res_list[];
 extern int Game_video_resolution;
-
+extern int Game_window_res_width, Game_window_res_height;
+extern bool Game_fullscreen;
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //KEEP THESE MEMBERS IN THE SAME ORDER, IF YOU ADD,REMOVE, OR CHANGE ANYTHING IN THIS STRUCT, MAKE SURE YOU

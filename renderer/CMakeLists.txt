@@ -1,16 +1,17 @@
 SET (HEADERS 
-		dyna_gl.h
 		HardwareInternal.h
 		RendererConfig.h)
 SET (CPPS
 		clipper.cpp
 		draw.cpp
+		gl.c
 		globalvars.cpp
 		instance.cpp
 		opengl.cpp
 		points.cpp
 		setup.cpp
-		transforms.cpp)
+		transforms.cpp
+		wgl.c)
 
 IF(UNIX)
 

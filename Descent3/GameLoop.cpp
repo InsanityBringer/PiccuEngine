@@ -866,8 +866,6 @@
 
 extern bool Display_renderer_stats;
 
-float Render_FOV_desired = 90;
-
 //Current zoom factor (this is the tan of 29.25, which is half our FOV of 58.5)
 float Render_FOV	= Render_FOV_desired;
 float Render_zoom = D3_DEFAULT_ZOOM;

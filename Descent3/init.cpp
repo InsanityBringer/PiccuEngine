@@ -1297,6 +1297,8 @@ void SaveGameSettings()
 	Database->write("DetailPowerupHalos",Detail_settings.Powerup_halos);
 
 	Database->write("RS_resolution", Game_video_resolution);
+	Database->write("RS_windowwidth", Game_window_res_width);
+	Database->write("RS_windowheight", Game_window_res_height);
 
 	Database->write("RS_bitdepth",Render_preferred_bitdepth);
 	Database->write("RS_bilear",Render_preferred_state.filtering);
@@ -1472,6 +1474,8 @@ void LoadGameSettings()
 	Database->read("Specmapping",&Detail_settings.Specular_lighting);
 	Database->read("RS_bitdepth",&Render_preferred_bitdepth,sizeof(Render_preferred_bitdepth));
 	Database->read_int("RS_resolution", &Game_video_resolution);
+	Database->read_int("RS_windowwidth", &Game_window_res_width);
+	Database->read_int("RS_windowheight", &Game_window_res_height);
 	Database->read_int("RS_bilear",&Render_preferred_state.filtering);
 	Database->read_int("RS_mipping",&Render_preferred_state.mipping);
 	Database->read_int("RS_color_model",&Render_state.cur_color_model);

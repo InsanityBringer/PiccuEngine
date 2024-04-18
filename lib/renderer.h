@@ -440,6 +440,7 @@ typedef struct
 
 	int clip_x1,clip_x2,clip_y1,clip_y2;
 	int screen_width,screen_height;
+	int view_width, view_height;
 
 }	rendering_state;
 
@@ -451,6 +452,8 @@ typedef struct
 	ubyte bit_depth;
 	int width,height;
 	ubyte vsync_on;
+	bool fullscreen; //Informs the window system that fullscreen should be used. 
+	int window_width, window_height; //Size of the game window, may != width/height. 
 } renderer_preferred_state;
 
 typedef struct 
@@ -628,9 +631,6 @@ void rend_DrawSimpleBitmap (int bm_handle,int x,int y);
 
 // Changes the resolution of the renderer
 void rend_SetResolution (int width,int height);
-
-// Gets OpenGL ready to work in a window
-int rend_InitOpenGLWindow (oeApplication *app,renderer_preferred_state *pref_state);
 
 // Shuts down OpenGL in a window
 void rend_CloseOpenGLWindow ();

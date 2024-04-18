@@ -305,7 +305,7 @@ ADD_EXECUTABLE(Descent3 ${HEADERS} ${CPPS} ${PLATFORM_CPPS} ${INCS})
 target_link_libraries(Descent3 
 	# 2dlib AudioEncode bitmap cfile czip d3music ddio_common libmve libacm
 	2dlib AudioEncode bitmap cfile czip d3music ddio_common libacm
-	fix grtext manage mem misc model module movie stream_audio
+	fix grtext manage mem misc model module movie stream_audio opengl32
 	music networking physics renderer rtperformance sndlib ui unzip vecmat md5
 	${PLATFORM_LIBS})
 install(TARGETS Descent3 DESTINATION ${D3_GAMEDIR})

@@ -101,6 +101,7 @@ typedef void(GLFUNCCALL *glBitmap_fp)( GLsizei width, GLsizei height,
                                 GLfloat xorig, GLfloat yorig,
                                 GLfloat xmove, GLfloat ymove,
                                 const GLubyte *bitmap );
+typedef void(GLFUNCCALL *glGenTextures_fp)(GLsizei n, GLuint* textures);
 
 								
 #if defined(WIN32)
@@ -188,6 +189,7 @@ DYNAEXTERN( glViewport_fp, dglViewport );
 DYNAEXTERN( glColor4fv_fp, dglColor4fv );
 DYNAEXTERN( glVertex3fv_fp, dglVertex3fv );
 DYNAEXTERN( glTexCoord4fv_fp, dglTexCoord4fv );
+DYNAEXTERN( glGenTextures_fp, dglGenTextures );
 
 #ifdef DECLARE_OPENGL
 static module OpenGLDLLInst;
@@ -406,6 +408,8 @@ module *LoadOpenGLDLL(char *dllname)
 
 	dglTexCoord4fv = (glTexCoord4fv_fp)mod_GetSymbol(&OpenGLDLLInst,"glTexCoord4fv",255);
 	if(! dglTexCoord4fv) goto dll_error;
+
+	dglGenTextures = (glGenTextures_fp)
 
 #if defined(WIN32)
 	dwglCreateContext = (wglCreateContext_fp)mod_GetSymbol(&OpenGLDLLInst,"wglCreateContext",255);
