@@ -1299,6 +1299,7 @@ void SaveGameSettings()
 	Database->write("RS_resolution", Game_video_resolution);
 	Database->write("RS_windowwidth", Game_window_res_width);
 	Database->write("RS_windowheight", Game_window_res_height);
+	Database->write("RS_fullscreen", Game_fullscreen);
 	Database->write("RS_fovdesired", Render_FOV_desired);
 
 	Database->write("RS_bitdepth",Render_preferred_bitdepth);

@@ -213,7 +213,10 @@ void oeWin32Application::init()
 		mprintf((0, "Failed to create game window (err: %x)\n",err));
 		return;
 	}
-	ShowWindow((HWND)m_hWnd, SW_SHOWNORMAL);
+	if (m_Flags & OEAPP_FULLSCREEN)
+		ShowWindow((HWND)m_hWnd, SW_SHOWMAXIMIZED);
+	else
+		ShowWindow((HWND)m_hWnd, SW_SHOWNORMAL);
 	UpdateWindow((HWND)m_hWnd);
 }
 

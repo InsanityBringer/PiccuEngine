@@ -668,6 +668,10 @@ int PASCAL HandledWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine,
 	}
 	else
 	{
+		int temp;
+		Database->read_int("RS_fullscreen", &temp);
+		Game_fullscreen = !!temp;
+
 		if (FindArg("-windowed"))
 			Game_fullscreen = false;
 
