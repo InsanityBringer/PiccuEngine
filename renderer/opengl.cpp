@@ -1291,16 +1291,8 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 				if (bm_format(bm_handle)==BITMAP_FORMAT_4444)
 				{
 					// Do 4444
-					if (bm_mipped(bm_handle))
-					{
-						for (i=0;i<w*h;i++)
-							opengl_packed_Upload_data[i]=0xf|(opengl_packed_4444_translate_table[bm_ptr[i]]);
-					}
-					else
-					{
-						for (i=0;i<w*h;i++)
-							opengl_packed_Upload_data[i]=opengl_packed_4444_translate_table[bm_ptr[i]];
-					}
+					for (i=0;i<w*h;i++)
+						opengl_packed_Upload_data[i]=opengl_packed_4444_translate_table[bm_ptr[i]];
 
 					if (replace)
 					{
@@ -1380,17 +1372,8 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 				if (bm_format(bm_handle)==BITMAP_FORMAT_4444)
 				{
 					// Do 4444
-
-					if (bm_mipped(bm_handle))
-					{
-						for (i=0;i<w*h;i++)
-						  opengl_Upload_data[i]=INTEL_INT((255<<24))|opengl_4444_translate_table[bm_ptr[i]];
-					}
-					else
-					{
-						for (i=0;i<w*h;i++)
-							opengl_Upload_data[i]=opengl_4444_translate_table[bm_ptr[i]];
-					}
+					for (i=0;i<w*h;i++)
+						opengl_Upload_data[i]=opengl_4444_translate_table[bm_ptr[i]];
 				}
 				else
 				{
@@ -3100,6 +3083,7 @@ void rend_SetAlphaType(sbyte atype)
 		if (opengl_Blending_on)
 		{
 			glDisable (GL_BLEND);
+			glDisable(GL_ALPHA_TEST);
 			opengl_Blending_on=false;
 		}
 	}
@@ -3108,6 +3092,7 @@ void rend_SetAlphaType(sbyte atype)
 		if (!opengl_Blending_on)
 		{
 			glEnable (GL_BLEND);
+			glEnable(GL_ALPHA_TEST);
 			opengl_Blending_on=true;
 		}
 	}
@@ -3155,6 +3140,12 @@ void rend_SetAlphaType(sbyte atype)
 		glBlendFunc (GL_SRC_ALPHA,GL_ONE);
 		break;
 	case AT_SPECULAR:
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		glEnable(GL_TEXTURE_2D);
+
+		//hack
+		OpenGL_state.cur_texture_quality = 2;
+		OpenGL_state.cur_texture_type = TT_PERSPECTIVE;
 		break;
 	default:
 		Int3();		// no type defined,get jason

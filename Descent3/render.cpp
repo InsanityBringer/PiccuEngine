@@ -1692,8 +1692,6 @@ void UpdateSpecularFace (room *rp,face *fp)
 		if (handle<0)
 			return;
 	}*/
-	if (Renderer_type==RENDERER_OPENGL)
-		return;
 	int n=Num_specular_faces_to_render;
 	if (n>=MAX_SPECULAR_FACES)
 		return;
@@ -1743,7 +1741,7 @@ void RenderFogFaces (room *rp)
 			g3Point *p = &pointbuffer[vn];
   			pointlist[vn] = p;
 			
-			float mag = 1.f; //[ISB] Initialize this so we don't get junk data, but I can't tell if we'd get in there -1
+			float mag = 1.f; //[ISB] Initialize this so we don't get junk data, but I can't tell if we're supposed to get here with Room_fog_plane_check==-1
 	
 			if (Room_fog_plane_check==0)
 			{
