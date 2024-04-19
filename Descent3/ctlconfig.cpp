@@ -285,6 +285,7 @@
 					
 // used for adjusting settings.
 #define CFG_AXIS_SENS_RANGE		20
+#define CFG_MOUSE_AXIS_SENS_RANGE		40
 const short UID_JOYCFG = 0x1000;
 
 #ifdef MACINTOSH
@@ -1273,9 +1274,9 @@ void joystick_settings_dialog()
 		slider_set.min_val.f = 0.0f;
 		slider_set.max_val.f = MSE_AXIS_SENS_RANGE;
 		slider_set.type = SLIDER_UNITS_FLOAT;
-		curpos = CALC_SLIDER_POS_FLOAT(val, &slider_set, CFG_AXIS_SENS_RANGE); 
+		curpos = CALC_SLIDER_POS_FLOAT(val, &slider_set, CFG_MOUSE_AXIS_SENS_RANGE); 
 		sprintf(str, TXT_CONTAXIS, axis_str[i]);
-		mse_sens[i] = sheet->AddSlider(str, CFG_AXIS_SENS_RANGE, curpos, &slider_set);
+		mse_sens[i] = sheet->AddSlider(str, CFG_MOUSE_AXIS_SENS_RANGE, curpos, &slider_set);
 	}
 //	joystick and mouse enabled
 	y = 0;
@@ -1341,7 +1342,7 @@ void joystick_settings_dialog()
 		Current_pilot.read_controller |= (*mse_enabled) ? READF_MOUSE : 0;
 		for (i = 0; i < N_MOUSE_AXIS; i++)
 		{
-			float val = CALC_SLIDER_FLOAT_VALUE(*mse_sens[i], 0.0f, MSE_AXIS_SENS_RANGE, CFG_AXIS_SENS_RANGE);
+			float val = CALC_SLIDER_FLOAT_VALUE(*mse_sens[i], 0.0f, MSE_AXIS_SENS_RANGE, CFG_MOUSE_AXIS_SENS_RANGE);
 			Controller->set_axis_sensitivity(ctMouseAxis, i+1, val);
 		}
 		Current_pilot.mouselook_control = (*msectl) ? true : false;
