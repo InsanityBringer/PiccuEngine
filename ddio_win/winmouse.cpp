@@ -393,8 +393,47 @@ int RawInputHandler(HWND hWnd, unsigned int msg, unsigned int wParam, long lPara
                 // DDIO_mouse_state.btn_mask = buttons;
             }
 
-            DDIO_mouse_state.x += (float)rawinput->data.mouse.lLastX;;
-            DDIO_mouse_state.y += rawinput->data.mouse.lLastY;
+            //In standard mode, sync the software cursor to the hardware cursor
+            if (DDIO_mouse_state.mode == MOUSE_STANDARD_MODE)
+            {
+                POINT mousept;
+                if (!GetCursorPos(&mousept))
+                    Int3();
+                if (!ScreenToClient(hWnd, &mousept))
+                    Int3();
+                //Get the client rectangle of the window and map brect to it. 
+                RECT clientrect;
+                if (!GetClientRect(hWnd, &clientrect))
+                    Int3();
+
+                int brectwidth = DDIO_mouse_state.brect.right - DDIO_mouse_state.brect.left;
+                int brectheight = DDIO_mouse_state.brect.bottom - DDIO_mouse_state.brect.top;
+                int clientrectwidth = clientrect.right - clientrect.left;
+                int clientrectheight = clientrect.bottom - clientrect.top;
+
+                float brectaspect = (float)brectwidth / brectheight;
+                float clientrectaspect = (float)clientrectwidth / clientrectheight;
+
+                int xoffset, yoffset;
+                float scale;
+                if (brectaspect < clientrectaspect) //base screen is less wide, so pillarbox it
+                {
+                    yoffset = 0; scale = (float)brectheight / clientrectheight;
+                    xoffset = (clientrectwidth - (clientrectheight * brectaspect)) / 2;
+                }
+                else //base screen is more wide, so letterbox it
+                {
+                    xoffset = 0; scale = (float)brectwidth / clientrectwidth;
+                    yoffset = (clientrectheight - (clientrectwidth / brectaspect)) / 2;
+                }
+                DDIO_mouse_state.x = ((mousept.x - xoffset) * scale);
+                DDIO_mouse_state.y = ((mousept.y - yoffset) * scale);
+            }
+            else
+            {
+                DDIO_mouse_state.x += rawinput->data.mouse.lLastX;
+                DDIO_mouse_state.y += rawinput->data.mouse.lLastY;
+            }
             DDIO_mouse_state.z = 0;
 
             // check bounds of mouse cursor.

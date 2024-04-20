@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include "mono.h"
 #include "descent.h"
+#include "game.h"
 #include "texture.h"
 #include "application.h"
 #include "appdatabase.h"
@@ -180,22 +181,15 @@ public:
 
 		switch (msg)
 		{
-		case WM_ACTIVATEAPP:
-			{
-				if (wParam == false)
-				{
-					ddio_MouseMode(MOUSE_STANDARD_MODE);
-				}
-				else
-				{
-					if (!(flags() & OEAPP_CONSOLE))
-					{
-						ddio_MouseMode(MOUSE_EXCLUSIVE_MODE);
-					}
-				}
-			}break;
+		case WM_KILLFOCUS:
+			ddio_MouseMode(MOUSE_STANDARD_MODE);
+			ddio_KeyFlush();
+			return 0;
+		case WM_SETFOCUS:
+			if (!(flags() & OEAPP_CONSOLE))
+				ddio_MouseMode(ShouldCaptureMouse() ? MOUSE_EXCLUSIVE_MODE : MOUSE_STANDARD_MODE);
+			return 0;
 		}
-
 		return oeWin32Application::WndProc(hwnd, msg, wParam, lParam);
 	}
 	
