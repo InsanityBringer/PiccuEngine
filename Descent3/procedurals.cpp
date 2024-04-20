@@ -579,6 +579,11 @@ void DoDynamicRisingEmber (int handle,dynamic_proc_element *proc)
 		}
 	}
 }
+constexpr fix NarrowToFix(int value)
+{
+	return value * 65536;
+}
+
 void AddProcSpinners (int handle,static_proc_element *proc)
 {
 	if (proc->frequency==0 || (FrameCount % proc->frequency)==0)
@@ -596,8 +601,8 @@ void AddProcSpinners (int handle,static_proc_element *proc)
 			
 			DynamicProcElements[index].dx=FloatToFix(FixCos (cur_angle));
 			DynamicProcElements[index].dy=FloatToFix(FixSin (cur_angle));
-			DynamicProcElements[index].x1=FloatToFix(proc->x1+(DynamicProcElements[index].dx*FloatToFix(proc->size)));
-			DynamicProcElements[index].y1=FloatToFix(proc->y1+(DynamicProcElements[index].dy*FloatToFix(proc->size)));
+			DynamicProcElements[index].x1= NarrowToFix(proc->x1+(DynamicProcElements[index].dx* NarrowToFix(proc->size)));
+			DynamicProcElements[index].y1= NarrowToFix(proc->y1+(DynamicProcElements[index].dy* NarrowToFix(proc->size)));
 			DynamicProcElements[index].color=BRIGHT_COLOR;
 			DynamicProcElements[index].speed=proc->speed;
 			DynamicProcElements[index].frames_left=(prand()%10)+15;
