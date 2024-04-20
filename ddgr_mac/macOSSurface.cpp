@@ -1,3 +1,20 @@
+/* 
+* Descent 3 
+* Copyright (C) 2024 Parallax Software
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 /*
  * $Logfile: /Descent3/main/ddgr_mac/macOSSurface.cpp $
  * $Revision: 1.1.1.1 $
@@ -165,7 +182,7 @@ ddgr_error 	ddgr_os_surf_InitVideo(ddgr_surface *sf)
 
 	bool userCanSelect = false;
 
-	// ¥ Initialize the desired screen attributes structure
+	// ï¿½ Initialize the desired screen attributes structure
 	gFullScreenData.m_screen_attr.displayWidth			= sf->w;
 	gFullScreenData.m_screen_attr.displayHeight			= sf->h;
 	gFullScreenData.m_screen_attr.colorNeeds			= kDSpColorNeeds_Require;
@@ -177,7 +194,7 @@ ddgr_error 	ddgr_os_surf_InitVideo(ddgr_surface *sf)
 	
 	try
 	{
-		// ¥ Check whether multiple monitors are available
+		// ï¿½ Check whether multiple monitors are available
 		macErr = DSpCanUserSelectContext(&(gFullScreenData.m_screen_attr), &userCanSelect);
 		if (macErr)
 			throw (CMacOSSurfErr("Error checking if user could select from different monitors.",
@@ -185,7 +202,7 @@ ddgr_error 	ddgr_os_surf_InitVideo(ddgr_surface *sf)
 		
 		if (userCanSelect)
 		{
-			// ¥ Allow user to select a monitor from those available
+			// ï¿½ Allow user to select a monitor from those available
 			macErr = DSpUserSelectContext(&(gFullScreenData.m_screen_attr),
 										  0,
 										  nil,
@@ -196,7 +213,7 @@ ddgr_error 	ddgr_os_surf_InitVideo(ddgr_surface *sf)
 		}
 		else
 		{
-			// ¥ Autoselect the best monitor/context
+			// ï¿½ Autoselect the best monitor/context
 			macErr = DSpFindBestContext( &(gFullScreenData.m_screen_attr),
 										 &(gFullScreenData.m_context) );
 			if (macErr)
@@ -204,34 +221,34 @@ ddgr_error 	ddgr_os_surf_InitVideo(ddgr_surface *sf)
 									macErr, DDGRERR_DRIVERINIT));
 		}
 
-		// ¥ Request hardware pageflipping if it is available when reserving the context
+		// ï¿½ Request hardware pageflipping if it is available when reserving the context
 		gFullScreenData.m_screen_attr.contextOptions |= kDSpContextOption_PageFlip;
 
-		// ¥ Reserve the context (take over the monitor)
+		// ï¿½ Reserve the context (take over the monitor)
 		macErr = DSpContext_Reserve(gFullScreenData.m_context, &(gFullScreenData.m_screen_attr));
 		if (macErr)
 			throw (CMacOSSurfErr("Error while reserving the draw sprocket context.",
 								macErr, DDGRERR_DRIVERINIT));
 
-		// ¥ Fade out the monitor while resolution switching
+		// ï¿½ Fade out the monitor while resolution switching
 		macErr = DSpContext_FadeGammaOut( gFullScreenData.m_context, NULL );
 		if (macErr)
 			throw (CMacOSSurfErr("Error while fading out monitor.",
 								macErr, DDGRERR_DRIVERINIT));
 
-		// ¥ Activate the context (do the resolution/depth switch)
+		// ï¿½ Activate the context (do the resolution/depth switch)
 		macErr = DSpContext_SetState( gFullScreenData.m_context, kDSpContextState_Active );
 		if (macErr)
 			throw (CMacOSSurfErr("Error while activating context",
 								macErr, DDGRERR_DRIVERINIT));
 
-		// ¥ Fade the monitor back in at the new resolution/depth
+		// ï¿½ Fade the monitor back in at the new resolution/depth
 		macErr = DSpContext_FadeGammaIn( gFullScreenData.m_context, NULL );
 		if (macErr)
 			throw (CMacOSSurfErr("Error while fading in monitor ",
 								macErr, DDGRERR_DRIVERINIT));
 	
-		//¥ All's well!
+		//ï¿½ All's well!
 		gFullScreenData.m_video_initted = true;
 	}
 	catch (CMacOSSurfErr theCaughtError)
@@ -240,7 +257,7 @@ ddgr_error 	ddgr_os_surf_InitVideo(ddgr_surface *sf)
 		mprintf((0, "DSp MacOS Error: %d\n", theCaughtError.m_MacErr));
 		if (gFullScreenData.m_context)
 		{
-			//¥ The monitor might be faded out so fade it back in and release the context
+			//ï¿½ The monitor might be faded out so fade it back in and release the context
 			DSpContext_FadeGammaIn( gFullScreenData.m_context, NULL );
 			DSpContext_Release( gFullScreenData.m_context );
 			gFullScreenData.m_context = nil;
@@ -270,13 +287,13 @@ void ddgr_os_surf_CloseVideo(ddgr_surface *sf)
 
 	try
 	{
-		// ¥ Fade out the monitor while resolution switching
+		// ï¿½ Fade out the monitor while resolution switching
 		macErr = DSpContext_FadeGammaOut( gFullScreenData.m_context, NULL );
 		if (macErr)
 			throw (CMacOSSurfErr("Error while fading out monitor.",
 								macErr, DDGRERR_DRIVERINIT));
 
-		// ¥ Deactivate the context (undo the resolution/depth switch)
+		// ï¿½ Deactivate the context (undo the resolution/depth switch)
 		macErr = DSpContext_SetState( gFullScreenData.m_context, kDSpContextState_Inactive );
 		if (macErr)
 			throw (CMacOSSurfErr("Error while de-activating context",
@@ -293,13 +310,13 @@ void ddgr_os_surf_CloseVideo(ddgr_surface *sf)
 	
 	if (gFullScreenData.m_context)
 	{
-		//¥ The monitor might be faded out so fade it back in and release the context
+		//ï¿½ The monitor might be faded out so fade it back in and release the context
 		DSpContext_FadeGammaIn( gFullScreenData.m_context, NULL );
 		DSpContext_Release( gFullScreenData.m_context );
 		gFullScreenData.m_context = nil;
 	}
 	
-	//¥ Video is deinitialized!
+	//ï¿½ Video is deinitialized!
 	gFullScreenData.m_video_initted = false;
 }
 
@@ -989,9 +1006,9 @@ ddgr_error	ddgr_os_surf_AttachHandle(ddgr_surface *sf, unsigned handle)
 	return err;
 }
 
-//¥======================================================
+//ï¿½======================================================
 //	MacOS Full Screen Graphics routines
-//¥======================================================
+//ï¿½======================================================
 
 //	Initialize the macintosh for full screen graphics
 ddgr_error ddgr_os_surf_fullscreen_Init(ddgr_init_info *info)

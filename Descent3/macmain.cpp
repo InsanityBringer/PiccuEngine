@@ -1,3 +1,20 @@
+/* 
+* Descent 3 
+* Copyright (C) 2024 Parallax Software
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 /*
  * $Logfile: /DescentIII/Main/macmain.cpp $
  * $Revision: 1.1.1.1 $
@@ -123,15 +140,15 @@ const char *French_strings[] = {
 };
 
 const char *German_strings[] = {
-	"Descent3 unter Windows NT ben÷tigt fnr die Ausfnhrung die NT-Version 4.0 oder h÷her",
-	"Descent 3 ben÷tigt fnr die Ausfnhrung Windows 9x, NT 4.0 oder h÷her.",
+	"Descent3 unter Windows NT benï¿½tigt fnr die Ausfnhrung die NT-Version 4.0 oder hï¿½her",
+	"Descent 3 benï¿½tigt fnr die Ausfnhrung Windows 9x, NT 4.0 oder hï¿½her.",
 	"",
 	"Sie mnssen DirectX nber den Descent 3 Starter installieren, bevor Sie fortsetzen.",
-	"Sie mnssen mindestens Service Paket 3 installieren, um Descent 3 unter Windows NT 4.0 ausfnhren zu k÷nnen.",
+	"Sie mnssen mindestens Service Paket 3 installieren, um Descent 3 unter Windows NT 4.0 ausfnhren zu kï¿½nnen.",
 	"Die DirectX Version konnte nicht abgerufen werden.",
-	"Descent 3 ben÷tigt DirectX 3 oder h÷her auf diesem Computer.",
-	"In dieser Windows NT Version ist DirectX 3 oder h÷her nicht installiert.",
-	"Ihr Prozessor und System mu¯ Katmai unterstntzen, um dieses Spiel auszufnhren."                                                 
+	"Descent 3 benï¿½tigt DirectX 3 oder hï¿½her auf diesem Computer.",
+	"In dieser Windows NT Version ist DirectX 3 oder hï¿½her nicht installiert.",
+	"Ihr Prozessor und System muï¿½ Katmai unterstntzen, um dieses Spiel auszufnhren."                                                 
 };
 
 const char *Italian_strings[] = {
@@ -152,9 +169,9 @@ const char *Spanish_strings[] = {
 	"",
 	"Debe instalar DirectX desde el lanzador de Descent 3 antes de continuar.",
 	"Debe instalar por lo menos Service Pack 3 para correr Descent 3 bajo Windows NT 4.0.",
-	"Falla en la detección de la versión de DirectX.",
+	"Falla en la detecciï¿½n de la versiï¿½n de DirectX.",
 	"Descent 3 requiere DirectX 3 o mejor en el ordenador.",
-	"Esta versión de Windows NT no tiene DirectX 3 o mejor instalado.",
+	"Esta versiï¿½n de Windows NT no tiene DirectX 3 o mejor instalado.",
 	"Vuestro procesador y ordenador deben soportar Katmai para correr este juego."
 };
 
@@ -350,7 +367,7 @@ main(int argc, char *argv[])
 
 	Descent = d3;
 	
-	//¥ Initialize Metrowerks Code Profiler
+	//ï¿½ Initialize Metrowerks Code Profiler
 		bool profilerInitted = false;
 	#ifdef USE_PROFILER
 		if (!ProfilerInit(collectDetailed, PPCTimeBase, 1024, 50))
@@ -365,14 +382,14 @@ main(int argc, char *argv[])
 		}
 	#endif
 
-	//¥ Here we go!!!
+	//ï¿½ Here we go!!!
 	PreInitD3Systems();
 
 	d3->init();
 	d3->run();
 	
 
-	//¥ Close the Metrowerks Code Profiler
+	//ï¿½ Close the Metrowerks Code Profiler
 	#ifdef USE_PROFILER
 		if (profilerInitted)
 		{
