@@ -1002,7 +1002,6 @@ void SetScreenMode(int sm, bool force_res_change)
 			Render_preferred_state.width=scr_width;
 			Render_preferred_state.height=scr_height;
 			Render_preferred_state.bit_depth=scr_bitdepth;
-			Render_preferred_state.fullscreen = Game_fullscreen;
 			Render_preferred_state.window_width = Game_window_res_width;
 			Render_preferred_state.window_height = Game_window_res_height;
 			Render_preferred_state.fullscreen = Game_fullscreen;
@@ -1284,7 +1283,7 @@ constexpr float ASPECT_4_3 = (4.f / 3.f);
 void StartFrame(int x, int y, int x2, int y2, bool clear,bool push_on_stack)
 {
 	static float last_fov=-1;
-	if (last_fov!=Render_FOV)
+	//if (last_fov!=Render_FOV)
 	{
 		float num=(Render_FOV / 2);
 		num=(3.14*(float)num/180.0);
