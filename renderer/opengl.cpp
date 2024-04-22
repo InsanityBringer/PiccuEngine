@@ -881,10 +881,8 @@ void opengl_FreeUploadBuffers()
 
 void opengl_SetUploadBufferSize(int width, int height)
 {
-	if (width * height <= opengl_last_upload_res)
+	if ((width * height) <= opengl_last_upload_res)
 		return;
-
-	opengl_last_upload_res = width * height;
 
 	opengl_FreeUploadBuffers();
 
@@ -1006,6 +1004,8 @@ void opengl_SetUploadBufferSize(int width, int height)
 			opengl_4444_translate_table[i] = INTEL_INT(pix);
 		}
 	}
+
+	opengl_last_upload_res = width * height;
 }
 
 // Sets up our OpenGL rendering context
