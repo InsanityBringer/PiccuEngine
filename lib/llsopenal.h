@@ -78,7 +78,7 @@ class llsOpenAL : public llsSystem
 
 	ALuint AuxEffectSlot, EffectSlot;
 
-	float Volume, Damping, Decay;
+	const EAX2Reverb* LastReverb;
 
 	bool ALErrorCheck(const char* context);
 
@@ -111,7 +111,7 @@ public:
 		Context = nullptr; Device = nullptr;
 
 		AuxEffectSlot = EffectSlot = 0;
-		Volume = Damping = Decay = 0;
+		LastReverb = nullptr;
 	}
 	// may be called before init (must be to be valid, the card passed here will be initialized in InitSoundLib)
 	void SetSoundCard(const char* name) override;
@@ -165,9 +165,7 @@ public:
 	void SoundEndFrame(void) override;
 
 	// environmental sound interface
-	// volume modifier (0-1), damping(0-1), 1 = complete, 0 = none
-	//	decay 0.1 to 100 seconds, how long it takes for a sound to die.
-	bool SetGlobalReverbProperties(float volume, float damping, float decay) override;
+	bool SetGlobalReverbProperties(const EAX2Reverb* reverb) override;
 
 	// set special parameters for the 3d environment.
 	// of strcuture passed, you must set the appropriate 'flags' value for values you wish to modify

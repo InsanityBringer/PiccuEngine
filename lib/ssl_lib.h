@@ -285,6 +285,32 @@ typedef struct
 #define SND_PRIORITY_LOW			1
 #define SND_PRIORITY_LOWEST		0
 
+struct EAX2Reverb
+{
+	float density;
+	float diffusion;
+	float gain;
+	float gain_hf;
+	float gain_lf;
+	float decay_time;
+	float decay_hf_ratio;
+	float decay_lf_ratio;
+	float reflection_gain;
+	float reflection_delay;
+	float reflection_pan[3];
+	float late_reverb_gain;
+	float late_reverb_delay;
+	float late_reverb_pan[3];
+	float echo_time;
+	float echo_depth;
+	float modulation_time;
+	float modulation_depth;
+	float air_absorption_gain_hf;
+	float hf_reference;
+	float lf_reference;
+	float room_rolloff_factor;
+	bool decay_hf_limit;
+};
 
 typedef struct
 {
@@ -521,9 +547,7 @@ public:
 	int GetLastError() { int code = m_lib_error_code; m_lib_error_code = 0; return code; };
 
 	// environmental sound interface
-	// volume modifier (0-1), damping(0-1), 1 = complete, 0 = none
-	//	decay 0.1 to 100 seconds, how long it takes for a sound to die.
-	virtual bool SetGlobalReverbProperties(float volume, float damping, float decay) = 0;
+	virtual bool SetGlobalReverbProperties(const EAX2Reverb* reverbs) = 0;
 
 	// set special parameters for the 3d environment.
 	// of strcuture passed, you must set the appropriate 'flags' value for values you wish to modify

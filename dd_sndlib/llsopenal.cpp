@@ -33,6 +33,7 @@ LPALDELETEEFFECTS dalDeleteEffects;
 LPALDELETEAUXILIARYEFFECTSLOTS dalDeleteAuxiliaryEffectSlots;
 LPALEFFECTI dalEffecti;
 LPALEFFECTF dalEffectf;
+LPALEFFECTFV dalEffectfv;
 LPALAUXILIARYEFFECTSLOTI dalAuxiliaryEffectSloti;
 
 //Hack: Maybe will fix problems with streaming system
@@ -130,6 +131,7 @@ int llsOpenAL::InitSoundLib(char mixer_type, oeApplication* sos, unsigned char m
 		dalDeleteEffects = (LPALDELETEEFFECTS)alGetProcAddress("alDeleteEffects");
 		dalEffecti = (LPALEFFECTI)alGetProcAddress("alEffecti");
 		dalEffectf = (LPALEFFECTF)alGetProcAddress("alEffectf");
+		dalEffectfv = (LPALEFFECTFV)alGetProcAddress("alEffectfv");
 		dalAuxiliaryEffectSloti = (LPALAUXILIARYEFFECTSLOTI)alGetProcAddress("alAuxiliaryEffectSloti");
 
 		if (!dalGenAuxiliaryEffectSlots || !dalDeleteAuxiliaryEffectSlots || !dalGenEffects || !dalDeleteEffects || !dalEffecti || !dalEffectf || !dalAuxiliaryEffectSloti)
@@ -149,7 +151,7 @@ int llsOpenAL::InitSoundLib(char mixer_type, oeApplication* sos, unsigned char m
 			//Make the effect an EAX reverb
 			dalEffecti(EffectSlot, AL_EFFECT_TYPE, AL_EFFECT_EAXREVERB);
 			ALErrorCheck("Setting effect type");
-			SetGlobalReverbProperties(0.0, 0.0, 0.1);
+			//SetGlobalReverbProperties(0.0, 0.0, 0.1);
 		}
 	}
 
@@ -589,39 +591,75 @@ void llsOpenAL::SoundEndFrame(void)
 	}
 }
 
-bool llsOpenAL::SetGlobalReverbProperties(float volume, float damping, float decay)
+bool llsOpenAL::SetGlobalReverbProperties(const EAX2Reverb* reverb)
 {
 	ALErrorCheck("Clearing entry error in reverb properties.");
 	if (!EffectsSupported)
 		return false;
 
-	mprintf((0, "Got Environmental params: vol: %f, damping: %f, decay: %f.", volume, damping, decay));
-	Volume = volume;
-	Damping = damping;
-	Decay = decay;
+	if (reverb == LastReverb)
+		return true;
+
+	LastReverb = reverb;
 
 	//Make the aux effect slot use the effect
 	dalAuxiliaryEffectSloti(AuxEffectSlot, AL_EFFECTSLOT_EFFECT, 0);
 	ALErrorCheck("Setting aux effect slot");
 
-	dalEffectf(EffectSlot, AL_EAXREVERB_DECAY_TIME, decay);
-	ALErrorCheck("Setting reverb decay");
-	dalEffectf(EffectSlot, AL_EAXREVERB_GAIN, std::min(volume, 1.0f));
+#ifndef NDEBUG
+	extern EAX2Reverb EnvAudio_Presets[];
+	mprintf((0, "setting environment %d\n", (int)(reverb - EnvAudio_Presets)));
+#endif
+
+	if (reverb->density == 0)
+		return true; //Turn off reverbs
+
+	dalEffectf(EffectSlot, AL_EAXREVERB_DENSITY, reverb->density);
+	ALErrorCheck("Setting reverb density");
+	dalEffectf(EffectSlot, AL_EAXREVERB_DIFFUSION, reverb->diffusion);
+	ALErrorCheck("Setting reverb diffusion");
+	dalEffectf(EffectSlot, AL_EAXREVERB_GAIN, reverb->gain);
 	ALErrorCheck("Setting reverb gain");
-	if (damping > 1.0f)
-	{
-		dalEffectf(EffectSlot, AL_EAXREVERB_GAINHF, 1.0f);
-		ALErrorCheck("Setting reverb gainlf");
-		dalEffectf(EffectSlot, AL_EAXREVERB_GAINLF, 2.0f - damping);
-		ALErrorCheck("Setting reverb gainhf");
-	}
-	else
-	{
-		dalEffectf(EffectSlot, AL_EAXREVERB_GAINLF, 1.0f);
-		ALErrorCheck("Setting reverb gainlf");
-		dalEffectf(EffectSlot, AL_EAXREVERB_GAINHF, damping);
-		ALErrorCheck("Setting reverb gainhf");
-	}
+	dalEffectf(EffectSlot, AL_EAXREVERB_GAINHF, reverb->gain_hf);
+	ALErrorCheck("Setting reverb gain hf");
+	dalEffectf(EffectSlot, AL_EAXREVERB_GAINLF, reverb->gain_lf);
+	ALErrorCheck("Setting reverb gain lf");
+	dalEffectf(EffectSlot, AL_EAXREVERB_DECAY_TIME, reverb->decay_time);
+	ALErrorCheck("Setting reverb decay time");
+	dalEffectf(EffectSlot, AL_EAXREVERB_DECAY_HFRATIO, reverb->decay_hf_ratio);
+	ALErrorCheck("Setting reverb decay hf ratio");
+	dalEffectf(EffectSlot, AL_EAXREVERB_DECAY_LFRATIO, reverb->decay_lf_ratio);
+	ALErrorCheck("Setting reverb decay lf ratio");
+	dalEffectf(EffectSlot, AL_EAXREVERB_REFLECTIONS_GAIN, reverb->reflection_gain);
+	ALErrorCheck("Setting reverb reflection gain");
+	dalEffectf(EffectSlot, AL_EAXREVERB_REFLECTIONS_DELAY, reverb->reflection_delay);
+	ALErrorCheck("Setting reverb reflection delay");
+	dalEffectfv(EffectSlot, AL_EAXREVERB_REFLECTIONS_PAN, reverb->reflection_pan);
+	ALErrorCheck("Setting reverb reflection pan");
+	dalEffectf(EffectSlot, AL_EAXREVERB_LATE_REVERB_DELAY, reverb->late_reverb_delay);
+	ALErrorCheck("Setting reverb late reverb delay");
+	dalEffectf(EffectSlot, AL_EAXREVERB_LATE_REVERB_GAIN, reverb->late_reverb_gain);
+	ALErrorCheck("Setting reverb late reverb gain");
+	dalEffectfv(EffectSlot, AL_EAXREVERB_LATE_REVERB_PAN, reverb->late_reverb_pan);
+	ALErrorCheck("Setting reverb late_reverb_pan");
+	dalEffectf(EffectSlot, AL_EAXREVERB_ECHO_TIME, reverb->echo_time);
+	ALErrorCheck("Setting reverb echo time");
+	dalEffectf(EffectSlot, AL_EAXREVERB_ECHO_DEPTH, reverb->echo_depth);
+	ALErrorCheck("Setting reverb echo depth");
+	dalEffectf(EffectSlot, AL_EAXREVERB_MODULATION_TIME, reverb->modulation_time);
+	ALErrorCheck("Setting reverb modulation time");
+	dalEffectf(EffectSlot, AL_EAXREVERB_MODULATION_DEPTH, reverb->modulation_depth);
+	ALErrorCheck("Setting reverb modulation depth");
+	dalEffectf(EffectSlot, AL_EAXREVERB_AIR_ABSORPTION_GAINHF, reverb->air_absorption_gain_hf);
+	ALErrorCheck("Setting reverb air absorption gain hf");
+	dalEffectf(EffectSlot, AL_EAXREVERB_HFREFERENCE, reverb->hf_reference);
+	ALErrorCheck("Setting reverb hf reference");
+	dalEffectf(EffectSlot, AL_EAXREVERB_LFREFERENCE, reverb->lf_reference);
+	ALErrorCheck("Setting reverb lf reference");
+	dalEffectf(EffectSlot, AL_EAXREVERB_ROOM_ROLLOFF_FACTOR, reverb->room_rolloff_factor);
+	ALErrorCheck("Setting reverb room rolloff factor");
+	dalEffecti(EffectSlot, AL_EAXREVERB_DECAY_HFLIMIT, reverb->decay_hf_limit);
+	ALErrorCheck("Setting reverb max decay limit");
 
 	//Make the aux effect slot use the effect
 	dalAuxiliaryEffectSloti(AuxEffectSlot, AL_EFFECTSLOT_EFFECT, EffectSlot);
