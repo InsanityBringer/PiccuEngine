@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
+#include <debugapi.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1252,3 +1253,8 @@ int __cdecl RecordExceptionInfo(PEXCEPTION_POINTERS data, const char *Message)
 		return EXCEPTION_EXECUTE_HANDLER;
 }
 
+
+void debug_break()
+{
+	DebugBreak();
+}

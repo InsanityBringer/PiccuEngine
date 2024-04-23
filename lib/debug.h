@@ -171,11 +171,7 @@ void Debug_ConsoleRedirectMessages(int virtual_window, int physical_window);
 //Break into the debugger, if this feature was enabled in Debug_init()
 #if !defined(RELEASE)
 #if defined(WIN32)
-	#define debug_break()  \
-		do {  \
-			if (Debug_break) \
-				__asm int 3  \
-		} while (0)
+void debug_break();
 #elif defined(__LINUX__)
 	void ddio_InternalKeyClose();
 	//#define debug_break() do{__asm__ __volatile__ ( "int $3" );}while(0)

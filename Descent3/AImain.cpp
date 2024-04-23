@@ -3762,17 +3762,14 @@ void ai_do_animation(object *obj, float anim_time)
 		obj->rtype.pobj_info.anim_frame = from;
 	}
 
-#ifdef MACINTOSH	//DAJ
 	if(obj->rtype.pobj_info.anim_frame+0.001 < from || obj->rtype.pobj_info.anim_frame > to)
 		mprintf((2, "AI ANIM from %0.6f (%0.6f) to %0.6f\n", from, obj->rtype.pobj_info.anim_frame, to));
 	if(obj->rtype.pobj_info.anim_frame < from)
 		obj->rtype.pobj_info.anim_frame = from;
 	if(obj->rtype.pobj_info.anim_frame > to)
 		obj->rtype.pobj_info.anim_frame = to;
-#else
 
 	ASSERT(obj->rtype.pobj_info.anim_frame >= from && obj->rtype.pobj_info.anim_frame <= to);
-#endif
 	return;
 
 	done:
