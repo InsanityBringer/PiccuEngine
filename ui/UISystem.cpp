@@ -173,7 +173,7 @@
 #include "Macros.h"
 #define UI_MOUSE_HOTX	2
 #define UI_MOUSE_HOTY	2
-#define UI_FRAMETIME		0.05
+#define UI_FRAMETIME		1./60
 //////////////////////////////////////////////////////////////////////////////
 //	VARIABLES
 typedef struct tUIWindowNode {
