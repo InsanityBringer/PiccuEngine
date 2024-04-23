@@ -443,6 +443,8 @@ void llsOpenAL::StopSound(int sound_uid, unsigned char f_immediately)
 	int id = sound_uid & 255;
 	if (!Initalized) return;
 	if (!SoundEntries || id < 0 || id >= NumSoundChannels || SoundEntries[id].soundUID != sound_uid) return;
+	ALint islooping;
+	alGetSourcei(SoundEntries[id].handle, AL_LOOPING, &islooping);
 	if (SoundEntries[id].playing)
 	{
 		if (f_immediately == 1)
@@ -452,16 +454,11 @@ void llsOpenAL::StopSound(int sound_uid, unsigned char f_immediately)
 
 			//PutLog(LogLevel::Info, "External code trying to stop sound %d (%s). Elimination mode %d.", sound_uid, pSoundFiles[pSounds[SoundEntries[id].soundNum].sample_index].name, f_immediately);
 		}
-		else
+		else if (islooping)
 		{
 			//Disable looping traits on the sound instead
 			alSourcei(SoundEntries[id].handle, AL_LOOPING, AL_FALSE);
-			alSourcePlay(SoundEntries[id].handle);
-			ALErrorCheck("Is it not okay to change AL_LOOPING on a playing source?");
-			//I don't know if Descent 3 holds onto the information at this point, so while servicing it I'm going to null it so the service code doesn't operate on it further.
-			//SoundEntries[id].info = nullptr;
-
-			//PutLog(LogLevel::Info, "External code trying to stop sound %d (%s) from looping.", sound_uid, pSoundFiles[pSounds[SoundEntries[id].soundNum].sample_index].name);
+			//alSourcePlay(SoundEntries[id].handle);
 		}
 
 	}

@@ -633,7 +633,7 @@ bool AudioStream::Play(bool start_on_frame)
 	bool looped = false;
 	if (m_state == STRM_INVALID) {
 #ifdef WIN32
-		Int3();
+		//Int3();
 #endif
 		return false;
 	}

@@ -374,7 +374,8 @@ void RenderHUDInventory(tHUDItem *item)
 		return;
 
 	int y;
-	float img_w;
+	//[ISB] uninitialized aaaaa
+	float img_w = 0;
 
 	if(cur_sel!=-1)
 	{
