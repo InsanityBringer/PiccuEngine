@@ -1980,7 +1980,9 @@ void FlushDataCache ()
 	}
 
 	mprintf ((0,"Freed %d textures, %d models, and %d sounds.\n",texfreed,modelsfreed,soundsfreed));
-	rend_ResetCache();
+
+	if (!Dedicated_server)
+		rend_ResetCache();
 
 }
 

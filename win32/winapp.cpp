@@ -100,7 +100,7 @@ oeWin32Application::oeWin32Application(const char *name, unsigned flags, HInstan
 	wc.lpszClassName 		= (LPCSTR)name;
 	wc.hInstance 			= (HINSTANCE)hinst;
 	wc.style					= CS_DBLCLKS;
-	wc.lpfnWndProc			= (WNDPROC)(MyWndProc);
+	wc.lpfnWndProc			= (flags & OEAPP_CONSOLE) ? (WNDPROC)MyConProc : (WNDPROC)(MyWndProc);
 	wc.cbWndExtra			= 0;
 	wc.cbClsExtra			= 0;
 
@@ -145,6 +145,8 @@ oeWin32Application::oeWin32Application(const char *name, unsigned flags, HInstan
 	m_WasCreated = true;
 	m_DeferFunc = NULL;
 	w32_mouseman_hack = false;
+
+	memset(m_MsgFn, 0, sizeof(m_MsgFn));
 }
 	
 //	Create object with a premade window handle/instance

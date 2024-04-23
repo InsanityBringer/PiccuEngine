@@ -1039,7 +1039,8 @@ void BuildRoomListSub(int start_room_num,clip_wnd *wnd,int depth)
 			{
 				g3_ProjectPoint (&Combined_portal_points[i]);
 			}
-			int left,top,right,bottom;
+			//[ISB] disgusting hack, sometimes these aren't initialized. 
+			int left = 0,top = 0,right = 0,bottom = 0;
 			clip_wnd combine_wnd;
 			combine_wnd.right = combine_wnd.bot = 0.0;
 			combine_wnd.left = Render_width;

@@ -1423,6 +1423,9 @@ void DoScreenshot ()
 
 bool ShouldCaptureMouse()
 {
+	if (Dedicated_server)
+		return false;
+
 	//If the UI cursor is visible, then the mouse shouldn't be captured.
 	if (ui_IsCursorVisible())
 		return false;

@@ -98,6 +98,9 @@ void RestartD3();
 
 void InitMessage(char *c,float progress=-1);
 
+//[ISB] Returns true if Mercenary is installed. 
+extern bool MercInstalled();
+
 #endif
 
 

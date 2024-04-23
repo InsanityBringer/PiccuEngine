@@ -1653,39 +1653,11 @@ tTempFileInfo temp_file_wildcards[] =
 };
 int num_temp_file_wildcards = sizeof(temp_file_wildcards)/sizeof(tTempFileInfo);
 
+bool Merc_IsInstalled;
 //Returns true if Mercenary is installed
 bool MercInstalled()
 {
-#if defined(LINUX)
-  return false; // TODO: check for mercenary
-#else
-	HKEY key;
-	DWORD lType;
-	LONG error;
-
-	#define BUFLEN 2000
-	char  dir[BUFLEN];
-	DWORD dir_len = BUFLEN;
-
-	error = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Descent3 Mercenary", 0, KEY_ALL_ACCESS, &key);
-
-	if ( (error == ERROR_SUCCESS) )
-	{
-		lType = REG_EXPAND_SZ;
-
-		unsigned long len = BUFLEN;
-		error = RegQueryValueEx(key, "UninstallString", NULL, &lType, (unsigned char*)dir, &len);
-
-		if (error == ERROR_SUCCESS)
-		{
-			// Mercenary is installed
-			return true;
-		}
-	}
-
-	//Mercenary not installed
-	return false;
-#endif
+	return Merc_IsInstalled;
 }
 
 
@@ -1735,7 +1707,7 @@ void InitIOSystems(bool editor)
 		Error("I/O initialization failed.");
 	} 
 
-	if( !editor /*&& !FindArg("-windowed") */) //[ISB] disable windowed standard mode for now
+	if( !editor)
 	{
 		if (Dedicated_server)
 		{
@@ -1815,35 +1787,10 @@ void InitIOSystems(bool editor)
 	ddio_MakePath(fullname, LocalD3Dir, "extra.hog", NULL);
 	extra_hid = cf_OpenLibrary(fullname);
 
-	// Opens the mercenary hog if it exists and the registry entery is present
-	// Win32 only.  Mac and Linux users are SOL for now
-#ifdef WIN32
-	HKEY    key;
-	DWORD lType;
-	LONG error;
-
-	#define BUFLEN 2000
-	char  dir[BUFLEN];
-	DWORD dir_len = BUFLEN;
-
-	error = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Descent3 Mercenary", 0, KEY_ALL_ACCESS, &key);
-
-	if ( (error == ERROR_SUCCESS) )
-	{
-		lType = REG_EXPAND_SZ;
-
-		unsigned long len = BUFLEN;
-		error = RegQueryValueEx(key, "UninstallString", NULL, &lType, (unsigned char*)dir, &len);
-
-		if (error == ERROR_SUCCESS)
-		{
-			merc_hid = cf_OpenLibrary("merc.hog");
-		}
-	}
-#else
 	// non-windows platforms always get merc!
 	merc_hid = cf_OpenLibrary("merc.hog");
-#endif	
+	if (merc_hid)
+		Merc_IsInstalled = true;
 	// Open this for extra 1.3 code (Black Pyro, etc)
 	ddio_MakePath(fullname, LocalD3Dir, "extra13.hog", NULL);
 	extra13_hid = cf_OpenLibrary(fullname);
@@ -2666,16 +2613,13 @@ void RestartD3()
 		Error("I/O initialization failed.");
 	} 
 
-	//if( !FindArg("-windowed") )
+	if (Dedicated_server)
 	{
-		if (Dedicated_server)
-		{
-			ddio_MouseMode(MOUSE_STANDARD_MODE);
-		}
-		else
-		{
-			ddio_MouseMode(MOUSE_EXCLUSIVE_MODE);
-		}
+		ddio_MouseMode(MOUSE_STANDARD_MODE);
+	}
+	else
+	{
+		ddio_MouseMode(MOUSE_EXCLUSIVE_MODE);
 	}
 
 //	startup screen.
