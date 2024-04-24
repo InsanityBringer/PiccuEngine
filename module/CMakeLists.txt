@@ -1,5 +1,3 @@
-SET (HEADERS )
-SET (CPPS
-		module.cpp)
-
-ADD_LIBRARY(module STATIC ${HEADERS} ${CPPS})
+SET (MODULE_SOURCES
+		module/module.cpp
+		PARENT_SCOPE)

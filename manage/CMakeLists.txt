@@ -1,23 +1,22 @@
-SET (HEADERS doorpage.h
-		gamefilepage.h
-		genericpage.h
-		megapage.h
-		powerpage.h
-		robotpage.h
-		shippage.h
-		soundpage.h
-		texpage.h
-		weaponpage.h )
-SET (CPPS
-		doorpage.cpp
-		gamefilepage.cpp
-		generic.cpp
-		manage.cpp
-		megapage.cpp
-		pagelock.cpp
-		shippage.cpp
-		soundpage.cpp
-		texpage.cpp
-		weaponpage.cpp)
-
-ADD_LIBRARY(manage STATIC ${HEADERS} ${CPPS})
+SET (MANAGE_SOURCES
+	manage/doorpage.h
+	manage/gamefilepage.h
+	manage/genericpage.h
+	manage/megapage.h
+	manage/powerpage.h
+	manage/robotpage.h
+	manage/shippage.h
+	manage/soundpage.h
+	manage/texpage.h
+	manage/weaponpage.h
+	manage/doorpage.cpp
+	manage/gamefilepage.cpp
+	manage/generic.cpp
+	manage/manage.cpp
+	manage/megapage.cpp
+	manage/pagelock.cpp
+	manage/shippage.cpp
+	manage/soundpage.cpp
+	manage/texpage.cpp
+	manage/weaponpage.cpp
+	PARENT_SCOPE)

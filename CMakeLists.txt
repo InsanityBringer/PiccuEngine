@@ -66,8 +66,6 @@ MESSAGE("Install will copy files to ${D3_GAMEDIR}")
 
 include_directories("lib" "Descent3" ${PLATFORM_INCLUDES})
 
-# file(GLOB_RECURSE INCS "*.h")
-
 # project version
 SET( ${PROJECT_NAME}_MAJOR_VERSION 1 )
 SET( ${PROJECT_NAME}_MINOR_VERSION 5 )
@@ -120,13 +118,121 @@ ADD_SUBDIRECTORY (Descent3 )
 
 # For now we don't need to build the scripts under windows, so we'll only include
 # the directory when building for linux/osx. In the future we may want to to fix bugs, etc.
-IF(UNIX)
-ADD_SUBDIRECTORY (netgames)
-ADD_SUBDIRECTORY (netcon)
-ADD_SUBDIRECTORY (scripts)
-ENDIF()
+#[ISB] TODO: Needs fixing for new build system
+#IF(UNIX)
+#ADD_SUBDIRECTORY (netgames)
+#ADD_SUBDIRECTORY (netcon)
+#ADD_SUBDIRECTORY (scripts)
+#ENDIF()
 
 # set default cmake build type to Debug (None Debug Release RelWithDebInfo MinSizeRel)
 IF( NOT CMAKE_BUILD_TYPE )
 SET( CMAKE_BUILD_TYPE "Debug" )
 ENDIF()
+
+SET (DESCENT3_SOURCES
+		${AUDIOENCODE_SORUCES}
+		${BITMAP_SOURCES}
+		${CFILE_SOURCES}
+		${D3MUSIC_SOURCES}
+		${DDIO_COMMON_SOURCES}
+		${FIX_SOURCES}
+		${GRTEXT_SOURCES}
+		${MANAGE_SOURCES}
+		${MEM_SOURCES}
+		${MISC_SOURCES}
+		${MODEL_SOURCES}
+		${MODULE_SOURCES}
+		${MOVIE_SOURCES}
+		${MUSIC_SOURCES}
+		${NETWORKING_SOURCES}
+		${PHYSICS_SOURCES}
+		${RENDERER_SOURCES}
+		${RTPERFORMANCE_SOURCES}
+		${SNDLIB_SOURCES}
+		${STREAM_AUDIO_SOURCES}
+		${UI_SOURCES}
+		${UNZIP_SOURCES}
+		${VECMAT_SOURCES}
+		${MD5_SOURCES}
+		${LIBACM_SOURCES}
+		${MAIN_SOURCES})
+		
+IF (WIN32)
+SET (DESCENT3_SOURCES
+	${DESCENT3_SOURCES}
+	${DD_GRWIN32_SOURCES}
+	${DD_VIDWIN32_SOURCES}
+	${DDIO_WIN_SOURCES}
+	${WIN32_SOURCES}
+	${DD_SNDLIB_SOURCES}
+	Descent3.manifest)
+ENDIF()
+
+IF (UNIX)
+SET (DESCENT3_SOURCES
+	${DESCENT3_SOURCES}
+	${LINUX_SOURCES}
+	${DDVID_LNX_SOURCES}
+	${DD_LNXSOUND_SOURCES}
+	${DDIO_SOURCES})
+ENDIF()		
+
+IF (WIN32)
+SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib
+	${DSOUND_LIBRARY} ${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${DDRAW_LIBRARY} ${OPENAL_LIBRARY})
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
+ENDIF()
+
+IF (UNIX AND NOT APPLE)
+SET (PLATFORM_LIBS ${SDL_LIBRARY} caca asound audio esd aa directfb m dl GLU)
+SET(CMAKE_EXE_LINKER_FLAGS "/usr/lib/libpulse-simple.so.0")
+ENDIF()
+	
+IF (APPLE)
+SET (PLATFORM_LIBS ${SDL_LIBRARY} ncurses )
+SET(CMAKE_EXE_LINKER_FLAGS "-framework IOKit -framework Cocoa -framework OpenGL -framework Carbon")
+ENDIF()
+
+add_executable(Descent3 ${DESCENT3_SOURCES})
+target_link_libraries(Descent3 
+	${PLATFORM_LIBS})
+	
+install(TARGETS Descent3 DESTINATION ${D3_GAMEDIR})
+
+source_group("AudioEncode" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/AudioEncode/.+")
+source_group("bitmap" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/bitmap/.+")
+source_group("cfile" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/cfile/.+")
+source_group("d3music" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/d3music/.+")
+source_group("dd_grwin32" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_grwin32/.+")
+source_group("dd_lnxsound" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_lnxsound/.+")
+source_group("dd_sndlib" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_sndlib/.+")
+source_group("dd_vidwin32" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_vidwin32/.+")
+source_group("ddio_common" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_common/.+")
+source_group("ddio_lnx" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_lnx/.+")
+source_group("ddio_win" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_win/.+")
+source_group("ddvid_lnx" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddvid_lnx/.+")
+source_group("main" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/Descent3/.+")
+source_group("fix" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/fix/.+")
+source_group("grtext" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/grtext/.+")
+source_group("libacm" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/libacm/.+")
+source_group("linux" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/linux/.+")
+source_group("manage" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/manage/.+")
+source_group("md5" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/md5/.+")
+source_group("mem" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/mem/.+")
+source_group("misc" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/misc/.+")
+source_group("model" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/model/.+")
+source_group("module" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/module/.+")
+source_group("movie" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/movie/.+")
+source_group("music" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/music/.+")
+source_group("networking" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/networking/.+")
+source_group("physics" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/physics/.+")
+source_group("renderer" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/renderer/.+")
+source_group("rtperformance" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/rtperformance/.+")
+source_group("sndlib" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/sndlib/.+")
+source_group("stream_audio" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/stream_audio/.+")
+source_group("ui" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ui/.+")
+source_group("unzip" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/unzip/.+")
+source_group("vecmat" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/vecmat/.+")
+source_group("win32" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/win32/.+")
+

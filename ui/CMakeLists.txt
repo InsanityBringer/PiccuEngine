@@ -1,19 +1,18 @@
-SET (HEADERS UIlib.h )
-SET (CPPS
-		UIButton.cpp
-		UICombo.cpp
-		UIConsole.cpp
-		UIDraw.cpp
-		UIEdit.cpp
-		UIGadget.cpp
-		UIGroup.cpp
-		UIHotspot.cpp
-		UIListBox.cpp
-		UIObject.cpp
-		UIRes.cpp
-		UISlider.cpp
-		UIStatic.cpp
-		UISystem.cpp
-		UIWindow.cpp)
-
-ADD_LIBRARY(ui STATIC ${HEADERS} ${CPPS})
+SET (UI_SOURCES
+		ui/UIButton.cpp
+		ui/UICombo.cpp
+		ui/UIConsole.cpp
+		ui/UIDraw.cpp
+		ui/UIEdit.cpp
+		ui/UIGadget.cpp
+		ui/UIGroup.cpp
+		ui/UIHotspot.cpp
+		ui/UIlib.h
+		ui/UIListBox.cpp
+		ui/UIObject.cpp
+		ui/UIRes.cpp
+		ui/UISlider.cpp
+		ui/UIStatic.cpp
+		ui/UISystem.cpp
+		ui/UIWindow.cpp
+		PARENT_SCOPE)

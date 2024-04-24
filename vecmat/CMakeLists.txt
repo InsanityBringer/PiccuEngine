@@ -1,5 +1,3 @@
-SET (HEADERS )
-SET (CPPS
-		vector.cpp)
-
-ADD_LIBRARY(vecmat STATIC ${HEADERS} ${CPPS})
+SET (VECMAT_SOURCES
+		vecmat/vector.cpp
+		PARENT_SCOPE)

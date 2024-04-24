@@ -1,13 +1,14 @@
-SET (HEADERS registry.h )
-SET (CPPS
-  lnxcon.cpp
-  lnxcon_raw.cpp
-  lnxdebug.cpp
-  lnxtask.cpp
-  lnxapp.cpp
-  lnxcon_null.cpp
-  lnxdata.cpp
-  lnxmono.cpp
-  registry.cpp)
-#  DynXLib.cpp
-ADD_LIBRARY(linux STATIC ${HEADERS} ${CPPS})
+SET (LINUX_SOURCES
+	linux/lnxcon.cpp
+	linux/lnxcon_raw.cpp
+	linux/lnxcontroller.cpp
+	linux/lnxdebug.cpp
+	linux/lnxtask.cpp
+	linux/lnxapp.cpp
+	linux/lnxcon_null.cpp
+	linux/lnxdata.cpp
+	linux/lnxmono.cpp
+	linux/registry.cpp
+	linux/registry.h
+	PARENT_SCOPE)
+

@@ -1,5 +1,2 @@
-SET (HEADERS  )
-SET (CPPS
-  video_lnx.cpp)
-
-ADD_LIBRARY(ddvid_lnx STATIC ${HEADERS} ${CPPS})
+SET (DDVID_LNX_SOURCES
+	ddvid_lnx/video_lnx.cpp)

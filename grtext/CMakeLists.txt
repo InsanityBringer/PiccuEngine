@@ -1,7 +1,6 @@
-SET (HEADERS grtextlib.h )
-SET (CPPS
-		grfont.cpp
-		grtext.cpp
-		textaux.cpp)
-
-ADD_LIBRARY(grtext STATIC ${HEADERS} ${CPPS})
+SET (GRTEXT_SOURCES
+		grtext/grfont.cpp
+		grtext/grtext.cpp
+		grtext/grtextlib.h
+		grtext/textaux.cpp
+		PARENT_SCOPE)

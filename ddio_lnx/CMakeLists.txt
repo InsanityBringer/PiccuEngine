@@ -1,4 +1,14 @@
-SET (HEADERS ddio_lnx.h )
-SET (CPPS lnxfile.cpp lnxforcefeedback.cpp lnxio.cpp sdljoy.cpp lnxkey.cpp lnxkey_null.cpp lnxmouse.cpp lnxtimer.cpp lnxkey_raw.cpp lnxcdrom.cpp lnxkey_sdl.cpp)
-
-ADD_LIBRARY(ddio_lnx STATIC ${HEADERS} ${CPPS})
+SET (DDIO_LNX_SOURCES 
+	ddio_lnx/ddio_lnx.h 
+	ddio_lnx/lnxfile.cpp 
+	ddio_lnx/lnxforcefeedback.cpp 
+	ddio_lnx/lnxio.cpp 
+	ddio_lnx/sdljoy.cpp 
+	ddio_lnx/lnxkey.cpp 
+	ddio_lnx/lnxkey_null.cpp 
+	ddio_lnx/lnxmouse.cpp 
+	ddio_lnx/lnxtimer.cpp 
+	ddio_lnx/lnxkey_raw.cpp 
+	ddio_lnx/lnxcdrom.cpp 
+	ddio_lnx/lnxkey_sdl.cpp
+	PARENT_SCOPE)

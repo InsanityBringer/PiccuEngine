@@ -1,8 +1,4 @@
-SET (HEADERS md5.h)
-SET (CPPS
-    md5.cpp)
-
-SET (PLATFORMCPPS )
-
-
-ADD_LIBRARY(md5 STATIC ${HEADERS} ${CPPS} ${PLATFORMCPPS})
+SET (MD5_SOURCES
+    md5/md5.cpp
+	md5/md5.h
+	PARENT_SCOPE)

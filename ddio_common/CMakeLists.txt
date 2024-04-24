@@ -1,6 +1,4 @@
-SET (HEADERS  )
-SET (CPPS
-		ddio.cpp
-		key.cpp)
-
-ADD_LIBRARY(ddio_common STATIC ${HEADERS} ${CPPS})
+SET (DDIO_COMMON_SOURCES
+		ddio_common/ddio.cpp
+		ddio_common/key.cpp
+		PARENT_SCOPE)

@@ -1,8 +1,6 @@
-SET (HEADERS )
-SET (CPPS
-		Collide.cpp
-		FindIntersection.cpp
-		newstyle_fi.cpp
-		physics.cpp)
-
-ADD_LIBRARY(physics STATIC ${HEADERS} ${CPPS})
+SET (PHYSICS_SOURCES
+		physics/Collide.cpp
+		physics/FindIntersection.cpp
+		physics/newstyle_fi.cpp
+		physics/physics.cpp
+		PARENT_SCOPE)

@@ -1,5 +1,3 @@
-SET (HEADERS )
-SET (CPPS
-		musicapi.cpp)
-
-ADD_LIBRARY(d3music STATIC ${HEADERS} ${CPPS})
+SET (D3MUSIC_SOURCES
+		d3music/musicapi.cpp
+		PARENT_SCOPE)

@@ -1,10 +1,9 @@
-SET (HEADERS iff.h)
-SET (CPPS
-		bitmain.cpp
-		bumpmap.cpp
-		iff.cpp
-		lightmap.cpp
-		pcx.cpp
-		tga.cpp)
-
-ADD_LIBRARY(bitmap STATIC ${HEADERS} ${CPPS})
+SET (BITMAP_SOURCES
+		bitmap/bitmain.cpp
+		bitmap/bumpmap.cpp
+		bitmap/iff.cpp
+		bitmap/iff.h
+		bitmap/lightmap.cpp
+		bitmap/pcx.cpp
+		bitmap/tga.cpp
+		PARENT_SCOPE)

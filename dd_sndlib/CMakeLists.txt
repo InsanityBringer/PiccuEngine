@@ -1,8 +1,6 @@
-SET (HEADERS 
-		ds3dlib_internal.h)
-SET (CPPS
-		ddsoundload.cpp
-		llsopenal.cpp
-		ssl_lib.cpp)
-
-ADD_LIBRARY(dd_sndlib STATIC ${HEADERS} ${CPPS})
+SET (DD_SNDLIB_SOURCES
+		dd_sndlib/ds3dlib_internal.h
+		dd_sndlib/ddsoundload.cpp
+		dd_sndlib/llsopenal.cpp
+		dd_sndlib/ssl_lib.cpp
+		PARENT_SCOPE)

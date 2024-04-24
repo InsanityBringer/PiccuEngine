@@ -1,8 +1,7 @@
-SET (HEADERS )
-SET (CPPS
-		omflex.cpp
-		sequencer.cpp
-		streamer.cpp
-		tracklist.cpp)
-
-ADD_LIBRARY(music STATIC ${HEADERS} ${CPPS})
+SET (MUSIC_SOURCES
+		music/musiclib.h
+		music/omflex.cpp
+		music/sequencer.cpp
+		music/streamer.cpp
+		music/tracklist.cpp
+		PARENT_SCOPE)

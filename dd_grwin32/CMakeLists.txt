@@ -1,11 +1,9 @@
-SET (HEADERS 
-		ddgrWin32.h
-		ddgrWin32DX.h
-		ddgrWin32GDI.h)
-SET (CPPS
-		ddgrWin32API.cpp
-		ddgrWin32DX.cpp
-		ddgrWin32GDI.cpp
-		ddgrWin32Init.cpp)
-
-ADD_LIBRARY(dd_grwin32 STATIC ${HEADERS} ${CPPS})
+SET (DD_GRWIN32_SOURCES
+		dd_grwin32/ddgrWin32.h
+		dd_grwin32/ddgrWin32DX.h
+		dd_grwin32/ddgrWin32GDI.h
+		dd_grwin32/ddgrWin32API.cpp
+		dd_grwin32/ddgrWin32DX.cpp
+		dd_grwin32/ddgrWin32GDI.cpp
+		dd_grwin32/ddgrWin32Init.cpp
+		PARENT_SCOPE)

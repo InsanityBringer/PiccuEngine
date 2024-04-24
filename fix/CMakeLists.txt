@@ -1,5 +1,3 @@
-SET (HEADERS )
-SET (CPPS
-		fix.cpp)
-
-ADD_LIBRARY(fix STATIC ${HEADERS} ${CPPS})
+SET (FIX_SOURCES
+	fix/fix.cpp
+	PARENT_SCOPE)
