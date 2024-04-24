@@ -15,43 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/bitmap/pcx.cpp $
- * $Revision: 8 $
- * $Date: 3/30/99 12:36a $
- * $Author: Jeff $
- *
- * Code to read PCX files
- *
- * $Log: /DescentIII/Main/bitmap/pcx.cpp $
- * 
- * 8     3/30/99 12:36a Jeff
- * added support for 24bit pcx's
- * 
- * 7     2/16/99 5:50p Jason
- * made pcx stuff only work with 8 bit files
- * 
- * 6     10/20/98 1:41a Jeff
- * fixed a mem_malloc/free bug
- * 
- * 5     10/08/98 4:23p Kevin
- * Changed code to comply with memory library usage. Always use mem_malloc
- * , mem_free and mem_strdup
- * 
- * 4     4/23/98 6:38p Jason
- * made bitmaps use 1555 format
- * 
- * 3     12/22/97 7:34p Samir
- * Removed instances of gr.h include.  Replaced with grdefs.h
- * 
- * 2     10/15/97 5:20p Jason
- * did a HUGE overhaul of the bitmap system
- * 
- * 4     3/03/97 6:20p Matt
- * Changed cfile functions to use D3 naming convention
- *
- * $NoKeywords: $
- */
 
 #include "mem.h"
 #include "bitmap.h"
@@ -64,7 +27,6 @@
 int bm_pcx_8bit_alloc_file (CFILE *infile);
 // load a 24bit pcx image
 int bm_pcx_24bit_alloc_file (CFILE *infile);
-
 
 // Loads a pcx file and converts it to 16 bit.  Returns bitmap handle or -1 on error
 int bm_pcx_alloc_file (CFILE *infile)
@@ -145,7 +107,6 @@ int bm_pcx_8bit_alloc_file (CFILE *infile)
 	cf_ReadByte (infile);	// ignore pad
 
 	// Read palette 
-	
 	for (i=0;i<256;i++)
 	{
 		pred[i]=cf_ReadByte (infile);
@@ -183,7 +144,6 @@ int bm_pcx_8bit_alloc_file (CFILE *infile)
 
 	return src_bm; // success!
 }
-
 
 // load a 24bit pcx image
 int bm_pcx_24bit_alloc_file (CFILE *infile)

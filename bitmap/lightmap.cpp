@@ -17,21 +17,19 @@
 */
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 #include "lightmap.h"
 #include "pstypes.h"
 #include "pserror.h"
 #include "bitmap.h"
 #include "mono.h"
 #include "mem.h"
-#ifdef __LINUX__
-#define max(a,b) ((a>b)?a:b)
-#else
-#include "Macros.h"
-#endif
+
 int Num_of_lightmaps=0;
 static ushort Free_lightmap_list[MAX_LIGHTMAPS];
 bms_lightmap GameLightmaps[MAX_LIGHTMAPS];
 int Lightmap_mem_used=0;
+
 // Sets all the lightmaps to unused
 void lm_InitLightmaps()
 {
@@ -46,6 +44,7 @@ void lm_InitLightmaps()
 	}
 	atexit (lm_ShutdownLightmaps);
 }
+
 void lm_ShutdownLightmaps (void)
 {
 	int i;
@@ -57,6 +56,7 @@ void lm_ShutdownLightmaps (void)
 	}
 	
 }
+
 // Allocs a lightmap of w x h size
 // Returns lightmap handle if successful, -1 if otherwise
 int lm_AllocLightmap (int w,int h)
@@ -85,7 +85,7 @@ int lm_AllocLightmap (int w,int h)
 	GameLightmaps[n].flags=LF_CHANGED;
 	// Figure out square size
 	// Find power of 2 number
-	int res=max(w,h);
+	int res=std::max(w,h);
 	int lightmap_res=2;
 	for (int i=0;i<=7;i++)
 	{
@@ -103,6 +103,7 @@ int lm_AllocLightmap (int w,int h)
 	
 	return n;
 }
+
 // Given a handle, frees the lightmap memory and flags this lightmap as unused
 void lm_FreeLightmap (int handle)
 { 
@@ -121,6 +122,7 @@ void lm_FreeLightmap (int handle)
 		Free_lightmap_list[--Num_of_lightmaps]=handle;
 	}
 }
+
 // returns a lightmaps width  else -1 if something is wrong
 int lm_w (int handle)
 {
@@ -132,7 +134,7 @@ int lm_w (int handle)
 	}
 	w=GameLightmaps[handle].width;
 	
-	return (w);
+	return w;
 }
 // returns a lightmaps height , else -1 if something is wrong
 int lm_h (int handle)
@@ -145,7 +147,7 @@ int lm_h (int handle)
 	}
 	h=GameLightmaps[handle].height;
 	
-	return (h);
+	return h;
 }
 // returns a lightmaps data else NULL if something is wrong
 ushort *lm_data (int handle)
@@ -158,5 +160,5 @@ ushort *lm_data (int handle)
 	}
 		
 	d=GameLightmaps[handle].data;
-	return (d);
+	return d;
 }

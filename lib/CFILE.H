@@ -211,10 +211,12 @@ int cf_ReadBytes(ubyte *buf, int count, CFILE *cfp);
 //Read and return an integer (32 bits)
 //Throws an exception of type (cfile_error *) if the OS returns an error on read
 int cf_ReadInt(CFILE *cfp);
+int cf_ReadIntBE(CFILE *cfp);
 
 //Read and return a short (16 bits)
 //Throws an exception of type (cfile_error *) if the OS returns an error on read
 short cf_ReadShort(CFILE *cfp);
+short cf_ReadShortBE(CFILE *cfp);
 
 //Read and return a byte (8 bits)
 //Throws an exception of type (cfile_error *) if the OS returns an error on read

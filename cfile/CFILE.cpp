@@ -995,6 +995,16 @@ int cf_ReadInt(CFILE *cfp)
 	cf_ReadBytes(b, sizeof(b), cfp);
 	return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
 }
+
+//Read and return an integer (32 bits, big endian)
+//Throws an exception of type (cfile_error *) if the OS returns an error on read
+int cf_ReadIntBE(CFILE* cfp)
+{
+	ubyte b[4];
+	cf_ReadBytes(b, sizeof(b), cfp);
+	return b[3] | (b[2] << 8) | (b[1] << 16) | (b[0] << 24);
+}
+
 //Read and return a short (16 bits)
 //Throws an exception of type (cfile_error *) if the OS returns an error on read
 short cf_ReadShort(CFILE *cfp)
@@ -1002,6 +1012,13 @@ short cf_ReadShort(CFILE *cfp)
 	ubyte b[2];
 	cf_ReadBytes(b, sizeof(b), cfp);
 	return b[0] | (b[1] << 8);
+}
+
+short cf_ReadShortBE(CFILE* cfp)
+{
+	ubyte b[2];
+	cf_ReadBytes(b, sizeof(b), cfp);
+	return b[1] | (b[0] << 8);
 }
 
 //Read and return a byte (8 bits)

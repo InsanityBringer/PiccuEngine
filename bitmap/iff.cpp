@@ -15,52 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/bitmap/iff.cpp $
- * $Revision: 8 $
- * $Date: 10/21/99 9:28p $
- * $Author: Jeff $
- *
- * Code to read IFF files
- *
- * $Log: /DescentIII/Main/bitmap/iff.cpp $
- * 
- * 8     10/21/99 9:28p Jeff
- * B.A. Macintosh code merge
- * 
- * 7     4/14/99 1:07a Jeff
- * fixed case mismatched #includes
- * 
- * 6     10/08/98 4:23p Kevin
- * Changed code to comply with memory library usage. Always use mem_malloc
- * , mem_free and mem_strdup
- * 
- * 5     4/23/98 6:38p Jason
- * made bitmaps use 1555 format
- * 
- * 4     3/19/98 3:18p Samir
- * enforce constant char* arguments when needed.  done in CFILE and bitmap
- * libraries as well as ddio.
- * 
- * 3     12/22/97 7:34p Samir
- * Removed instances of gr.h include.  Replaced with grdefs.h
- * 
- * 2     10/15/97 5:20p Jason
- * did a HUGE overhaul of the bitmap system
- * 
- * 11    3/07/97 4:02p Samir
- * Took out conio.h and malloc.h for ANSI compliance.
- * 
- * 10    3/07/97 1:02p Jason
- * decreased size of bitmap headers array to compensate for stupid mac
- * problem
- * 
- * 9     3/03/97 6:20p Matt
- * Changed cfile functions to use D3 naming convention
- *
- * $NoKeywords: $
- */
-
 
 #define COMPRESS		1	//do the RLE or not? (for debugging mostly)
 #define WRITE_TINY	0	//should we write a TINY chunk?
@@ -93,40 +47,39 @@
 #define mskHasTransparentColor 2
 
 //Palette entry structure
-typedef struct 
+struct pal_entry
 {
 	ubyte r,g,b;
-} pal_entry;
+};
 
 //structure of the header in the file
-typedef struct iff_bitmap_header {
-	short w,h;						//width and height of this bitmap
-	short x,y;						//generally unused
+struct iff_bitmap_header
+{
+	short w, h;						//width and height of this bitmap
+	short x, y;						//generally unused
 	short type;						//see types above
 	short transparentcolor;			//which color is transparent (if any)
-	short pagewidth,pageheight;		//width & height of source screen
+	short pagewidth, pageheight;	//width & height of source screen
 	ubyte nplanes;					//number of planes (8 for 256 color image)
-	ubyte masking,compression;		//see constants above
-	ubyte xaspect,yaspect;			//aspect ratio (usually 5/6)
+	ubyte masking, compression;		//see constants above
+	ubyte xaspect, yaspect;			//aspect ratio (usually 5/6)
 	pal_entry palette[256];			//the palette for this bitmap
-	ubyte *raw_data;				//ptr to array of data
+	ubyte* raw_data;				//ptr to array of data
 	short row_size;					//offset to next row
-} iff_bitmap_header;
+};
 
 short iff_transparent_color;
 short iff_has_transparency;	// 0=no transparency, 1=iff_transparent_color is valid
 
-#define MIN(a,b) ((a<b)?a:b)
-
 #define MAKE_SIG(a,b,c,d) (((long)(a)<<24)+((long)(b)<<16)+((c)<<8)+(d))
 
-#define IFF_SIG_FORM 1
-#define IFF_SIG_ILBM 2
-#define IFF_SIG_BODY 3
-#define IFF_SIG_BMHD 4
-#define IFF_SIG_CMAP 5
+#define IFF_SIG_FORM	1
+#define IFF_SIG_ILBM	2
+#define IFF_SIG_BODY	3
+#define IFF_SIG_BMHD	4
+#define IFF_SIG_CMAP	5
 #define IFF_SIG_UNKNOWN 6
-#define IFF_SIG_PBM 7
+#define IFF_SIG_PBM		7
 #define IFF_SIG_ANIM	8
 #define IFF_SIG_DELTA	9
 #define IFF_SIG_ANHD	10
@@ -160,26 +113,27 @@ int bm_iff_get_sig(CFILE *f)
 
 	return (IFF_SIG_UNKNOWN);
 }
+
 int bm_iff_parse_bmhd(CFILE *ifile,uint len,iff_bitmap_header *bmheader)
 {
 	len=len; 
 
-	bmheader->w = cf_ReadShort(ifile);	bmheader->w=MOTOROLA_SHORT (bmheader->w);
-	bmheader->h = cf_ReadShort(ifile);	bmheader->h=MOTOROLA_SHORT (bmheader->h);
-	bmheader->x = cf_ReadShort(ifile); bmheader->x=MOTOROLA_SHORT (bmheader->x);
-	bmheader->y = cf_ReadShort(ifile); bmheader->y=MOTOROLA_SHORT (bmheader->y);
+	bmheader->w = cf_ReadShortBE(ifile);
+	bmheader->h = cf_ReadShortBE(ifile);
+	bmheader->x = cf_ReadShortBE(ifile);
+	bmheader->y = cf_ReadShortBE(ifile);
 
 	bmheader->nplanes = cf_ReadByte(ifile);
 	bmheader->masking = cf_ReadByte(ifile);
 	bmheader->compression = cf_ReadByte(ifile);
 	cf_ReadByte(ifile);        /* skip pad */
 
-	bmheader->transparentcolor =cf_ReadShort(ifile); bmheader->transparentcolor=MOTOROLA_SHORT (bmheader->transparentcolor);
+	bmheader->transparentcolor = cf_ReadShortBE(ifile);
 	bmheader->xaspect = cf_ReadByte(ifile);
 	bmheader->yaspect = cf_ReadByte(ifile);
 
-	bmheader->pagewidth = cf_ReadShort(ifile); 
-	bmheader->pageheight = cf_ReadShort(ifile);
+	bmheader->pagewidth = cf_ReadShortBE(ifile);
+	bmheader->pageheight = cf_ReadShortBE(ifile);
 
 	iff_transparent_color = bmheader->transparentcolor;
 
@@ -194,17 +148,19 @@ int bm_iff_parse_bmhd(CFILE *ifile,uint len,iff_bitmap_header *bmheader)
 	return IFF_NO_ERROR;
 }
 
-
-//  the buffer pointed to by raw_data is stuffed with a pointer to decompressed pixel data
+// the buffer pointed to by raw_data is stuffed with a pointer to decompressed pixel data
 int bm_iff_parse_body(CFILE *ifile,int len,iff_bitmap_header *bmheader)
 {
 	ubyte *p=bmheader->raw_data;
 	int width,depth,done=0;
 			
-	if (bmheader->type == TYPE_PBM) {
+	if (bmheader->type == TYPE_PBM) 
+	{
 		width=bmheader->w;
 		depth=1;
-	} else if (bmheader->type == TYPE_ILBM) {
+	} 
+	else if (bmheader->type == TYPE_ILBM) 
+	{
 		width = (bmheader->w+7)/8;
 		depth=bmheader->nplanes;
 	}
@@ -226,10 +182,10 @@ int bm_iff_parse_body(CFILE *ifile,int len,iff_bitmap_header *bmheader)
 
 			if (bmheader->w & 1) 
 				cf_ReadByte (ifile);
-				
 		}
 
 	}
+
 	else if (bmheader->compression == cmpByteRun1)	// compression
 	{
 		ubyte *data_end=p+(bmheader->h*depth*width);
@@ -293,11 +249,8 @@ int bm_iff_parse_body(CFILE *ifile,int len,iff_bitmap_header *bmheader)
 		}
 	}
 
-
-
 	return IFF_NO_ERROR;
 }
-
 
 //  the buffer pointed to by raw_data is stuffed with a pointer to bitplane pixel data
 void bm_iff_skip_chunk(CFILE *ifile,uint len)
@@ -306,9 +259,7 @@ void bm_iff_skip_chunk(CFILE *ifile,uint len)
 
 	for (i=0;i<len;i++)
 		cf_ReadByte(ifile);
-	
 }
-
 
 //modify passed bitmap
 int bm_iff_parse_delta(CFILE *ifile,int len,iff_bitmap_header *bmheader)
@@ -352,7 +303,7 @@ int bm_iff_parse_delta(CFILE *ifile,int len,iff_bitmap_header *bmheader)
 					p--;
 			}
 			else 
-			{						//literal
+			{	//literal
 				cnt -= code;
 				if (cnt==-1)
 					code--;
@@ -387,10 +338,7 @@ int bm_iff_parse_delta(CFILE *ifile,int len,iff_bitmap_header *bmheader)
 
 	else
 		return IFF_NO_ERROR;
-
 }
-
-
 
 // read an PBM 
 // Pass pointer to opened file, and to empty bitmap_header structure, and form length
@@ -409,8 +357,7 @@ int bm_iff_parse_file(CFILE *ifile,iff_bitmap_header *bmheader,iff_bitmap_header
 
 		sig=bm_iff_get_sig (ifile);
 	
-		len=cf_ReadInt(ifile);
-		len=MOTOROLA_INT (len);
+		len=cf_ReadIntBE(ifile);
 			
 		switch (sig) 
 		{
@@ -439,7 +386,6 @@ int bm_iff_parse_file(CFILE *ifile,iff_bitmap_header *bmheader,iff_bitmap_header
 			break;
 			case IFF_SIG_ANHD:
 			{
-
 				if (!prev_bm)
 				{
 					Int3();
@@ -500,14 +446,12 @@ int bm_iff_parse_file(CFILE *ifile,iff_bitmap_header *bmheader,iff_bitmap_header
 				break;
 			}
 
-
 			default:
 				// Don't know this chunk
 				if (len & 1)
 					len++;
 				bm_iff_skip_chunk(ifile,len);
 				break;
-			
 		}
 	}
 
@@ -590,15 +534,13 @@ int bm_iff_alloc_file(CFILE *ifile)
 	free (bmheader.raw_data);
 
 	return src_bm;
-
 }
-
 
 // returns number of bitmaps or -1 on error
 int bm_iff_read_animbrush(const char *ifilename,int *bm_list)
 {
 	CFILE *ifile;
-	iff_bitmap_header bm_headers[40];
+	static iff_bitmap_header bm_headers[40];
 	iff_bitmap_header *temp_bm_head;
 	long sig,form_len;
 	long form_type;
@@ -635,7 +577,6 @@ int bm_iff_read_animbrush(const char *ifilename,int *bm_list)
 
 			num_bitmaps++;
 		}
-
 	}
 	else
 	{
@@ -645,8 +586,6 @@ int bm_iff_read_animbrush(const char *ifilename,int *bm_list)
 
 done:
 	cfclose (ifile);
-
-
 	
 	for (i=0;i<num_bitmaps;i++)
 	{
@@ -663,14 +602,8 @@ done:
 		bm_list[i]=src_bm;
 	}
 
-	
-
 	for (i=0;i<num_bitmaps;i++)
 		mem_free (bm_headers[i].raw_data);
-		
-		
 
 	return num_bitmaps;
-
 }
-
