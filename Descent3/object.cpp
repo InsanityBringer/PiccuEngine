@@ -1761,7 +1761,7 @@ int ObjCreate(ubyte type, ushort id, int roomnum, vector *pos, const matrix *ori
 		Int3();		//Show this to Matt, or email him if he's not here
 
 	//Initialize the object
-	if (! ObjInit(obj,type,id,handle,pos,Gametime,parent_handle)) {		//Couldn't init!
+	if (! ObjInit(obj,type,id,handle,pos,roomnum,Gametime,parent_handle)) {		//Couldn't init!
 		obj->type = OBJ_NONE;		//mark as unused
 		ObjFree(objnum);				//de-allocate object
 		return -1;

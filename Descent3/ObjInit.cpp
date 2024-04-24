@@ -1168,7 +1168,7 @@ int ObjInitTypeSpecific(object *objp,bool reinitializing)
 }
 //Initializes a new object.  All fields not passed in set to defaults.
 //Returns 1 if ok, 0 if error
-int ObjInit(object *objp,int type,int id,int handle,vector *pos,float creation_time,int parent_handle)
+int ObjInit(object *objp,int type,int id,int handle,vector *pos, int roomnum,float creation_time,int parent_handle)
 {
 	//Zero out object structure to keep weird bugs from happening in uninitialized fields.
 	//I hate doing this because it seems sloppy, but it's probably better to do it
@@ -1182,7 +1182,7 @@ int ObjInit(object *objp,int type,int id,int handle,vector *pos,float creation_t
 	objp->creation_time = creation_time;
 	objp->osiris_script = NULL;
 	//Initialize some general stuff
-	objp->roomnum = -1;
+	objp->roomnum = roomnum;
 	objp->orient = Identity_matrix;
 	objp->next = objp->prev = -1;
 	objp->dummy_type = OBJ_NONE;
@@ -1201,7 +1201,10 @@ int ObjInit(object *objp,int type,int id,int handle,vector *pos,float creation_t
 	objp->dynamic_wb = NULL;
 	objp->attach_children = NULL;
 	//Now initialize the type-specific data
-	return ObjInitTypeSpecific(objp,0);
+	
+	int res = ObjInitTypeSpecific(objp,0);
+	objp->roomnum = -1; //Make sure it appears unlinked
+	return res;
 }
 //Re-copies data to each object from the appropriate page for that object type.
 //Called after an object page has changed.

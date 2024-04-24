@@ -1652,7 +1652,7 @@ int ReadObject(CFILE *ifile,object *objp,int handle,int fileversion)
 	cf_ReadVector(ifile,&pos);
 
 	//Initialize the object
-	ObjInit(objp,type,id,handle,&pos,0.0);
+	ObjInit(objp,type,id,handle,&pos, roomnum,0.0);
 
 	//Set the stuff we've already read in
 	objp->flags |= (flags & OBJECT_SAVE_LOAD_FLAGS);
