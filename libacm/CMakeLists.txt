@@ -1,4 +1,6 @@
 SET (LIBACM_SOURCES
+	libacm/adecode.cpp
 	libacm/aencode.cpp
-	libacm/libacm.cpp
+	libacm/decode.c
+	libacm/libacm.h
 	PARENT_SCOPE)
