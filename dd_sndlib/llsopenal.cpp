@@ -693,13 +693,7 @@ void llsOpenAL::InitMovieBuffer(bool is16bit, int samplerate, bool stereo)
 	ALErrorCheck("Creating movie source");
 	alGenBuffers(NUM_MOVIE_BUFFERS, MovieBufferNames);
 	ALErrorCheck("Creating movie buffers");
-	alSourcei(MovieSourceName, AL_SOURCE_RELATIVE, AL_TRUE); //should glue source to listener pos
-	alSourcef(MovieSourceName, AL_ROLLOFF_FACTOR, 0.0f);
-	alSource3f(MovieSourceName, AL_DIRECTION, 0.f, 0.f, 0.f);
-	alSource3f(MovieSourceName, AL_VELOCITY, 0.f, 0.f, 0.f);
-	alSource3f(MovieSourceName, AL_POSITION, 0.f, 0.f, 0.f);
-	alSourcef(MovieSourceName, AL_MAX_GAIN, 1.f);
-	alSourcef(MovieSourceName, AL_GAIN, 0.5f); //OH NO
+	InitSourceStreaming(MovieSourceName, .5);
 	ALErrorCheck("Setting movie source properties");
 
 
@@ -740,6 +734,7 @@ void llsOpenAL::DequeueMovieBuffers()
 	if (numProcessedBuffers > 0)
 	{
 		alSourceUnqueueBuffers(MovieSourceName, numProcessedBuffers, dequeuedNames);
+		mprintf((0, "dequeueing %d buffers from %d\n", numProcessedBuffers, MovieBufferQTail));
 	}
 	ALErrorCheck("Dequeue movie source buffers");
 
@@ -770,9 +765,11 @@ void llsOpenAL::QueueMovieBuffer(int length, void* data)
 	ALint status;
 	alSourceQueueBuffers(MovieSourceName, 1, &MovieBufferNames[MovieBufferQHead]);
 	alGetSourcei(MovieSourceName, AL_SOURCE_STATE, &status);
-	if (status != AL_STREAMING)
+	if (status != AL_PLAYING)
 		alSourcePlay(MovieSourceName);
 	ALErrorCheck("Queuing movie buffer");
+
+	mprintf((0, "queueing buffer %d\n", MovieBufferQHead));
 
 	MovieBufferQHead = (MovieBufferQHead + 1) % NUM_MOVIE_BUFFERS;
 	//uh oh
