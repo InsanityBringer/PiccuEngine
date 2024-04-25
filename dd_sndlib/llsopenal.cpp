@@ -734,7 +734,7 @@ void llsOpenAL::DequeueMovieBuffers()
 	if (numProcessedBuffers > 0)
 	{
 		alSourceUnqueueBuffers(MovieSourceName, numProcessedBuffers, dequeuedNames);
-		mprintf((0, "dequeueing %d buffers from %d\n", numProcessedBuffers, MovieBufferQTail));
+		//mprintf((0, "dequeueing %d buffers from %d\n", numProcessedBuffers, MovieBufferQTail));
 	}
 	ALErrorCheck("Dequeue movie source buffers");
 
@@ -769,7 +769,7 @@ void llsOpenAL::QueueMovieBuffer(int length, void* data)
 		alSourcePlay(MovieSourceName);
 	ALErrorCheck("Queuing movie buffer");
 
-	mprintf((0, "queueing buffer %d\n", MovieBufferQHead));
+	//mprintf((0, "queueing buffer %d\n", MovieBufferQHead));
 
 	MovieBufferQHead = (MovieBufferQHead + 1) % NUM_MOVIE_BUFFERS;
 	//uh oh
