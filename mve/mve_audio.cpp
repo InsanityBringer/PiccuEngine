@@ -53,7 +53,7 @@ void mveaudio_uncompress(short *buffer, unsigned char *data, int length)
     int swath;
 
     data += 4;
-    swath = getWord(&data) / 2;
+    swath = (getWord(&data) - 4) / 2;
     nCurOffsets[0] = getWord(&data);
     nCurOffsets[1] = getWord(&data);
     sendWord(&buffer, nCurOffsets[0]);

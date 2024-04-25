@@ -234,26 +234,19 @@ static int audio_data_handler(unsigned char major, unsigned char minor, unsigned
 			{
 				if (mve_audio_compressed)
 				{
-					nsamp += 4;
-
-					buf = (short*)mem_malloc(nsamp+4);
+					buf = (short*)mem_malloc(nsamp);
 					mveaudio_uncompress(buf, data, -1);
 				} 
 				else 
 				{
-					nsamp -= 8;
-					data += 8;
-
-					buf = (short*)mem_malloc(nsamp+8);
-					mveaudio_uncompress(buf, data, -1);
+					buf = (short*)mem_malloc(nsamp);
+					memcpy(buf, data + 6, nsamp);
 				}
 			} 
-			else 
+			else //MVE_OPCODE_AUDIOFRAMESILENCE
 			{
-				buf = (short*)mem_malloc(nsamp+4);
-				mveaudio_uncompress(buf, data, -1);
-
-				memset(buf, 0, nsamp); /* XXX */
+				buf = (short*)mem_malloc(nsamp);
+				memset(buf, 0, nsamp);
 			}
 
 			mvesnd_queue_audio_buffer(nsamp, (uint8_t*)buf);
