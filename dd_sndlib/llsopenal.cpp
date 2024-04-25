@@ -684,8 +684,26 @@ void llsOpenAL::GetEnvironmentToggles(t3dEnvironmentToggles* env)
 	env->flags = ENV3DVALF_DOPPLER;
 }
 
-void llsOpenAL::InitMovieBuffer(bool is16bit, int samplerate)
+void llsOpenAL::InitMovieBuffer(bool is16bit, int samplerate, bool stereo)
 {
+	Movie16BitSound = is16bit;
+	MovieSampleRate = samplerate;
+	MovieStereo = stereo;
+	alGenSources(1, &MovieSourceName);
+	ALErrorCheck("Creating movie source");
+	alGenBuffers(NUM_MOVIE_BUFFERS, MovieBufferNames);
+	ALErrorCheck("Creating movie buffers");
+	alSourcei(MovieSourceName, AL_SOURCE_RELATIVE, AL_TRUE); //should glue source to listener pos
+	alSourcef(MovieSourceName, AL_ROLLOFF_FACTOR, 0.0f);
+	alSource3f(MovieSourceName, AL_DIRECTION, 0.f, 0.f, 0.f);
+	alSource3f(MovieSourceName, AL_VELOCITY, 0.f, 0.f, 0.f);
+	alSource3f(MovieSourceName, AL_POSITION, 0.f, 0.f, 0.f);
+	alSourcef(MovieSourceName, AL_MAX_GAIN, 1.f);
+	alSourcef(MovieSourceName, AL_GAIN, 0.5f); //OH NO
+	ALErrorCheck("Setting movie source properties");
+
+
+	MovieBufferQTail = MovieBufferQHead = 0;
 }
 
 void llsOpenAL::KillMovieBuffer()
@@ -698,23 +716,68 @@ void llsOpenAL::KillMovieBuffer()
 	if (status != AL_STOPPED)
 		alSourceStop(MovieSourceName);
 
+	ALuint dequeuedNames[NUM_MOVIE_BUFFERS];
 	ALint numProcessedBuffers;
-	alGetSourcei(MovieSourceName, AL_BUFFERS_QUEUED, &numProcessedBuffers);
+	alGetSourcei(MovieSourceName, AL_BUFFERS_PROCESSED, &numProcessedBuffers);
 	if (numProcessedBuffers > 0)
 	{
-		alSourceUnqueueBuffers(MovieSourceName, numProcessedBuffers, MovieBufferQueue);
+		alSourceUnqueueBuffers(MovieSourceName, numProcessedBuffers, dequeuedNames);
 	}
 	ALErrorCheck("Dequeueing ended movie buffers");
 
-	alDeleteBuffers(NUM_STREAMING_BUFFERS, MovieBufferNames);
+	alDeleteBuffers(NUM_MOVIE_BUFFERS, MovieBufferNames);
 	ALErrorCheck("Destroying movie buffers");
 
 	alDeleteSources(1, &MovieSourceName);
 	ALErrorCheck("Destroying movie source");
 }
 
+void llsOpenAL::DequeueMovieBuffers()
+{
+	ALuint dequeuedNames[NUM_MOVIE_BUFFERS];
+	ALint numProcessedBuffers;
+	alGetSourcei(MovieSourceName, AL_BUFFERS_PROCESSED, &numProcessedBuffers);
+	if (numProcessedBuffers > 0)
+	{
+		alSourceUnqueueBuffers(MovieSourceName, numProcessedBuffers, dequeuedNames);
+	}
+	ALErrorCheck("Dequeue movie source buffers");
+
+	MovieBufferQTail = (MovieBufferQTail + numProcessedBuffers) % NUM_MOVIE_BUFFERS;
+}
+
 void llsOpenAL::QueueMovieBuffer(int length, void* data)
 {
+	DequeueMovieBuffers();
+
+	ALenum mveSndFormat;
+	if (!Movie16BitSound)
+	{
+		if (MovieStereo)
+			mveSndFormat = AL_FORMAT_STEREO8;
+		else
+			mveSndFormat = AL_FORMAT_MONO8;
+	}
+	else
+	{
+		if (MovieStereo)
+			mveSndFormat = AL_FORMAT_STEREO16;
+		else
+			mveSndFormat = AL_FORMAT_MONO16;
+	}
+
+	alBufferData(MovieBufferNames[MovieBufferQHead], mveSndFormat, data, length, MovieSampleRate);
+	ALint status;
+	alSourceQueueBuffers(MovieSourceName, 1, &MovieBufferNames[MovieBufferQHead]);
+	alGetSourcei(MovieSourceName, AL_SOURCE_STATE, &status);
+	if (status != AL_STREAMING)
+		alSourcePlay(MovieSourceName);
+	ALErrorCheck("Queuing movie buffer");
+
+	MovieBufferQHead = (MovieBufferQHead + 1) % NUM_MOVIE_BUFFERS;
+	//uh oh
+	if (MovieBufferQHead == MovieBufferQTail)
+		Int3();
 }
 
 const char* ALErrors[4] = { "Invalid enum", "Invalid name", "Invalid operation", "Invalid value" };

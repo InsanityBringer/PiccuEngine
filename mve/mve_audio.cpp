@@ -1,4 +1,5 @@
 #include "mve_audio.h"
+#include "ssl_lib.h"
 static int audio_exp_table[256] =
 {
          0,      1,      2,      3,      4,      5,      6,      7,      8,      9,     10,     11,     12,     13,     14,     15,
@@ -55,16 +56,29 @@ void mveaudio_uncompress(short *buffer, unsigned char *data, int length)
     processSwath(buffer, data, swath, nCurOffsets);
 }
 
+extern llsSystem* mve_soundSystem;
 void mvesnd_init_audio(int format, int samplerate, int stereo)
 {
+    if (mve_soundSystem)
+    {
+        mve_soundSystem->InitMovieBuffer(format == MVESND_S16LSB, samplerate, stereo);
+    }
 }
 
 void mvesnd_queue_audio_buffer(int len, short* data)
 {
+    if (mve_soundSystem)
+    {
+        mve_soundSystem->QueueMovieBuffer(len, data);
+    }
 }
 
 void mvesnd_close()
 {
+    if (mve_soundSystem)
+    {
+        mve_soundSystem->KillMovieBuffer();
+    }
 }
 
 void mvesnd_pause()

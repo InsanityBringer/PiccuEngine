@@ -31,7 +31,6 @@
 #ifdef WIN32
 #include <MMSystem.h>
 #include <io.h>
-#include "dsound.h"
 #endif
 
 
@@ -53,6 +52,7 @@
 #include "game.h"
 
 #include "../mve/libmve.h"
+#include "llsopenal.h"
 
 //#define NO_MOVIES
 
@@ -576,6 +576,12 @@ void mve_SetCallback( MovieFrameCallback_fp callBack )
 #ifndef NO_MOVIES
 	Movie_callback = callBack;
 #endif
+}
+
+llsSystem* mve_soundSystem;
+void mve_SetSoundSystem(llsSystem* system)
+{
+	mve_soundSystem = system;
 }
 
 // used to tell movie library how to render movies.

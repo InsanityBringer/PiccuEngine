@@ -16,11 +16,13 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <stdint.h>
+#include <string.h>
 #include "ssl_lib.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+
 
 //OpenAL LLS system implementation
 
@@ -28,7 +30,7 @@
 //but not too high to add noticable latency to stream changes. 
 #define NUM_STREAMING_BUFFERS 3
 
-#define NUM_MOVIE_BUFFERS 20
+#define NUM_MOVIE_BUFFERS 80
 
 struct llsOpenALSoundEntry
 {
@@ -82,11 +84,14 @@ class llsOpenAL : public llsSystem
 
 	const EAX2Reverb* LastReverb;
 
+
 	//Movie stuff
+	bool Movie16BitSound;
+	int MovieSampleRate;
+	bool MovieStereo;
 	ALuint MovieSourceName;
 	ALuint MovieBufferNames[NUM_MOVIE_BUFFERS];
-	bool MovieBufferStatus[NUM_MOVIE_BUFFERS];
-	ALuint MovieBufferQueue[NUM_MOVIE_BUFFERS];
+	int MovieBufferQHead, MovieBufferQTail;
 	
 	bool ALErrorCheck(const char* context);
 
@@ -120,6 +125,13 @@ public:
 
 		AuxEffectSlot = EffectSlot = 0;
 		LastReverb = nullptr;
+
+		Movie16BitSound = false;
+		MovieSampleRate = 0;
+		MovieSourceName = 0;
+		MovieStereo = false;
+		memset(MovieBufferNames, 0, sizeof(MovieBufferNames));
+		MovieBufferQHead = MovieBufferQTail = 0;
 	}
 	// may be called before init (must be to be valid, the card passed here will be initialized in InitSoundLib)
 	void SetSoundCard(const char* name) override;
@@ -191,9 +203,11 @@ public:
 	// of strcuture passed, you must set the appropriate 'flags' value for values you wish to modify
 	void GetEnvironmentToggles(t3dEnvironmentToggles* env) override;
 
-	void InitMovieBuffer(bool is16bit, int samplerate) override;
+	void InitMovieBuffer(bool is16bit, int samplerate, bool stereo) override;
 
 	void KillMovieBuffer() override;
+
+	void DequeueMovieBuffers();
 
 	void QueueMovieBuffer(int length, void* data) override;
 };

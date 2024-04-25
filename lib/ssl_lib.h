@@ -349,7 +349,7 @@ public:
 
 	//[ISB] These functions are added for movie support. 
 	//I only really intend to support them in my OpenAL backend.
-	virtual void InitMovieBuffer(bool is16bit, int samplerate) = 0;
+	virtual void InitMovieBuffer(bool is16bit, int samplerate, bool stereo) = 0;
 
 	virtual void KillMovieBuffer() = 0;
 

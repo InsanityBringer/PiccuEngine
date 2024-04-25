@@ -79,6 +79,8 @@ void SetMovieProperties(int x, int y, int w, int h, renderer_type type)
 	mve_SetRenderProperties( x, y, w, h, type, kHiColorEnabled );
 }
 
+extern void mve_SetSoundSystem(llsSystem* system);
+
 bool PlayMovie(const char *moviename)
 {
 	if( !Cinematic_lib_init )
@@ -92,6 +94,7 @@ bool PlayMovie(const char *moviename)
 	if (Sound_system.IsActive())
 	{
 		Sound_system.StopAllSounds(); //kill eveyrthing
+		mve_SetSoundSystem(Sound_system.m_ll_sound_ptr);
 	}
 
 	// check extension
