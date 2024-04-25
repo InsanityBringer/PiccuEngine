@@ -52,7 +52,9 @@
 #include "gamefont.h"
 #include "game.h"
 
-#define NO_MOVIES
+#include "../mve/libmve.h"
+
+//#define NO_MOVIES
 
 namespace {
 	MovieFrameCallback_fp Movie_callback = NULL;	
@@ -68,6 +70,7 @@ namespace {
 
 #ifndef NO_MOVIES
 
+#if 0
 #ifdef WIN32
 class MovieSoundBuffer : public ISysSoundBuffer
 	{
@@ -543,6 +546,8 @@ class MovieSoundBuffer : public ISysSoundBuffer
 #endif
 }
 
+#endif
+
 void* CallbackAlloc( unsigned int size );
 void CallbackFree( void *p );
 unsigned int CallbackFileRead( int hFile, void *pBuffer, unsigned int bufferCount );
@@ -551,12 +556,6 @@ void CallbackSetPalette( unsigned char *pBuffer, unsigned int start, unsigned in
 void CallbackShowFrame( unsigned char* buf, unsigned int bufw, unsigned int bufh,
 						unsigned int sx, unsigned int sy, unsigned int w, unsigned int h,
 						unsigned int dstx, unsigned int dsty, unsigned int hicolor );
-
-#ifndef NO_MOVIES
-bool mve_InitSound(oeApplication *app, MovieSoundDevice& device);
-void mve_CloseSound(MovieSoundDevice& device);
-#endif
-
 
 
 // sets the directory where movies are stored
@@ -601,29 +600,20 @@ int mve_PlayMovie( const char *pMovieName, oeApplication *pApp )
 	bool highColor = ( pExtension != NULL && stricmp( pExtension, ".mv8" ) != 0 );
 
 	// setup
-	MVE_rmFastMode( MVE_RM_NORMAL );
+	//MVE_rmFastMode( MVE_RM_NORMAL );
 	MVE_sfCallbacks( CallbackShowFrame );
 	MVE_memCallbacks( CallbackAlloc, CallbackFree );
 	MVE_ioCallbacks( CallbackFileRead );
-	MVE_sfSVGA( 640, 480, 480, 0, NULL, 0, 0, NULL, highColor ? 1 : 0 );
+	//MVE_sfSVGA( 640, 480, 480, 0, NULL, 0, 0, NULL, highColor ? 1 : 0 );
 	MVE_palCallbacks( CallbackSetPalette );
 	InitializePalette();
 	Movie_bm_handle = -1;
-
-	MovieSoundDevice soundDevice;
-	if( !mve_InitSound( pApp, soundDevice ) )
-	{
-		mprintf((0, "Failed to initialize sound\n"));
-		close( hFile );
-		return MVELIB_INIT_ERROR;
-	}
 
 	int result = MVE_rmPrepMovie( hFile, -1, -1, 0 );
 	if( result != 0 )
 	{
 		mprintf(( 0, "PrepMovie result = %d\n", result ));
 		close( hFile );
-		mve_CloseSound( soundDevice );
 		return MVELIB_INIT_ERROR;
 	}
 
@@ -667,9 +657,6 @@ int mve_PlayMovie( const char *pMovieName, oeApplication *pApp )
 	// cleanup and shutdown
 	MVE_rmEndMovie();
 	MVE_ReleaseMem();
-
-	// reset sound
-	mve_CloseSound( soundDevice );
 
 	// return out
 	return err;
@@ -768,10 +755,15 @@ void BlitToMovieBitmap(unsigned char* buf, unsigned int bufw, unsigned int bufh,
 			for( int x = 0; x < drawWidth; ++x )
 			{
 				unsigned short col16 = *wBuf++;
+				//[ISB] The decoded colors are apparently RGB555, but this code uses RGB565. Does libmve translate it normally?
+#if 1
+				pPixelData[x] = col16 | OPAQUE_FLAG;
+#else
 				unsigned int b = (( col16 >> 11 ) & 0x1F) << 3;
 				unsigned int g = (( col16 >> 5  ) & 0x3F) << 2;
 				unsigned int r = (( col16 >> 0  ) & 0x1F) << 3;
 				pPixelData[ x ] = OPAQUE_FLAG | GR_RGB16( r, g, b );
+#endif
 			}
 
 			pPixelData += texW;
@@ -798,7 +790,7 @@ void CallbackShowFrame( unsigned char* buf, unsigned int bufw, unsigned int bufh
 {
 	// prepare our bitmap
 	int texW, texH;
-	BlitToMovieBitmap( buf, bufw, bufh, hicolor, true, texW, texH );
+	BlitToMovieBitmap( buf, bufw, bufh, hicolor, false, texW, texH );
 
 	// calculate UVs from texture
 	int drawWidth  = hicolor ? (bufw >> 1) : bufw;
@@ -834,6 +826,8 @@ void CallbackShowFrame( unsigned char* buf, unsigned int bufw, unsigned int bufh
 }
 #endif
 
+#define NO_MOVIES
+
 unsigned int mve_SequenceStart( const char *mvename, int *fhandle, oeApplication *app, bool looping )
 {
 #ifndef NO_MOVIES
@@ -848,7 +842,7 @@ unsigned int mve_SequenceStart( const char *mvename, int *fhandle, oeApplication
 	}
 
 	// setup
-	MVE_rmFastMode( MVE_RM_NORMAL );
+	//MVE_rmFastMode( MVE_RM_NORMAL );
 	MVE_memCallbacks( CallbackAlloc, CallbackFree );
 	MVE_ioCallbacks( CallbackFileRead );
 	InitializePalette();
@@ -970,146 +964,3 @@ void mve_ClearRect( short x1, short y1, short x2, short y2 )
 	//Note: I can not figure out how to clear, and then write over it with text. It always covers my text!
 	//rend_FillRect( GR_BLACK, x1, y1, x2, y2 );
 }
-
-#ifndef NO_MOVIES
-#ifdef WIN32
-// Internal function to enumerate sound devices
-BOOL CALLBACK DSEnumCallback( LPGUID lp_guid, LPCSTR lpstr_description, LPCSTR lpstr_module, LPVOID lp_Context )
-{
-	GUID FAR *lp_ret_guid = (GUID FAR *)lp_Context;
-
-	if( SoundCardName[0] )
-	{
-		if( strcmp( lpstr_description, SoundCardName ) == 0 )
-		{
-			if( lp_guid )
-			{
-				memmove( lp_ret_guid, lp_guid, sizeof(GUID) );
-			}
-
-			return FALSE;
-		}
-	}
-
-	return TRUE;
-}
-
-
-bool mve_InitSound(oeApplication *app, MovieSoundDevice& device)
-{
-	//	Perform Direct Sound Initialization
-	device.SetDirectSound( NULL );
-
-	GUID *pguid = NULL;
-	GUID card_guid, zero_card_guid;
-	ZeroMemory(&card_guid, sizeof(GUID));
-	ZeroMemory(&zero_card_guid, sizeof(GUID));
-	HRESULT hr = DirectSoundEnumerate(DSEnumCallback, &card_guid);
-	if (hr == DS_OK)
-	{
-		if (memcmp(&card_guid, &zero_card_guid, sizeof(GUID)) != 0)
-		{
-			pguid = &card_guid;
-		}
-	}
-
-	LPDIRECTSOUND lpDS;
-	if (DirectSoundCreate(pguid, &lpDS, NULL) != DS_OK)
-	{
-		return false;
-	}
-
-	HWND hWnd = (HWND)((oeWin32Application *)app)->m_hWnd;
-	hr = lpDS->SetCooperativeLevel(hWnd, DSSCL_EXCLUSIVE);
-	if (hr != DS_OK)
-	{
-		lpDS->Release();
-		return false;
-	}
-
-	bool use_22k_sound = false;
-
-	//	Start Mixer
-	LPDIRECTSOUNDBUFFER lpPrimaryBuffer;
-	DSBUFFERDESC dsbd;
-	memset(&dsbd, 0, sizeof(DSBUFFERDESC));
-	dsbd.dwSize  = sizeof(DSBUFFERDESC);
-	dsbd.dwFlags = DSBCAPS_PRIMARYBUFFER;
-	hr = lpDS->CreateSoundBuffer(&dsbd, &lpPrimaryBuffer, NULL);
-	if (hr == DS_OK)
-	{
-		// set format to 44khz if requested.
-		WAVEFORMATEX fmt;
-		fmt.cbSize          = sizeof(fmt);
-		fmt.wFormatTag      = WAVE_FORMAT_PCM;
-		fmt.nChannels       = 2;
-		fmt.wBitsPerSample  = 16;
-		fmt.nSamplesPerSec  = use_22k_sound ? 22050 : 44100;
-		fmt.nBlockAlign     = fmt.nChannels * (fmt.wBitsPerSample/8);
-		fmt.nAvgBytesPerSec = ((DWORD)fmt.nSamplesPerSec)*((DWORD)fmt.nBlockAlign);
-		hr = lpPrimaryBuffer->SetFormat(&fmt);
-		if( hr != DS_OK )
-		{
-			lpPrimaryBuffer->Release();
-			lpDS->Release();
-			lpDS = NULL;
-			return false;
-		}
-
-		hr = lpPrimaryBuffer->Play( 0, 0, DSBPLAY_LOOPING );
-		if( hr != DS_OK )
-		{
-			lpPrimaryBuffer->Release();
-			lpDS->Release();
-			return false;
-		}
-
-		lpPrimaryBuffer->Release();
-	}
-	else
-	{
-		lpDS->Release();
-		return false;
-	}
-
-	device.SetDirectSound( lpDS );
-	MVE_sndInit( &device );
-
-	return true;
-}
-
-void mve_CloseSound(MovieSoundDevice& device)
-{
-	LPDIRECTSOUND ds = device.GetDirectSound();
-	if( ds )
-	{
-		ds->Release();
-		device.SetDirectSound( NULL );
-	}
-}
-#else
-bool mve_InitSound(oeApplication *app, MovieSoundDevice& device)
-{
-
-  LnxSoundDevice snddev;
-  bool use_22k_sound = false;
-  snddev.freq = use_22k_sound ? 22050 : 44100;
-  snddev.bit_depth = 16;
-  snddev.channels = 2;
-  snddev.bps = snddev.freq * snddev.channels * snddev.bit_depth/8;
-
-  device.SetDirectSound(snddev);
-
-  MVE_sndInit( &device );
-
-  return true;
-}
-
-void mve_CloseSound(MovieSoundDevice& device)
-{
-  // TODO: close the driver out
-}
-#endif
-
-#endif
-

@@ -89,6 +89,11 @@ bool PlayMovie(const char *moviename)
 	strncpy( filename, moviename, sizeof(filename) - 1 );
 	filename[ sizeof(filename) - 1 ] = 0;
 
+	if (Sound_system.IsActive())
+	{
+		Sound_system.StopAllSounds(); //kill eveyrthing
+	}
+
 	// check extension
 	const char* extension = strrchr( filename, '.' );
 	if( extension == NULL || ( stricmp( extension, ".mve" ) != 0 && stricmp( extension, ".mv8" ) != 0 ) )
@@ -96,13 +101,6 @@ bool PlayMovie(const char *moviename)
 		// we need an extension
 		strncat( filename, ".mve", sizeof( filename ) - 1 );
 		filename[ sizeof(filename) - 1 ] = 0;
-	}
-	
-	// shutdown sound.
-	bool sound_sys_active = Sound_system.IsActive();
-	if (sound_sys_active)
-	{
-		Sound_system.KillSoundLib( false );
 	}
 
 	//	start movie.
@@ -127,12 +125,6 @@ bool PlayMovie(const char *moviename)
 	{
 		mprintf((1, "Movie error %d.\n", mveerr));
 		retval = false;
-	}
-
-	//	startup D3 sound.
-	if( sound_sys_active )
-	{
-		Sound_system.InitSoundLib( Descent, Sound_mixer, Sound_quality, false );
 	}
 
 	return retval;

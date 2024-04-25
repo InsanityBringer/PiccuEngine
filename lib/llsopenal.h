@@ -28,6 +28,8 @@
 //but not too high to add noticable latency to stream changes. 
 #define NUM_STREAMING_BUFFERS 3
 
+#define NUM_MOVIE_BUFFERS 20
+
 struct llsOpenALSoundEntry
 {
 	uint32_t handle, bufferHandle;
@@ -80,6 +82,12 @@ class llsOpenAL : public llsSystem
 
 	const EAX2Reverb* LastReverb;
 
+	//Movie stuff
+	ALuint MovieSourceName;
+	ALuint MovieBufferNames[NUM_MOVIE_BUFFERS];
+	bool MovieBufferStatus[NUM_MOVIE_BUFFERS];
+	ALuint MovieBufferQueue[NUM_MOVIE_BUFFERS];
+	
 	bool ALErrorCheck(const char* context);
 
 	short FindSoundSlot(float volume, int priority);
@@ -182,4 +190,10 @@ public:
 	// get states of special parameters for the 3d environment.
 	// of strcuture passed, you must set the appropriate 'flags' value for values you wish to modify
 	void GetEnvironmentToggles(t3dEnvironmentToggles* env) override;
+
+	void InitMovieBuffer(bool is16bit, int samplerate) override;
+
+	void KillMovieBuffer() override;
+
+	void QueueMovieBuffer(int length, void* data) override;
 };

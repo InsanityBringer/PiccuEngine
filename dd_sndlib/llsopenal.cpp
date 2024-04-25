@@ -684,6 +684,39 @@ void llsOpenAL::GetEnvironmentToggles(t3dEnvironmentToggles* env)
 	env->flags = ENV3DVALF_DOPPLER;
 }
 
+void llsOpenAL::InitMovieBuffer(bool is16bit, int samplerate)
+{
+}
+
+void llsOpenAL::KillMovieBuffer()
+{
+	if (!MovieSourceName)
+		return;
+
+	ALint status;
+	alGetSourcei(MovieSourceName, AL_SOURCE_STATE, &status);
+	if (status != AL_STOPPED)
+		alSourceStop(MovieSourceName);
+
+	ALint numProcessedBuffers;
+	alGetSourcei(MovieSourceName, AL_BUFFERS_QUEUED, &numProcessedBuffers);
+	if (numProcessedBuffers > 0)
+	{
+		alSourceUnqueueBuffers(MovieSourceName, numProcessedBuffers, MovieBufferQueue);
+	}
+	ALErrorCheck("Dequeueing ended movie buffers");
+
+	alDeleteBuffers(NUM_STREAMING_BUFFERS, MovieBufferNames);
+	ALErrorCheck("Destroying movie buffers");
+
+	alDeleteSources(1, &MovieSourceName);
+	ALErrorCheck("Destroying movie source");
+}
+
+void llsOpenAL::QueueMovieBuffer(int length, void* data)
+{
+}
+
 const char* ALErrors[4] = { "Invalid enum", "Invalid name", "Invalid operation", "Invalid value" };
 
 bool llsOpenAL::ALErrorCheck(const char* context)

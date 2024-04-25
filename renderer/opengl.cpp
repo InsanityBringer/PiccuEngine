@@ -1451,11 +1451,11 @@ int opengl_MakeBitmapCurrent (int handle,int map_type,int tn)
 		h=bm_h(handle,0);
 	}
 
-	if( w != h )
+	/*if( w != h )
 	{
 		mprintf ((0,"Can't use non-square textures with OpenGL!\n"));
 		return 0;
-	}
+	}*/
 
 	// See if the bitmaps is already in the cache
 	if (map_type==MAP_TYPE_LIGHTMAP)
