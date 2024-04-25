@@ -1,3 +1,4 @@
+#include <atomic>
 #include "mve_audio.h"
 #include "ssl_lib.h"
 static int audio_exp_table[256] =
@@ -19,6 +20,10 @@ static int audio_exp_table[256] =
        -32,    -31,    -30,    -29,    -28,    -27,    -26,    -25,    -24,    -23,    -22,    -21,    -20,    -19,    -18,    -17,
        -16,    -15,    -14,    -13,    -12,    -11,    -10,     -9,     -8,     -7,     -6,     -5,     -4,     -3,     -2,     -1
 };
+
+constexpr int MVEBUFFER_SIZE = 262144;
+static uint8_t mveaudiobuffer[MVEBUFFER_SIZE];
+static std::atomic_int mveaudiohead, mveaudiotail;
 
 static int getWord(unsigned char **fin)
 {
@@ -56,17 +61,72 @@ void mveaudio_uncompress(short *buffer, unsigned char *data, int length)
     processSwath(buffer, data, swath, nCurOffsets);
 }
 
+static int mvesnd_callback(void* userptr, void* sampledata, int numbytes)
+{
+    /*short* data = (short*)sampledata;
+    for (int i = 0; i < numbytes / 2; i++)
+    {
+        data[i] = sin((double)i / 100) * 32767;
+    }*/
+
+    uint8_t* ptr = &mveaudiobuffer[mveaudiotail];
+    //Determine if fragmentation is needed
+    int endaddress = mveaudiotail + numbytes;
+    int fragmentsize = numbytes;
+    int remainingsize = 0;
+    if (endaddress > MVEBUFFER_SIZE)
+    {
+        remainingsize = endaddress - MVEBUFFER_SIZE;
+        fragmentsize -= remainingsize;
+    }
+
+    //Handle first fragment
+    memcpy(sampledata, ptr, fragmentsize);
+
+    //Handle second fragment if needed
+    if (remainingsize > 0)
+    {
+        memcpy((uint8_t*)sampledata + fragmentsize, &mveaudiobuffer[0], remainingsize);
+    }
+
+    mveaudiotail = (mveaudiotail + numbytes) % MVEBUFFER_SIZE;
+    return numbytes;
+}
+
 extern llsSystem* mve_soundSystem;
 void mvesnd_init_audio(int format, int samplerate, int stereo)
 {
     if (mve_soundSystem)
     {
-        mve_soundSystem->InitMovieBuffer(format == MVESND_S16LSB, samplerate, stereo);
+        mve_soundSystem->InitMovieBuffer(format == MVESND_S16LSB, samplerate, stereo, mvesnd_callback);
     }
 }
 
-void mvesnd_queue_audio_buffer(int len, short* data)
+void mvesnd_queue_audio_buffer(int len, uint8_t* data)
 {
+    uint8_t* ptr = &mveaudiobuffer[mveaudiohead];
+    //Determine if fragmentation is needed
+    int endaddress = mveaudiohead + len;
+    int fragmentsize = len;
+    int remainingsize = 0;
+    if (endaddress > MVEBUFFER_SIZE)
+    {
+        remainingsize = endaddress - MVEBUFFER_SIZE;
+        fragmentsize -= remainingsize;
+    }
+    
+    //Handle first fragment
+    memcpy(ptr, data, fragmentsize);
+
+    //Handle second fragment if needed
+    if (remainingsize > 0)
+    {
+        memcpy(&mveaudiobuffer[0], data + fragmentsize, remainingsize);
+    }
+
+    mveaudiohead = (mveaudiohead + len) % MVEBUFFER_SIZE;
+
+    //This starts the source if it is needed
     if (mve_soundSystem)
     {
         mve_soundSystem->QueueMovieBuffer(len, data);

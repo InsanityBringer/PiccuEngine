@@ -86,12 +86,11 @@ class llsOpenAL : public llsSystem
 
 
 	//Movie stuff
-	bool Movie16BitSound;
 	int MovieSampleRate;
-	bool MovieStereo;
 	ALuint MovieSourceName;
-	ALuint MovieBufferNames[NUM_MOVIE_BUFFERS];
-	int MovieBufferQHead, MovieBufferQTail;
+	ALuint MovieBufferName;
+	ALenum MovieSoundFormat;
+	bool MovieStarted;
 	
 	bool ALErrorCheck(const char* context);
 
@@ -126,12 +125,11 @@ public:
 		AuxEffectSlot = EffectSlot = 0;
 		LastReverb = nullptr;
 
-		Movie16BitSound = false;
 		MovieSampleRate = 0;
 		MovieSourceName = 0;
-		MovieStereo = false;
-		memset(MovieBufferNames, 0, sizeof(MovieBufferNames));
-		MovieBufferQHead = MovieBufferQTail = 0;
+		MovieBufferName = 0;
+		MovieSoundFormat = 0;
+		MovieStarted = false;
 	}
 	// may be called before init (must be to be valid, the card passed here will be initialized in InitSoundLib)
 	void SetSoundCard(const char* name) override;
@@ -203,7 +201,7 @@ public:
 	// of strcuture passed, you must set the appropriate 'flags' value for values you wish to modify
 	void GetEnvironmentToggles(t3dEnvironmentToggles* env) override;
 
-	void InitMovieBuffer(bool is16bit, int samplerate, bool stereo) override;
+	void InitMovieBuffer(bool is16bit, int samplerate, bool stereo, llsMovieCallback callback) override;
 
 	void KillMovieBuffer() override;
 

@@ -256,7 +256,7 @@ static int audio_data_handler(unsigned char major, unsigned char minor, unsigned
 				memset(buf, 0, nsamp); /* XXX */
 			}
 
-			mvesnd_queue_audio_buffer(nsamp, buf);
+			mvesnd_queue_audio_buffer(nsamp, (uint8_t*)buf);
 		}
 	}
 

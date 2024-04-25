@@ -237,7 +237,7 @@ typedef struct t3dEnvironmentToggles
 }
 t3dEnvironmentToggles;
 
-
+typedef int (*llsMovieCallback)(void* userptr, void* sampledata, int numbytes);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Looping constants
@@ -349,7 +349,7 @@ public:
 
 	//[ISB] These functions are added for movie support. 
 	//I only really intend to support them in my OpenAL backend.
-	virtual void InitMovieBuffer(bool is16bit, int samplerate, bool stereo) = 0;
+	virtual void InitMovieBuffer(bool is16bit, int samplerate, bool stereo, llsMovieCallback callback) = 0;
 
 	virtual void KillMovieBuffer() = 0;
 

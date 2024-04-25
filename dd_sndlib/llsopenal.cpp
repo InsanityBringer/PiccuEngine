@@ -35,6 +35,10 @@ LPALEFFECTI dalEffecti;
 LPALEFFECTF dalEffectf;
 LPALEFFECTFV dalEffectfv;
 LPALAUXILIARYEFFECTSLOTI dalAuxiliaryEffectSloti;
+LPALBUFFERCALLBACKSOFT dalBufferCallbackSOFT;
+LPALGETBUFFERPTRSOFT dalGetBufferPtrSOFT;
+LPALGETBUFFER3PTRSOFT dalGetBuffer3PtrSOFT;
+LPALGETBUFFERPTRVSOFT dalGetBufferPtrvSOFT;
 
 //Hack: Maybe will fix problems with streaming system
 bool streamStartedthisFrame = false;
@@ -50,7 +54,6 @@ int llsOpenAL::InitSoundLib(char mixer_type, oeApplication* sos, unsigned char m
 {
 	int i, numsends;
 	ALCint attribs[4] = {};
-	//MessageBoxA(nullptr, "Horrible hack has been started up", "Cursed", MB_OK);
 	Device = alcOpenDevice(nullptr);
 	//ALErrorCheck("Opening device");
 	if (!Device)
@@ -58,6 +61,7 @@ int llsOpenAL::InitSoundLib(char mixer_type, oeApplication* sos, unsigned char m
 		mprintf((0, "OpenAL LLS failed to open a device."));
 		return 0;
 	}
+
 
 	EffectsSupported = alcIsExtensionPresent(nullptr, "ALC_EXT_EFX") != AL_FALSE;
 	if (!EffectsSupported)
@@ -86,9 +90,27 @@ int llsOpenAL::InitSoundLib(char mixer_type, oeApplication* sos, unsigned char m
 	}
 	alcMakeContextCurrent(Context);
 
+	const char* test = alGetString(AL_EXTENSIONS);
+	mprintf((0, "AL_EXTENSIONS: %s\n", test));
+
 	LoopPointsSupported = alIsExtensionPresent("AL_SOFT_loop_points") != AL_FALSE;
 	if (!LoopPointsSupported)
 		mprintf((0, "OpenAL Soft loop points extension not present!"));
+
+	if (alIsExtensionPresent("AL_SOFT_callback_buffer") == AL_FALSE)
+	{
+		Error("Required OpenAL extension AL_SOFT_callback_buffer not present!");
+	}
+
+	dalBufferCallbackSOFT = (LPALBUFFERCALLBACKSOFT)alGetProcAddress("alBufferCallbackSOFT");
+	dalGetBufferPtrSOFT = (LPALGETBUFFERPTRSOFT)alGetProcAddress("alGetBufferPtrSOFT");
+	dalGetBuffer3PtrSOFT = (LPALGETBUFFER3PTRSOFT)alGetProcAddress("alGetBuffer3PtrSOFT");
+	dalGetBufferPtrvSOFT = (LPALGETBUFFERPTRVSOFT)alGetProcAddress("alGetBufferPtrvSOFT");
+
+	if (!dalBufferCallbackSOFT || !dalGetBufferPtrSOFT || !dalGetBuffer3PtrSOFT || !dalGetBufferPtrvSOFT)
+	{
+		Error("Failed to load functions from AL_SOFT_callback_buffer!");
+	}
 
 	//Check if that one send is available, though there's no reason to assume it won't...
 	alcGetIntegerv(Device, ALC_MAX_AUXILIARY_SENDS, 1, &numsends);
@@ -684,20 +706,35 @@ void llsOpenAL::GetEnvironmentToggles(t3dEnvironmentToggles* env)
 	env->flags = ENV3DVALF_DOPPLER;
 }
 
-void llsOpenAL::InitMovieBuffer(bool is16bit, int samplerate, bool stereo)
+void llsOpenAL::InitMovieBuffer(bool is16bit, int samplerate, bool stereo, llsMovieCallback callback)
 {
-	Movie16BitSound = is16bit;
 	MovieSampleRate = samplerate;
-	MovieStereo = stereo;
 	alGenSources(1, &MovieSourceName);
 	ALErrorCheck("Creating movie source");
-	alGenBuffers(NUM_MOVIE_BUFFERS, MovieBufferNames);
-	ALErrorCheck("Creating movie buffers");
+	alGenBuffers(1, &MovieBufferName);
+	ALErrorCheck("Creating movie buffer");
 	InitSourceStreaming(MovieSourceName, .5);
 	ALErrorCheck("Setting movie source properties");
 
+	if (!is16bit)
+	{
+		if (stereo)
+			MovieSoundFormat = AL_FORMAT_STEREO8;
+		else
+			MovieSoundFormat = AL_FORMAT_MONO8;
+	}
+	else
+	{
+		if (stereo)
+			MovieSoundFormat = AL_FORMAT_STEREO16;
+		else
+			MovieSoundFormat = AL_FORMAT_MONO16;
+	}
 
-	MovieBufferQTail = MovieBufferQHead = 0;
+	dalBufferCallbackSOFT(MovieBufferName, MovieSoundFormat, samplerate, (ALBUFFERCALLBACKTYPESOFT)callback, nullptr);
+	ALErrorCheck("Setting movie buffer callback");
+	alSourcei(MovieSourceName, AL_BUFFER, MovieBufferName);
+	ALErrorCheck("Setting movie source buffer");
 }
 
 void llsOpenAL::KillMovieBuffer()
@@ -709,72 +746,50 @@ void llsOpenAL::KillMovieBuffer()
 	alGetSourcei(MovieSourceName, AL_SOURCE_STATE, &status);
 	if (status != AL_STOPPED)
 		alSourceStop(MovieSourceName);
+	//Buffer must be detached before deleting
+	alSourcei(MovieSourceName, AL_BUFFER, 0);
+	ALErrorCheck("Stopping source");
 
-	ALuint dequeuedNames[NUM_MOVIE_BUFFERS];
-	ALint numProcessedBuffers;
-	alGetSourcei(MovieSourceName, AL_BUFFERS_PROCESSED, &numProcessedBuffers);
-	if (numProcessedBuffers > 0)
-	{
-		alSourceUnqueueBuffers(MovieSourceName, numProcessedBuffers, dequeuedNames);
-	}
-	ALErrorCheck("Dequeueing ended movie buffers");
-
-	alDeleteBuffers(NUM_MOVIE_BUFFERS, MovieBufferNames);
+	alDeleteBuffers(1, &MovieBufferName);
 	ALErrorCheck("Destroying movie buffers");
 
 	alDeleteSources(1, &MovieSourceName);
 	ALErrorCheck("Destroying movie source");
+
+	MovieStarted = false;
 }
 
 void llsOpenAL::DequeueMovieBuffers()
 {
-	ALuint dequeuedNames[NUM_MOVIE_BUFFERS];
-	ALint numProcessedBuffers;
-	alGetSourcei(MovieSourceName, AL_BUFFERS_PROCESSED, &numProcessedBuffers);
-	if (numProcessedBuffers > 0)
-	{
-		alSourceUnqueueBuffers(MovieSourceName, numProcessedBuffers, dequeuedNames);
-		//mprintf((0, "dequeueing %d buffers from %d\n", numProcessedBuffers, MovieBufferQTail));
-	}
-	ALErrorCheck("Dequeue movie source buffers");
-
-	MovieBufferQTail = (MovieBufferQTail + numProcessedBuffers) % NUM_MOVIE_BUFFERS;
 }
 
 void llsOpenAL::QueueMovieBuffer(int length, void* data)
 {
-	DequeueMovieBuffers();
+	/*DequeueMovieBuffers();
 
-	ALenum mveSndFormat;
-	if (!Movie16BitSound)
-	{
-		if (MovieStereo)
-			mveSndFormat = AL_FORMAT_STEREO8;
-		else
-			mveSndFormat = AL_FORMAT_MONO8;
-	}
-	else
-	{
-		if (MovieStereo)
-			mveSndFormat = AL_FORMAT_STEREO16;
-		else
-			mveSndFormat = AL_FORMAT_MONO16;
-	}
-
-	alBufferData(MovieBufferNames[MovieBufferQHead], mveSndFormat, data, length, MovieSampleRate);
-	ALint status;
+	alBufferData(MovieBufferNames[MovieBufferQHead], MovieSoundFormat, data, length, MovieSampleRate);
+	//ALint status;
 	alSourceQueueBuffers(MovieSourceName, 1, &MovieBufferNames[MovieBufferQHead]);
-	alGetSourcei(MovieSourceName, AL_SOURCE_STATE, &status);
-	if (status != AL_PLAYING)
+	//alGetSourcei(MovieSourceName, AL_SOURCE_STATE, &status);
+	if (!MovieStarted)
+	{
 		alSourcePlay(MovieSourceName);
-	ALErrorCheck("Queuing movie buffer");
+		MovieStarted = true;
+	}
+	//ALErrorCheck("Queuing movie buffer");
 
 	//mprintf((0, "queueing buffer %d\n", MovieBufferQHead));
 
 	MovieBufferQHead = (MovieBufferQHead + 1) % NUM_MOVIE_BUFFERS;
 	//uh oh
 	if (MovieBufferQHead == MovieBufferQTail)
-		Int3();
+		Int3();*/
+
+	if (!MovieStarted)
+	{
+		alSourcePlay(MovieSourceName);
+		MovieStarted = true;
+	}
 }
 
 const char* ALErrors[4] = { "Invalid enum", "Invalid name", "Invalid operation", "Invalid value" };
