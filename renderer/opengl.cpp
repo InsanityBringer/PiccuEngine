@@ -3114,6 +3114,12 @@ void rend_SetAlphaType(sbyte atype)
 		}
 	}
 
+	if (OpenGL_state.cur_alpha_type == AT_SPECULAR)
+	{
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+	}
+
 	switch (atype)
 	{
 	case AT_ALWAYS:
@@ -3158,11 +3164,21 @@ void rend_SetAlphaType(sbyte atype)
 		break;
 	case AT_SPECULAR:
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glEnable(GL_TEXTURE_2D);
-
 		//hack
+		glEnable(GL_TEXTURE_2D); 
 		OpenGL_state.cur_texture_quality = 2;
 		OpenGL_state.cur_texture_type = TT_PERSPECTIVE;
+
+		glGetError();
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PRIMARY_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);
+		if (glGetError() != GL_NO_ERROR)
+			Int3();
+
 		break;
 	default:
 		Int3();		// no type defined,get jason
