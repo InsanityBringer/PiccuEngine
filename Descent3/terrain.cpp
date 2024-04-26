@@ -303,6 +303,19 @@ void GenerateLODDeltas ()
 
 		simplemul=1<<((MAX_TERRAIN_LOD-1)-i);
 		rowsize=TERRAIN_WIDTH/simplemul;
+
+		// zar: if this hits 31 it will be out of bounds
+		// since 31 * 8 = 248. Add 8 and that's 256, 
+		// which is past the maximum terrain size.
+		// I'm not sure how this system works so this will, 
+		// at best, not overflow and be broken.
+		// The other option might be to increase terrain width and depth to 257...
+		// or boundry check RecurseLODDeltas.
+		if (h >= TERRAIN_DEPTH >> 4)
+			h = (TERRAIN_DEPTH >> 4) - 1;
+
+		if (w >= TERRAIN_WIDTH >> 4)
+			w = (TERRAIN_WIDTH >> 4) - 1;
 				
 		for (z=0;z<h;z++)
 		{
@@ -310,7 +323,13 @@ void GenerateLODDeltas ()
 			{
 				float delta;
 
-				delta=RecurseLODDeltas (x*simplemul,(z*simplemul),(x*simplemul)+simplemul,z*simplemul+simplemul,i);
+				delta=RecurseLODDeltas (
+					x*simplemul,
+					(z*simplemul),
+					(x*simplemul)+simplemul,
+					z*simplemul+simplemul,
+					i
+					);
 				TerrainDeltaBlocks[i][z*rowsize+x]=delta;
 			}
 		}
@@ -384,18 +403,14 @@ void BuildMinMaxTerrain ()
 				minheight=999;
 				maxheight=0;
 
-				if (h<TERRAIN_DEPTH)
-					h++;
-				if (w<TERRAIN_DEPTH)
-					w++;
-
-
 				int terrain_offset=0;
 				for (y=0;y<h;y++,terrain_offset+=TERRAIN_WIDTH)
 				{
 					for (x=0;x<w;x++)
 					{
 						cell=start+(terrain_offset)+x;
+						assert(cell < TERRAIN_WIDTH*TERRAIN_DEPTH);
+
 						cellheight=Terrain_seg[cell].ypos;
 
 						if (cellheight<minheight)

@@ -703,9 +703,15 @@ void nw_InitNetworking (int iReadBufSizeOverride)
 		{
 			fixdir = exedir;
 		}
-		if(exeext[strlen(exeext)-1]=='\"')
+
+		// zar: the max macro did not work as I expected
+		int len = strlen(exeext);
+		int pos = len;
+		if (pos > 0) pos -= 1;
+
+		if(exeext[pos]=='\"')
 		{
-			exeext[strlen(exeext)-1] = NULL;
+			exeext[pos] = NULL;
 		}
 		strcat(exefile,exeext);
 		//dp_RegisterLobbyApplication("Descent 3",exefile,fixdir,ourargs,Base_directory,"Descent 3");

@@ -1519,7 +1519,14 @@ void ObjUnlink(int objnum)
 
 	if (OBJECT_OUTSIDE(obj))
 	{
+		// zar: room hasn't been assigned yet? why is this being unlinked???
+		// this basically causes cellnum to be INT_MAX and 
+		// cause seg to be out of bounds!!
+		if (obj->roomnum == -1)
+			return;
+
 		int cellnum = CELLNUM(obj->roomnum);
+		assert(cellnum >= 0 && cellnum <= 65535);
 
 		terrain_segment *seg = &Terrain_seg[cellnum];
 

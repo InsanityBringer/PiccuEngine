@@ -440,7 +440,8 @@ void bm_ChangeEndName(const char* src, char* dest)
 	ddio_SplitPath(src, path, filename, ext);
 	limit = BITMAP_NAME_LEN - 7;
 	// Make sure we don't go over our name length limit
-	strncpy(filename, filename, limit);
+	// zar: this is redundant and triggers asan :(
+	// strncpy(filename, filename, limit);
 	filename[limit] = 0;
 
 Start:

@@ -208,7 +208,7 @@ int	ddio_GetFileLength(FILE* filePtr)
 // Split a pathname into its component parts
 void ddio_SplitPath(const char* srcPath, char* path, char* filename, char* ext)
 {
-	char drivename[_MAX_DRIVE], dirname[_MAX_DIR];
+	char drivename[_MAX_DRIVE] = {}, dirname[_MAX_DIR] = {};
 
 	_splitpath(srcPath, drivename, dirname, filename, ext);
 
