@@ -971,6 +971,8 @@ int ADecodeFileRead(void *data, void *buf, unsigned qty)
 	AudioStream *stream = (AudioStream *)data;
 	int iqty = (int)qty;
 
+	mprintf((0, "ADecodeFileRead: Reading %u bytes\n", qty));
+
 	if (iqty>stream->m_bytesleft)
 	{
 		iqty = stream->m_bytesleft;

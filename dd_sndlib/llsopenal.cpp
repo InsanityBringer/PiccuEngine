@@ -290,6 +290,8 @@ int llsOpenAL::PlayStream(play_information* play_info)
 	//PutLog(LogLevel::Info, "Starting a stream");
 	InitSourceStreaming(SoundEntries[sound_uid].handle, peakVolume);
 
+	mprintf((0, "llsOpenAL::PlayStream: Starting stream %d\n", sound_uid));
+
 	//Generate buffers
 	alGenBuffers(NUM_STREAMING_BUFFERS, SoundEntries[sound_uid].bufferHandles);
 	memset(SoundEntries[sound_uid].bufferStatus, 0, sizeof(SoundEntries[sound_uid].bufferStatus)); //all ready to use
@@ -1014,6 +1016,7 @@ void llsOpenAL::SoundCleanup(int soundID)
 	//Streaming sounds need to clean up all their buffers
 	if (SoundEntries[soundID].streaming)
 	{
+		mprintf((0, "llsOpenAL::SoundCleanup: Aborting stream %d\n", soundID));
 		ALint numProcessedBuffers, numQueuedBuffers;
 		ALuint dequeueList[NUM_STREAMING_BUFFERS];
 		int i;
@@ -1104,6 +1107,7 @@ void llsOpenAL::ServiceStream(int soundID)
 
 		//Get available data and queue it
 		data = SoundEntries[soundID].info->m_stream_cback(SoundEntries[soundID].info->user_data, SoundEntries[soundID].info->m_stream_handle, &size);
+		mprintf((0, "Stream %d got a buffer of size %d\n", soundID, size));
 
 		SoundEntries[soundID].info->m_stream_size = size;
 		SoundEntries[soundID].info->m_stream_data = data;

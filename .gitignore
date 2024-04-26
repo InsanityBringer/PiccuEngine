@@ -398,3 +398,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Want to keep these around but don't want to keep them in repo
+libacm/libacmold.cpp
+libacm/aencodeold.cpp
