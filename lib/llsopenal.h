@@ -131,6 +131,11 @@ public:
 		MovieSoundFormat = 0;
 		MovieStarted = false;
 	}
+
+	~llsOpenAL() override
+	{
+	}
+
 	// may be called before init (must be to be valid, the card passed here will be initialized in InitSoundLib)
 	void SetSoundCard(const char* name) override;
 

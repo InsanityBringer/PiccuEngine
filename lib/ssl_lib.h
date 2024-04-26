@@ -259,6 +259,10 @@ protected:
 // Public functions 
 public:
 	llsSystem();
+	//derived LLS is different size, so a virtual destructor is needed. 
+	virtual ~llsSystem()
+	{
+	}
 	
 	// may be called before init (must be to be valid, the card passed here will be initialized in InitSoundLib)
 	virtual void SetSoundCard(const char *name) = 0;
