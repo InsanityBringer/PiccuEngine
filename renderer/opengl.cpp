@@ -105,7 +105,17 @@ extern vector View_position;
 #define GL_UNSIGNED_SHORT_4_4_4_4 0x8033
 #endif
 
+#if 1
+void DO_CHECK_ERROR(int x)
+{
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+		mprintf((0, "Error in context %d: %d\n", x, error));
+}
+#define CHECK_ERROR(x) DO_CHECK_ERROR(x);
+#else
 #define CHECK_ERROR(x)	
+#endif
 
 #if defined(WIN32)
 	//	Moved from DDGR library
@@ -283,6 +293,8 @@ int opengl_MakeTextureObject (int tn)
 
 	num = texture_name_list[num];
 
+	if (num == framebuffer_color_name || num == framebuffer_depth_name)
+		Int3();
 	glBindTexture (GL_TEXTURE_2D,num);
 	glPixelStorei (GL_UNPACK_ALIGNMENT,2);
 
@@ -334,13 +346,21 @@ void opengl_UpdateFramebuffer()
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureType, framebuffer_color_name, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, textureType, framebuffer_depth_name, 0);
 
-	
+
 
 	GLenum fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (fbstatus != GL_FRAMEBUFFER_COMPLETE)
 	{
 		Error("opengl_UpdateFramebuffer(): Framebuffer object is incomplete!");
 	}
+}
+
+void opengl_CloseFramebuffer()
+{
+	glDeleteTextures(1, &framebuffer_color_name);
+	glDeleteTextures(1, &framebuffer_depth_name);
+	framebuffer_color_name = framebuffer_depth_name = 0;
+	glDeleteFramebuffers(1, &framebuffer_name);
 }
 
 int opengl_InitCache(void)
@@ -1158,6 +1178,8 @@ void opengl_Close ()
 	if (Cur_texture_object_num>1)
 		glDeleteTextures (Cur_texture_object_num,(const uint *)delete_list);
 
+	opengl_CloseFramebuffer();
+
 	mem_free (delete_list);
 
 #if defined(WIN32)
@@ -1236,6 +1258,8 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 
 	if (OpenGL_last_bound[tn]!=texnum)
 	{
+		if (texnum == framebuffer_color_name || texnum == framebuffer_depth_name)
+			Int3();
 		glBindTexture (GL_TEXTURE_2D,texnum);
 		OpenGL_sets_this_frame[0]++;
 		OpenGL_last_bound[tn]=texnum;
@@ -1503,6 +1527,8 @@ int opengl_MakeBitmapCurrent (int handle,int map_type,int tn)
 			Last_texel_unit_set=tn;
 		}
 
+		if (texnum == framebuffer_color_name || texnum == framebuffer_depth_name)
+			Int3();
 		glBindTexture (GL_TEXTURE_2D,texnum);
 		OpenGL_last_bound[tn]=texnum;
 		OpenGL_sets_this_frame[0]++;
@@ -2057,6 +2083,10 @@ int rend_Init(renderer_type state, oeApplication *app,renderer_preferred_state *
 
 		Renderer_initted=1;
 	}
+	else
+	{
+		return 1; //[ISB] don't double dip on renderer initialization. This happens after an int3
+	}
 
 	if( OpenGL_window_initted )
 	{
@@ -2593,6 +2623,11 @@ static void slownessAbort(void)
 // Flips the screen
 void rend_Flip(void)
 {
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+	{
+		mprintf((0, "Error entering flip: %d\n", err));
+	}
 #ifndef RELEASE
 	int i;
 
@@ -2619,11 +2654,23 @@ void rend_Flip(void)
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_name);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+	{
+		mprintf((0, "Error unbinding draw framebuffer: %d\n", err));
+	}
+
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glBlitFramebuffer(0, 0, OpenGL_state.screen_width, OpenGL_state.screen_height, 
 		framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_x + framebuffer_blit_w, framebuffer_blit_y + framebuffer_blit_h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+	{
+		mprintf((0, "Error blitting to real framebuffer: %d\n", err));
+	}
 
 #if defined(WIN32)	
 	SwapBuffers ((HDC)hOpenGLDC);
@@ -2632,6 +2679,12 @@ void rend_Flip(void)
 #endif
 
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_name);
+
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+	{
+		mprintf((0, "Error setting framebuffer back: %d\n", err));
+	}
 
 #ifdef __PERMIT_GL_LOGGING
 	if (__glLog == true)

@@ -1717,6 +1717,8 @@ void InitIOSystems(bool editor)
 		{
 			ddio_MouseMode(MOUSE_EXCLUSIVE_MODE);
 		}
+
+		ddio_MouseSetCallbackFn(ShouldCaptureMouse);
 	}
 
 	int rocknride_arg = FindArg("-rocknride");

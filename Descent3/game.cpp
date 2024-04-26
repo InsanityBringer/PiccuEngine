@@ -1426,6 +1426,12 @@ bool ShouldCaptureMouse()
 	if (Dedicated_server)
 		return false;
 
+	if (!Descent->active())
+		return false; //Never grab when the app isn't active
+
+	if (GetFunctionMode() != GAME_MODE)
+		return false; //Never grab outside of game
+
 	//If the UI cursor is visible, then the mouse shouldn't be captured.
 	if (ui_IsCursorVisible())
 		return false;

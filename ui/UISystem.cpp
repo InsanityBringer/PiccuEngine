@@ -588,7 +588,6 @@ bool ui_ShowCursor()
 #if defined (MACINTOSH) && !defined (DAJ_DEBUG)
 	::HideCursor();
 #endif
-	ddio_MouseMode(MOUSE_STANDARD_MODE);
 	if (!UI_cursor_show) {
 		UI_cursor_show=1;
 		return false;
@@ -597,7 +596,6 @@ bool ui_ShowCursor()
 }
 bool ui_HideCursor()
 {
-	ddio_MouseMode(MOUSE_EXCLUSIVE_MODE);
 	if (UI_cursor_show) {
 		UI_cursor_show=0;
 		return false;

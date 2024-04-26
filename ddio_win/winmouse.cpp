@@ -242,6 +242,12 @@ int ddio_MouseGetState(int* x, int* y, int* dx, int* dy, int* z, int* dz) {
     return btn_mask;
 }
 
+DDIO_ShouldCaptureMouse_fp DDIO_ShouldCaptureMouse;
+void ddio_MouseSetCallbackFn(DDIO_ShouldCaptureMouse_fp fn)
+{
+    DDIO_ShouldCaptureMouse = fn;
+}
+
 void ddio_InternalMouseFrame() {
     int btn_mask = 0;
 
@@ -264,6 +270,15 @@ void ddio_InternalMouseFrame() {
         btn_mask |= MOUSE_B8;
 
     DDIO_mouse_state.btn_mask = btn_mask;
+
+    if (DDIO_ShouldCaptureMouse)
+    {
+        bool capture = DDIO_ShouldCaptureMouse();
+        if (DDIO_mouse_state.mode != MOUSE_EXCLUSIVE_MODE && capture)
+            ddio_MouseMode(MOUSE_EXCLUSIVE_MODE);
+        else if (DDIO_mouse_state.mode != MOUSE_STANDARD_MODE && !capture)
+            ddio_MouseMode(MOUSE_STANDARD_MODE);
+    }
 }
 
 void MouseError() { MessageBoxA(nullptr, "Failed to init raw input for mouse", "Error", MB_ICONERROR); }
