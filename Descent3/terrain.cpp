@@ -164,10 +164,10 @@ float RecurseLODDeltas (int x1,int y1,int x2,int y2,int lod)
 	deltas[2]=fabs(Terrain_seg[(midy)*TERRAIN_WIDTH+x1].y-(((v1-v0)/2)+v0));
 
 	// top edge
-	deltas[3]=fabs(Terrain_seg[(y2)*TERRAIN_WIDTH+midx].y-(((v2-v1)/2)+v1));
+	deltas[3]=fabs(Terrain_seg[(edgey)*TERRAIN_WIDTH+midx].y-(((v2-v1)/2)+v1));
 
 	// right edge
-	deltas[4]=fabs(Terrain_seg[(midy)*TERRAIN_WIDTH+x2].y-(((v3-v2)/2)+v2));
+	deltas[4]=fabs(Terrain_seg[(midy)*TERRAIN_WIDTH+ edgex].y-(((v3-v2)/2)+v2));
 
 	// bottom edge
 	deltas[5]=fabs(Terrain_seg[(y1)*TERRAIN_WIDTH+midx].y-(((v3-v0)/2)+v0));
@@ -311,11 +311,11 @@ void GenerateLODDeltas ()
 		// at best, not overflow and be broken.
 		// The other option might be to increase terrain width and depth to 257...
 		// or boundry check RecurseLODDeltas.
-		if (h >= TERRAIN_DEPTH >> 4)
+		/*if (h >= TERRAIN_DEPTH >> 4)
 			h = (TERRAIN_DEPTH >> 4) - 1;
 
 		if (w >= TERRAIN_WIDTH >> 4)
-			w = (TERRAIN_WIDTH >> 4) - 1;
+			w = (TERRAIN_WIDTH >> 4) - 1;*/
 				
 		for (z=0;z<h;z++)
 		{
@@ -403,13 +403,24 @@ void BuildMinMaxTerrain ()
 				minheight=999;
 				maxheight=0;
 
+				//[ISB] If this isn't there the collision detection code explodes
+				if (h < TERRAIN_DEPTH)
+					h++;
+				if (w < TERRAIN_DEPTH)
+					w++;
+
+
 				int terrain_offset=0;
 				for (y=0;y<h;y++,terrain_offset+=TERRAIN_WIDTH)
 				{
 					for (x=0;x<w;x++)
 					{
 						cell=start+(terrain_offset)+x;
-						assert(cell < TERRAIN_WIDTH*TERRAIN_DEPTH);
+
+						//[ISB] why
+						//Prevent addressing out of bounds cells.
+						if (cell >= TERRAIN_WIDTH * TERRAIN_DEPTH)
+							cell = TERRAIN_WIDTH * TERRAIN_DEPTH - 1;
 
 						cellheight=Terrain_seg[cell].ypos;
 
