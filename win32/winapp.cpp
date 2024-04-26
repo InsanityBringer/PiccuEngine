@@ -712,7 +712,13 @@ LRESULT WINAPI MyWndProc( HWND hWnd,UINT msg,UINT wParam,LPARAM lParam)
 			break;
 	}
 	
-	oeWin32Application *winapp = Win32_AppObjects[i].app;
+	oeWin32Application *winapp = nullptr;
+
+	// zar: this used to just addres -1 directly. it didn't break anything but
+	// it sure triggered asan.
+	if (i != -1) 
+		winapp = Win32_AppObjects[i].app;
+
 
 //	if this window not on list, then run default window proc.
 	if (i == -1 || winapp == NULL || force_default) 

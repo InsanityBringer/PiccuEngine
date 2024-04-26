@@ -144,7 +144,7 @@ int Scorch_texture_handles[MAX_SCORCH_TEXTURES];
 //Called when a new level is started to reset the scorch list
 void ResetScorches()
 {
-	Scorch_start = Scorch_end = -1;
+	Scorch_start = Scorch_end = 0;
 }
 
 //Delete the specified scorch mark

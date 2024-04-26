@@ -540,6 +540,7 @@ end_win32_check:
 	return retval;
 }
 
+__declspec(no_sanitize_address)
 void getcpudata(cpuinfo *info)
 {
 	unsigned char family,model,mask;
