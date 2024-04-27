@@ -1937,6 +1937,7 @@ int IsPointVisible (vector *pos,float size,float *pointz)
 	g3Point pnt;
 	ubyte ccode;
 	static float last_render_fov=-1;
+	static float last_render_aspect = -1;
 	static vector left_normal,right_normal,top_normal,bottom_normal,view_position;
 	static matrix unscaled_matrix;
 	
@@ -1952,18 +1953,20 @@ int IsPointVisible (vector *pos,float size,float *pointz)
 			return 0;			// behind plane!
 		if (pnt.p3_z>Far_clip_z+size)
 			return 0;		   // too far away!
-		if (Render_FOV!=last_render_fov)
+
+		int w, h;
+		rend_GetProjectionParameters(&w, &h);
+
+		float aspect = (float)w / (float)h;
+		if (Render_FOV != last_render_fov || aspect != last_render_aspect)
 		{
 			last_render_fov=Render_FOV;
-			int vfov=(Render_FOV/2)*(65536/360);
 
-			int w, h;
-			rend_GetProjectionParameters( &w, &h );
-
-			float aspect = (float) w / (float) h;
-			float up = tan(Render_FOV/2.0);
+			float up = tan(3.14 * Render_FOV / 360.0) * 3.f / 4.f;
 			float side = up * aspect;
-			float hfov = atan(side) * 65536.0 / 3.14159;
+			//[ISB] changed divisor to 2 * PI because these need to be half of FOV
+			int hfov = atan(side) * 65536.0 / 6.283185;
+			int vfov = atan(up) * 65536.0 / 6.283185;
 
 			vector rvec={1,0,0};
 			vector lvec={-1,0,0};
