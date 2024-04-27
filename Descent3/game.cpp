@@ -1421,6 +1421,8 @@ void DoScreenshot ()
 	StartTime();
 }
 
+#include "TelCom.h"
+
 bool ShouldCaptureMouse()
 {
 	if (Dedicated_server)
@@ -1431,6 +1433,10 @@ bool ShouldCaptureMouse()
 
 	if (GetFunctionMode() != GAME_MODE)
 		return false; //Never grab outside of game
+
+	//This needs to be higher priority than UI cursor, since it's visible in telcom
+	if (TelComGetSystem() == TS_MAP)
+		return true; //Always grab when the map is open.. why is the cursor visible anyways?
 
 	//If the UI cursor is visible, then the mouse shouldn't be captured.
 	if (ui_IsCursorVisible())

@@ -781,6 +781,8 @@ void TelComMain(bool ingame,bool SelectShip)
 	DestroyAllScreens(true);
 
 	EfxClose();	
+	// [ISB] Otherwise the system would linger on automap and continue capturing the mouse. 
+	Telcom_system.current_status = TS_OFF;
 }
 
 //This will make the TelCom system active, displaying it on the screen.  This version of TelComShow() takes 
@@ -3830,6 +3832,11 @@ $$TABLE_GAMEFILE "SS Background.ogf"
 	Players[Player_num].ship_index = ship_index_to_use;
 
 	TelCom_ClearCustomKeyEvents();
+}
+
+int TelComGetSystem(void)
+{
+	return Telcom_system.current_status;
 }
 
 //returns the ship index that is selected

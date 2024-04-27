@@ -194,6 +194,9 @@ extern tTelComInfo Telcom_system;
 // This is the function called by TelCom to choose a ship
 void TelComSingleShipSelect(tTelComInfo *tcs);
 
+// [ISB] Gets the current system used by the telcom
+int TelComGetSystem(void);
+
 
 //**********************************************
 //			TelCom Rendering Functions
