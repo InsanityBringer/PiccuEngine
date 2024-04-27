@@ -128,11 +128,13 @@ void DO_CHECK_ERROR(int x)
 #else
 #endif
 
-#define GET_WRAP_STATE(x)	(x>>4)
-#define GET_FILTER_STATE(x)	(x & 0x0f)
+#define GET_WRAP_STATE(x)	((x>>2) & 0x02)
+#define GET_MIP_STATE(x)	((x>>1) & 0x01);
+#define GET_FILTER_STATE(x)	(x & 0x01)
 
-#define SET_WRAP_STATE(x,s) {x&=0x0F; x|=(s<<4);}
-#define SET_FILTER_STATE(x,s) {x&=0xF0; x|=(s);}
+#define SET_WRAP_STATE(x,s) {x&=0xF3; x|=(s<<2);}
+#define SET_MIP_STATE(x,s) {x&=0xFD; x|=(s<<1);}
+#define SET_FILTER_STATE(x,s) {x&=0xFE; x|=(s);}
 
 //	OpenGL Stuff
 static int OpenGL_window_initted=0;
@@ -420,7 +422,7 @@ void opengl_SetDefaults()
 	OpenGL_state.cur_texture_quality=-1;
 	OpenGL_state.cur_light_state=LS_GOURAUD;
 	OpenGL_state.cur_color_model=CM_MONO;
-	OpenGL_state.cur_bilinear_state=-1;
+	OpenGL_state.cur_mip_state=-1;
 	OpenGL_state.cur_alpha_type=AT_TEXTURE;
 
 	// Enable some states
@@ -1475,12 +1477,6 @@ int opengl_MakeBitmapCurrent (int handle,int map_type,int tn)
 		h=bm_h(handle,0);
 	}
 
-	/*if( w != h )
-	{
-		mprintf ((0,"Can't use non-square textures with OpenGL!\n"));
-		return 0;
-	}*/
-
 	// See if the bitmaps is already in the cache
 	if (map_type==MAP_TYPE_LIGHTMAP)
 	{
@@ -1597,23 +1593,29 @@ void opengl_MakeWrapTypeCurrent(int handle,int map_type,int tn)
 // Chooses the correct filter type for the currently bound texture
 void opengl_MakeFilterTypeCurrent(int handle,int map_type,int tn)
 {
-	int magf;
-	sbyte dest_state;
+	int magf, mmip;
+	sbyte dest_filter, dest_mip;
 
 	if (map_type==MAP_TYPE_LIGHTMAP)
 	{
-		magf=GET_FILTER_STATE(OpenGL_lightmap_states[handle]);
-		dest_state=1;
+		magf = GET_FILTER_STATE(OpenGL_lightmap_states[handle]);
+		mmip = GET_MIP_STATE(OpenGL_lightmap_states[handle]);
+		dest_filter=1;
+		dest_mip = 0;
 	}
 	else
 	{
-		magf=GET_FILTER_STATE(OpenGL_bitmap_states[handle]);
-		dest_state=OpenGL_preferred_state.filtering;
+		magf = GET_FILTER_STATE(OpenGL_bitmap_states[handle]);
+		mmip = GET_MIP_STATE(OpenGL_bitmap_states[handle]);
+		dest_filter=OpenGL_preferred_state.filtering;
 		if (!OpenGL_state.cur_bilinear_state)
-			dest_state=0;
+			dest_filter=0;
+		dest_mip = OpenGL_preferred_state.mipping;
+		if (!OpenGL_state.cur_mip_state || !bm_mipped(handle))
+			dest_mip = 0;
 	}
 
-	if (magf==dest_state)
+	if (magf==dest_filter&&mmip==dest_mip)
 		return;
 	if (UseMultitexture && Last_texel_unit_set!=tn)
 	{
@@ -1621,14 +1623,30 @@ void opengl_MakeFilterTypeCurrent(int handle,int map_type,int tn)
 		Last_texel_unit_set=tn;
 	}
 
+	GLenum mag_filter = dest_filter ? GL_LINEAR : GL_NEAREST;
+	GLenum min_filter;
+	if (dest_mip)
+	{
+		min_filter = dest_filter ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST;
+		//This is a bit hacky, this should be set once at texture creation.
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, NUM_MIP_LEVELS - 1);
+	}
+	else
+	{
+		min_filter = dest_filter ? GL_LINEAR : GL_NEAREST;
+	}
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
+
 	OpenGL_sets_this_frame[2]++;
 
-	if (dest_state)
+	/*if (dest_filter)
 	{
 		if (map_type==MAP_TYPE_BITMAP && bm_mipped(handle))
 		{
 			glTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-			glTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_NEAREST);
+			glTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, NUM_MIP_LEVELS-1);
 		}
 		else
@@ -1651,15 +1669,17 @@ void opengl_MakeFilterTypeCurrent(int handle,int map_type,int tn)
 			glTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 			glTexParameteri (GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 		}
-	}
+	}*/
 
 	if (map_type==MAP_TYPE_LIGHTMAP)
 	{
-		SET_FILTER_STATE (OpenGL_lightmap_states[handle],dest_state);
+		SET_FILTER_STATE(OpenGL_lightmap_states[handle], dest_filter);
+		SET_MIP_STATE(OpenGL_lightmap_states[handle], dest_mip);
 	}
 	else
 	{
-		SET_FILTER_STATE (OpenGL_bitmap_states[handle],dest_state);
+		SET_FILTER_STATE(OpenGL_bitmap_states[handle], dest_filter);
+		SET_MIP_STATE(OpenGL_bitmap_states[handle], dest_mip);
 	}
 
 	CHECK_ERROR(9)
@@ -2065,6 +2085,7 @@ void opengl_ChangeChunkedBitmap(int bm_handle, chunked_bitmap *chunk)
 // Tells the software renderer whether or not to use mipping
 void rend_SetMipState( sbyte mipstate )
 {
+	OpenGL_state.cur_mip_state = mipstate;
 }
 
 // Init our renderer
@@ -2851,26 +2872,12 @@ void rend_SetSoftwareParameters(float aspect,int width,int height,int pitch,ubyt
 // Sets the state of bilinear filtering for our textures
 void rend_SetFiltering(sbyte state)
 {
-#ifndef RELEASE
-	if (Fast_test_render)
-	{
-		state=0;
-	}
-#endif
-
 	OpenGL_state.cur_bilinear_state=state;
 }
 
 // Sets the state of z-buffering to on or off
 void rend_SetZBufferState(sbyte state)
 {
-#ifndef RELEASE
-	if (Fast_test_render)
-	{
-		state=0;
-	}
-#endif
-
 	if (state==OpenGL_state.cur_zbuffer_state)
 		return;	// No redundant state setting
 
