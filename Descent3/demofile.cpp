@@ -862,8 +862,8 @@ int DemoReadHeader()
 	Demo_next_frame = demo_gametime;
 
 	if (gs_Xlates)
-		mem_free(gs_Xlates);
-	gs_Xlates = (struct gs_tables *)mem_malloc(sizeof(gs_tables));
+		delete (gs_Xlates);
+	gs_Xlates = new gs_tables;
 
 	try
 	{
@@ -1609,7 +1609,7 @@ void DemoAbort(bool deletefile)
 	if(Demo_flags != DF_NONE)
 	{
 		//We're done with the xlate table, so free it
-		mem_free(gs_Xlates);
+		delete (gs_Xlates);
 		gs_Xlates = NULL;
 
 		cfclose(Demo_cfp);

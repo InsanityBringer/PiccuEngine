@@ -408,6 +408,7 @@ START_VERIFY_SAVEFILE(fp);
 
 loadsg_error:
 	delete gs_Xlates;
+	gs_Xlates = nullptr;
 
 	END_VERIFY_SAVEFILE(fp, "Total load");	
 	cfclose(fp);
