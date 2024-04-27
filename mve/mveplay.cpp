@@ -147,12 +147,13 @@ static void do_timer_wait(void)
 {
 	uint64_t startTick = GetClockTimeUS();
 	uint64_t numTicks = nextTimerTick - startTick;
+
 	if (numTicks > 2000) //[ISB] again inspired by dpJudas, with 2000 US number from GZDoom
 		DelayUS(numTicks - 2000);
 	while (GetClockTimeUS() < nextTimerTick);
-	//nextTimerTick = GetClockTimeUS() + micro_frame_delay;
-	nextTimerTick += micro_frame_delay;
 	mvesnd_wait_for_frame_start(g_frameCount);
+	nextTimerTick = GetClockTimeUS() + micro_frame_delay;
+	//nextTimerTick += micro_frame_delay;
 }
 
 /*************************
