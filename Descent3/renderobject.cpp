@@ -1983,8 +1983,7 @@ int IsPointVisible (vector *pos,float size,float *pointz)
 		if (Point_visible_last_frame!=FrameCount)
 		{
 			Point_visible_last_frame=FrameCount;	
-			//g3_GetUnscaledMatrix (&unscaled_matrix);
-			g3_GetViewMatrix(&unscaled_matrix);
+			g3_GetUnscaledMatrix (&unscaled_matrix);
 			g3_GetViewPosition (&view_position);
 		}
 		vector temp_vec = *pos - view_position;
