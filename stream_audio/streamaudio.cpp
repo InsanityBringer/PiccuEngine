@@ -520,6 +520,7 @@ bool AudioStream::ReopenDigitalStream(ubyte fbufidx, int nbufs)
 	case SAF_8BIT_S:	granularity = 2; bytesize = digihdr->measure << 1; break;
 	case SAF_16BIT_M: granularity = 2; bytesize = digihdr->measure << 1; break;
 	case SAF_16BIT_S: granularity = 4; bytesize = digihdr->measure << 2; break;
+	default: Int3();
 	}
 
 	//	bufsize is bytes per measure.  now scale according to memory requirements.

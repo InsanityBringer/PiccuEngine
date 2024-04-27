@@ -40,6 +40,7 @@
 
 int g_spdFactorNum=0;
 static int g_spdFactorDenom=10;
+static int g_frameCount = 0;
 static int g_frameUpdated = 0;
 
 static short get_short(unsigned char *data)
@@ -91,6 +92,14 @@ static int timer_created = 0;
 static int micro_frame_delay=0;
 static int timer_started=0;
 
+//[ISB] TODO: move to timer.cpp perhaps
+#include <chrono>
+static uint64_t GetClockTimeUS()
+{
+	using namespace std::chrono;
+	return static_cast<uint64_t>(duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count());
+}
+
 static uint64_t nextTimerTick;
 
 static int create_timer_handler(unsigned char major, unsigned char minor, unsigned char *data, int len, void *context)
@@ -112,15 +121,11 @@ static int create_timer_handler(unsigned char major, unsigned char minor, unsign
 		micro_frame_delay = (int)temp;
 	}
 
-	return 1;
-}
+	nextTimerTick = GetClockTimeUS() + micro_frame_delay;
 
-//[ISB] TODO: move to timer.cpp perhaps
-#include <chrono>
-static uint64_t GetClockTimeUS()
-{
-	using namespace std::chrono;
-	return static_cast<uint64_t>(duration_cast<microseconds>(steady_clock::now().time_since_epoch()).count());
+	mvesnd_update_timer(micro_frame_delay);
+
+	return 1;
 }
 
 static void DelayUS(uint64_t us)
@@ -135,7 +140,6 @@ static void timer_stop(void)
 
 static void timer_start(void)
 {
-	nextTimerTick = GetClockTimeUS() + micro_frame_delay;
 	timer_started=1;
 }
 
@@ -146,7 +150,9 @@ static void do_timer_wait(void)
 	if (numTicks > 2000) //[ISB] again inspired by dpJudas, with 2000 US number from GZDoom
 		DelayUS(numTicks - 2000);
 	while (GetClockTimeUS() < nextTimerTick);
+	//nextTimerTick = GetClockTimeUS() + micro_frame_delay;
 	nextTimerTick += micro_frame_delay;
+	mvesnd_wait_for_frame_start(g_frameCount);
 }
 
 /*************************
@@ -213,6 +219,7 @@ static int create_audiobuf_handler(unsigned char major, unsigned char minor, uns
 
 static int play_audio_handler(unsigned char major, unsigned char minor, unsigned char *data, int len, void *context)
 {
+	mvesnd_start_audio();
 	return 1;
 }
 
@@ -501,6 +508,8 @@ int MVE_rmPrepMovie(int filehandle, int x, int y, int track)
 
 	mve_set_handler(mve, MVE_OPCODE_VIDEODATA,            video_data_handler);
 
+	g_frameCount = 0;
+
 	return 0;
 }
 
@@ -528,7 +537,11 @@ int MVE_rmStepMovie()
 	}
 
 	if (g_frameUpdated)
+	{
 		do_timer_wait();
+		mvesnd_end_of_frame();
+		g_frameCount++;
+	}
 	g_frameUpdated = 0;
 
 	if (cont)

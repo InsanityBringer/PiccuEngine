@@ -1,6 +1,7 @@
 #include <atomic>
 #include "mve_audio.h"
 #include "ssl_lib.h"
+#include "mono.h"
 static int audio_exp_table[256] =
 {
          0,      1,      2,      3,      4,      5,      6,      7,      8,      9,     10,     11,     12,     13,     14,     15,
@@ -61,13 +62,32 @@ void mveaudio_uncompress(short *buffer, unsigned char *data, int length)
     processSwath(buffer, data, swath, nCurOffsets);
 }
 
+//Playhead in samples
+static std::atomic<uint64_t> g_playhead;
+static int g_lastchunk, g_lastread;
+static int g_bytespersample, g_slackbytes, g_samplerate;
+static uint64_t g_audio_timerrate;
+
+//Waits for the last sample number from the last read to have gone beyond the sample number at the start of the frame.
+void mvesnd_wait_for_frame_start(int frame_num)
+{
+    //mprintf((0, "frame %d, playhead %llu framestart %llu\n", g_framedebug, g_playhead.load() + 10000, g_framestart.load()));
+    uint64_t target = (((uint64_t)frame_num * g_audio_timerrate * g_bytespersample) * g_samplerate / 1000000) + g_slackbytes;
+    mprintf((0, "playhead %llu target %llu\n", g_playhead.load(), target));
+    while (g_playhead < target) {}
+}
+
 static int mvesnd_callback(void* userptr, void* sampledata, int numbytes)
 {
-    /*short* data = (short*)sampledata;
-    for (int i = 0; i < numbytes / 2; i++)
+
+    /*if (resync_request)
     {
-        data[i] = sin((double)i / 100) * 32767;
+        mveaudiotail = (mveaudiohead - resync_last) % MVEBUFFER_SIZE;
+        resync_request = false;
     }*/
+
+    //If this exceeds the start of the current frame, the frame wait can end.
+    g_playhead += numbytes;
 
     uint8_t* ptr = &mveaudiobuffer[mveaudiotail];
     //Determine if fragmentation is needed
@@ -94,12 +114,39 @@ static int mvesnd_callback(void* userptr, void* sampledata, int numbytes)
 }
 
 extern llsSystem* mve_soundSystem;
+void mvesnd_end_of_frame()
+{
+}
+
 void mvesnd_init_audio(int format, int samplerate, int stereo)
 {
+    mveaudiohead = mveaudiotail = 0;
+    g_lastchunk = g_lastread = 0;
+    g_playhead = 0;
+
+    g_bytespersample = 1;
+    g_samplerate = samplerate;
+    g_slackbytes = 1800;
+    if (stereo)
+    {
+        g_bytespersample *= 2;
+        g_slackbytes *= 2;
+    }
+    if (format == MVESND_S16LSB)
+    {
+        g_bytespersample *= 2;
+        g_slackbytes *= 2;
+    }
+
     if (mve_soundSystem)
     {
         mve_soundSystem->InitMovieBuffer(format == MVESND_S16LSB, samplerate, stereo, mvesnd_callback);
     }
+}
+
+void mvesnd_update_timer(int rate)
+{
+    g_audio_timerrate = rate;
 }
 
 void mvesnd_queue_audio_buffer(int len, uint8_t* data)
@@ -114,7 +161,7 @@ void mvesnd_queue_audio_buffer(int len, uint8_t* data)
         remainingsize = endaddress - MVEBUFFER_SIZE;
         fragmentsize -= remainingsize;
     }
-    
+
     //Handle first fragment
     memcpy(ptr, data, fragmentsize);
 
@@ -125,11 +172,14 @@ void mvesnd_queue_audio_buffer(int len, uint8_t* data)
     }
 
     mveaudiohead = (mveaudiohead + len) % MVEBUFFER_SIZE;
+}
 
+void mvesnd_start_audio()
+{
     //This starts the source if it is needed
     if (mve_soundSystem)
     {
-        mve_soundSystem->QueueMovieBuffer(len, data);
+        mve_soundSystem->QueueMovieBuffer(0, nullptr);
     }
 }
 
