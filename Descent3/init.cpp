@@ -1709,15 +1709,7 @@ void InitIOSystems(bool editor)
 
 	if( !editor)
 	{
-		if (Dedicated_server)
-		{
-			ddio_MouseMode(MOUSE_STANDARD_MODE);
-		}
-		else
-		{
-			ddio_MouseMode(MOUSE_EXCLUSIVE_MODE);
-		}
-
+		ddio_MouseMode(MOUSE_STANDARD_MODE);
 		ddio_MouseSetCallbackFn(ShouldCaptureMouse);
 	}
 

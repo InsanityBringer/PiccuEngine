@@ -101,7 +101,7 @@ void DDIOShowCursor(BOOL show)
         if (DDIO_mouse_state.cursor_count == -1) 
         {
             ShowCursor(TRUE);
-            if (rawInputOpened)
+            /*if (rawInputOpened)
             {
                 RAWINPUTDEVICE rawInputDevice = {};
                 rawInputDevice.usUsage = 0x0002;
@@ -112,7 +112,7 @@ void DDIOShowCursor(BOOL show)
                 if (RegisterRawInputDevices(&rawInputDevice, 1, sizeof(rawInputDevice)) == FALSE) {
                     Int3();
                 }
-            }
+            }*/
         }
         DDIO_mouse_state.cursor_count = 0;
     }
@@ -121,7 +121,7 @@ void DDIOShowCursor(BOOL show)
         if (DDIO_mouse_state.cursor_count == 0) 
         {
             ShowCursor(FALSE);
-            if (rawInputOpened)
+            /*if (rawInputOpened)
             {
                 RAWINPUTDEVICE rawInputDevice = {};
                 rawInputDevice.usUsage = 0x0002;
@@ -132,7 +132,7 @@ void DDIOShowCursor(BOOL show)
                 if (RegisterRawInputDevices(&rawInputDevice, 1, sizeof(rawInputDevice)) == FALSE) {
                     Int3();
                 }
-            }
+            }*/
         }
         DDIO_mouse_state.cursor_count = -1;
     }
@@ -140,11 +140,29 @@ void DDIOShowCursor(BOOL show)
 
 void ddio_MouseMode(int mode) {
     mprintf((0, "mouse mode set to %d\n", mode));
-    if (mode == MOUSE_EXCLUSIVE_MODE) {
+    if (mode == MOUSE_EXCLUSIVE_MODE) 
+    {
         DDIOShowCursor(FALSE);
+        RECT clientrect;
+
+        if (!GetClientRect(DInputData.hwnd, &clientrect))
+            Int3();
+        else
+        {
+            POINT pt = { 0, 0 };
+            ClientToScreen(DInputData.hwnd, &pt);
+            clientrect.left += pt.x; clientrect.top += pt.y;
+            clientrect.right += pt.x; clientrect.bottom += pt.y;
+            if (!ClipCursor(&clientrect))
+            {
+                Int3();
+            }
+        }
     }
-    else if (mode == MOUSE_STANDARD_MODE) {
+    else if (mode == MOUSE_STANDARD_MODE) 
+    {
         DDIOShowCursor(TRUE);
+        ClipCursor(nullptr);
     }
     else {
         Int3();
@@ -448,6 +466,17 @@ int RawInputHandler(HWND hWnd, unsigned int msg, unsigned int wParam, long lPara
             {
                 DDIO_mouse_state.x += rawinput->data.mouse.lLastX;
                 DDIO_mouse_state.y += rawinput->data.mouse.lLastY;
+
+                RECT clientrect;
+                if (!GetClientRect(hWnd, &clientrect))
+                    Int3();
+                else
+                {
+                    POINT pt = { clientrect.right / 2, clientrect.bottom / 2 };
+                    ClientToScreen(hWnd, &pt);
+                    SetCursorPos(pt.x, pt.y);
+                }
+                
             }
             DDIO_mouse_state.z = 0;
 
@@ -483,10 +512,10 @@ bool InitNewMouse()
         rawInputDevice.usUsage = 0x0002;
         rawInputDevice.usUsagePage = 0x0001;
         //Account for the original mode. 
-        if (DDIO_mouse_state.mode == MOUSE_EXCLUSIVE_MODE)
+        /*if (DDIO_mouse_state.mode == MOUSE_EXCLUSIVE_MODE)
             rawInputDevice.dwFlags = RIDEV_CAPTUREMOUSE | RIDEV_NOLEGACY; 
-        else
-            rawInputDevice.dwFlags = 0;
+        else*/
+            rawInputDevice.dwFlags = RIDEV_INPUTSINK; //[ISB] I'm not happy having to do inputsink but for now it's needed to avoid losing mouse inputs
         
         rawInputDevice.hwndTarget = DInputData.hwnd;
 
