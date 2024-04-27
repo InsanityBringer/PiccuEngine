@@ -105,7 +105,7 @@ extern vector View_position;
 #define GL_UNSIGNED_SHORT_4_4_4_4 0x8033
 #endif
 
-#if 1
+#if 0
 void DO_CHECK_ERROR(int x)
 {
 	GLenum error = glGetError();
@@ -128,7 +128,7 @@ void DO_CHECK_ERROR(int x)
 #else
 #endif
 
-#define GET_WRAP_STATE(x)	((x>>2) & 0x02)
+#define GET_WRAP_STATE(x)	((x>>2) & 0x03)
 #define GET_MIP_STATE(x)	((x>>1) & 0x01);
 #define GET_FILTER_STATE(x)	(x & 0x01)
 
