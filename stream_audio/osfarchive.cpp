@@ -115,6 +115,7 @@ try
 	m_type = (ubyte)cf_ReadByte(m_fp);
 	m_comp = (ubyte)cf_ReadByte(m_fp);
 	m_flags = (ubyte)cf_ReadByte(m_fp);
+	//mprintf((0, "read flags %d while opening %s\n", m_flags, filename));
 	m_rate = (uint)cf_ReadByte(m_fp);
 
 	if (m_type == OSF_DIGITAL_STRM) {

@@ -3571,6 +3571,9 @@ void newuiListBox::OnKeyDown(int key)
 	}
 	else {
 		int new_selected_index = m_SelectedIndex;
+		//[ISB] Input buffering can cause a keypress to occur before the control is initialized
+		if (new_selected_index == -1) 
+			return;
 
 		if (key == KEY_UP) {
  			if (m_SelectedIndex > 0) {
