@@ -1434,13 +1434,15 @@ bool ShouldCaptureMouse()
 	if (GetFunctionMode() != GAME_MODE)
 		return false; //Never grab outside of game
 
-	//This needs to be higher priority than UI cursor, since it's visible in telcom
+	//This needs to be higher priority than Telcom overall
 	if (TelComGetSystem() == TS_MAP)
-		return true; //Always grab when the map is open.. why is the cursor visible anyways?
+		return true; //Always grab when the map is open, since it uses normal flight controls.
 
-	//If the UI cursor is visible, then the mouse shouldn't be captured.
+	if (TelComIsActive())
+		return false; //Never grab while the Telcom system is up otherwise. 
+
 	if (ui_IsCursorVisible())
-		return false;
+		return false; //If a UI is visible, don't capture the mouse
 
 	return true;
 }

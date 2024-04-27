@@ -31,12 +31,13 @@
 #include "psclass.h"
 #include "Macros.h"
 
-typedef struct t_mse_button_info {
+typedef struct t_mse_button_info 
+{
     bool is_down[N_MSEBTNS];
     ubyte down_count[N_MSEBTNS];
     ubyte up_count[N_MSEBTNS];
-    DWORD time_down[N_MSEBTNS]; // in milliseconds windows ticks
-    DWORD time_up[N_MSEBTNS];
+    float time_down[N_MSEBTNS]; // in seconds from main timer
+    float time_up[N_MSEBTNS];
 } t_mse_button_info;
 
 typedef struct t_mse_event {
@@ -84,11 +85,6 @@ static struct mses_state {
     short nbtns, naxis; // device caps.
 } DDIO_mouse_state;
 
-// Normally mouse events use ticks, attempting to use timer_GetTime which has more accuracy to smooth over bug with
-// mouse buttons dropping.
-float localDownStart[N_MSEBTNS];
-float localUpStart[N_MSEBTNS];
-
 static t_mse_button_info DIM_buttons;
 static tQueue<t_mse_event, 16> MB_queue;
 
@@ -101,18 +97,6 @@ void DDIOShowCursor(BOOL show)
         if (DDIO_mouse_state.cursor_count == -1) 
         {
             ShowCursor(TRUE);
-            /*if (rawInputOpened)
-            {
-                RAWINPUTDEVICE rawInputDevice = {};
-                rawInputDevice.usUsage = 0x0002;
-                rawInputDevice.usUsagePage = 0x0001;
-                rawInputDevice.dwFlags = 0;
-                rawInputDevice.hwndTarget = DInputData.hwnd;
-
-                if (RegisterRawInputDevices(&rawInputDevice, 1, sizeof(rawInputDevice)) == FALSE) {
-                    Int3();
-                }
-            }*/
         }
         DDIO_mouse_state.cursor_count = 0;
     }
@@ -121,24 +105,13 @@ void DDIOShowCursor(BOOL show)
         if (DDIO_mouse_state.cursor_count == 0) 
         {
             ShowCursor(FALSE);
-            /*if (rawInputOpened)
-            {
-                RAWINPUTDEVICE rawInputDevice = {};
-                rawInputDevice.usUsage = 0x0002;
-                rawInputDevice.usUsagePage = 0x0001;
-                rawInputDevice.dwFlags = RIDEV_NOLEGACY | RIDEV_CAPTUREMOUSE;
-                rawInputDevice.hwndTarget = DInputData.hwnd;
-
-                if (RegisterRawInputDevices(&rawInputDevice, 1, sizeof(rawInputDevice)) == FALSE) {
-                    Int3();
-                }
-            }*/
         }
         DDIO_mouse_state.cursor_count = -1;
     }
 }
 
-void ddio_MouseMode(int mode) {
+void ddio_MouseMode(int mode) 
+{
     mprintf((0, "mouse mode set to %d\n", mode));
     if (mode == MOUSE_EXCLUSIVE_MODE) 
     {
@@ -172,14 +145,10 @@ void ddio_MouseMode(int mode) {
     DDIO_mouse_state.mode = mode;
 }
 
-void ddio_MouseQueueFlush() {
+void ddio_MouseQueueFlush() 
+{
     memset(&DIM_buttons, 0, sizeof(DIM_buttons));
     MB_queue.flush();
-
-    // Need to clear the new arrays, since otherwise the game will think you're holding down a button when leaving a UI
-    // screen.
-    memset(localDownStart, 0, sizeof(localDownStart));
-    memset(localUpStart, 0, sizeof(localUpStart));
 }
 
 void ddio_MouseReset() {
@@ -206,20 +175,23 @@ void ddio_MouseReset() {
 
 // return mouse button down time.
 // This function has been hacked to use timer_GetTime which can be much more accurate.
-float ddio_MouseBtnDownTime(int btn) {
+float ddio_MouseBtnDownTime(int btn) 
+{
     // DWORD ticks, curticks = GetTickCount();
     float time, curtime = timer_GetTime();
 
     // ASSERT(btn >= 0 && btn < N_MSEBTNS);
 
-    if (DIM_buttons.is_down[btn]) {
-        time = curtime - localDownStart[btn];
-        DIM_buttons.time_down[btn] = (int)(curtime * 1000);
-        localDownStart[btn] = curtime;
+    if (DIM_buttons.is_down[btn]) 
+    {
+        time = curtime - DIM_buttons.time_down[btn];
+        DIM_buttons.time_down[btn] = curtime;
+
+        time = 0.99f;
     }
-    else {
-        time = localUpStart[btn] - localDownStart[btn];
-        localUpStart[btn] = localDownStart[btn] = 0;
+    else 
+    {
+        time = DIM_buttons.time_up[btn] - DIM_buttons.time_down[btn];
         DIM_buttons.time_down[btn] = DIM_buttons.time_up[btn] = 0;
     }
 
@@ -229,7 +201,8 @@ float ddio_MouseBtnDownTime(int btn) {
     return time;
 }
 
-int ddio_MouseGetState(int* x, int* y, int* dx, int* dy, int* z, int* dz) {
+int ddio_MouseGetState(int* x, int* y, int* dx, int* dy, int* z, int* dz) 
+{
     //    update mouse timer.
     int btn_mask = DDIO_mouse_state.btn_mask;
 
@@ -326,97 +299,89 @@ int RawInputHandler(HWND hWnd, unsigned int msg, unsigned int wParam, long lPara
 
         if (result >= 0) {
             RAWINPUT* rawinput = (RAWINPUT*)buf;
-            if (rawinput->header.dwType == RIM_TYPEMOUSE) {
+            if (rawinput->header.dwType == RIM_TYPEMOUSE) 
+            {
                 buttons = rawinput->data.mouse.ulButtons;
-                if (buttons & RI_MOUSE_LEFT_BUTTON_DOWN && !DIM_buttons.is_down[0]) {
+                if (buttons & RI_MOUSE_LEFT_BUTTON_DOWN && !DIM_buttons.is_down[0]) 
+                {
                     DIM_buttons.down_count[0]++;
-                    DIM_buttons.time_down[0] = GetTickCount();
-                    localDownStart[0] = curtime;
+                    DIM_buttons.time_down[0] = curtime;
                     DIM_buttons.is_down[0] = true;
                     DDIO_mouse_state.btn_mask |= MOUSE_LB;
                     ev.btn = 0;
                     ev.state = true;
                     MB_queue.send(ev);
-                    /*if (hack)
-                    {
-                            fprintf(hack, "MB1 down at %f\n", timer_GetTime());
-                    }*/
                 }
-                else if (buttons & RI_MOUSE_LEFT_BUTTON_UP && DIM_buttons.is_down[0]) {
+                else if (buttons & RI_MOUSE_LEFT_BUTTON_UP && DIM_buttons.is_down[0]) 
+                {
                     DIM_buttons.up_count[0]++;
                     DIM_buttons.is_down[0] = false;
-                    DIM_buttons.time_up[0] = GetTickCount();
-                    localUpStart[0] = curtime;
+                    DIM_buttons.time_up[0] = curtime;
                     DDIO_mouse_state.btn_mask &= ~MOUSE_LB;
                     ev.btn = 0;
                     ev.state = false;
                     MB_queue.send(ev);
-                    /*if (hack)
-                    {
-                            fprintf(hack, "MB1 up at %f\n", timer_GetTime());
-                    }*/
                 }
-                if (buttons & RI_MOUSE_RIGHT_BUTTON_DOWN && !DIM_buttons.is_down[1]) {
+                if (buttons & RI_MOUSE_RIGHT_BUTTON_DOWN && !DIM_buttons.is_down[1]) 
+                {
                     DIM_buttons.down_count[1]++;
-                    DIM_buttons.time_down[1] = GetTickCount();
-                    localDownStart[1] = curtime;
+                    DIM_buttons.time_down[1] = curtime;
                     DIM_buttons.is_down[1] = true;
                     DDIO_mouse_state.btn_mask |= MOUSE_RB;
                     ev.btn = 1;
                     ev.state = true;
                     MB_queue.send(ev);
                 }
-                else if (buttons & RI_MOUSE_RIGHT_BUTTON_UP && DIM_buttons.is_down[1]) {
+                else if (buttons & RI_MOUSE_RIGHT_BUTTON_UP && DIM_buttons.is_down[1]) 
+                {
                     DIM_buttons.up_count[1]++;
                     DIM_buttons.is_down[1] = false;
-                    DIM_buttons.time_up[1] = GetTickCount();
-                    localUpStart[1] = curtime;
+                    DIM_buttons.time_up[1] = curtime;
                     DDIO_mouse_state.btn_mask &= ~MOUSE_RB;
                     ev.btn = 1;
                     ev.state = false;
                     MB_queue.send(ev);
                 }
-                if (buttons & RI_MOUSE_MIDDLE_BUTTON_DOWN && !DIM_buttons.is_down[2]) {
+                if (buttons & RI_MOUSE_MIDDLE_BUTTON_DOWN && !DIM_buttons.is_down[2]) 
+                {
                     DIM_buttons.down_count[2]++;
-                    DIM_buttons.time_down[2] = GetTickCount();
-                    localDownStart[2] = curtime;
+                    DIM_buttons.time_down[2] = curtime;
                     DIM_buttons.is_down[2] = true;
                     DDIO_mouse_state.btn_mask |= MOUSE_CB;
                     ev.btn = 2;
                     ev.state = true;
                     MB_queue.send(ev);
                 }
-                else if (buttons & RI_MOUSE_MIDDLE_BUTTON_UP && DIM_buttons.is_down[2]) {
+                else if (buttons & RI_MOUSE_MIDDLE_BUTTON_UP && DIM_buttons.is_down[2]) 
+                {
                     DIM_buttons.up_count[2]++;
                     DIM_buttons.is_down[2] = false;
-                    DIM_buttons.time_up[2] = GetTickCount();
-                    localUpStart[2] = curtime;
+                    DIM_buttons.time_up[2] = curtime;
                     DDIO_mouse_state.btn_mask &= ~MOUSE_CB;
                     ev.btn = 2;
                     ev.state = false;
                     MB_queue.send(ev);
                 }
 
-                if (buttons & RI_MOUSE_WHEEL) {
+                if (buttons & RI_MOUSE_WHEEL) 
+                {
                     wheelAccum += (int)(short)rawinput->data.mouse.usButtonData;
-                    if (wheelAccum >= WHEEL_DELTA) {
+                    if (wheelAccum >= WHEEL_DELTA) 
+                    {
                         DIM_buttons.down_count[MSEBTN_WHL_UP]++;
                         DIM_buttons.up_count[MSEBTN_WHL_UP]++;
                         DIM_buttons.is_down[MSEBTN_WHL_UP] = true;
-                        DIM_buttons.time_down[MSEBTN_WHL_UP] = GetTickCount();
-                        DIM_buttons.time_up[MSEBTN_WHL_UP] = GetTickCount() + 100;
-                        localDownStart[MSEBTN_WHL_UP] = curtime;
-                        localUpStart[MSEBTN_WHL_UP] = curtime + .1f;
+                        DIM_buttons.time_down[MSEBTN_WHL_UP] = curtime;
+                        DIM_buttons.time_up[MSEBTN_WHL_UP] = curtime + .1f;
                         wheelAccum = 0;
                     }
-                    else if (wheelAccum <= -WHEEL_DELTA) {
+                    else if (wheelAccum <= -WHEEL_DELTA) 
+                    {
                         DIM_buttons.down_count[MSEBTN_WHL_DOWN]++;
                         DIM_buttons.up_count[MSEBTN_WHL_DOWN]++;
                         DIM_buttons.is_down[MSEBTN_WHL_DOWN] = true;
-                        DIM_buttons.time_down[MSEBTN_WHL_DOWN] = GetTickCount();
-                        DIM_buttons.time_up[MSEBTN_WHL_DOWN] = GetTickCount() + 100;
-                        localDownStart[MSEBTN_WHL_DOWN] = curtime;
-                        localUpStart[MSEBTN_WHL_DOWN] = curtime + .1f;
+                        DIM_buttons.time_down[MSEBTN_WHL_DOWN] = curtime;
+                        DIM_buttons.time_up[MSEBTN_WHL_DOWN] = curtime + .1f;
                         wheelAccum = 0;
                     }
                 }
@@ -519,7 +484,8 @@ bool InitNewMouse()
         
         rawInputDevice.hwndTarget = DInputData.hwnd;
 
-        if (RegisterRawInputDevices(&rawInputDevice, 1, sizeof(rawInputDevice)) == FALSE) {
+        if (RegisterRawInputDevices(&rawInputDevice, 1, sizeof(rawInputDevice)) == FALSE) 
+        {
             Error("InitNewMouse: HID Registration failed: %d", GetLastError());
             return false;
         }
@@ -527,7 +493,8 @@ bool InitNewMouse()
         // HACK: Need to flush messages for this to work.
         MSG msg;
 
-        while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
+        while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) 
+        {
             TranslateMessage(&msg);
             DispatchMessageA(&msg);
         }
@@ -537,7 +504,8 @@ bool InitNewMouse()
         DDIO_mouse_state.timer = timer_GetTime();
         DDIO_mouse_state.naxis = 2;
         DDIO_mouse_state.nbtns = N_DIMSEBTNS + 2; // always have a mousewheel
-        for (i = 0; i < DDIO_mouse_state.nbtns; i++) {
+        for (i = 0; i < DDIO_mouse_state.nbtns; i++) 
+        {
             DDIO_mouse_state.btn_flags |= (1 << i);
         }
 
@@ -606,14 +574,16 @@ void ddio_MouseClose() {
 }
 
 // used to prevent mouse input from being registered
-void ddio_InternalMouseSuspend() {
+void ddio_InternalMouseSuspend() 
+{
     if (!DDIO_mouse_init)
         return;
 
     DDIO_mouse_state.suspended = true;
 }
 
-void ddio_InternalMouseResume() {
+void ddio_InternalMouseResume() 
+{
     if (!DDIO_mouse_init)
         return;
 
@@ -621,7 +591,8 @@ void ddio_InternalMouseResume() {
 }
 
 // return mouse button down time
-int ddio_MouseBtnDownCount(int btn) {
+int ddio_MouseBtnDownCount(int btn) 
+{
     if (btn < 0 || btn >= N_MSEBTNS)
         return 0;
     int n_downs = DIM_buttons.down_count[btn];
@@ -635,7 +606,8 @@ int ddio_MouseBtnDownCount(int btn) {
 }
 
 // return mouse button up count
-int ddio_MouseBtnUpCount(int btn) {
+int ddio_MouseBtnUpCount(int btn) 
+{
     if (btn < 0 || btn >= N_MSEBTNS)
         return 0;
     int n_ups = DIM_buttons.up_count[btn];
@@ -644,7 +616,8 @@ int ddio_MouseBtnUpCount(int btn) {
 }
 
 // get device caps
-int ddio_MouseGetCaps(int* btn, int* axis) {
+int ddio_MouseGetCaps(int* btn, int* axis) 
+{
     *btn = (int)DDIO_mouse_state.nbtns;
     *axis = (int)DDIO_mouse_state.naxis;
 
@@ -652,7 +625,8 @@ int ddio_MouseGetCaps(int* btn, int* axis) {
 }
 
 //      gets limits on the position of the mouse cursor (or atleast what's returned from GetState)
-void ddio_MouseGetLimits(int* left, int* top, int* right, int* bottom, int* zmin, int* zmax) {
+void ddio_MouseGetLimits(int* left, int* top, int* right, int* bottom, int* zmin, int* zmax) 
+{
     *left = DDIO_mouse_state.brect.left;
     *top = DDIO_mouse_state.brect.top;
     *right = DDIO_mouse_state.brect.right;
@@ -665,7 +639,8 @@ void ddio_MouseGetLimits(int* left, int* top, int* right, int* bottom, int* zmin
 }
 
 //      sets limits on the position of the mouse cursor (or atleast what's returned from GetState)
-void ddio_MouseSetLimits(int left, int top, int right, int bottom, int zmin, int zmax) {
+void ddio_MouseSetLimits(int left, int top, int right, int bottom, int zmin, int zmax) 
+{
     bool zaxis = (DDIO_mouse_state.naxis >= 3);
     SetRect(&DDIO_mouse_state.brect, left, top, right, bottom);
     DDIO_mouse_state.zmin = (!zmin && zaxis) ? MOUSE_ZMIN : zmin;
@@ -675,13 +650,18 @@ void ddio_MouseSetLimits(int left, int top, int right, int bottom, int zmin, int
 }
 
 // virtual coordinate system for mouse (match to video resolution set for optimal mouse usage.
-void ddio_MouseSetVCoords(int width, int height) { ddio_MouseSetLimits(0, 0, width, height); }
+void ddio_MouseSetVCoords(int width, int height) 
+{ 
+    ddio_MouseSetLimits(0, 0, width, height); 
+}
 
 // gets a mouse button event, returns false if none.
-bool ddio_MouseGetEvent(int* btn, bool* state) {
+bool ddio_MouseGetEvent(int* btn, bool* state) 
+{
     t_mse_event evt;
 
-    if (MB_queue.recv(&evt)) {
+    if (MB_queue.recv(&evt)) 
+    {
         *btn = (int)evt.btn;
         *state = evt.state ? true : false;
         return true;
@@ -700,18 +680,23 @@ char Ctltext_MseBtnBindings[N_MSEBTNS][32] = { "mse-l\0\0\0\0\0\0\0\0\0\0\0\0",
                                               "",
                                               "" };
 
-char Ctltext_MseAxisBindings[][32] = { "mse-X\0\0\0\0\0\0\0\0\0\0\0\0", "mse-Y\0\0\0\0\0\0\0\0\0\0\0\0",
-                                      "msewheel\0\0\0\0\0\0\0\0\0\0" };
+// [ISB] I don't know if these strings are expected to be 32 chars, 
+// but I'll keep it like this just in case until I prove otherwise. 
+char Ctltext_MseAxisBindings[][32] = {  "mse-X\0\0\0\0\0\0\0\0\0\0\0\0", 
+                                        "mse-Y\0\0\0\0\0\0\0\0\0\0\0\0",
+                                        "msewheel\0\0\0\0\0\0\0\0\0\0" };
 
 // returns string to binding.
-const char* ddio_MouseGetBtnText(int btn) {
+const char* ddio_MouseGetBtnText(int btn) 
+{
     if (btn >= N_MSEBTNS || btn < 0)
         return ("");
     return Ctltext_MseBtnBindings[btn];
 }
 
-const char* ddio_MouseGetAxisText(int axis) {
-    if (axis >= (sizeof(Ctltext_MseAxisBindings) / sizeof(char*)) || axis < 0)
+const char* ddio_MouseGetAxisText(int axis) 
+{
+    if (axis >= (sizeof(Ctltext_MseAxisBindings) / sizeof(char[32])) || axis < 0)
         return ("");
     return Ctltext_MseAxisBindings[axis];
 }
