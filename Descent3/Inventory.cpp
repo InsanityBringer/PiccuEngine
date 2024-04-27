@@ -866,9 +866,12 @@ bool Inventory::Use(int type,int id,object *parent)
 
 		tOSIRISEventInfo ei;
 		ei.evt_use.it_handle = player->handle;
+
+		// zar: node might be invalid after CallEvent.
+		int type = node->type, id = node->id; 
 		if(Osiris_CallEvent(&Objects[objnum],EVT_USE, &ei)){
 			//if we're the server tell the clients to remove this item from their inventory
-			Remove(node->type,node->id);
+			Remove(type, id);
 			ret = true;
 		}else{
 			if(node->iflags&INVF_OBJECT)
