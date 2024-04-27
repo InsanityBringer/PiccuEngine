@@ -1955,19 +1955,28 @@ int IsPointVisible (vector *pos,float size,float *pointz)
 		if (Render_FOV!=last_render_fov)
 		{
 			last_render_fov=Render_FOV;
-			int angle_adjust=(Render_FOV/2)*(65536/360);
+			int vfov=(Render_FOV/2)*(65536/360);
+
+			int w, h;
+			rend_GetProjectionParameters( &w, &h );
+
+			float aspect = (float) w / (float) h;
+			float up = tan(Render_FOV/2.0);
+			float side = up * aspect;
+			float hfov = atan(side) * 65536.0 / 3.14159;
+
 			vector rvec={1,0,0};
 			vector lvec={-1,0,0};
 			vector tvec={0,1,0};
 			vector bvec={0,-1,0};
 			matrix temp_mat;
-			vm_AnglesToMatrix (&temp_mat,0,65536-angle_adjust,0);
+			vm_AnglesToMatrix (&temp_mat,0,65536-hfov,0);
 			right_normal=rvec*temp_mat;
-			vm_AnglesToMatrix (&temp_mat,0,angle_adjust,0);
+			vm_AnglesToMatrix (&temp_mat,0,hfov,0);
 			left_normal=lvec*temp_mat;
-			vm_AnglesToMatrix (&temp_mat,65536-angle_adjust,0,0);
+			vm_AnglesToMatrix (&temp_mat,65536-vfov,0,0);
 			bottom_normal=bvec*temp_mat;
-			vm_AnglesToMatrix (&temp_mat,angle_adjust,0,0);
+			vm_AnglesToMatrix (&temp_mat,vfov,0,0);
 			top_normal=tvec*temp_mat;
 		}
 		// Get unscaled matrix stuff
