@@ -9,4 +9,8 @@ SET (WIN32_SOURCES
 		win32/wintask.cpp
 		win32/win32os.h
 		win32/wincontroller.h
+		win32/win32res.h
+		win32/win32res.rc
+		win32/piccu_station_256.ico
+		win32/piccu_station_32.ico
 		PARENT_SCOPE)

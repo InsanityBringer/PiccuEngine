@@ -143,7 +143,7 @@ class oeD3Win32App: public oeWin32Application
 
 public:
 	oeD3Win32App(unsigned flags, HInstance hinst):
-		 oeWin32Application(PRODUCT_NAME, flags, hinst) 
+		 oeWin32Application(ENGINE_NAME, flags, hinst) 
 	{ 
 	  	Descent = this;
 		shutdown = false;
@@ -664,14 +664,6 @@ int PASCAL HandledWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine,
 		return 0;
 	}
 	
-#endif
-
-#ifndef GAMEGAUGE
-	/*
-	if (! FindArg("-launched") && !FindArg("-dedicated") && !FindArg("-timetest") ) {
-		MessageBox(NULL,"You cannot run this program directly.  Please run \"" PRODUCT_NAME ".exe\".",PRODUCT_NAME " Error",MB_OK);
-		return 0;					// pre init return
-	}*/
 #endif
 
 	if (Dedicated_server)

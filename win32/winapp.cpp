@@ -22,6 +22,7 @@
 //#include "AppConsole.h"
 #include "mono.h"
 #include "networking.h"
+#include "win32res.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
@@ -92,14 +93,13 @@ oeWin32Application::oeWin32Application(const char *name, unsigned flags, HInstan
 		oeWin32Application::first_time = false;
 	}
 
-	HICON dicon = ExtractIcon((HINSTANCE)hinst,"descent 3.exe",0);
-
 	wc.hCursor				= NULL;
-	wc.hIcon					= dicon;
-	wc.lpszMenuName		= NULL;
+	//wc.hIcon				= LoadIcon((HINSTANCE)hinst, MAKEINTRESOURCE(IDI_APPICON));
+	wc.hIcon				= (HICON)LoadImage((HINSTANCE)hinst, TEXT("IDI_APPICONSMALL"), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+	wc.lpszMenuName			= NULL;
 	wc.lpszClassName 		= (LPCSTR)name;
 	wc.hInstance 			= (HINSTANCE)hinst;
-	wc.style					= CS_DBLCLKS;
+	wc.style				= CS_DBLCLKS;
 	wc.lpfnWndProc			= (flags & OEAPP_CONSOLE) ? (WNDPROC)MyConProc : (WNDPROC)(MyWndProc);
 	wc.cbWndExtra			= 0;
 	wc.cbClsExtra			= 0;

@@ -188,8 +188,6 @@ float ddio_MouseBtnDownTime(int btn)
     {
         time = curtime - DIM_buttons.time_down[btn];
         DIM_buttons.time_down[btn] = curtime;
-
-        time = 0.99f;
     }
     else 
     {
