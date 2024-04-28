@@ -9061,7 +9061,7 @@ void MultiDoLagInfo(ubyte *data)
 	int count = 0;
 	SKIP_HEADER (data,&count);
 	ubyte slot = MultiGetByte (data,&count);
-	NetPlayers[slot].ping_time = MultiGetFloat (data,&count) * 1000; 
+	NetPlayers[slot].ping_time = MultiGetFloat (data,&count); 
 	//mprintf((0, "%d's lag info net ping: %f ms\n", slot, NetPlayers[slot].ping_time));
 }
 

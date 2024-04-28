@@ -24,7 +24,13 @@ SET (CPPS
   idmfc.cpp 
   encryption.cpp 
   dmfcinterface.cpp)
+  
+if (WIN32)
+	set (CPPS
+		${CPPS}
+		dmfc.def)
+endif()
 
 ADD_DEFINITIONS(-DOUTRAGE_VERSION -DDMFC_DLL)
 
-ADD_LIBRARY(dmfc STATIC ${HEADERS} ${CPPS})
+ADD_LIBRARY(dmfc SHARED ${HEADERS} ${CPPS})
