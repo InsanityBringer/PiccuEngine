@@ -209,9 +209,11 @@ static oeApplication *ParentApplication = NULL;
 
 //Texture list
 GLuint texture_name_list[10000];
-GLuint framebuffer_name;
-GLuint framebuffer_color_name;
-GLuint framebuffer_depth_name;
+constexpr int NUM_FBOS = 2;
+GLuint framebuffer_names[NUM_FBOS];
+GLuint framebuffer_color_names[NUM_FBOS];
+GLuint framebuffer_depth_names[NUM_FBOS];
+int framebuffer_current_draw;
 
 unsigned int framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h;
 
@@ -300,7 +302,8 @@ int opengl_MakeTextureObject (int tn)
 
 	num = texture_name_list[num];
 
-	if (num == framebuffer_color_name || num == framebuffer_depth_name)
+	if (num == framebuffer_color_names[0] || num == framebuffer_depth_names[0]
+		|| num == framebuffer_color_names[1] || num == framebuffer_depth_names[1])
 		Int3();
 	glBindTexture (GL_TEXTURE_2D,num);
 	glPixelStorei (GL_UNPACK_ALIGNMENT,2);
@@ -326,48 +329,53 @@ void opengl_UpdateFramebuffer()
 	{
 		glActiveTextureARB(GL_TEXTURE0_ARB);
 	}
-	if (framebuffer_color_name == 0)
+	if (framebuffer_color_names[0] == 0)
 	{
-		glGenTextures(1, &framebuffer_color_name);
-		glGenTextures(1, &framebuffer_depth_name);
-		glGenFramebuffers(1, &framebuffer_name);
+		glGenTextures(NUM_FBOS, framebuffer_color_names);
+		glGenTextures(NUM_FBOS, framebuffer_depth_names);
+		glGenFramebuffers(NUM_FBOS, framebuffer_names);
 	}
 
 	GLenum textureType = GL_TEXTURE_2D; //future MSAA support?
 
-	glBindTexture(GL_TEXTURE_2D, framebuffer_color_name);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glBindTexture(GL_TEXTURE_2D, framebuffer_depth_name);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	OpenGL_last_bound[0] = -1;
-	OpenGL_last_bound[1] = -1;
-	Last_texel_unit_set = -1;
-
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_name);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureType, framebuffer_color_name, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, textureType, framebuffer_depth_name, 0);
-
-
-
-	GLenum fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (fbstatus != GL_FRAMEBUFFER_COMPLETE)
+	int i;
+	for (i = 0; i < NUM_FBOS; i++)
 	{
-		Error("opengl_UpdateFramebuffer(): Framebuffer object is incomplete!");
+		glBindTexture(GL_TEXTURE_2D, framebuffer_color_names[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glBindTexture(GL_TEXTURE_2D, framebuffer_depth_names[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		OpenGL_last_bound[0] = -1;
+		OpenGL_last_bound[1] = -1;
+		Last_texel_unit_set = -1;
+
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_names[i]);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureType, framebuffer_color_names[i], 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, textureType, framebuffer_depth_names[i], 0);
+
+		GLenum fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (fbstatus != GL_FRAMEBUFFER_COMPLETE)
+		{
+			Error("opengl_UpdateFramebuffer(): Framebuffer object is incomplete!");
+		}
 	}
+
+	framebuffer_current_draw = i;
 }
 
 void opengl_CloseFramebuffer()
 {
-	glDeleteTextures(1, &framebuffer_color_name);
-	glDeleteTextures(1, &framebuffer_depth_name);
-	framebuffer_color_name = framebuffer_depth_name = 0;
-	glDeleteFramebuffers(1, &framebuffer_name);
+	glDeleteTextures(NUM_FBOS, framebuffer_color_names);
+	glDeleteTextures(NUM_FBOS, framebuffer_depth_names);
+	memset(framebuffer_color_names, 0, sizeof(framebuffer_color_names));
+	memset(framebuffer_depth_names, 0, sizeof(framebuffer_depth_names));
+	glDeleteFramebuffers(NUM_FBOS, framebuffer_names);
 }
 
 int opengl_InitCache(void)
@@ -1277,8 +1285,6 @@ void opengl_TranslateBitmapToOpenGL (int texnum,int bm_handle,int map_type,int r
 
 	if (OpenGL_last_bound[tn]!=texnum)
 	{
-		if (texnum == framebuffer_color_name || texnum == framebuffer_depth_name)
-			Int3();
 		glBindTexture (GL_TEXTURE_2D,texnum);
 		OpenGL_sets_this_frame[0]++;
 		OpenGL_last_bound[tn]=texnum;
@@ -1540,8 +1546,6 @@ int opengl_MakeBitmapCurrent (int handle,int map_type,int tn)
 			Last_texel_unit_set=tn;
 		}
 
-		if (texnum == framebuffer_color_name || texnum == framebuffer_depth_name)
-			Int3();
 		glBindTexture (GL_TEXTURE_2D,texnum);
 		OpenGL_last_bound[tn]=texnum;
 		OpenGL_sets_this_frame[0]++;
@@ -2691,7 +2695,7 @@ void rend_Flip(void)
 	OpenGL_polys_drawn     = 0;
 	OpenGL_verts_processed = 0;
 
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_name);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_names[framebuffer_current_draw]);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
 	err = glGetError();
@@ -2718,7 +2722,8 @@ void rend_Flip(void)
 	SDL_GL_SwapBuffers();
 #endif
 
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_name);
+	framebuffer_current_draw = (framebuffer_current_draw + 1) % NUM_FBOS;
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_names[framebuffer_current_draw]);
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)
