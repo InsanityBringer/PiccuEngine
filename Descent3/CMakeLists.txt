@@ -139,7 +139,6 @@ SET (MAIN_SOURCES
 		Descent3/vibeinterface.h
 		Descent3/viseffect.h
 		Descent3/viseffect_external.h
-		Descent3/voice.h
 		Descent3/weapon.h
 		Descent3/weapon_external.h
 		Descent3/weather.h
@@ -268,7 +267,6 @@ SET (MAIN_SOURCES
 		Descent3/trigger.cpp
 		Descent3/vclip.cpp
 		Descent3/viseffect.cpp
-		Descent3/voice.cpp
 		Descent3/weapon.cpp
 		Descent3/WeaponFire.cpp
 		Descent3/weather.cpp)

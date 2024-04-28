@@ -35,7 +35,6 @@
 #include "module.h"
 #include "localization.h"
 #include "weapon.h"
-#include "voice.h"
 #include "gametexture.h"
 #include "Mission.h"
 #include "damage.h"

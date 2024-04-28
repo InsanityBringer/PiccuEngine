@@ -39,7 +39,6 @@
 #include "PHYSICS.H"
 #include "pilot.h"
 #include "hud.h"
-#include "voice.h"
 #include "bitmap.h"
 #include "game.h"
 #include "render.h"

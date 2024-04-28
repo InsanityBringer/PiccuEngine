@@ -15,50 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/BriefingParse.cpp $
-* $Revision: 11 $
-* $Date: 4/14/99 2:50a $
-* $Author: Jeff $
-*
-* Parse functions to parse a briefing file
-*
-* $Log: /DescentIII/main/BriefingParse.cpp $
- * 
- * 11    4/14/99 2:50a Jeff
- * fixed some case mismatched #includes
- * 
- * 10    2/17/99 6:55p Jeff
- * added jump button type.  Added no early render flag for bitmaps.  Fixed
- * color bug for type text
- * 
- * 9     2/17/99 11:12a Doug
- * set movie type to TC_MOVIE_STATIC (Jeff)
- * 
- * 8     1/13/99 8:01p Jeff
- * initialize text_ptr (even though it really doesn't get used till it's
- * init), to get rid of warning
- * 
- * 7     1/04/99 12:32p Jeff
- * added support for mission flag parsing
- * 
- * 6     11/17/98 3:39p Jeff
- * handle any length line when parsing
- * 
- * 5     10/12/98 8:32p Jeff
- * changed the way focus is handled
- * 
- * 4     9/17/98 2:28p Jeff
- * added focus filenames to button effect
- * 
- * 3     9/11/98 6:06p Jeff
- * Briefing Editor completed
- * 
- * 2     9/09/98 7:02p Jeff
- * Initial Creation
-*
-* $NoKeywords: $
-*/
+
 #include "BriefingParse.h"
 #include "TelComEffects.h"
 #include <stdlib.h>
@@ -68,7 +25,6 @@
 #include "pserror.h"
 #include "game.h"
 #include "mem.h"
-#include "voice.h"
 #include "streamaudio.h"
 #include "ddio.h"
 
@@ -493,6 +449,7 @@ int CBriefParse::ParseBriefing(char *filename)
 				break;
 			case K_VOICE:
 				{
+					//[ISB] This needs to stick around in case it was placed in a extant briefing.
 					//define the voice for this screen
 					bool play = false;
 					char d[128];
@@ -512,14 +469,14 @@ int CBriefParse::ParseBriefing(char *filename)
 							play = true;
 						else
 						if(!stricmp(token,"8bit")){
-							vflags |= VF_8BIT;
+							//vflags |= VF_8BIT;
 							bitdepthset = true;
 						}else
 						if(!stricmp(token,"compressed")){
-							vflags |= VF_COMPRESSED;
+							//vflags |= VF_COMPRESSED;
 						}else
 						if(!stricmp(token,"stereo")){
-							vflags |= VF_STEREO;
+							//vflags |= VF_STEREO;
 						}else
 						if(!stricmp(buffer,"isset")){
 							int value,bit = 0x01;
@@ -545,7 +502,7 @@ int CBriefParse::ParseBriefing(char *filename)
 							ParseError("Illegal parameter in $VOICE");	
 					}
 					if(!bitdepthset)
-						vflags |= VF_16BIT|VF_INTERUPT|VF_FORCE;
+						//vflags |= VF_16BIT|VF_INTERUPT|VF_FORCE;
 
 					PARSE_STRING(buffer);
 

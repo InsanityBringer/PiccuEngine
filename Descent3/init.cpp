@@ -70,7 +70,6 @@
 #include "PHYSICS.H"
 #include "special_face.h"
 #include "streamaudio.h"
-#include "voice.h"
 #include "localization.h"
 #include "stringtable.h"
 #include "hlsoundlib.h"
@@ -412,9 +411,6 @@ void SaveGameSettings()
 	Database->write("RS_light",Render_state.cur_light_state);
 	Database->write("RS_texture_quality",Render_state.cur_texture_quality);
 
-	Database->write("VoicePowerup",PlayPowerupVoice);
-	Database->write("VoiceAll",PlayVoices);
-
 	// Write out force feedback
 	Database->write("EnableJoystickFF",D3Use_force_feedback);
 	Database->write("ForceFeedbackAutoCenter",D3Force_auto_center);
@@ -490,8 +486,6 @@ void LoadGameSettings()
 	D3Force_gain = 1.0f;
 	D3Force_auto_center = true;
 	Game_video_resolution = RES_640X480;
-	PlayPowerupVoice = true;
-	PlayVoices = true;
 	Sound_mixer = SOUND_MIXER_SOFTWARE_16;
 	Sound_quality = SQT_NORMAL;
 	Missile_camera_window = SVW_LEFT;
@@ -585,9 +579,6 @@ void LoadGameSettings()
 //@@	// Base missile camera if in wrong window
 //@@	if (Missile_camera_window==SVW_CENTER)
 //@@		Missile_camera_window=SVW_LEFT;
-
-	Database->read("VoicePowerup",&PlayPowerupVoice);
-	Database->read("VoiceAll",&PlayVoices);
 
 	Database->read("DetailScorchMarks",&Detail_settings.Scorches_enabled);
 	Database->read("DetailWeaponCoronas",&Detail_settings.Weapon_coronas_enabled);
@@ -1323,7 +1314,6 @@ void InitD3Systems2(bool editor)
 	InitTriggers();
 
 // the remaining sound system
-	InitVoices();
 	InitD3Music(FindArg("-nomusic") ? false : true);
 	InitAmbientSoundSystem();
 
