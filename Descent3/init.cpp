@@ -86,7 +86,6 @@
 #include "d3music.h"
 #include "PilotPicsAPI.h"
 #include "osiris_dll.h"
-//#include "gamespy.h"
 #include "mem.h"
 #include "multi.h"
 #include "marker.h"
@@ -95,15 +94,9 @@
 #include "rocknride.h"
 #include "vibeinterface.h"
 
-//Uncomment this for all non-US versions!!
-//#define LASERLOCK
 
 //Uncomment this to allow all languages
 #define ALLOW_ALL_LANG	1
-
-#if defined(WIN32) && defined(LASERLOCK)
-#include "laserlock.h"
-#endif
 
 #ifdef EDITOR
 	#include "editor\HFile.h"
@@ -189,22 +182,13 @@ int IsLocalOk(void)
 	return 1;
 }
 
-
-
 void PreGameCdCheck()
 {
 	CD_inserted = 0;
 	do
 	{
 		char *p = NULL;
-#if defined (MACINTOSH)
-		p = ddio_GetCDDrive("Descent3");
-		if(p && *p)
-		{
-			CD_inserted = 1;			
-			break;
-		}
-#elif defined  (OEM)
+#if defined  (OEM)
 		p = ddio_GetCDDrive("D3OEM_1");
 		if(p && *p)
 		{
@@ -244,12 +228,6 @@ void PreGameCdCheck()
 				exit(0);	
 			}
 			ShowCursor(false);
-
-#elif defined(MACINTOSH)
-		::ShowCursor();
-		short action = ::Alert(130, NULL);
-		if(action == 1)
-			::ExitToShell();
 #elif defined(__LINUX__)
 			// ummm what should we do in Linux?
 			// right now I'm just going to return this hopefully will be safe, as I think
@@ -261,7 +239,6 @@ void PreGameCdCheck()
 
 	}while(!CD_inserted);
 }
-
 
 /*
 	Initializes all the subsystems that need to be initialized BEFORE application creation.
@@ -439,7 +416,6 @@ void SaveGameSettings()
 	Database->write("VoiceAll",PlayVoices);
 
 	// Write out force feedback
-#ifndef MACINTOSH
 	Database->write("EnableJoystickFF",D3Use_force_feedback);
 	Database->write("ForceFeedbackAutoCenter",D3Force_auto_center);
 	ubyte force_gain;
@@ -447,7 +423,6 @@ void SaveGameSettings()
 	if(D3Force_gain>1.0f) D3Force_gain = 1.0f;
 	force_gain = (ubyte)((100.0f * D3Force_gain)+0.5f);
 	Database->write("ForceFeedbackGain",force_gain);
-#endif
 
 #ifndef RELEASE			// never save this value out in release.
 	Database->write("SoundMixer", Sound_mixer);
@@ -505,43 +480,20 @@ void LoadGameSettings()
 	Render_preferred_state.gamma = 1.5;
 	PreferredRenderer = RENDERER_NONE;
 
-#ifdef MACINTOSH
-
-//DAJ render switch
-#if defined(USE_OPENGL)
-	PreferredRenderer = RENDERER_OPENGL;
-#elif defined(USE_GLIDE)
-	PreferredRenderer = RENDERER_GLIDE;
-#elif defined(USE_SOFTWARE)
-	PreferredRenderer = RENDERER_SOFTWARE_16BIT;
-#else
-	PreferredRenderer = RENDERER_NONE;
-#endif		
-
-#endif
 
 	Sound_system.SetLLSoundQuantity(MIN_SOUNDS_MIXED+ (MAX_SOUNDS_MIXED-MIN_SOUNDS_MIXED)/2);
 	D3MusicSetVolume(0.5f);
 	Detail_settings.Pixel_error = 8.0;
-#ifdef MACINTOSH
-	Sound_system.SetMasterVolume(0.7);
-	Detail_settings.Terrain_render_distance = 10.0 * TERRAIN_SIZE;	//DAJ
-#else
 	Sound_system.SetMasterVolume(1.0);
 	Detail_settings.Terrain_render_distance = 70.0 * TERRAIN_SIZE;
 	D3Use_force_feedback = true;
 	D3Force_gain = 1.0f;
 	D3Force_auto_center = true;
-#endif
 	Game_video_resolution = RES_640X480;
 	PlayPowerupVoice = true;
 	PlayVoices = true;
 	Sound_mixer = SOUND_MIXER_SOFTWARE_16;
-#ifdef MACINTOSH
-	Sound_quality = SQT_LOW;
-#else
 	Sound_quality = SQT_NORMAL;
-#endif
 	Missile_camera_window = SVW_LEFT;
 	Render_preferred_state.vsync_on = true;
 	Detail_settings.Fog_enabled = true;
@@ -614,18 +566,6 @@ void LoadGameSettings()
 	Database->read_int("RS_color_model",&Render_state.cur_color_model);
 	Database->read_int("RS_light",&Render_state.cur_light_state);
 	Database->read_int("RS_texture_quality",&Render_state.cur_texture_quality);
-#ifdef MACINTOSH
-	if(Render_state.cur_texture_quality == 0) {
-		Mem_low_memory_mode = true;
-		Mem_superlow_memory_mode = true;
-	} else if(Render_state.cur_texture_quality == 1) {
-		Mem_low_memory_mode = true;
-		Mem_superlow_memory_mode = false;
-	} else if(Render_state.cur_texture_quality == 2) {
-		Mem_low_memory_mode = false;
-		Mem_superlow_memory_mode = false;
-	}
-#else
 	// force feedback stuff
 	Database->read("EnableJoystickFF",&D3Use_force_feedback);
 	Database->read("ForceFeedbackAutoCenter",&D3Force_auto_center);
@@ -633,7 +573,6 @@ void LoadGameSettings()
 	Database->read("ForceFeedbackGain",&force_gain,sizeof(force_gain));
 	if(force_gain>100) force_gain = 100;
 	D3Force_gain = ((float)force_gain)/100.0f;
-#endif
 	Database->read_int("PreferredRenderer",&PreferredRenderer);
 	Database->read_int("MissileView",&Missile_camera_window);
 	Database->read("FastHeadlight",&Detail_settings.Fast_headlight_on);
@@ -642,7 +581,6 @@ void LoadGameSettings()
 
 	if (FindArg ("-vsync"))
 		Render_preferred_state.vsync_on=true;
-
 
 //@@	// Base missile camera if in wrong window
 //@@	if (Missile_camera_window==SVW_CENTER)
@@ -669,37 +607,24 @@ void LoadGameSettings()
 	if(Database->read_int("SoundQuality",&tempint))
 		Sound_quality = tempint;
 	
-	if(Database->read_int("SoundQuantity",&tempint)) {
+	if(Database->read_int("SoundQuantity",&tempint)) 
+	{
 		Sound_system.SetLLSoundQuantity(tempint);
 	}
 
 	Sound_card_name[0] = 0;
 	templen = TEMPBUFFERSIZE;
-	if (Database->read("SoundcardName",tempbuffer, &templen)) {
+	if (Database->read("SoundcardName",tempbuffer, &templen)) 
+	{
 		strcpy(Sound_card_name, tempbuffer);
 	}
 	
 	int len = _MAX_PATH;
 	Database->read("Default_pilot",Default_pilot,&len);
-
-	//If preferred renderer set to software, force it to be glide
-	if ((PreferredRenderer == RENDERER_SOFTWARE_8BIT) || (PreferredRenderer == RENDERER_SOFTWARE_16BIT)) {
-		Int3();	//Warning: rederer was set to Software.  Ok to ignore this.
-		PreferredRenderer = RENDERER_OPENGL;
-	}
-
 	//Now that we have read in all the data, set the detail level if it is a predef setting (custom is ignored in function)
 
 	int level;
-#ifdef MACINTOSH
-	#ifdef USE_OPENGL
-		level = DETAIL_LEVEL_LOW;
-	#else
-		level = DETAIL_LEVEL_HIGH;
-	#endif
-#else
-	level = DETAIL_LEVEL_MED;
-#endif
+	level = DETAIL_LEVEL_VERY_HIGH;
 
 	Database->read_int("PredefDetailSetting",&level);
 	ConfigSetDetailLevel(level);
@@ -943,25 +868,6 @@ void InitIOSystems(bool editor)
 extern int Num_languages;
 void InitStringTable()
 {
-
-#if defined (MACINTOSH) && !defined (DAJ_DEBUG)
-	if(cfopen("german.lan", "rt")) {
-		Localization_SetLanguage(LANGUAGE_GERMAN);
-		ddio_SetKeyboardLanguage(KBLANG_GERMAN);
-	} else if(cfopen("spanish.lan", "rt")) {
-		Localization_SetLanguage(LANGUAGE_SPANISH);
-		ddio_SetKeyboardLanguage(KBLANG_AMERICAN);
-	} else if(cfopen("italian.lan", "rt")) {
-		Localization_SetLanguage(LANGUAGE_ITALIAN);
-		ddio_SetKeyboardLanguage(KBLANG_AMERICAN);
-	} else if(cfopen("french.lan", "rt")) {
-		Localization_SetLanguage(LANGUAGE_FRENCH);
-		ddio_SetKeyboardLanguage(KBLANG_FRENCH);
-	} else {
-		Localization_SetLanguage(LANGUAGE_ENGLISH);
-		ddio_SetKeyboardLanguage(KBLANG_AMERICAN);
-	}	
-#else
 	int language = LANGUAGE_ENGLISH;
 	Database->read("LanguageType",&language,sizeof(language));
 
@@ -972,7 +878,6 @@ void InitStringTable()
 	}
 	Localization_SetLanguage(language);
 	
-#endif
 	int string_count = LoadStringTables();
 	
 	if(string_count==0) 
@@ -1031,7 +936,8 @@ void InitGameSystems(bool editor)
 
 	//Check for aspect ratio override
 	int t = FindArg("-aspect");
-	if (t) {
+	if (t) 
+	{
 		extern void g3_SetAspectRatio(float);
 		float aspect = atof(GameArgs[t+1]);
 		if (aspect > 0.0)
@@ -1041,7 +947,8 @@ void InitGameSystems(bool editor)
 	//Initialize force feedback effects (if we can)
 	ForceInit();
 
-	if (!editor) {
+	if (!editor) 
+	{
 		tUIInitInfo uiinit;
 		uiinit.window_font = SMALL_FONT;
 		uiinit.w = 640;
@@ -1057,7 +964,6 @@ void InitGameSystems(bool editor)
 	}
 }
 
-
 //////////////////////////////////////////////////////////////////////////////
 static float Init_messagebar_portion = 0.0f, Init_messagebar_offset=0.0f;
 static char *Init_messagebar_text = NULL;
@@ -1070,7 +976,6 @@ void SetInitMessageLength(char *c, float amount)
 	Init_messagebar_portion = amount;
 }
 
-
 // amount is 0 to 1
 void UpdateInitMessage(float amount)
 {
@@ -1078,7 +983,6 @@ void UpdateInitMessage(float amount)
 	InitMessage(Init_messagebar_text, (amount*Init_messagebar_portion)+Init_messagebar_offset);
 //	mprintf((0, "amt=%.2f, portion=%.2f offs=%.2f, prog=%.2f\n", amount, Init_messagebar_portion, Init_messagebar_offset, (amount*Init_messagebar_portion)+Init_messagebar_offset));
 }
-
 
 void InitMessage(char *c,float progress)
 {
@@ -1097,12 +1001,14 @@ void InitMessage(char *c,float progress)
 
 	StartFrame();
 
-	if (Title_bitmap_init) {
+	if (Title_bitmap_init) 
+	{
 		rend_ClearScreen(GR_BLACK);
 		rend_DrawChunkedBitmap(&Title_bitmap, x,y,255);
 	}
 
-	if (c) {
+	if (c) 
+	{
 		g3Point *pntlist[4],points[4];
 	// Set our four corners to cover the screen
 		grtext_SetFont(MONITOR9_NEWUI_FONT);
@@ -1169,7 +1075,6 @@ void ShowStaticScreen(char *bitmap_filename,bool timed=false,float delay_time=0.
 
 void IntroScreen()
 {		
-//#if (defined(OEM) || defined(DEMO) )
 #ifdef DEMO
 	#ifdef MACINTOSH
 	ShowStaticScreen("graphsim.ogf",true,3.0);	
@@ -1177,14 +1082,6 @@ void IntroScreen()
 	ShowStaticScreen("tantrum.ogf",true,3.0);	
 	#endif
 	ShowStaticScreen("outrage.ogf",true,3.0);	
-#else
-	#ifdef MACINTOSH
-	if(cfopen("publisher.ogf", "rb"))
-		ShowStaticScreen("publisher.ogf",true,3.0);	
-	
-	if(cfopen("graphsim.ogf", "rb"))
-		ShowStaticScreen("graphsim.ogf",true,3.0);	
-	#endif
 #endif
 	
 #ifdef DEMO
@@ -1282,14 +1179,6 @@ void InitD3Systems1(bool editor)
 #endif
 		exit(0);		
 	}
-	
-// With 1.5 no more copy protection!
-#if 0
-	//CD Check goes here
-//#if ( defined(RELEASE) && (!defined(DEMO)) && (!defined(GAMEGAUGE)) )
-	if( (!FindArg("-dedicated")) ) 
-		PreGameCdCheck();
-#endif
 
 #ifdef LASERLOCK
 	//At this point the laser locked CD MUST be inserted or the
@@ -1386,17 +1275,8 @@ bool CheckCdForValidity(int cd);
 		LastPacketReceived = timer_GetTime();
 	}
 
-//Init gamespy
-//	gspy_Init();
-
 // Sound initialization
 	int soundres = Sound_system.InitSoundLib(Descent, Sound_mixer, Sound_quality, false);
-#ifdef OEM_AUREAL
-	if(!soundres)
-	{
-		Error("Unable to initialize Aureal audio. This version of Descent 3 requires Aureal audio");
-	}
-#endif
 
 	//	Initialize Cinematics system
 	InitCinematics();
@@ -1629,11 +1509,7 @@ void DeleteTempFiles(void)
 				{
 					ddio_DeleteFile(filename);
 				}
-#ifdef MACINTOSH
-				while(ddio_FindFileStart(temp_file_wildcards[i].wildcard,filename));
-#else
 				while(ddio_FindNextFile(filename));
-#endif
 			}
 			ddio_FindFileClose();
 		}
@@ -1671,10 +1547,13 @@ void ShutdownD3()
 	Init_old_control_mode = Control_poll_flag;
 
 //JEFF: only pause game if not in multi, so we can background process
-	if (GetFunctionMode() == GAME_MODE) {
-		if( !(Game_mode&GM_MULTI))  {
+	if (GetFunctionMode() == GAME_MODE) 
+	{
+		if( !(Game_mode&GM_MULTI)) 
+		{
 			Init_was_game_paused = Game_paused;
-			if (!Init_was_game_paused) {
+			if (!Init_was_game_paused) 
+			{
 				PauseGame();
 			}
 			else {
@@ -1745,13 +1624,16 @@ void RestartD3()
 	LoadControlConfig(&Init_old_pilot);
 
 // resume game sounds and time as needed
-	if (GetFunctionMode() == GAME_MODE) {
+	if (GetFunctionMode() == GAME_MODE) 
+	{
 		if( !(Game_mode&GM_MULTI) )
 		{
-			if (!Init_was_game_paused) {
+			if (!Init_was_game_paused) 
+			{
 				ResumeGame();
 			}
-			else {
+			else 
+			{
 				D3MusicResume();
 			}
 		}
@@ -1762,7 +1644,8 @@ void RestartD3()
 	}
 
 // resume controller if it was active before alt-tabbing out.
-	if (Init_old_control_mode) {
+	if (Init_old_control_mode) 
+	{
 		ResumeControls();
 	}
 
