@@ -15,99 +15,8 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Source: $
- * $Revision: 27 $
- * $Author: Matt $
- * $Date: 12/06/01 9:26a $
- *
- * main menu interface
- *
- * $Log: /DescentIII/Main/mmItem.cpp $
- * 
- * 27    12/06/01 9:26a Matt
- * Added code to override main menu bitmap.
- * 
- * 26    3/20/00 12:17p Matt
- * Merge of Duane's post-1.3 changes.
- * Don't show build number in release versions (Mac only)
- * 
- * 25    8/02/99 9:01a Duane
- * turned off menusound for mac
- * 
- * 24    4/29/99 3:21a Samir
- * reorganized main menu music to work in config, multiplayer, whereever.
- * 
- * 23    4/21/99 4:10p Samir
- * changed sound names for table file.
- * 
- * 22    4/20/99 1:58a Matt
- * Changed version number text from old UI font to briefing font.
- * 
- * 21    4/18/99 8:35p Samir
- * replaced placeholder sounds with newer placeholder sounds.
- * 
- * 20    4/15/99 2:32p Kevin
- * Added some code for the Demo
- * 
- * 19    4/14/99 11:48a Matt
- * Moved the main menu movie to the movies directory
- * 
- * 18    4/02/99 3:03p Samir
- * opengl doesn't use main menu movie.
- * 
- * 17    3/31/99 11:53a Samir
- * slow opengl code for movies.
- * 
- * 16    3/23/99 9:06p Samir
- * properly sync wait dialog and sound system calls.
- * 
- * 15    3/22/99 10:14a Kevin
- * Added a build number to the release builds of main. Also put in code to
- * increment the build number each time a release build is done.
- * 
- * 14    3/18/99 10:13a Samir
- * new main menu interface.
- * 
- * 13    3/02/99 11:52a Kevin
- * Fixes for OEM Beta 4.1
- * 
- * 12    2/26/99 5:34p Samir
- * oem screen.
- * 
- * 11    2/20/99 12:33p Kevin
- * Added some OEM stuff
- * 
- * 10    10/23/98 7:05p Samir
- * fixed keyboard select prob.
- * 
- * 9     10/22/98 5:23p Matt
- * Moved the version number and made it not print the build number if the
- * build number was zero.
- * 
- * 8     10/20/98 3:52p Samir
- * tweaked main menu look.
- * 
- * 7     10/13/98 6:06p Samir
- * fixed booboo.
- * 
- * 6     10/13/98 5:51p Samir
- * moved version number
- * 
- * 5     10/13/98 3:16p Samir
- * enhanced gadgets some more with new effects (added Credits option).
- * 
- * 4     10/13/98 12:03p Kevin
- * Changed use of preprocessors for debug, etc.
- * 
- * 3     10/12/98 4:40p Samir
- * fancy effect for hotspots in main menu.
- * 
- * 2     10/12/98 1:46p Samir
- * initial new main menu
- * 
- */
 
+#include <string>
 
 #include "mmItem.h"
 #include "game.h"
@@ -470,36 +379,28 @@ void mmInterface::OnDestroy()
 void mmInterface::CopyrightText()
 {
 	int i;
-	char type[16];
-	type[0] = 0;
-#ifdef DEMO
-	strcpy(type, "Demo ");
-#endif
+	std::string typestr = ENGINE_NAME;
 
-	if (PROGRAM(beta)) 
-		strcpy(type, "Beta ");
+	if (PROGRAM(beta))
+		typestr += " Beta";
 
-#ifdef OEM
-	strcat(type, "OEM ");
-#endif
+	if (Program_version.version_type == DEVELOPMENT_VERSION)
+		typestr += " Dev";
+	else if (Program_version.version_type == RELEASE_VERSION)
+		typestr += " Ver";
 
-	if (Program_version.version_type == DEVELOPMENT_VERSION) {
-		strcat(type, "Dev");
-	}
-	else if (Program_version.version_type == RELEASE_VERSION) {
-		strcat(type, "Ver");
-	}
 #ifndef RELEASE
-	int x = Max_window_w - 128,y = Max_window_h-29;		//was -128 and -16
+	int x = Max_window_w - 164,y = Max_window_h-29;		//was -128 and -16
 #else
 	int x = Max_window_w - 164,y = Max_window_h-29;		//was -128 and -16
 #endif
+
 // attempt to print text nicely.
 	grtext_SetFont(BRIEFING_FONT);
 	grtext_SetAlpha(192);
 	grtext_SetColor(GR_RGB(255,32,32));
 #if ( defined(MACINTOSH) || (!defined(RELEASE)) || defined(DEMO) )
-	grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d" : "%s v%d.%d", type, Program_version.major, Program_version.minor, Program_version.build);
+	grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d" : "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor, Program_version.build);
 #else
 	grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d Build %d" : "%s v%d.%d", type, Program_version.major, Program_version.minor, Program_version.build,D3_RELEASE_BUILD_NO);
 #endif
@@ -509,7 +410,7 @@ void mmInterface::CopyrightText()
 
 	for (i = 0; i < 1; i++)
 	{
-		grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d" : "%s v%d.%d", type, Program_version.major, Program_version.minor, Program_version.build);
+		grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d" : "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor, Program_version.build);
 //		grtext_CenteredPrintf(0, Max_window_h-16, "(c) 1998 Outrage Entertainment, Inc.");
 	}
 

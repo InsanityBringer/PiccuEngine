@@ -15,114 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/descent.h $
- * $Revision: 33 $
- * $Date: 11/04/99 12:35a $
- * $Author: Chris $
- *
- * Descent 3 header file
- *
- * $Log: /DescentIII/main/descent.h $
- * 
- * 33    11/04/99 12:35a Chris
- * Added support for Merc
- * 
- * 32    10/21/99 3:27p Matt
- * Mac merge
- * 
- * 31    7/20/99 12:59p Jason
- * added auto katmai support
- * 
- * 30    5/12/99 2:24p Jeff
- * Descent3 now has a setable temp directory for all temp files
- * 
- * 29    4/14/99 3:56a Jeff
- * fixed case mismatch in #includes
- * 
- * 28    3/31/99 3:04p Jeff
- * added _real_ temporary credits system...
- * 
- * 27    3/19/99 4:30p Kevin
- * multi-cd support
- * 
- * 26    2/16/99 12:36a Kevin
- * Fixes for release builds of OEM V3 and KAtmai
- * 
- * 25    2/03/99 4:40p Kevin
- * Added new port number for OEM
- * 
- * 24    1/15/99 7:16p Kevin
- * Added GameGauge Configuration & code
- * 
- * 23    12/23/98 6:38p Kevin
- * All UDP data (except gamespy) now uses one (registered) port number
- * 
- * 22    10/18/98 8:55p Matt
- * Added a constant with the name of the program.
- * 
- * 21    10/16/98 1:54p Kevin
- * Changes for Demo Beta 4
- * 
- * 20    10/08/98 7:26p Samir
- * changed the prototype for the defer handler callback.
- * 
- * 19    10/08/98 12:00p Kevin
- * Demo system work
- * 
- * 18    9/22/98 3:54p Samir
- * no include slew in release version.
- * 
- * 17    9/15/98 4:31p Jason
- * added more functionality for the dedicated server
- * 
- * 16    8/20/98 10:51a Samir
- * added the RESTORE_GAME_MODE function mode,.
- * 
- * 15    8/15/98 5:16p Matt
- * Added new Base_directory variable.  Got rid of D3_LOCAL check and
- * 'local directory' registry variable.
- * 
- * 14    7/02/98 12:57p Jason
- * upped FOV
- * 
- * 13    4/22/98 3:24p Jason
- * made FOV be 65 degrees by default
- * 
- * 12    4/14/98 7:56p Matt
- * Moved MSN_NAMELEN from mission.h to descent,h, so multi.h didn't need
- * to include mission.h. 
- * 
- * 11    3/23/98 8:06p Samir
- * change return type of D3DeferHandler to match changes in library.
- * 
- * 10    3/19/98 11:27a Samir
- * Better error checking.
- * 
- * 9     3/10/98 5:16p Samir
- * Got debug callbacks working when you hit an Int3.
- * 
- * 8     2/25/98 2:05p Jason
- * did FOV and object visibility changes
- * 
- * 7     10/16/97 2:30p Samir
- * Added defer handler.
- * 
- * 6     9/17/97 10:56a Matt
- * Deleted Room_engine variable
- * 
- * 5     9/16/97 1:04p Samir
- * Added delay function.
- * 
- * 4     7/24/97 6:35p Matt
- * Created symbolic constant for default zoom, and used it every place
- * that specifies zoom
- * 
- * 3     7/24/97 2:53p Matt
- * Added SourceSafe header and missing include
- *
- * $NoKeywords: $
- */
 
 #ifndef _DESCENT_H
 #define _DESCENT_H
@@ -131,11 +23,9 @@
 #include "application.h"
 
 //The name of this product
-#ifdef DEMO
-#define PRODUCT_NAME "Descent 3 Demo"
-#else
 #define PRODUCT_NAME "Descent 3"
-#endif
+//[ISB] Branding for the engine
+#define ENGINE_NAME "Piccu Engine"
 
 //This is the port number assigned to "descent3" by the IANA (Internet Assigned Numbers Authority)
 //Don't arbitrarily change this number!
