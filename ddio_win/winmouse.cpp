@@ -31,19 +31,20 @@
 #include "psclass.h"
 #include "Macros.h"
 
-typedef struct t_mse_button_info 
+struct t_mse_button_info
 {
     bool is_down[N_MSEBTNS];
     ubyte down_count[N_MSEBTNS];
     ubyte up_count[N_MSEBTNS];
     float time_down[N_MSEBTNS]; // in seconds from main timer
     float time_up[N_MSEBTNS];
-} t_mse_button_info;
+};
 
-typedef struct t_mse_event {
+struct t_mse_event 
+{
     short btn;
     short state;
-} t_mse_event;
+};
 
 #define MOUSE_ZMIN 0 // mouse wheel z min and max (increments of 120 = 10 units)
 #define MOUSE_ZMAX 1200
@@ -66,7 +67,8 @@ bool handlerCalled = false;
 
 static bool DDIO_mouse_init = 0;
 
-static struct mses_state {
+static struct mses_state 
+{
     LPDIRECTINPUTDEVICE lpdimse;
     RECT brect;              // limit rectangle of absolute mouse coords
     short x, y, z;           // current x,y,z in absolute mouse coords

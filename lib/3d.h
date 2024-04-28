@@ -15,168 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/Lib/3d.h $
- * $Revision: 36 $
- * $Date: 10/21/99 9:27p $
- * $Author: Jeff $
- *
- * Header file for Descent 3 3d library
- *
- * $Log: /DescentIII/Main/Lib/3d.h $
- * 
- * 36    10/21/99 9:27p Jeff
- * B.A. Macintosh code merge
- * 
- * 35    5/13/99 10:57p Jason
- * added extra parameter to g3_DrawPoly
- * 
- * 34    4/22/99 5:14p Matt
- * Changed the and & or fields in the grCodes struct to cc_and & cc_or,
- * since the former names didn't work with some compilers.
- * 
- * 33    3/26/99 3:53p Jason
- * returned clip codes to their original order
- * 
- * 32    3/26/99 3:25p Jason
- * fixed remaining mirror problems
- * 
- * 31    2/19/99 4:26p Jason
- * more work on Katmai support
- * 
- * 30    2/18/99 5:45p Jason
- * added custom clip plane
- * 
- * 29    1/26/99 6:39p Jason
- * added wall effects code
- * 
- * 28    5/25/98 3:45p Jason
- * made g3_DrawPoly return 1 if it drew
- * 
- * 27    5/20/98 5:43p Jason
- * incremental checkin for bumpmapping
- * 
- * 26    5/19/98 12:27p Jason
- * cleaned up some 3d stuff
- * 
- * 25    5/14/98 12:56p Jason
- * changes to help lower memory usage
- * 
- * 24    4/01/98 12:02p Jason
- * incremental checkin for rendering changes
- * 
- * 23    2/05/98 11:14a Jason
- * added g3_DrawPlanarRotatedBitmap function
- * 
- * 22    1/28/98 5:36p Jason
- * added streamer weapons
- * 
- * 21    1/07/98 3:57p Jason
- * fixed spelling of triangulation (doh!)
- * 
- * 20    1/07/98 3:55p Jason
- * made Triangulate test a user callable function
- * 
- * 
- * 19    12/29/97 5:49p Samir
- * 3d.h doesn't include gr.h anymore.
- * 
- * 18    12/23/97 10:59a Samir
- * Temporarily put gr.h back in.
- * 
- * 17    12/22/97 7:21p Samir
- * replaced ddvid.h with grdefs.h
- * 
- * 16    12/22/97 6:57p Samir
- * Removed instances of gr.h
- * 
- * 15    12/19/97 12:20p Jason
- * changes for better 2d/3d system integration
- * 
- * 14    11/10/97 12:10p Jason
- * implemented g3_GetMatrixScale
- * 
- * 13    10/22/97 4:18p Jason
- * added g3_DrawRotatedBitmap
- * 
- * 12    10/17/97 5:09p Jason
- * added more fireball stuff
- * 
- * 11    10/15/97 2:27p Jason
- * changes for prelim fireball stuff
- * 
- * 10    10/13/97 3:56p Jason
- * made a better 3d bitmap system
- * 
- * 9     9/16/97 4:23p Matt
- * Made ClipPolygon() a public function (g3_ClipPolygon()), and added
- * g3_FreeTempPoints().
- * 
- * 8     9/10/97 3:50p Jason
- * added code for instancing the unscaled view matrix
- * 
- * 7     9/04/97 11:59a Matt
- * Added new function  g3_ResetFarClipZ()
- * 
- * 6     9/03/97 2:20p Samir
- * Added function to get viewer matrix.
- * 
- * 5     9/02/97 11:07a Jason
- * added alpha component to uvl struct
- * 
- * 4     8/20/97 4:17p Matt
- * Added g3_GetViewPosition()
- * 
- * 3     8/04/97 6:40p Jason
- * added 2nd level UV floats for lightmaps
- * 
- * 2     7/16/97 4:12p Matt
- * Changed and cleaned up a bunch of stuff:
- * 
- * 1. Modified clipper to not change the order of the vertices
- * 2. Cleaned up drawer/clipper integration
- * 3. Renamed internal functions to conform to nameing standards
- * 4. Changed tmap drawer to not take list of uvls.  UVL values must now
- * be added to the points by the caller
- * 5. Renamed g3_DrawTmap() to g3_DrawPoly(), and killed the old
- * g3_DrawPoly()
- * 6. Made line always do 3d clip if they go offscreen
- * 
- * 14    6/25/97 5:45p Matt
- * Made 3D draw functions void, to get rid of warnings about bool return
- * values that were never used anyway.
- * 
- * 13    5/08/97 8:11p Matt
- * Added code to create subwindows that show a subsection of the 3d view
- * 
- * 12    4/10/97 2:24p Jason
- * added the existance of a far clip plane. 
- * 
- * 11    4/01/97 5:17p Matt
- * Got g3_DrawSphere() working
- * 
- * 10    2/28/97 10:43a Matt
- * Added g3_DrawBox() to draw a wireframe box (used to show the current
- * object in the editor).
- * 
- * 9     2/27/97 5:01p Jason
- * added 3d model functionality and created model library
- * 
- * 8     2/26/97 6:00p Matt
- * Renamed 3d lib structs for D3 naming convention
- * 
- * 7     2/21/97 7:29p Matt
- * Added rgb fields to g3s_uvl struct
- * 
- * 6     2/19/97 3:32p Matt
- * gr_DrawPoly() now takes the color
- * 
- * 5     2/07/97 5:58p Matt
- * Took out now-obsolete jason_point struct
- * Renamed vector.h to vecmat.h
- *
- * $NoKeywords: $
- */
 
 #ifndef _3D_H
 #define _3D_H
@@ -192,7 +30,7 @@ extern vector Matrix_scale;		//how the matrix is currently scaled
 
 //Structure for storing u,v,light values.  This structure doesn't have a
 //prefix because it was defined somewhere else before it was moved here
-typedef struct g3UVL
+struct g3UVL
 {
 	//texture coordinates
 	float u,v;
@@ -204,13 +42,13 @@ typedef struct g3UVL
 		float r;
 	};
 	float g,b,a;	//rgba lighting
-} g3UVL;
+};
 
 // Structure to store clipping codes in a word
-typedef struct g3Codes
+struct g3Codes
 {
 	ubyte cc_or,cc_and;
-} g3Codes;
+};
 
 //flags for point structure
 #define PF_PROJECTED 	1	//has been projected, so sx,sy valid
@@ -233,7 +71,7 @@ typedef struct g3Codes
 
 //Used to store rotated points for mines.  Has frame count to indicate
 //if rotated, and flag to indicate if projected.
-typedef struct g3Point
+struct g3Point
 {
 	float		p3_sx,p3_sy;		//screen x&y
 	ubyte		p3_codes;			//clipping codes
@@ -242,7 +80,7 @@ typedef struct g3Point
 	vector		p3_vec;				//x,y,z of rotated point
 	vector		p3_vecPreRot;		//original XYZ of the point
 	g3UVL		p3_uvl;				//uv & lighting values
-} g3Point;
+};
 
 //macros to reference x,y,z elements of a 3d point
 #define p3_x p3_vec.x

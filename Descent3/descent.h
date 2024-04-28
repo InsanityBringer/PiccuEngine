@@ -36,17 +36,16 @@
 #define D3_DEFAULT_PORT	2092
 #endif
 
-class grScreen;
 class oeApplication;
 class oeAppDatabase;
-class grViewport;
 
 //	---------------------------------------------------------------------------
 //	Constants and Types
 					   
-typedef enum function_mode { 
+enum function_mode 
+{ 
 	INIT_MODE, GAME_MODE, RESTORE_GAME_MODE, EDITOR_MODE, EDITOR_GAME_MODE, MENU_MODE,QUIT_MODE,LOADDEMO_MODE, GAMEGAUGE_MODE, CREDITS_MODE
-} function_mode;
+};
 
 extern bool Descent_overrided_intro;
 
@@ -64,11 +63,9 @@ extern bool Descent_overrided_intro;
 // The "root" directory of the D3 file tree
 extern char Base_directory[];
 
-
 //	---------------------------------------------------------------------------
 //	Globals
 
-extern grScreen *Game_screen;			// The Descent 3 screen.
 extern oeApplication *Descent;		// The Descent object
 extern oeAppDatabase *Database;		// The Database
 extern char Descent3_temp_directory[_MAX_PATH];	//temp directory to put temp files
@@ -93,10 +90,6 @@ void D3DeferHandler(bool is_active);
 void SetFunctionMode(function_mode mode);
 function_mode GetFunctionMode();
 
-//	these functions create viewports from the game screen in a 'nice' C way
-void CreateGameViewport(grViewport **vp);
-void DestroyGameViewport(grViewport *vp);
-
 //This function figures out whether or not a file needs to be loaded off of
 //CD or off of the local drive. If it needs to come from a CD, it figures out
 //which CD and prompts the user to enter that CD. If they hit cancel, it 
@@ -104,15 +97,8 @@ void DestroyGameViewport(grViewport *vp);
 char * GetMultiCDPath(char *file);
 char * GetCDVolume(int cd_num);
 
-inline void CREATE_VIEWPORT(grViewport **vp) {
-	CreateGameViewport(vp);
-}
-
-inline void DESTROY_VIEWPORT(grViewport *vp) {
-	DestroyGameViewport(vp);
-}
-
-inline void DELAY(float secs) {
+inline void DELAY(float secs) 
+{
 	Descent->delay(secs);
 }
 

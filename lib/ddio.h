@@ -75,13 +75,6 @@ float timer_GetTime();
 //returns time in milliseconds
 longlong timer_GetMSTime();
 
-//	hook in timer function at certain period.  returns a handle to this function
-//@@int timer_HookFunction(void (*fncptr)(), int period);
-
-//	clears function from hook list specified by a handle returned from HookFunction
-//@@void timer_ReleaseFunction(int func);
-
-
 // ----------------------------------------------------------------------------
 //	Device Dependent Mouse Interface
 // ----------------------------------------------------------------------------
@@ -301,8 +294,5 @@ int ddio_CreateLockFile(const char *dir);
 //		-2		A lock file exists in the directory, but wasn't deleted...illegal format
 //		-3		Unable to delete file
 int ddio_DeleteLockFile(const char *dir);
-
-
-
 
 #endif

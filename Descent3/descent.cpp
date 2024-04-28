@@ -46,9 +46,7 @@
 #include "multi_dll_mgr.h"
 #include "localization.h"
 #include "mem.h"
-#if defined(MACINTOSH) && defined (GAMERANGER)
-#include "GameRanger.h"
-#endif
+
 //	---------------------------------------------------------------------------
 //	Variables
 //	---------------------------------------------------------------------------
@@ -59,7 +57,6 @@ static function_mode Function_mode = INIT_MODE;		// Game function mode
 #endif
 static function_mode Last_function_mode = INIT_MODE;
 
-grScreen *Game_screen = NULL;			// The one and only video screen
 oeApplication *Descent = NULL;		// The Main application
 oeAppDatabase *Database = NULL;		// Application database.
 
@@ -207,12 +204,6 @@ void Descent3()
 			SetFunctionMode(GAMEGAUGE_MODE);
 		}
 
-#if defined(MACINTOSH) && defined (GAMERANGER)
-		if(GRCheckFileForCmd()) {
-			SetFunctionMode (GAME_MODE);
-			GRGetWaitingCmd();
-		}
-#endif
 		MainLoop();
 
 		//delete the lock file in the temp directory (as long as it belongs to us)
@@ -264,7 +255,6 @@ void MainLoop()
 				SetGameState(GAMESTATE_LOADGAME);
 				PlayGame();
 				break;
-
 			case GAME_MODE:
 				SetGameState(GAMESTATE_NEW);
 				PlayGame();							// Does what is says.
@@ -277,7 +267,6 @@ void MainLoop()
 				Credits_Display();
 				Function_mode = MENU_MODE;
 				break;
-//#ifdef GAMEGAUGE
 			case GAMEGAUGE_MODE:
 				{
 					int c;
@@ -288,7 +277,6 @@ void MainLoop()
 					//exit_game = 1;
 				}
 				break;
-//#endif
 		#ifdef EDITOR
 			case EDITOR_GAME_MODE:				// run level and then instead of menus, go to editor.
 				QuickPlayGame();
@@ -438,14 +426,17 @@ extern bool Skip_render_game_frame;
 void GameFrame(void);
 void D3DeferHandler(bool is_active)
 {
-	if (is_active) {
+	if (is_active) 
+	{
 	// perform any needed io system processing in the background
 		ddio_Frame();
 	}
-	else {
+	else 
+	{
 	//JEFF - If the game is in idle loop and we are in multiplayer game
 	//then process the game frame so we stay alive in the game.  
-		if(Game_mode&GM_MULTI) {
+		if(Game_mode&GM_MULTI) 
+		{
 			Skip_render_game_frame = true;
 			GameFrame();
 			Skip_render_game_frame = false;
@@ -468,11 +459,11 @@ extern int rend_initted;			// from game.cpp
 void D3DebugStopHandler()
 {
 //	close off all systems for debugging.
-	if (rend_initted) {
+	if (rend_initted) 
+	{
 		rend_Close();
 	}
 }
-
 
 void D3DebugResumeHandler()
 {
@@ -552,19 +543,17 @@ char * GetCDVolume(int cd_num)
 
 }
 
-typedef struct file_vols
+struct file_vols
 {
 	char file[_MAX_PATH];
 	char localpath[_MAX_PATH*2];
 	int volume;
 	bool localized;
-}file_vols;
+};
 
 extern int CD_inserted;
 
 //Localization_GetLanguage();
-
-
 char Oem_language_dirs[5][10] = 
 {
 	"English",
@@ -573,7 +562,6 @@ char Oem_language_dirs[5][10] =
 	"Italian",
 	"French"
 };
-
 
 file_vols file_volumes[] = 
 {

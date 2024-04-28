@@ -15,280 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/renderer.h $
- * $Revision: 80 $
- * $Date: 4/19/00 5:22p $
- * $Author: Matt $
- *
- * Header for renderer library
- *
- * $Log: /DescentIII/Main/lib/renderer.h $
- * 
- * 80    4/19/00 5:22p Matt
- * From Duane for 1.4
- * Added extern
- * 
- * 79    10/21/99 1:43p Kevin
- * Mac Merge
- * 
- * 78    9/18/99 9:22p Jeff
- * Get/Set Alpha factor functions
- * 
- * 77    8/10/99 10:51p Duane
- * Added UseMipmap global
- * 
- * 76    7/22/99 8:37p Jeff
- * added texture upload to renderstats
- * 
- * 75    7/15/99 6:38p Jeff
- * created function to get rendering stats
- * 
- * 74    4/01/99 10:56a Jason
- * added better support for movie rendering
- * 
- * 73    3/31/99 3:48p Jason
- * changes for cinematics
- * 
- * 72    3/29/99 7:29p Jason
- * made renderer handle default resolution more gracefully
- * 
- * 71    3/24/99 11:55a Jason
- * added S3 texture compression
- * 
- * 70    3/22/99 5:51p Jason
- * enhancements to mirrors
- * 
- * 69    1/29/99 6:29p Jason
- * first pass at adding bumpmaps
- * 
- * 68    1/22/99 1:09a Jason
- * added vid mem checking
- * 
- * 67    1/18/99 10:45a Samir
- * added function to get DirectDraw object from Win32 apps.
- * 
- * 66    12/23/98 5:35p Jason
- * added saturated lightmap blending
- * 
- * 65    12/18/98 5:25p Jason
- * added specularity to mine walls
- * 
- * 64    12/09/98 5:28p Jason
- * added more options
- * 
- * 63    12/08/98 2:29p Jason
- * fog rendering changes for patch
- * 
- * 62    10/21/98 9:28p Jason
- * Made no lightmaps work globally
- * 
- * 61    10/21/98 12:05p Jason
- * changes for data paging
- * 
- * 60    10/17/98 3:10p Jason
- * added Set/Get error message stuff
- * 
- * 59    10/08/98 3:36p Jason
- * fixes for the demo
- * 
- * 58    9/25/98 1:17a Jason
- * added rend_SetCoplanarPolygonOffset functions
- * 
- * 57    9/18/98 1:28p Jason
- * cleaned up renderer initting
- * 
- * 56    9/11/98 4:03p Jason
- * added better multitexture support
- * 
- * 55    6/11/98 3:38p Jason
- * added a general StateLimit render boolean for APIs that are state
- * limited (like OpenGL or D3D)
- * 
- * 54    6/09/98 4:47p Jason
- * added windowed openGL mode
- * 
- * 53    5/26/98 3:59p Jason
- * added LIGHTMAP_BLEND_CONSTANT alpha type
- * 
- * 52    5/20/98 5:44p Jason
- * incremental checkin for bumpmapping
- * 
- * 51    5/19/98 12:27p Jason
- * cleaned up some 3d stuff
- * 
- * 50    5/06/98 1:39p Jason
- * added rend_SetResolution
- * 
- * 49    5/06/98 10:51a Jeff
- * put rend_DrawScaledChunkBitmap back in the header
- * 
- * 48    5/05/98 3:02p Jason
- * attempting to add different screen resolutions
- * 
- * 46    4/23/98 6:38p Jason
- * made bitmaps use 1555 format
- * 
- * 45    4/17/98 4:27p Jason
- * added alpha per vertex stuff to drawscaledbitmap
- * 
- * 44    4/08/98 12:27p Jason
- * added rend_drawsimplebitmap
- * 
- * 43    4/01/98 12:02p Jason
- * incremental checkin for rendering changes
- * 
- * 42    3/13/98 1:22p Jason
- * Moved UseHardware flag to the renderer lib where it belongs
- * 
- * 41    3/03/98 6:50p Jason
- * added gamma stuff in preferred state
- * 
- * 40    3/02/98 5:53p Jason
- * added gamma functionality
- * 
- * 39    2/14/98 10:48p Jason
- * got preferred rendering working
- * 
- * 38    2/12/98 1:32p Jason
- * got mipmapping working
- * 
- * 37    2/05/98 6:53p Jason
- * added new weapon slot
- * 
- * 36    2/03/98 3:16p Jason
- * added the ability to specify saturation textures for models
- * 
- * 35    1/28/98 5:37p Jason
- * added streamer weapons
- * 
- * 34    1/19/98 2:32p Jason
- * added the ability to set clear flags on rend_StartFrame
- * 
- * 33    1/16/98 11:54a Samir
- * Added support for rendering chunked bitmaps.
- * 
- * 32    1/15/98 6:32p Jason
- * added v wrapping for sky textures
- * 
- * 31    12/22/97 7:23p Samir
- * took out transparent colors again.
- * 
- * 30    12/22/97 7:15p Samir
- * removed references of ddgr and gr.h.  replace with grdefs.h
- * 
- * 29    12/19/97 5:22p Samir
- * Added more drawing primatives for software.
- * 
- * 28    12/19/97 2:18p Jason
- * fixed some more 2d/3d integration 
- * 
- * 27    12/19/97 12:20p Jason
- * changes for better 2d/3d system integration
- * 
- * 26    11/25/97 12:33p Jason
- * added antialiasing mode
- * 
- * 25    11/19/97 5:25p Jason
- * added new alpha mode - AT_FLAT_BLEND
- * 
- * 24    11/13/97 4:06p Jason
- * added rend_DrawLFBBitmap
- * 
- * 23    11/13/97 3:52p Jason
- * added lfb stuff for renderer
- * 
- * 22    10/29/97 12:36p Jason
- * remove byte/bool conflicts in the renderer lib
- * 
- * 21    10/24/97 4:39p Jason
- * added support to not write into the zbuffer
- * 
- * 20    10/24/97 2:29p Jason
- * added alpha saturation type
- * 
- * 19    10/22/97 4:19p Jason
- * added smoke trail effects
- * 
- * 18    10/15/97 5:20p Jason
- * did a HUGE overhaul of the bitmap system
- * 
- * 17    10/13/97 3:56p Jason
- * made a better 3d bitmap system
- * 
- * 16    9/16/97 4:09p Jason
- * implemented software zbuffer
- * 
- * 15    9/09/97 12:09p Jason
- * took transparency out of texture_types
- * 
- * 14    9/09/97 11:44a Jason
- * changed the way alpha works with the renderer
- * 
- * 13    9/04/97 5:52p Matt
- * Took out include of 3d.h
- * 
- * 12    8/29/97 11:59a Jason
- * implemented screenshot functions
- * 
- * 11    8/24/97 2:45p Jason
- * implemented texture wrapping
- * 
- * 10    8/07/97 11:46a Jason
- * implemented tmap overlay system
- * 
- * 9     8/06/97 11:43a Jason
- * made lightmaps work correctly in the terrain
- * 
- * 8     8/04/97 6:46p Jason
- * added code for a lightmap system
- * 
- * 7     8/04/97 3:28p Jason
- * added alpha blending per texture
- * 
- * 6     7/20/97 7:36p Jason
- * added support for colored fog
- * 
- * 2     6/24/97 7:45p Matt
- * Removed include of manage.h
- * 
- * 1     6/23/97 9:25p Samir
- * added because source safe sucks
- * 
- * 11    6/16/97 5:02p Jason
- * added flip function
- * 
- * 10    6/16/97 3:44p Jason
- * added line drawing
- * 
- * 9     6/16/97 2:54p Jason
- * added rend_DrawFontCharacter function for drawing fonts
- * 
- * 8     6/16/97 2:34p Jason
- * added 3dfx support
- * 
- * 7     6/06/97 11:35a Jason
- * added missing functions for pixel primitives
- * 
- * 6     6/03/97 12:19p Jason
- * more functions added for opengl
- * 
- * 5     5/27/97 4:39p Jason
- * changes to support OpenGL
- * 
- * 4     5/22/97 11:59a Jason
- * add a ScaleBitmap function to the abstracted render library
- * 
- * 3     5/21/97 12:30p Jason
- * calls rend_start and rend_end when frames begin/end
- * 
- * 2     5/19/97 5:10p Jason
- * changes for our new abstracted renderer code
- * 
- * 1     5/19/97 3:23p Jason
- * 
- * $NoKeywords: $
- */
 
 #ifndef RENDERER_H
 #define RENDERER_H
@@ -297,8 +23,8 @@
 #include "grdefs.h"
 
 //Declare this here so we don't need to include 3d.h
-typedef struct g3Point g3Point;
-typedef struct chunked_bitmap chunked_bitmap;
+struct g3Point;
+struct chunked_bitmap;
 
 //	for rend_Init prototype
 class oeApplication;
@@ -314,7 +40,7 @@ class oeApplication;
 extern int Triangles_drawn;
 
 // Is this hardware or software rendered?
-typedef enum
+enum renderer_type
 {
 	RENDERER_SOFTWARE_8BIT,
 	RENDERER_SOFTWARE_16BIT,
@@ -322,7 +48,7 @@ typedef enum
 	RENDERER_DIRECT3D,
 	RENDERER_GLIDE,
 	RENDERER_NONE,
-} renderer_type;
+};
 
 extern renderer_type Renderer_type;
 
@@ -365,33 +91,33 @@ void rend_SetRendererType (renderer_type state);
 #define MAP_TYPE_UNKNOWN		3
 
 // lighting state
-typedef enum
+enum light_state
 {
 	LS_NONE,				// no lighting, fully lit rendering
 	LS_GOURAUD,			// Gouraud shading
 	LS_PHONG,			// Phong shading
 	LS_FLAT_GOURAUD	 // Take color from flat color
-} light_state;
+};
 
 void rend_SetLighting(light_state);
 
-typedef enum
+enum color_model
 {
 	CM_MONO,		// monochromatic (intensity) model - default
 	CM_RGB,			// RGB model
-} color_model;
+};
 
 // color model
 void rend_SetColorModel (color_model);
 
-typedef enum
+enum texture_type
 {
 	TT_FLAT,					// solid color
 	TT_LINEAR,					// textured linearly
 	TT_PERSPECTIVE,				// texture perspectively
 	TT_LINEAR_SPECIAL,			// A textured polygon drawn as a flat color
 	TT_PERSPECTIVE_SPECIAL,			// A textured polygon drawn as a flat color
-} texture_type;
+};
 
 // Alpha type flags - used to decide what type of alpha blending to use
 #define ATF_CONSTANT		1		// Take constant alpha into account
@@ -422,14 +148,14 @@ typedef enum
 #define	LFB_LOCK_READ		0
 #define	LFB_LOCK_WRITE		1
 
-typedef enum
+enum wrap_type
 {
 	WT_WRAP,			// Texture repeats
 	WT_CLAMP,		// Texture clamps
 	WT_WRAP_V		// Texture wraps in v
-} wrap_type;
+};
 
-typedef struct
+struct rendering_state
 {
 	sbyte initted;			
 
@@ -459,33 +185,33 @@ typedef struct
 	int screen_width,screen_height;
 	int view_width, view_height;
 
-}	rendering_state;
+};
 
-typedef struct
+struct renderer_preferred_state
 {
 	ubyte mipping;
 	ubyte filtering;
 	float gamma;
 	ubyte bit_depth;
-	int width,height;
+	int width, height;
 	ubyte vsync_on;
 	bool fullscreen; //Informs the window system that fullscreen should be used. 
 	int window_width, window_height; //Size of the game window, may != width/height. 
-} renderer_preferred_state;
+};
 
-typedef struct 
+struct renderer_lfb
 {
 	int type;
-	ushort *data;
+	ushort* data;
 	int bytes_per_row;
-} renderer_lfb;
+};
 
-typedef struct
+struct tRendererStats
 {
 	int poly_count;
 	int vert_count;
 	int texture_uploads;
-}tRendererStats;
+};
 
 // returns rendering statistics for the frame
 void rend_GetStatistics(tRendererStats *stats);
