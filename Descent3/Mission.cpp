@@ -1277,6 +1277,7 @@ bool GetMissionInfo(const char *msnfile, tMissionInfo *msn)
 				indesc = false;
 			if (!strcmpi(command, "NAME")) {
 				strncpy(msn->name, operand, MSN_NAMELEN-1);
+				msn->name[MSN_NAMELEN - 1] = '\0';
 			}
 			else if (!strcmpi(command, "MULTI")) {
 				if(strcmpi("no",operand)==0)	
@@ -1291,6 +1292,7 @@ bool GetMissionInfo(const char *msnfile, tMissionInfo *msn)
 			}
 			else if (!strcmpi(command, "AUTHOR")) {
 				strncpy(msn->author, operand, MSN_NAMELEN-1);
+				msn->author[MSN_NAMELEN - 1] = '\0';
 			}
 			else if (!strcmpi(command, "DESCRIPTION") || indesc) {
 			//	multi-line descriptions require the strcat.  the initial
@@ -1311,6 +1313,7 @@ bool GetMissionInfo(const char *msnfile, tMissionInfo *msn)
 			else if (!strcmpi(command, "KEYWORDS")) {
 				//Read in all the keywords
 				strncpy(msn->keywords,operand,MAX_KEYWORDLEN);
+				msn->keywords[MAX_KEYWORDLEN - 1] = '\0';
 			}
 		}
 	}
