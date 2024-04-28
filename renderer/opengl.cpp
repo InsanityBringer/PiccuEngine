@@ -55,6 +55,11 @@
 
 #include "glad/gl.h"
 
+#ifdef WIN32
+typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int interval);
+PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
+#endif
+
 #undef min
 #undef max
 
@@ -582,6 +587,8 @@ int opengl_Setup(HDC glhdc)
 			return 0;
 		}
 	}
+
+	dwglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)opengl_GLADLoad("wglSwapIntervalEXT");
 
 	Already_loaded=1;
 
@@ -1163,6 +1170,16 @@ int opengl_Init (oeApplication *app,renderer_preferred_state *pref_state)
 	OpenGL_state.initted = 1;
 
 	mprintf ((0,"OpenGL initialization at %d x %d was successful.\n",OpenGL_state.screen_width, OpenGL_state.screen_height));
+
+#ifdef WIN32
+	if (dwglSwapIntervalEXT)
+	{
+		if (pref_state->vsync_on)
+			dwglSwapIntervalEXT(1);
+		else
+			dwglSwapIntervalEXT(0);
+	}
+#endif
 
 	return retval;
 }
@@ -1942,6 +1959,7 @@ void opengl_DrawFlatPolygon3D(g3Point **p,int nv)
 // Sets the gamma correction value
 void opengl_SetGammaValue( float val )
 {
+#if 0
 	OpenGL_preferred_state.gamma = val;
 	mprintf ((0,"Setting gamma to %f\n",val));
 
@@ -1964,6 +1982,7 @@ void opengl_SetGammaValue( float val )
 	}
 
 	SetDeviceGammaRamp(hOpenGLDC,(LPVOID)rampvals);
+#endif
 #endif
 }
 
@@ -3565,6 +3584,16 @@ int rend_SetPreferredState(renderer_preferred_state *pref_state)
 		{
 			opengl_SetGammaValue( pref_state->gamma );
 		}
+
+#ifdef WIN32
+		if (dwglSwapIntervalEXT)
+		{
+			if (pref_state->vsync_on)
+				dwglSwapIntervalEXT(1);
+			else
+				dwglSwapIntervalEXT(0);
+		}		
+#endif
 		//}
 	}
 	else

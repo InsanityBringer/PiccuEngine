@@ -103,7 +103,9 @@ float Render_FOV_desired = 72;
 tDetailSettings Detail_settings;
 int Default_detail_level = DETAIL_LEVEL_MED;
 
-tGameToggles Game_toggles = {			// toggles specified in general settings.
+// toggles specified in general settings.
+tGameToggles Game_toggles = 
+{
 	true,
 	false,
 	true
