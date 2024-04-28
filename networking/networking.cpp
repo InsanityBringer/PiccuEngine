@@ -505,7 +505,7 @@ SOCKET Reliable_IPX_socket = INVALID_SOCKET;
 float first_sent_iamhere = 0;
 float last_sent_iamhere = 0;
 
-unsigned int serverconn = 0xFFFFFFFF;
+unsigned int serverconn = UINT_MAX;
 
 #ifdef WIN32
 #pragma pack(pop,r_udp)
@@ -1649,7 +1649,7 @@ void nw_WorkReliable(ubyte * data,int len,network_address *naddr)
 	
 	reliable_socket *rsocket = NULL;
 	//Check to see if we need to send a packet out.
-	if((reliable_sockets[serverconn].status==RNF_LIMBO) && ((serverconn!=-1)&&(timer_GetTime() - last_sent_iamhere)>NETRETRYTIME) )
+	if((reliable_sockets[serverconn].status==RNF_LIMBO) && ((serverconn!=UINT_MAX)&&(timer_GetTime() - last_sent_iamhere)>NETRETRYTIME) )
 	{
 		reliable_header conn_header;
 		//Now send I_AM_HERE packet
@@ -1789,7 +1789,7 @@ void nw_WorkReliable(ubyte * data,int len,network_address *naddr)
 				if(rsocket->status==RNF_LIMBO)
 				{
 					//this is our connection to the server
-					if((serverconn!=-1))
+					if((serverconn!=UINT_MAX))
 					{
 						if(rcv_buff.type == RNT_ACK)
 						{
@@ -1811,7 +1811,7 @@ void nw_WorkReliable(ubyte * data,int len,network_address *naddr)
 						continue;
 					}
 				}
-				if((rcv_buff.type==RNT_DATA)&&(serverconn!=-1))
+				if((rcv_buff.type==RNT_DATA)&&(serverconn!= UINT_MAX))
 				{
 					rsocket->status = RNF_CONNECTED;
 				}
@@ -2192,7 +2192,7 @@ void nw_CloseSocket( SOCKET *sockp )
 	diss_conn_header.seq = INTEL_SHORT((short) (CONNECTSEQ));
 	diss_conn_header.data_len = 0;
 	if(*sockp==serverconn)
-		serverconn = -1;
+		serverconn = UINT_MAX;
 
 	network_address send_address;
 	memset(&send_address,0,sizeof(network_address));
@@ -3232,7 +3232,7 @@ void nw_ReliableResend(void)
 	{
 		rsocket=&reliable_sockets[j];
 
-		if(serverconn==-1)
+		if(serverconn== UINT_MAX)
 		{
 			if(rsocket->status==RNF_LIMBO)
 				if((timer_GetTime() - rsocket->last_packet_received)>NETTIMEOUT)
