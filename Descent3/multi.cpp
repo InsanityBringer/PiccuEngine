@@ -9041,6 +9041,7 @@ void MultiDoPong (ubyte *data)
 	ubyte slot = MultiGetByte (data,&count);
 	float pingtime = MultiGetFloat (data,&count); 
 	NetPlayers[slot].ping_time = timer_GetTime() - pingtime;
+	mprintf((0, "net ping: %d ms\n", NetPlayers[slot].ping_time));
 
 	//If we are the server and this is a client server game, send the lag info to other clients
 	if((Netgame.local_role==LR_SERVER)&&(!(Netgame.flags & NF_PEER_PEER)))
@@ -9059,6 +9060,7 @@ void MultiDoLagInfo(ubyte *data)
 	SKIP_HEADER (data,&count);
 	ubyte slot = MultiGetByte (data,&count);
 	NetPlayers[slot].ping_time = MultiGetFloat (data,&count); 
+	mprintf((0, "net ping: %d ms\n", NetPlayers[slot].ping_time));
 }
 
 // the server is telling us to play an audio taunt
