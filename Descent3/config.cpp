@@ -1,5 +1,5 @@
-/* 
-* Descent 3 
+/*
+* Descent 3
 * Copyright (C) 2024 Parallax Software
 *
 * This program is free software: you can redistribute it and/or modify
@@ -107,7 +107,7 @@ tGameToggles Game_toggles = {			// toggles specified in general settings.
 	true,
 	false,
 	true
-};										
+};
 
 #define IDV_VCONFIG			12	//video config
 #define IDV_GCONFIG			13	//general config
@@ -136,11 +136,7 @@ tGameToggles Game_toggles = {			// toggles specified in general settings.
 
 //these are the default settings for each detail level
 #define DL_LOW_TERRAIN_DISTANCE		(MINIMUM_RENDER_DIST*TERRAIN_SIZE)
-#ifndef MACINTOSH
 #define DL_LOW_PIXEL_ERROR			25.0
-#else
-#define DL_LOW_PIXEL_ERROR			MAXIMUM_TERRAIN_DETAIL
-#endif
 #define DL_LOW_SPECULAR_LIGHT		false
 #define DL_LOW_DYNAMIC_LIGHTING		false
 #define DL_LOW_FAST_HEADLIGHT		true
@@ -154,19 +150,11 @@ tGameToggles Game_toggles = {			// toggles specified in general settings.
 #define DL_LOW_SPEC_MAPPING_TYPE	1
 #define DL_LOW_OBJECT_COMPLEXITY	0
 
-#ifndef MACINTOSH
 #define DL_MED_TERRAIN_DISTANCE		(90*TERRAIN_SIZE)
-#else
-#define DL_MED_TERRAIN_DISTANCE		(((MAXIMUM_RENDER_DIST-MINIMUM_RENDER_DIST)*0.2+MINIMUM_RENDER_DIST)*TERRAIN_SIZE)
-#endif
 #define DL_MED_PIXEL_ERROR			18.0
 #define DL_MED_SPECULAR_LIGHT		false
 #define DL_MED_DYNAMIC_LIGHTING		false
-#ifndef MACINTOSH
 #define DL_MED_FAST_HEADLIGHT		true
-#else
-#define DL_MED_FAST_HEADLIGHT		false
-#endif
 #define DL_MED_MIRRORED_SURFACES	false
 #define DL_MED_FOG_ENABLED			true
 #define DL_MED_CORONAS_ENABLES		true
@@ -177,19 +165,11 @@ tGameToggles Game_toggles = {			// toggles specified in general settings.
 #define DL_MED_SPEC_MAPPING_TYPE	1
 #define DL_MED_OBJECT_COMPLEXITY	1
 
-#ifndef MACINTOSH
 #define DL_HIGH_TERRAIN_DISTANCE	(100*TERRAIN_SIZE)
-#else
-#define DL_HIGH_TERRAIN_DISTANCE	(((MAXIMUM_RENDER_DIST-MINIMUM_RENDER_DIST)*0.4+MINIMUM_RENDER_DIST)*TERRAIN_SIZE)
-#endif
 #define DL_HIGH_PIXEL_ERROR			12.0
 #define DL_HIGH_SPECULAR_LIGHT		false
 #define DL_HIGH_DYNAMIC_LIGHTING	true
-#ifndef MACINTOSH
 #define DL_HIGH_FAST_HEADLIGHT		true
-#else
-#define DL_HIGH_FAST_HEADLIGHT		false
-#endif
 #define DL_HIGH_MIRRORED_SURFACES	true
 #define DL_HIGH_FOG_ENABLED			true
 #define DL_HIGH_CORONAS_ENABLES		true
@@ -200,20 +180,11 @@ tGameToggles Game_toggles = {			// toggles specified in general settings.
 #define DL_HIGH_SPEC_MAPPING_TYPE	1
 #define DL_HIGH_OBJECT_COMPLEXITY	2
 
-#ifndef MACINTOSH
 #define DL_VHI_TERRAIN_DISTANCE		(120.0*TERRAIN_SIZE)
 #define DL_VHI_PIXEL_ERROR			10.0
-#else
-#define DL_VHI_TERRAIN_DISTANCE		(MAXIMUM_RENDER_DIST*TERRAIN_SIZE)
-#define DL_VHI_PIXEL_ERROR			MINIMUM_TERRAIN_DETAIL
-#endif
 #define DL_VHI_SPECULAR_LIGHT		true
 #define DL_VHI_DYNAMIC_LIGHTING		true
-#ifndef MACINTOSH
 #define DL_VHI_FAST_HEADLIGHT		true
-#else
-#define DL_VHI_FAST_HEADLIGHT		false
-#endif
 #define DL_VHI_MIRRORED_SURFACES	true
 #define DL_VHI_FOG_ENABLED			true
 #define DL_VHI_CORONAS_ENABLES		true
@@ -226,15 +197,11 @@ tGameToggles Game_toggles = {			// toggles specified in general settings.
 
 #define MINIMUM_TERRAIN_DETAIL		4
 #define MAXIMUM_TERRAIN_DETAIL		28
-#ifdef MACINTOSH
-#define MINIMUM_RENDER_DIST			40
-#define MAXIMUM_RENDER_DIST			200
-#else
 #define MINIMUM_RENDER_DIST			80
 #define MAXIMUM_RENDER_DIST			200
-#endif
 
-tDetailSettings DetailPresetLow = {
+tDetailSettings DetailPresetLow =
+{
 	DL_LOW_TERRAIN_DISTANCE,
 	DL_LOW_PIXEL_ERROR,
 	DL_LOW_SPECULAR_LIGHT,
@@ -248,8 +215,10 @@ tDetailSettings DetailPresetLow = {
 	DL_LOW_SCORCH_MARKS,
 	DL_LOW_WEAPON_CORONAS,
 	DL_LOW_SPEC_MAPPING_TYPE,
-	DL_LOW_OBJECT_COMPLEXITY};
-tDetailSettings DetailPresetMed = {
+	DL_LOW_OBJECT_COMPLEXITY
+};
+tDetailSettings DetailPresetMed =
+{
 	DL_MED_TERRAIN_DISTANCE,
 	DL_MED_PIXEL_ERROR,
 	DL_MED_SPECULAR_LIGHT,
@@ -263,8 +232,10 @@ tDetailSettings DetailPresetMed = {
 	DL_MED_SCORCH_MARKS,
 	DL_MED_WEAPON_CORONAS,
 	DL_MED_SPEC_MAPPING_TYPE,
-	DL_MED_OBJECT_COMPLEXITY};
-tDetailSettings DetailPresetHigh = {
+	DL_MED_OBJECT_COMPLEXITY
+};
+tDetailSettings DetailPresetHigh =
+{
 	DL_HIGH_TERRAIN_DISTANCE,
 	DL_HIGH_PIXEL_ERROR,
 	DL_HIGH_SPECULAR_LIGHT,
@@ -278,8 +249,10 @@ tDetailSettings DetailPresetHigh = {
 	DL_HIGH_SCORCH_MARKS,
 	DL_HIGH_WEAPON_CORONAS,
 	DL_HIGH_SPEC_MAPPING_TYPE,
-	DL_HIGH_OBJECT_COMPLEXITY};
-tDetailSettings DetailPresetVHi = {
+	DL_HIGH_OBJECT_COMPLEXITY
+};
+tDetailSettings DetailPresetVHi =
+{
 	DL_VHI_TERRAIN_DISTANCE,
 	DL_VHI_PIXEL_ERROR,
 	DL_VHI_SPECULAR_LIGHT,
@@ -293,22 +266,24 @@ tDetailSettings DetailPresetVHi = {
 	DL_VHI_SCORCH_MARKS,
 	DL_VHI_WEAPON_CORONAS,
 	DL_VHI_SPEC_MAPPING_TYPE,
-	DL_VHI_OBJECT_COMPLEXITY};
+	DL_VHI_OBJECT_COMPLEXITY
+};
 
 void ConfigSetDetailLevel(int level)
 {
-	switch(level){
+	switch (level)
+	{
 	case DETAIL_LEVEL_LOW:
-		memcpy(&Detail_settings,&DetailPresetLow,sizeof(tDetailSettings));
+		memcpy(&Detail_settings, &DetailPresetLow, sizeof(tDetailSettings));
 		break;
 	case DETAIL_LEVEL_MED:
-		memcpy(&Detail_settings,&DetailPresetMed,sizeof(tDetailSettings));		
+		memcpy(&Detail_settings, &DetailPresetMed, sizeof(tDetailSettings));
 		break;
 	case DETAIL_LEVEL_HIGH:
-		memcpy(&Detail_settings,&DetailPresetHigh,sizeof(tDetailSettings));
+		memcpy(&Detail_settings, &DetailPresetHigh, sizeof(tDetailSettings));
 		break;
 	case DETAIL_LEVEL_VERY_HIGH:
-		memcpy(&Detail_settings,&DetailPresetVHi,sizeof(tDetailSettings));
+		memcpy(&Detail_settings, &DetailPresetVHi, sizeof(tDetailSettings));
 		break;
 	};
 
@@ -333,125 +308,123 @@ void ConfigSetDetailLevel(int level)
 #define IDV_GAMMAAPPLY	5
 #define IDV_AUTOGAMMA	6
 
-#if !(defined( MACINTOSH ) && defined (USE_OPENGL))
-
-void gamma_callback(newuiTiledWindow *wnd, void *data)
+void gamma_callback(newuiTiledWindow* wnd, void* data)
 {
-	int bm_handle = *((int *)data);
+	int bm_handle = *((int*)data);
 
-	g3Point pnts[4],*pntlist[4];
+	g3Point pnts[4], * pntlist[4];
 	rend_SetColorModel(CM_RGB);
-	rend_SetAlphaType (AT_ALWAYS);
-	rend_SetTextureType (TT_LINEAR);
-	rend_SetLighting (LS_NONE);
-	rend_SetOverlayType (OT_NONE);
-	rend_SetWrapType (WT_WRAP);
-	rend_SetZBufferState (0);
-		
-	// First draw checkboard
-	int startx=GAMMA_SLICE_X;
+	rend_SetAlphaType(AT_ALWAYS);
+	rend_SetTextureType(TT_LINEAR);
+	rend_SetLighting(LS_NONE);
+	rend_SetOverlayType(OT_NONE);
+	rend_SetWrapType(WT_WRAP);
+	rend_SetZBufferState(0);
 
-	for (int i=0;i<4;i++)
+	// First draw checkboard
+	int startx = GAMMA_SLICE_X;
+
+	for (int i = 0; i < 4; i++)
 	{
-		pntlist[i]=&pnts[i];
-		pnts[i].p3_z=0;
-		pnts[i].p3_r=1;
-		pnts[i].p3_g=1;
-		pnts[i].p3_b=1;
+		pntlist[i] = &pnts[i];
+		pnts[i].p3_z = 0;
+		pnts[i].p3_r = 1;
+		pnts[i].p3_g = 1;
+		pnts[i].p3_b = 1;
 		pnts[i].p3_flags = PF_PROJECTED;
 	}
 
-	pnts[0].p3_sx=startx;
-	pnts[0].p3_sy=GAMMA_SLICE_Y;
-	pnts[0].p3_u=0;
-	pnts[0].p3_v=0;
+	pnts[0].p3_sx = startx;
+	pnts[0].p3_sy = GAMMA_SLICE_Y;
+	pnts[0].p3_u = 0;
+	pnts[0].p3_v = 0;
 
-	pnts[1].p3_sx=startx+GAMMA_SLICE_WIDTH;
-	pnts[1].p3_sy=GAMMA_SLICE_Y;
-	pnts[1].p3_u=2;
-	pnts[1].p3_v=0;
+	pnts[1].p3_sx = startx + GAMMA_SLICE_WIDTH;
+	pnts[1].p3_sy = GAMMA_SLICE_Y;
+	pnts[1].p3_u = 2;
+	pnts[1].p3_v = 0;
 
-	pnts[2].p3_sx=startx+GAMMA_SLICE_WIDTH;
-	pnts[2].p3_sy=GAMMA_SLICE_Y+GAMMA_SLICE_HEIGHT;
-	pnts[2].p3_u=2;
-	pnts[2].p3_v=1;
+	pnts[2].p3_sx = startx + GAMMA_SLICE_WIDTH;
+	pnts[2].p3_sy = GAMMA_SLICE_Y + GAMMA_SLICE_HEIGHT;
+	pnts[2].p3_u = 2;
+	pnts[2].p3_v = 1;
 
-	pnts[3].p3_sx=startx;
-	pnts[3].p3_sy=GAMMA_SLICE_Y+GAMMA_SLICE_HEIGHT;
-	pnts[3].p3_u=0;
-	pnts[3].p3_v=1;
+	pnts[3].p3_sx = startx;
+	pnts[3].p3_sy = GAMMA_SLICE_Y + GAMMA_SLICE_HEIGHT;
+	pnts[3].p3_u = 0;
+	pnts[3].p3_v = 1;
 
-	rend_DrawPolygon2D( bm_handle, pntlist, 4 );
+	rend_DrawPolygon2D(bm_handle, pntlist, 4);
 
 	// Now draw grey in the center
-	int int_val=8;
-	rend_SetFlatColor (GR_RGB(int_val,int_val,int_val));
-	rend_SetTextureType (TT_FLAT);
+	int int_val = 8;
+	rend_SetFlatColor(GR_RGB(int_val, int_val, int_val));
+	rend_SetTextureType(TT_FLAT);
 
-	pnts[0].p3_sx+=64;
-	pnts[0].p3_sy+=32;
+	pnts[0].p3_sx += 64;
+	pnts[0].p3_sy += 32;
 
-	pnts[1].p3_sx-=64;
-	pnts[1].p3_sy+=32;
+	pnts[1].p3_sx -= 64;
+	pnts[1].p3_sy += 32;
 
-	pnts[2].p3_sx-=64;
-	pnts[2].p3_sy-=32;
+	pnts[2].p3_sx -= 64;
+	pnts[2].p3_sy -= 32;
 
-	pnts[3].p3_sx+=64;
-	pnts[3].p3_sy-=32;
+	pnts[3].p3_sx += 64;
+	pnts[3].p3_sy -= 32;
 
-	rend_DrawPolygon2D( 0, pntlist, 4 );
+	rend_DrawPolygon2D(0, pntlist, 4);
 
-	rend_SetWrapType (WT_CLAMP);
-	rend_SetZBufferState (1);
+	rend_SetWrapType(WT_CLAMP);
+	rend_SetZBufferState(1);
 }
 
 
 void config_gamma()
 {
 	newuiTiledWindow gamma_wnd;
-	newuiSheet *sheet;
+	newuiSheet* sheet;
 	tSliderSettings slider_set;
-	short *gamma_slider;
+	short* gamma_slider;
 	short curpos;
-	int res, gamma_bitmap=-1;
+	int res, gamma_bitmap = -1;
 	float init_gamma;
 
-// Make gamma bitmap
-	gamma_bitmap=bm_AllocBitmap (128,128,0);
-	if (gamma_bitmap<=0) {
-		gamma_bitmap=0;
+	// Make gamma bitmap
+	gamma_bitmap = bm_AllocBitmap(128, 128, 0);
+	if (gamma_bitmap <= 0) {
+		gamma_bitmap = 0;
 	}
 	else {
-		ushort *dest_data=(ushort *)bm_data(gamma_bitmap,0);
-		int addval=0;
-		int i,t;
+		ushort* dest_data = (ushort*)bm_data(gamma_bitmap, 0);
+		int addval = 0;
+		int i, t;
 
 		// This loop makes the checkerboard
-		for (i=0;i<128;i++)
+		for (i = 0; i < 128; i++)
 		{
-			addval = (i&1) ? 1 : 0;
+			addval = (i & 1) ? 1 : 0;
 
-			for (t=0;t<128;t++)
+			for (t = 0; t < 128; t++)
 			{
-				if (((t+addval)%2)==0) {
-					dest_data[i*128+t]=OPAQUE_FLAG|(1<<10)|(1<<5)|(1);
+				if (((t + addval) % 2) == 0) {
+					dest_data[i * 128 + t] = OPAQUE_FLAG | (1 << 10) | (1 << 5) | (1);
 				}
 				else {
-					dest_data[i*128+t]=OPAQUE_FLAG;
+					dest_data[i * 128 + t] = OPAQUE_FLAG;
 				}
 			}
 		}
 	}
 
-// create ui.
+	// create ui.
 	gamma_wnd.Create(TXT_AUTO_GAMMA, 0, 0, GAMMA_MENU_W, GAMMA_MENU_H);
 	gamma_wnd.SetData(&gamma_bitmap);
 	gamma_wnd.SetOnDrawCB(gamma_callback);
 
 	sheet = gamma_wnd.GetSheet();
 
-// ok, cancel buttons.
+	// ok, cancel buttons.
 	sheet->NewGroup(NULL, 130, 224, NEWUI_ALIGN_HORIZ);
 	sheet->AddButton(TXT_APPLY, IDV_GAMMAAPPLY);
 	sheet->AddText(" ");
@@ -462,7 +435,7 @@ void config_gamma()
 	sheet->AddText(TXT_GAMMAADJUSTA);
 	sheet->AddText(TXT_GAMMAADJUSTB);
 
-// add slider!
+	// add slider!
 	sheet->NewGroup(NULL, 0, 175);
 	slider_set.min_val.f = 1.0f;
 	slider_set.max_val.f = 3.0f;
@@ -470,10 +443,10 @@ void config_gamma()
 
 	init_gamma = Render_preferred_state.gamma;
 	curpos = CALC_SLIDER_POS_FLOAT(init_gamma, &slider_set, GAMMA_SLIDER_UNITS);
-	gamma_slider = sheet->AddSlider(TXT_GAMMA,100, curpos, &slider_set, UID_GAMMASLIDER);
+	gamma_slider = sheet->AddSlider(TXT_GAMMA, 100, curpos, &slider_set, UID_GAMMASLIDER);
 	sheet->SetInitialFocusedGadget(UID_GAMMASLIDER);
-	
-// do ui.
+
+	// do ui.
 	gamma_wnd.Open();
 
 	do
@@ -483,14 +456,13 @@ void config_gamma()
 			break;
 		}
 		if (res == IDV_GAMMAAPPLY) {
-		//get & set the gamma
+			//get & set the gamma
 			Render_preferred_state.gamma = CALC_SLIDER_FLOAT_VALUE(*gamma_slider, slider_set.min_val.f, slider_set.max_val.f, GAMMA_SLIDER_UNITS);
 			rend_SetPreferredState(&Render_preferred_state);
 		}
-	}
-	while (res != UID_OK && res != UID_CANCEL);
+	} while (res != UID_OK && res != UID_CANCEL);
 
-// handle results.
+	// handle results.
 	if (res == UID_OK) {
 		Render_preferred_state.gamma = CALC_SLIDER_FLOAT_VALUE(*gamma_slider, slider_set.min_val.f, slider_set.max_val.f, GAMMA_SLIDER_UNITS);
 	}
@@ -500,7 +472,7 @@ void config_gamma()
 
 	rend_SetPreferredState(&Render_preferred_state);
 
-// cleanup
+	// cleanup
 	gamma_wnd.Close();
 	gamma_wnd.Destroy();
 
@@ -508,7 +480,6 @@ void config_gamma()
 		bm_FreeBitmap(gamma_bitmap);
 	}
 }
-#endif 
 
 //////////////////////////////////////////////////////////////////
 // VIDEO MENU
@@ -518,21 +489,21 @@ void config_gamma()
 #define UID_RESOLUTION 110
 struct video_menu
 {
-	newuiSheet *sheet;
-	
-	bool *filtering;									// settings
-	bool *mipmapping;
-	bool *vsync;
+	newuiSheet* sheet;
 
-	int *resolution;									// all resolutions
+	bool* filtering;									// settings
+	bool* mipmapping;
+	bool* vsync;
+
+	int* resolution;									// all resolutions
 	short* fov;
 	char* buffer;
 	bool* fullscreen;
 
 	int window_width, window_height;
 
-// sets the menu up.
-	newuiSheet *setup(newuiMenu *menu)
+	// sets the menu up.
+	newuiSheet* setup(newuiMenu* menu)
 	{
 		int iTemp;
 		sheet = menu->AddOption(IDV_VCONFIG, TXT_OPTVIDEO, NEWUIMENU_MEDIUM);
@@ -551,13 +522,13 @@ struct video_menu
 		window_width = Game_window_res_width;
 		window_height = Game_window_res_height;
 
-	// video settings
-		sheet->NewGroup(TXT_TOGGLES, 0,120);
-		filtering = sheet->AddLongCheckBox(TXT_BILINEAR, (Render_preferred_state.filtering!=0));
-		mipmapping = sheet->AddLongCheckBox(TXT_MIPMAPPING, (Render_preferred_state.mipping!=0));
+		// video settings
+		sheet->NewGroup(TXT_TOGGLES, 0, 120);
+		filtering = sheet->AddLongCheckBox(TXT_BILINEAR, (Render_preferred_state.filtering != 0));
+		mipmapping = sheet->AddLongCheckBox(TXT_MIPMAPPING, (Render_preferred_state.mipping != 0));
 
 		sheet->NewGroup(TXT_MONITOR, 0, 180);
-		vsync = sheet->AddLongCheckBox(TXT_CFG_VSYNCENABLED, (Render_preferred_state.vsync_on!=0));
+		vsync = sheet->AddLongCheckBox(TXT_CFG_VSYNCENABLED, (Render_preferred_state.vsync_on != 0));
 
 		sheet->AddText("");
 		sheet->AddLongButton(TXT_AUTO_GAMMA, IDV_AUTOGAMMA);
@@ -565,14 +536,14 @@ struct video_menu
 		return sheet;
 	};
 
-// retreive values from property sheet here.
+	// retreive values from property sheet here.
 	void finish()
 	{
-		if (filtering) 
+		if (filtering)
 			Render_preferred_state.filtering = (*filtering) ? 1 : 0;
-		if (mipmapping) 
+		if (mipmapping)
 			Render_preferred_state.mipping = (*mipmapping) ? 1 : 0;
-		if (vsync) 
+		if (vsync)
 			Render_preferred_state.vsync_on = (*vsync) ? 1 : 0;
 
 		//Hopefully this doesn't do anything cursed..
@@ -594,26 +565,10 @@ struct video_menu
 			Current_pilot.set_hud_data(NULL, NULL, NULL, &window_width, &window_height);
 		}
 
-		/*if ((*resolution) != Game_video_resolution) {
-		// if in game, do resolution change.
-			int temp_w, temp_h;
-			int old_sm = GetScreenMode();
-
-			Game_video_resolution = *resolution;
-			
-			if (old_sm == SM_GAME) {
-				SetScreenMode(SM_NULL);
-				SetScreenMode(old_sm, true);
-			}
-			temp_w = Video_res_list[Game_video_resolution].width;
-			temp_h = Video_res_list[Game_video_resolution].height;
-			Current_pilot.set_hud_data(NULL, NULL, NULL, &temp_w, &temp_h);
-		}*/
-
 		sheet = NULL;
 	};
 
-// process
+	// process
 	void process(int res)
 	{
 		switch (res)
@@ -667,7 +622,7 @@ struct video_menu
 				}
 
 				snprintf(buffer, RESBUFFER_SIZE, "%d x %d", window_width, window_height);
-				
+
 			}
 
 			menu.Close();
@@ -682,32 +637,23 @@ struct video_menu
 	};
 };
 
-#ifdef MACINTOSH
-#pragma mark sound --
-#endif
-
-
 //////////////////////////////////////////////////////////////////
 // SOUND MENU
 //
 struct sound_menu
 {
-	newuiSheet *sheet;
-	newuiMenu *parent_menu;
+	newuiSheet* sheet;
+	newuiMenu* parent_menu;
 	int ls_sound_id, sound_id;
 
-	short *fxvolume, *musicvolume;			// volume sliders
-	short *fxquantity;							// sound fx quantity limit
-	int *fxquality;								// sfx quality low/high
+	short* fxvolume, * musicvolume;			// volume sliders
+	short* fxquantity;							// sound fx quantity limit
+	int* fxquality;								// sfx quality low/high
 
 	short old_fxquantity;
 
-#ifdef _DEBUG
-	int *sndmixer;
-#endif
-
-// sets the menu up.
-	newuiSheet *setup(newuiMenu *menu)
+	// sets the menu up.
+	newuiSheet* setup(newuiMenu* menu)
 	{
 		tSliderSettings slider_set;
 
@@ -716,17 +662,17 @@ struct sound_menu
 		ls_sound_id = -1;
 		sound_id = FindSoundName("Menu Slider Click");
 		ASSERT(sound_id != -1);	//DAJ -1FIX
-		
-	// volume sliders
-		sheet->NewGroup(NULL, 0,0);
-		
-		slider_set.type = SLIDER_UNITS_PERCENT;
-		fxvolume = sheet->AddSlider(TXT_SOUNDVOL, 10, (short)(Sound_system.GetMasterVolume()*10), &slider_set);
-		
-		slider_set.type = SLIDER_UNITS_PERCENT;
-		musicvolume = sheet->AddSlider(TXT_SNDMUSVOL, 10, (short)(D3MusicGetVolume()*10), &slider_set);
 
-	// sound fx quality radio list.
+		// volume sliders
+		sheet->NewGroup(NULL, 0, 0);
+
+		slider_set.type = SLIDER_UNITS_PERCENT;
+		fxvolume = sheet->AddSlider(TXT_SOUNDVOL, 10, (short)(Sound_system.GetMasterVolume() * 10), &slider_set);
+
+		slider_set.type = SLIDER_UNITS_PERCENT;
+		musicvolume = sheet->AddSlider(TXT_SNDMUSVOL, 10, (short)(D3MusicGetVolume() * 10), &slider_set);
+
+		// sound fx quality radio list.
 		if (GetFunctionMode() != GAME_MODE && GetFunctionMode() != EDITOR_GAME_MODE) {
 			sheet->NewGroup(TXT_SNDQUALITY, 0, 95);
 #ifdef MACINTOSH
@@ -737,131 +683,62 @@ struct sound_menu
 #else
 			fxquality = sheet->AddFirstRadioButton(TXT_SNDNORMAL);
 			sheet->AddRadioButton(TXT_SNDHIGH);
-			*fxquality = Sound_system.GetSoundQuality()==SQT_HIGH ? 1 : 0;
+			*fxquality = Sound_system.GetSoundQuality() == SQT_HIGH ? 1 : 0;
 #endif
 			slider_set.min_val.i = MIN_SOUNDS_MIXED;
 			slider_set.max_val.i = MAX_SOUNDS_MIXED;
 			slider_set.type = SLIDER_UNITS_INT;
-			fxquantity = sheet->AddSlider(TXT_SNDCFG_SFXQUANTITY, (slider_set.max_val.i-slider_set.min_val.i), 
-									Sound_system.GetLLSoundQuantity()-MIN_SOUNDS_MIXED, &slider_set);
-			old_fxquantity = (Sound_system.GetLLSoundQuantity()-MIN_SOUNDS_MIXED);
+			fxquantity = sheet->AddSlider(TXT_SNDCFG_SFXQUANTITY, (slider_set.max_val.i - slider_set.min_val.i),
+				Sound_system.GetLLSoundQuantity() - MIN_SOUNDS_MIXED, &slider_set);
+			old_fxquantity = (Sound_system.GetLLSoundQuantity() - MIN_SOUNDS_MIXED);
 
 		}
-		else {
+		else
+		{
 			fxquality = NULL;
 			fxquantity = NULL;
 		}
-
-	#if defined( _DEBUG ) && !defined ( MACINTOSH )
-		int iTemp;
-	// add sound stats group
-		sheet->NewGroup("MIXER SETTINGS", 180,85);
-		switch (Sound_system.GetSoundMixer()) 
-		{
-		case SOUND_MIXER_NONE:iTemp = 0; break;
-		case SOUND_MIXER_SOFTWARE_16:		iTemp = 1;	break;
-		case SOUND_MIXER_DS_8:	iTemp = 2;	break;
-		case SOUND_MIXER_DS_16:	iTemp = 3;	break;
-		case SOUND_MIXER_DS3D_16:	iTemp = 4; break;
-		case SOUND_MIXER_AUREAL: iTemp = 5; break;
-		case SOUND_MIXER_CREATIVE_EAX: iTemp = 6; break;
-		default: Int3(); //-wtf?
-		}
-		sndmixer = sheet->AddFirstRadioButton("NONE");
-		sheet->AddRadioButton("SOFTWARE");
-		sheet->AddRadioButton("DS 8");
-		sheet->AddRadioButton("DS 16");
-		sheet->AddRadioButton("DS 3D");
-		sheet->AddRadioButton("A3D 2");
-		sheet->AddRadioButton("EAX");
-		*sndmixer = iTemp;
-	#endif
-
 		return sheet;
 	};
 
-// retreive values from property sheet here.
+	// retreive values from property sheet here.
 	void finish()
 	{
-		int iTemp;
-		char mixer_type=SOUND_MIXER_NONE;
-		
-	#if defined( _DEBUG ) && !defined ( MACINTOSH )
-		iTemp = *sndmixer;
+		Sound_system.SetMasterVolume((*fxvolume) / 10.0f);
+		D3MusicSetVolume((*musicvolume) / 10.0f);
 
-		switch (iTemp)
+		if (fxquantity)
 		{
-		case 0: mixer_type = SOUND_MIXER_NONE; break;
-		case 1: mixer_type = SOUND_MIXER_SOFTWARE_16; break;
-		case 2: mixer_type = SOUND_MIXER_DS_8; break;
-		case 3: mixer_type = SOUND_MIXER_DS_16; break;
-		case 4: mixer_type = SOUND_MIXER_DS3D_16; break;
-		case 5: mixer_type = SOUND_MIXER_AUREAL; break;
-		case 6: mixer_type = SOUND_MIXER_CREATIVE_EAX; break;
-		default: Int3();		// -wtf? 
-		}
-
-		if (Sound_system.GetSoundMixer() ==SOUND_MIXER_NONE) {
-			Sound_system.InitSoundLib(Descent, mixer_type, Sound_quality, false);
-		}
-		else {
-			Sound_system.SetSoundMixer(mixer_type); 
-		}
-	#endif
-	
-		Sound_system.SetMasterVolume((*fxvolume)/10.0f);
-		D3MusicSetVolume((*musicvolume)/10.0f);
-		
-		if (fxquantity) {
 			mprintf((1, "oldquant %d newquant %d\n", old_fxquantity, *fxquantity));
-			if (old_fxquantity != (*fxquantity)) {
-				Sound_system.SetLLSoundQuantity((*fxquantity)+MIN_SOUNDS_MIXED);
+			if (old_fxquantity != (*fxquantity))
+			{
+				Sound_system.SetLLSoundQuantity((*fxquantity) + MIN_SOUNDS_MIXED);
 			}
 		}
 
-		if (fxquality) {
-#ifdef MACINTOSH
-			Sound_system.SetSoundQuality(*fxquality);
-#else
-			Sound_system.SetSoundQuality((*fxquality==1) ? SQT_HIGH : SQT_NORMAL);
-#endif
+		if (fxquality)
+		{
+			Sound_system.SetSoundQuality((*fxquality == 1) ? SQT_HIGH : SQT_NORMAL);
 		}
-		
-//@@		iTemp = (*powerupvoices);
-//@@		if (iTemp == 2) {
-//@@			PlayVoices = true;
-//@@			PlayPowerupVoice = true;
-//@@		}
-//@@		else if (iTemp == 1) {
-//@@			PlayPowerupVoice = false;
-//@@			PlayVoices = true;
-//@@		}
-//@@		else {
-//@@			PlayVoices = false;
-//@@			PlayPowerupVoice = false;
-//@@		}
 	};
 
-// process output and do stuff accordintly
+	// process output and do stuff accordintly
 	void process(int res)
 	{
-		if (sheet->HasChanged(fxvolume)) {
-			Sound_system.SetMasterVolume((*fxvolume)/10.0f);
+		if (sheet->HasChanged(fxvolume))
+		{
+			Sound_system.SetMasterVolume((*fxvolume) / 10.0f);
 			Sound_system.BeginSoundFrame(false);
 			Sound_system.StopSoundImmediate(ls_sound_id);
 			ls_sound_id = Sound_system.Play2dSound(sound_id);
 			Sound_system.EndSoundFrame();
 		}
-		if (sheet->HasChanged(musicvolume)) {
-			D3MusicSetVolume((*musicvolume)/10.0f);
+		if (sheet->HasChanged(musicvolume))
+		{
+			D3MusicSetVolume((*musicvolume) / 10.0f);
 		}
 	};
 };
-
-
-#ifdef MACINTOSH
-#pragma mark toggles --
-#endif
 
 //////////////////////////////////////////////////////////////////
 // GENERAL SETTINGS (TOGGLES) MENU
@@ -873,18 +750,18 @@ struct sound_menu
 
 struct toggles_menu
 {
-	newuiSheet *sheet;
-	newuiMenu *parent_menu;
+	newuiSheet* sheet;
+	newuiMenu* parent_menu;
 
-	int *terrain_autolevel;				// auto leveling radios
-	int *mine_autolevel;
-	int *missile_view;					// missile view radio
-	bool *joy_enabled, *mse_enabled;
-	bool *reticle_toggle, *guided_toggle;
-	bool *shipsnd_toggle;
+	int* terrain_autolevel;				// auto leveling radios
+	int* mine_autolevel;
+	int* missile_view;					// missile view radio
+	bool* joy_enabled, * mse_enabled;
+	bool* reticle_toggle, * guided_toggle;
+	bool* shipsnd_toggle;
 
-// sets the menu up.
-	newuiSheet *setup(newuiMenu *menu)
+	// sets the menu up.
+	newuiSheet* setup(newuiMenu* menu)
 	{
 		sheet = menu->AddOption(IDV_GCONFIG, TXT_OPTGENERAL, NEWUIMENU_MEDIUM);
 		parent_menu = menu;
@@ -896,7 +773,7 @@ struct toggles_menu
 		sheet->AddRadioButton(TXT_CFG_HIGH);
 		*terrain_autolevel = Default_player_terrain_leveling;
 
-		sheet->NewGroup(TXT_MINEAUTOLEV, 0,70);
+		sheet->NewGroup(TXT_MINEAUTOLEV, 0, 70);
 		mine_autolevel = sheet->AddFirstRadioButton(TXT_NONE);
 		sheet->AddRadioButton(TXT_CFG_MEDIUM);
 		sheet->AddRadioButton(TXT_CFG_HIGH);
@@ -905,12 +782,10 @@ struct toggles_menu
 		sheet->NewGroup(TXT_MISSILEVIEW, 0, 140);
 		missile_view = sheet->AddFirstRadioButton(TXT_NONE);
 		sheet->AddRadioButton(TXT_LEFT);
-//@@		sheet->AddRadioButton(TXT_CENTER);
 		sheet->AddRadioButton(TXT_RIGHT);
-//@@		*missile_view = (Missile_camera_window==SVW_LEFT) ? 1 : (Missile_camera_window==SVW_CENTER) ? 2 : (Missile_camera_window==SVW_RIGHT) ? 3 : 0;
-		*missile_view = (Missile_camera_window==SVW_LEFT) ? 1 : (Missile_camera_window==SVW_RIGHT) ? 2 : 0;
 
-#ifndef MACINTOSH
+		*missile_view = (Missile_camera_window == SVW_LEFT) ? 1 : (Missile_camera_window == SVW_RIGHT) ? 2 : 0;
+
 		sheet->NewGroup(TXT_CONTROL_TOGGLES, 110, 0);
 		joy_enabled = sheet->AddLongCheckBox(TXT_JOYENABLED);
 		mse_enabled = sheet->AddLongCheckBox(TXT_CFG_MOUSEENABLED);
@@ -930,22 +805,14 @@ struct toggles_menu
 		sheet->AddLongButton(TXT_JOYSENSBTN, UID_SHORTCUT_JOYSETTINGS);
 		sheet->AddLongButton(TXT_KEYRAMPING, UID_SHORTCUT_KEYSETTINGS);
 
-		if (ff_found) {
+		if (ff_found)
+		{
 			sheet->AddLongButton(TXT_CFG_CONFIGFORCEFEEDBACK, UID_SHORTCUT_FORCEFEED);
 		}
-#else
-		sheet->NewGroup(TXT_TOGGLES, 110, 40);
-		reticle_toggle = sheet->AddLongCheckBox(TXT_TOG_SHOWRETICLE);
-		guided_toggle = sheet->AddLongCheckBox(TXT_TOG_GUIDEDMISSILE);
-		shipsnd_toggle = sheet->AddLongCheckBox(TXT_TOG_SHIPSOUNDS);
-		*reticle_toggle = Game_toggles.show_reticle;
-		*guided_toggle = Game_toggles.guided_mainview;
-		*shipsnd_toggle = Game_toggles.ship_noises;
-#endif
 		return sheet;
 	};
 
-// retreive values from property sheet here.
+	// retreive values from property sheet here.
 	void finish()
 	{
 		int iTemp;
@@ -953,9 +820,8 @@ struct toggles_menu
 		Default_player_terrain_leveling = *terrain_autolevel;
 		Default_player_room_leveling = *mine_autolevel;
 
-		iTemp =(*missile_view);
-//@@		Missile_camera_window = (iTemp==1) ? SVW_LEFT : (iTemp==2) ? SVW_CENTER : (iTemp==3) ? SVW_RIGHT : -1;
-		Missile_camera_window = (iTemp==1) ? SVW_LEFT : (iTemp==2) ? SVW_RIGHT : -1;
+		iTemp = (*missile_view);
+		Missile_camera_window = (iTemp == 1) ? SVW_LEFT : (iTemp == 2) ? SVW_RIGHT : -1;
 #ifndef MACINTOSH
 		Current_pilot.read_controller = (*joy_enabled) ? READF_JOY : 0;
 		Current_pilot.read_controller |= (*mse_enabled) ? READF_MOUSE : 0;
@@ -965,7 +831,7 @@ struct toggles_menu
 		Game_toggles.ship_noises = (*shipsnd_toggle);
 	};
 
-// process
+	// process
 	void process(int res)
 	{
 		switch (res)
@@ -985,50 +851,47 @@ struct toggles_menu
 	};
 };
 
-#ifdef MACINTOSH
-#pragma mark HUD --
-#endif
-
-
 //////////////////////////////////////////////////////////////////
 //  HUD CONFIG MENU
 //
 struct hud_menu
 {
-	newuiSheet *sheet;
-	newuiMenu *parent_menu;
-	
-	int *ship_status;
-	int *shield_energy;
-	int *weapon_loads;
-	int *afterburner;
-	int *inventory;
-	int *warnings;
-	int *countermeasures;
-//	int *goals;
+	newuiSheet* sheet;
+	newuiMenu* parent_menu;
 
-	int add_hud_option(const char *title, int **ptr, int y, int sel, bool graphical) 
+	int* ship_status;
+	int* shield_energy;
+	int* weapon_loads;
+	int* afterburner;
+	int* inventory;
+	int* warnings;
+	int* countermeasures;
+	//	int *goals;
+
+	int add_hud_option(const char* title, int** ptr, int y, int sel, bool graphical)
 	{
 		const int y_line = 29;
 
-		sheet->NewGroup(title,0,y,NEWUI_ALIGN_HORIZ);
+		sheet->NewGroup(title, 0, y, NEWUI_ALIGN_HORIZ);
 		*ptr = sheet->AddFirstRadioButton(TXT_OFF);
-		if (graphical) {
+		if (graphical)
+		{
 			sheet->AddRadioButton(TXT_TEXT);
 			sheet->AddRadioButton(TXT_GRAPHICAL);
 		}
-		else {
+		else
+		{
 			sheet->AddRadioButton(TXT_ON);
 		}
 		*(*ptr) = sel;
-		return y+y_line;
+		return y + y_line;
 	};
 
-// sets the menu up.
-	newuiSheet *setup(newuiMenu *menu)
+	// sets the menu up.
+	newuiSheet* setup(newuiMenu* menu)
 	{
 		int y, sel;
-		ushort stat,grstat;
+		ushort stat, grstat;
 
 		sheet = menu->AddOption(IDV_HCONFIG, TXT_OPTHUD, NEWUIMENU_MEDIUM);
 		parent_menu = menu;
@@ -1036,12 +899,12 @@ struct hud_menu
 		Current_pilot.get_hud_data(NULL, &stat, &grstat);
 
 		sel = (stat & STAT_SHIP) ? 1 : (grstat & STAT_SHIP) ? 2 : 0;
-		y = add_hud_option(TXT_HUDSHIPSTATUS,&ship_status,0,sel,true);
+		y = add_hud_option(TXT_HUDSHIPSTATUS, &ship_status, 0, sel, true);
 
-		sel = (stat & (STAT_SHIELDS+STAT_ENERGY)) ? 1 : (grstat & (STAT_SHIELDS+STAT_ENERGY)) ? 2 : 0;
-		y = add_hud_option(TXT_HUDSHIELDENERGY,&shield_energy, y, sel, true);
+		sel = (stat & (STAT_SHIELDS + STAT_ENERGY)) ? 1 : (grstat & (STAT_SHIELDS + STAT_ENERGY)) ? 2 : 0;
+		y = add_hud_option(TXT_HUDSHIELDENERGY, &shield_energy, y, sel, true);
 
-		sel = (stat & (STAT_PRIMARYLOAD+STAT_SECONDARYLOAD)) ? 1 : (grstat & (STAT_PRIMARYLOAD+STAT_SECONDARYLOAD)) ? 2 : 0;
+		sel = (stat & (STAT_PRIMARYLOAD + STAT_SECONDARYLOAD)) ? 1 : (grstat & (STAT_PRIMARYLOAD + STAT_SECONDARYLOAD)) ? 2 : 0;
 		y = add_hud_option(TXT_HUDWEAPONS, &weapon_loads, y, sel, true);
 
 		sel = (stat & STAT_AFTERBURN) ? 1 : (grstat & STAT_AFTERBURN) ? 2 : 0;
@@ -1053,52 +916,47 @@ struct hud_menu
 		sel = (stat & STAT_CNTRMEASURE) ? 1 : (grstat & STAT_CNTRMEASURE) ? 2 : 0;
 		y = add_hud_option(TXT_HUDCNTRMEASURE, &countermeasures, y, sel, true);
 
-//		sel = (stat & STAT_GOALS) ? 1 : 0;
-//		y = add_hud_option(TXT_HUDMISSIONSTATUS, &goals, y, sel, false);
-
 		sel = (stat & STAT_INVENTORY) ? 1 : 0;
 		y = add_hud_option(TXT_HUDINVENTORY, &inventory, y, sel, false);
 
 		return sheet;
 	};
 
-// retreive values from property sheet here.
+	// retreive values from property sheet here.
 	void finish()
 	{
 		int sel;
-		ushort hud_new_stat = STAT_MESSAGES+STAT_CUSTOM;
+		ushort hud_new_stat = STAT_MESSAGES + STAT_CUSTOM;
 		ushort hud_new_grstat = 0;
 
 		sel = *ship_status;
-		if (sel==1) hud_new_stat |= STAT_SHIP;
-		else if (sel==2) hud_new_grstat |= STAT_SHIP; 
+		if (sel == 1) hud_new_stat |= STAT_SHIP;
+		else if (sel == 2) hud_new_grstat |= STAT_SHIP;
 		sel = *shield_energy;
-		if (sel==1) hud_new_stat |= (STAT_SHIELDS+STAT_ENERGY);
-		else if (sel==2) hud_new_grstat |= (STAT_SHIELDS+STAT_ENERGY); 
-		sel = *weapon_loads;		
-		if (sel==1) hud_new_stat |= (STAT_PRIMARYLOAD+STAT_SECONDARYLOAD);
-		else if (sel==2) hud_new_grstat |= (STAT_PRIMARYLOAD+STAT_SECONDARYLOAD);
+		if (sel == 1) hud_new_stat |= (STAT_SHIELDS + STAT_ENERGY);
+		else if (sel == 2) hud_new_grstat |= (STAT_SHIELDS + STAT_ENERGY);
+		sel = *weapon_loads;
+		if (sel == 1) hud_new_stat |= (STAT_PRIMARYLOAD + STAT_SECONDARYLOAD);
+		else if (sel == 2) hud_new_grstat |= (STAT_PRIMARYLOAD + STAT_SECONDARYLOAD);
 		sel = *afterburner;
-		if (sel==1) hud_new_stat |= STAT_AFTERBURN;
-		else if (sel==2) hud_new_grstat |= STAT_AFTERBURN;
-		sel = *warnings;		
-		if (sel==1) hud_new_stat |= STAT_WARNING;
-		else if (sel==2) hud_new_grstat |= STAT_WARNING;
+		if (sel == 1) hud_new_stat |= STAT_AFTERBURN;
+		else if (sel == 2) hud_new_grstat |= STAT_AFTERBURN;
+		sel = *warnings;
+		if (sel == 1) hud_new_stat |= STAT_WARNING;
+		else if (sel == 2) hud_new_grstat |= STAT_WARNING;
 		sel = *countermeasures;
-		if (sel==1) hud_new_stat |= STAT_CNTRMEASURE;
-		else if (sel==2) hud_new_grstat |= STAT_CNTRMEASURE;
-//		sel = *goals;
-//		if (sel==1) hud_new_stat |= STAT_GOALS;
+		if (sel == 1) hud_new_stat |= STAT_CNTRMEASURE;
+		else if (sel == 2) hud_new_grstat |= STAT_CNTRMEASURE;
+		//		sel = *goals;
+		//		if (sel==1) hud_new_stat |= STAT_GOALS;
 		sel = *inventory;
-		if (sel==1) hud_new_stat |= STAT_INVENTORY;
+		if (sel == 1) hud_new_stat |= STAT_INVENTORY;
 
 		Current_pilot.set_hud_data(NULL, &hud_new_stat, &hud_new_grstat);
 
-		//mprintf((0, "pilot hud stat=%x\n", Current_pilot.hud_stat));
-		//mprintf((0, "pilot hud grstat=%x\n", Current_pilot.hud_graphical_stat));
-
-	// modify current hud stats if in game.
-		if ((GetFunctionMode()==EDITOR_GAME_MODE || GetFunctionMode()==GAME_MODE) && GetHUDMode()==HUD_FULLSCREEN) {
+		// modify current hud stats if in game.
+		if ((GetFunctionMode() == EDITOR_GAME_MODE || GetFunctionMode() == GAME_MODE) && GetHUDMode() == HUD_FULLSCREEN)
+		{
 			SetHUDState(hud_new_stat | STAT_SCORE | (Hud_stat_mask & STAT_FPS), hud_new_grstat);
 		}
 	};
@@ -1114,30 +972,30 @@ struct hud_menu
 //
 struct details_menu
 {
-	newuiSheet *sheet;
-	newuiMenu *parent_menu;
-	
-	int *detail_level;									// detail level radio
-	int *objcomp;											// object complexity radio
-	bool *specmap, *headlight, *mirror,				// check boxes
-		*dynamic, *fog, *coronas, *procedurals,
-		*powerup_halo, *scorches, *weapon_coronas;
-	short *pixel_err,										// 0-27 (1-28)
-		*rend_dist;											// 0-120 (80-200)
+	newuiSheet* sheet;
+	newuiMenu* parent_menu;
 
-		int *texture_quality;
+	int* detail_level;									// detail level radio
+	int* objcomp;											// object complexity radio
+	bool* specmap, * headlight, * mirror,				// check boxes
+		* dynamic, * fog, * coronas, * procedurals,
+		* powerup_halo, * scorches, * weapon_coronas;
+	short* pixel_err,										// 0-27 (1-28)
+		* rend_dist;											// 0-120 (80-200)
 
-// sets the menu up.
-	newuiSheet *setup(newuiMenu *menu)
+	int* texture_quality;
+
+	// sets the menu up.
+	newuiSheet* setup(newuiMenu* menu)
 	{
 		int iTemp;
 		sheet = menu->AddOption(IDV_DCONFIG, TXT_OPTDETAIL, NEWUIMENU_MEDIUM);
 		parent_menu = menu;
 
-	// detail level radio
-		Database->read_int("PredefDetailSetting",&Default_detail_level);
+		// detail level radio
+		Database->read_int("PredefDetailSetting", &Default_detail_level);
 		iTemp = Default_detail_level;
-		sheet->NewGroup(TXT_CFG_PRESETDETAILS, 0,0);
+		sheet->NewGroup(TXT_CFG_PRESETDETAILS, 0, 0);
 		detail_level = sheet->AddFirstRadioButton(TXT_LOW);
 		sheet->AddRadioButton(TXT_CFG_MEDIUM);
 		sheet->AddRadioButton(TXT_CFG_HIGH);
@@ -1145,8 +1003,8 @@ struct details_menu
 		sheet->AddRadioButton(TXT_CFG_CUSTOM);
 		*detail_level = iTemp;
 
-	// toggles
-		sheet->NewGroup(TXT_TOGGLES,0,87);
+		// toggles
+		sheet->NewGroup(TXT_TOGGLES, 0, 87);
 		specmap = sheet->AddLongCheckBox(TXT_SPECMAPPING, Detail_settings.Specular_lighting);
 		headlight = sheet->AddLongCheckBox(TXT_FASTHEADLIGHT, Detail_settings.Fast_headlight_on);
 		mirror = sheet->AddLongCheckBox(TXT_MIRRORSURF, Detail_settings.Mirrored_surfaces);
@@ -1158,45 +1016,34 @@ struct details_menu
 		scorches = sheet->AddLongCheckBox(TXT_CFG_SCORCHMARKS, Detail_settings.Scorches_enabled);
 		weapon_coronas = sheet->AddLongCheckBox(TXT_CFG_WEAPONEFFECTS, Detail_settings.Weapon_coronas_enabled);
 
-	// sliders
+		// sliders
 		tSliderSettings slider_set;
-		sheet->NewGroup(TXT_GEOMETRY, 90,0);
+		sheet->NewGroup(TXT_GEOMETRY, 90, 0);
 		iTemp = MAXIMUM_TERRAIN_DETAIL - Detail_settings.Pixel_error - MINIMUM_TERRAIN_DETAIL;
-		if(iTemp<0) iTemp = 0;
+		if (iTemp < 0) iTemp = 0;
 		slider_set.min_val.i = MINIMUM_TERRAIN_DETAIL;
 		slider_set.max_val.i = MAXIMUM_TERRAIN_DETAIL;
 		slider_set.type = SLIDER_UNITS_INT;
-		pixel_err = sheet->AddSlider(TXT_TERRDETAIL, MAXIMUM_TERRAIN_DETAIL-MINIMUM_TERRAIN_DETAIL, iTemp, &slider_set);
+		pixel_err = sheet->AddSlider(TXT_TERRDETAIL, MAXIMUM_TERRAIN_DETAIL - MINIMUM_TERRAIN_DETAIL, iTemp, &slider_set);
 
-		slider_set.min_val.i = MINIMUM_RENDER_DIST/2;
-		slider_set.max_val.i = MAXIMUM_RENDER_DIST/2;
+		slider_set.min_val.i = MINIMUM_RENDER_DIST / 2;
+		slider_set.max_val.i = MAXIMUM_RENDER_DIST / 2;
 		slider_set.type = SLIDER_UNITS_INT;
-		iTemp = (int)(Detail_settings.Terrain_render_distance/((float)TERRAIN_SIZE)) - MINIMUM_RENDER_DIST;
+		iTemp = (int)(Detail_settings.Terrain_render_distance / ((float)TERRAIN_SIZE)) - MINIMUM_RENDER_DIST;
 		if (iTemp < 0) iTemp = 0;
-		rend_dist = sheet->AddSlider(TXT_RENDDIST, (MAXIMUM_RENDER_DIST-MINIMUM_RENDER_DIST)/2, iTemp/2, &slider_set);
+		rend_dist = sheet->AddSlider(TXT_RENDDIST, (MAXIMUM_RENDER_DIST - MINIMUM_RENDER_DIST) / 2, iTemp / 2, &slider_set);
 
-	// object complexity radio
+		// object complexity radio
 		sheet->NewGroup(TXT_CFG_OBJECTCOMPLEXITY, 174, 87);
 		objcomp = sheet->AddFirstRadioButton(TXT_LOW);
 		sheet->AddRadioButton(TXT_CFG_MEDIUM);
 		sheet->AddRadioButton(TXT_CFG_HIGH);
 		*objcomp = Detail_settings.Object_complexity;
 
-#ifdef MACINTOSH
-		if (GetFunctionMode() != GAME_MODE && GetFunctionMode() != EDITOR_GAME_MODE) {
-			sheet->NewGroup(TXT_TEXTURE_QUALITY, 174,152);
-			Database->read_int("RS_texture_quality",&Render_state.cur_texture_quality);
-			iTemp = Render_state.cur_texture_quality;
-			texture_quality = sheet->AddFirstRadioButton(TXT_LOW);
-			sheet->AddRadioButton(TXT_CFG_MEDIUM);
-			sheet->AddRadioButton(TXT_CFG_HIGH);
-			*texture_quality = Render_state.cur_texture_quality;
-		}
-#endif
 		return sheet;
 	};
 
-// retreive values from property sheet here.
+	// retreive values from property sheet here.
 	void finish()
 	{
 		Detail_settings.Coronas_enabled = *coronas;
@@ -1205,72 +1052,55 @@ struct details_menu
 		Detail_settings.Fog_enabled = *fog;
 		Detail_settings.Mirrored_surfaces = *mirror;
 		Detail_settings.Object_complexity = *objcomp;
-		Detail_settings.Pixel_error = MAXIMUM_TERRAIN_DETAIL - ((*pixel_err)+MINIMUM_TERRAIN_DETAIL);
+		Detail_settings.Pixel_error = MAXIMUM_TERRAIN_DETAIL - ((*pixel_err) + MINIMUM_TERRAIN_DETAIL);
 		Detail_settings.Powerup_halos = *powerup_halo;
 		Detail_settings.Procedurals_enabled = *procedurals;
 		Detail_settings.Scorches_enabled = *scorches;
 		Detail_settings.Specular_lighting = *specmap;
-		Detail_settings.Terrain_render_distance = (((*rend_dist)*2)+MINIMUM_RENDER_DIST)*((float)TERRAIN_SIZE);
+		Detail_settings.Terrain_render_distance = (((*rend_dist) * 2) + MINIMUM_RENDER_DIST) * ((float)TERRAIN_SIZE);
 		Detail_settings.Weapon_coronas_enabled = *weapon_coronas;
 
 		Default_detail_level = *detail_level;
-		Database->write("PredefDetailSetting",Default_detail_level);
+		Database->write("PredefDetailSetting", Default_detail_level);
 
-#ifdef MACINTOSH
-		if (GetFunctionMode() != GAME_MODE && GetFunctionMode() != EDITOR_GAME_MODE) {
-			Render_state.cur_texture_quality = *texture_quality;
-			Database->write("RS_texture_quality",Render_state.cur_texture_quality);
-
-			if(Render_state.cur_texture_quality == 0) {
-				Mem_low_memory_mode = true;
-				Mem_superlow_memory_mode = true;
-			} else if(Render_state.cur_texture_quality == 1) {
-				Mem_low_memory_mode = true;
-				Mem_superlow_memory_mode = false;
-			} else if(Render_state.cur_texture_quality == 2) {
-				Mem_low_memory_mode = false;
-				Mem_superlow_memory_mode = false;
-			}
-		}
-		InitVisEffects(); //reset max_vis_effects l
-#endif
 		sheet = NULL;
 	};
 
-// process output and do stuff accordintly
+	// process output and do stuff accordintly
 	void process(int res)
 	{
-		bool changed;
+		// check here if the detail level currently set should be custom
+		bool changed = sheet->HasChanged(specmap) ||
+			sheet->HasChanged(headlight) ||
+			sheet->HasChanged(mirror) ||
+			sheet->HasChanged(dynamic) ||
+			sheet->HasChanged(fog) ||
+			sheet->HasChanged(coronas) ||
+			sheet->HasChanged(procedurals) ||
+			sheet->HasChanged(powerup_halo) ||
+			sheet->HasChanged(scorches) ||
+			sheet->HasChanged(weapon_coronas) ||
+			sheet->HasChanged(objcomp) ||
+			sheet->HasChanged(pixel_err) ||
+			sheet->HasChanged(rend_dist);
 
-	// check here if the detail level currently set should be custom
-		changed = sheet->HasChanged(specmap) ||
-				sheet->HasChanged(headlight) ||
-				sheet->HasChanged(mirror) ||
-				sheet->HasChanged(dynamic) ||
-				sheet->HasChanged(fog) ||
-				sheet->HasChanged(coronas) ||
-				sheet->HasChanged(procedurals) ||
-				sheet->HasChanged(powerup_halo) ||
-				sheet->HasChanged(scorches) ||
-				sheet->HasChanged(weapon_coronas) || 
-				sheet->HasChanged(objcomp) ||
-				sheet->HasChanged(pixel_err) ||
-				sheet->HasChanged(rend_dist);
-
-		if (changed) {
-		// enable custom radio button
+		if (changed)
+		{
+			// enable custom radio button
 			*detail_level = DETAIL_LEVEL_CUSTOM;
 		}
-		else {
-		// check if any preset detail has been selected.
-			if (sheet->HasChanged(detail_level)) {
+		else
+		{
+			// check if any preset detail has been selected.
+			if (sheet->HasChanged(detail_level))
+			{
 				set_preset_details(*detail_level);
 			}
 		}
 
 	};
 
-//	sets detail presets
+	//	sets detail presets
 	void set_preset_details(int setting);
 };
 
@@ -1280,25 +1110,24 @@ void details_menu::set_preset_details(int setting)
 {
 	tDetailSettings ds;
 
-	switch(setting)
+	switch (setting)
 	{
-	case DETAIL_LEVEL_LOW:			memcpy(&ds,&DetailPresetLow,sizeof(tDetailSettings)); break;
-	case DETAIL_LEVEL_MED:			memcpy(&ds,&DetailPresetMed,sizeof(tDetailSettings)); break;
-	case DETAIL_LEVEL_HIGH:			memcpy(&ds,&DetailPresetHigh,sizeof(tDetailSettings)); break;
-	case DETAIL_LEVEL_VERY_HIGH:	memcpy(&ds,&DetailPresetVHi,sizeof(tDetailSettings)); break;
+	case DETAIL_LEVEL_LOW:			memcpy(&ds, &DetailPresetLow, sizeof(tDetailSettings)); break;
+	case DETAIL_LEVEL_MED:			memcpy(&ds, &DetailPresetMed, sizeof(tDetailSettings)); break;
+	case DETAIL_LEVEL_HIGH:			memcpy(&ds, &DetailPresetHigh, sizeof(tDetailSettings)); break;
+	case DETAIL_LEVEL_VERY_HIGH:	memcpy(&ds, &DetailPresetVHi, sizeof(tDetailSettings)); break;
 	default:
 		return;
 	};
-	
-//now go through all the config items and set to the new values
-	int iTemp;
 
-	iTemp = MAXIMUM_TERRAIN_DETAIL - ds.Pixel_error - MINIMUM_TERRAIN_DETAIL;
-	if(iTemp<0) iTemp = 0;
+	//now go through all the config items and set to the new values
+	int iTemp = MAXIMUM_TERRAIN_DETAIL - ds.Pixel_error - MINIMUM_TERRAIN_DETAIL;
+	if (iTemp < 0)
+		iTemp = 0;
 	*pixel_err = (short)(iTemp);
-	iTemp = (int)((ds.Terrain_render_distance/((float)TERRAIN_SIZE)) - MINIMUM_RENDER_DIST);
-	if(iTemp < 0) iTemp = 0;
-	iTemp = iTemp/2;
+	iTemp = (int)((ds.Terrain_render_distance / ((float)TERRAIN_SIZE)) - MINIMUM_RENDER_DIST);
+	if (iTemp < 0) iTemp = 0;
+	iTemp = iTemp / 2;
 	*rend_dist = (short)(iTemp);
 	*objcomp = ds.Object_complexity;
 	*specmap = ds.Specular_lighting;
@@ -1313,22 +1142,12 @@ void details_menu::set_preset_details(int setting)
 	*weapon_coronas = ds.Weapon_coronas_enabled;
 }
 
-
-
-//////////////////////////////////////////////////////////////////
-//	new Gamma menu
-//
-
-
-
 //////////////////////////////////////////////////////////////////
 //	new Options menu
 //
 
-
 // externed from init.cpp
 extern void SaveGameSettings();
-
 
 void OptionsMenu()
 {
@@ -1339,43 +1158,45 @@ void OptionsMenu()
 	toggles_menu toggles;
 	hud_menu hud;
 
-	int res=-1, state=0;								// state = 0, options menu, 1 = controller config, 2 = quitting.
+	int res = -1, state = 0;								// state = 0, options menu, 1 = controller config, 2 = quitting.
 
-	while (state != 2) 
+	while (state != 2)
 	{
-		if (state == 1) {
-		// enter controller config menu
+		if (state == 1) 
+		{
+			// enter controller config menu
 			mprintf((0, "CONTROLLER CONFIG MENU HERE!\n"));
 			CtlConfig(CTLCONFIG_KEYBOARD);
 			state = 0;									// goto options menu.
 		}
-		else {
-		// open menu
+		else 
+		{
+			// open menu
 
 			DoWaitMessage(true);
 
 			menu.Create();
 			menu.Open();
-	
+
 			video.setup(&menu);						// setup video menu IDV_VCONFIG
 			details.setup(&menu);					// setup details menu.  IDV_DCONFIG
 			sound.setup(&menu);						// setup sound menu. IDV_SCONFIG
 			toggles.setup(&menu);				 	// setup general menu. IDV_GCONFIG
 			hud.setup(&menu);							// setup hud menu. IDV_HCONFIG
 
-			menu.AddSimpleOption(IDV_CCONFIG,TXT_OPTCONFIG);
+			menu.AddSimpleOption(IDV_CCONFIG, TXT_OPTCONFIG);
 			menu.AddSimpleOption(UID_CANCEL, TXT_DONE);
 
 			menu.SetCurrentOption(IDV_VCONFIG);
 
 			DoWaitMessage(false);
 
-		// run menu
+			// run menu
 			do
 			{
 				res = menu.DoUI();
 
-			// immediate checking of any option ids.
+				// immediate checking of any option ids.
 				if (res == UID_CANCEL || res == NEWUIRES_FORCEQUIT) {
 					state = 2;	break;				// next pass will quit
 				}
@@ -1383,7 +1204,7 @@ void OptionsMenu()
 					state = 1;	break;				// next pass will enter controller menu
 				}
 
-			// handle any processing needed by current option.
+				// handle any processing needed by current option.
 				switch (menu.GetCurrentOption())
 				{
 				case IDV_DCONFIG:
@@ -1399,17 +1220,16 @@ void OptionsMenu()
 					toggles.process(res);
 					break;
 				}
-			}
-			while (1);
+			} while (1);
 
-		// get settings
+			// get settings
 			hud.finish();
 			toggles.finish();
 			sound.finish();
 			details.finish();
 			video.finish();
 
-		// write them out and close.
+			// write them out and close.
 			PltWriteFile(&Current_pilot);
 
 			menu.Close();
@@ -1419,5 +1239,3 @@ void OptionsMenu()
 
 	SaveGameSettings();
 }
-
-
