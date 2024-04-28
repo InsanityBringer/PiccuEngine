@@ -1253,8 +1253,9 @@ int __cdecl RecordExceptionInfo(PEXCEPTION_POINTERS data, const char *Message)
 		return EXCEPTION_EXECUTE_HANDLER;
 }
 
-
+#ifndef RELEASE
 void debug_break()
 {
 	DebugBreak();
 }
+#endif

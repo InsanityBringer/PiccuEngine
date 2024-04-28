@@ -402,7 +402,7 @@ void mmInterface::CopyrightText()
 #if ( defined(MACINTOSH) || (!defined(RELEASE)) || defined(DEMO) )
 	grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d" : "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor, Program_version.build);
 #else
-	grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d Build %d" : "%s v%d.%d", type, Program_version.major, Program_version.minor, Program_version.build,D3_RELEASE_BUILD_NO);
+	grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d Build %d" : "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor, Program_version.build,D3_RELEASE_BUILD_NO);
 #endif
 //	grtext_CenteredPrintf(0, Max_window_h-16, "(c) 1998 Outrage Entertainment, Inc.");
 
