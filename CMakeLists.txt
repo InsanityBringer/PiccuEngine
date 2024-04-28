@@ -41,7 +41,7 @@ ENDIF()
 IF (WIN32)
 	SET(D3_GAMEDIR "c:/games/Descent3/")	
 	set (CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "lib/win" "lib/win/directx" "thirdparty/OpenAL/libs/Win32") 
-	SET(CMAKE_CXX_FLAGS_DEBUG "/Od /Gm /EHsc /RTC1 /MTd  /W3 /nologo /c /ZI /TP /errorReport:prompt")
+	SET(CMAKE_CXX_FLAGS_DEBUG "/Od /EHsc /RTC1 /MTd  /W3 /nologo /c /ZI /TP /errorReport:prompt")
 	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL /FD /EHsc /MT /W3 /nologo /c /Zi /TP /errorReport:prompt")
 	
 	
@@ -199,6 +199,10 @@ ENDIF()
 add_executable(Descent3 ${DESCENT3_SOURCES})
 target_link_libraries(Descent3 
 	${PLATFORM_LIBS})
+	
+target_compile_definitions(Descent3 PUBLIC "$<$<CONFIG:RELEASE>:RELEASE>")
+target_compile_definitions(Descent3 PUBLIC "$<$<CONFIG:MINSIZEREL>:RELEASE>")
+target_compile_definitions(Descent3 PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
 	
 install(TARGETS Descent3 DESTINATION ${D3_GAMEDIR})
 
