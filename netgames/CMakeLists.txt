@@ -9,3 +9,9 @@ ADD_SUBDIRECTORY(dmfc)
 #ADD_SUBDIRECTORY(monsterball)
 #ADD_SUBDIRECTORY(roboanarchy)
 #ADD_SUBDIRECTORY(tanarchy)
+
+#Transfer variables to root scope
+set (DMFC_SOURCES
+	${DMFC_SOURCES}
+	PARENT_SCOPE)
+	

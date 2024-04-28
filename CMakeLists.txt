@@ -1,5 +1,4 @@
-# CMake compatibility issues: don't modify this, please!
-CMAKE_MINIMUM_REQUIRED( VERSION 2.4.6 )
+CMAKE_MINIMUM_REQUIRED( VERSION 3.11 )
 
 MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 # allow more human readable "if then else" constructs
@@ -203,6 +202,10 @@ target_link_libraries(Descent3
 target_compile_definitions(Descent3 PUBLIC "$<$<CONFIG:RELEASE>:RELEASE>")
 target_compile_definitions(Descent3 PUBLIC "$<$<CONFIG:MINSIZEREL>:RELEASE>")
 target_compile_definitions(Descent3 PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
+
+add_library(dmfc SHARED ${DMFC_SOURCES})
+target_compile_definitions(dmfc PUBLIC -DOUTRAGE_VERSION -DDMFC_DLL)
+target_include_directories(dmfc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/netgames/includes")
 	
 install(TARGETS Descent3 DESTINATION ${D3_GAMEDIR})
 
@@ -233,6 +236,8 @@ source_group("movie" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/movie/.+")
 source_group("music" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/music/.+")
 source_group("mve" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/mve/.+")
 source_group("networking" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/networking/.+")
+source_group("netgames" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netgames/.+")
+source_group("netgames/dmfc" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netgames/dmfc/.+")
 source_group("physics" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/physics/.+")
 source_group("renderer" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/renderer/.+")
 source_group("rtperformance" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/rtperformance/.+")
