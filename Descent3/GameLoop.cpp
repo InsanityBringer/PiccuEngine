@@ -43,7 +43,6 @@
 #include "BOA.h"
 #include "lighting.h"
 #include "findintersection.h"
-#include "soar.h"
 #include "multi.h"
 #include "hud.h"
 #include "bsp.h"
@@ -1610,25 +1609,6 @@ void ProcessTestKeys(int key)
 			break;
 
 		case KEY_F11:
-	/*
-			if(Player_object->control_type != CT_SOAR)
-			{
-				AddHUDMessage("SOAR ON.  Auto-pilot engaged.");
-
-				SetObjectControlType(Player_object, CT_SOAR);
-				SoarCreateAgent(OBJNUM(Player_object), 0);
-			}
-			else
-			{
-				AddHUDMessage("SOAR OFF.  Manual control returned.");
-
-				SoarDestroyAgent(OBJNUM(Player_object), 0);
-				SetObjectControlType(Player_object, CT_FLYING);
-			}
-			break;
-
-		case KEY_F12:
-		*/
 			{
 				char test[MAX_MATCEN_NAME_LEN];
 				bool f_name_changed;

@@ -119,8 +119,6 @@ SET (MAIN_SOURCES
 		Descent3/ship.h
 		Descent3/slew.h
 		Descent3/SmallViews.h
-		Descent3/soar.h
-		Descent3/soar_helpers.h
 		Descent3/sounds.h
 		Descent3/special_face.h
 		Descent3/spew.h
@@ -249,8 +247,6 @@ SET (MAIN_SOURCES
 		Descent3/ship.cpp
 		Descent3/SLEW.cpp
 		Descent3/SmallViews.cpp
-		Descent3/soar.cpp
-		Descent3/soar_helpers.cpp
 		Descent3/special_face.cpp
 		Descent3/spew.cpp
 		Descent3/splinter.cpp
