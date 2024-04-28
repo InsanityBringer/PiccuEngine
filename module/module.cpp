@@ -15,81 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/module/module.cpp $
-* $Revision: 20 $
-* $Date: 10/21/99 2:43p $
-* $Author: Kevin $
-*
-* Source for Dynamic Loadable Module functions
-*
-* $Log: /DescentIII/Main/module/module.cpp $
- * 
- * 20    10/21/99 2:43p Kevin
- * Mac Merge
- * 
- * 19    8/24/99 4:33p Jeff
- * fixed bug with finding alternate file names in Linux
- * 
- * 18    8/22/99 7:12p Jeff
- * when open a module on a Linux system, if the original open fails, then
- * check for alternate files with different case.
- * 
- * 17    8/16/99 11:48a Nate
- * (JEFF) Use calls to dd_ instead of ddio_ (this library cannot be
- * dependant on any other libs)
- * 
- * 16    7/28/99 5:22p Kevin
- * Mac Merge fixes
- * 
- * 15    7/28/99 2:17p Kevin
- * Macintosh Stuff!
- * 
- * 14    5/13/99 5:07p Ardussi
- * changes for compiling on the Mac
- * 
- * 13    4/19/99 4:01a Jeff
- * fixed splitpath
- * 
- * 12    4/18/99 3:14p Jeff
- * fixed splitpath for linux
- * 
- * 11    4/16/99 1:06a Jeff
- * 
- * 10    1/19/99 1:08p Jason
- * added dynamically loadable dlls
- * 
- * 9     1/14/99 10:36a Jeff
- * removed ddio_ dependency (requires a #ifdef around functions taken out
- * of ddio_)
- * 
- * 8     1/13/99 6:50a Jeff
- * made linux friendly (#include case-sensitivity)
- * 
- * 7     1/11/99 1:01p Jeff
- * code will convert an .so->.dll for win32 and .dll->.so for Linux
- * 
- * 6     1/11/99 12:53p Jeff
- * added a function that given a module name it will make sure it has an
- * extension.  Made Osiris friendly with modules with no extension
- * 
- * 5     1/11/99 12:29p Jeff
- * tack on an automatic extension to the module name if one isn't given
- * (system dependent)
- * 
- * 4     1/10/99 6:47a Jeff
- * Changes made to get linux version to compile
- * 
- * 3     7/06/98 10:45a Jeff
- * Made Linux friendly
- * 
- * 2     6/05/98 2:15p Jeff
- * Initial creation
- * 
- * 1     6/05/98 2:14p Jeff
-*
-* $NoKeywords: $
-*/
+
 #include "module.h"
 #include "pstypes.h"
 #include "pserror.h"
@@ -99,10 +25,6 @@
 bool mod_FindRealFileNameCaseInsenstive(const char *directory,const char *filename,char *new_filename);
 #endif
 
-#ifdef MACINTOSH
-#include <Files.h>
-#include <CodeFragments.h>
-#endif
 #include "module.h"
 #include "pstypes.h"
 #include "pserror.h"
@@ -165,182 +87,8 @@ void dd_MakePath(char* newPath, const char* absolutePathHeader, const char* subD
 		}
 	va_end(args);	
 }
-#elif defined(MACINTOSH)
-//DAJ why duplicate the functions that ddio provides???
-// Split a pathname into its component parts
-void dd_SplitPath(const char* srcPath, char* path, char* filename, char* ext)
-{
-#ifdef FIXED
-	char drivename[_MAX_DRIVE], dirname[_MAX_DIR];
-	_splitpath(srcPath, drivename, dirname, filename, ext);
-	if (path) 
-		sprintf(path, "%s%s", drivename, dirname);
 #endif
-}
-// Constructs a path in the local file system's syntax
-// 	newPath: stores the constructed path
-//  absolutePathHeader: absolute path on which the sub directories will be appended
-//						(specified in local file system syntax)
-//  takes a variable number of subdirectories which will be concatenated on to the path
-//		the last argument in the list of sub dirs *MUST* be NULL to terminate the list
-void dd_MakePath(char* newPath, const char* absolutePathHeader, const char* subDir, ...)
-{
-#ifdef FIXED
-	const char	delimiter = '\\';
-	va_list		args;
-	char*		currentDir = NULL;
-	int			pathLength = 0;
-	
-	assert(newPath);
-	assert(absolutePathHeader);
-	assert(subDir);
-		
-	if (newPath != absolutePathHeader)
-	{
-		strcpy(newPath, absolutePathHeader);
-	}
-	// Add the first sub directory
-	pathLength = strlen(newPath);
-	if (newPath[pathLength - 1] != delimiter)
-	{
-		newPath[pathLength] = delimiter;		// add the delimiter
-		newPath[pathLength+1] = 0;				// terminate the string
-	}
-	strcat(newPath, subDir);		
-	
-	// Add the additional subdirectories
-	va_start(args, subDir);
-		while ((currentDir = va_arg(args, char*)) != NULL)
-		{
-			pathLength = strlen(newPath);
-			if (newPath[pathLength - 1] != delimiter)
-			{
-				newPath[pathLength] = delimiter;		// add the delimiter
-				newPath[pathLength+1] = 0;				// terminate the string
-			}
-			strcat(newPath, currentDir);		
-		}
-	va_end(args);	
-#endif
-}
-#elif defined(__LINUX__)
-// Split a pathname into its component parts
-void dd_SplitPath(const char* srcPath, char* path, char* filename, char* ext)
-{
-  int pathStart 	= -1;
-  int pathEnd 	= -1;
-  int fileStart	= -1;
-  int fileEnd 	= -1;
-  int extStart	= -1;
-  int	extEnd		= -1;
-  int totalLen = strlen(srcPath);
-  // Check for an extension
-  ///////////////////////////////////////
-  int t = totalLen - 1;
-  while( (srcPath[t]!='.') && (srcPath[t]!='/') && (t>=0) ) t--;
-  //see if we are at an extension
-  if((t>=0)&&(srcPath[t]=='.')){
-    //we have an extension
-    extStart = t;
-    extEnd = totalLen - 1;
-    if(ext)
-    {
-    	strncpy(ext,&(srcPath[extStart]),extEnd - extStart + 1);
-    	ext[extEnd - extStart + 1] = '\0';
-    }
-  }else{
-    //no extension
-    if(ext)
-    	ext[0] = '\0';
-  }
-  
-  // Check for file name
-  ////////////////////////////////////
-  int temp = (extStart!=-1)?(extStart):(totalLen-1);
-  while( (srcPath[temp]!='/') && (temp>=0) ) temp--;
-  if(temp<0)
-    temp = 0;
-  if(srcPath[temp]=='/'){
-    //we have a file
-    fileStart = temp + 1;
-    if(extStart!=-1)
-      fileEnd = extStart - 1;
-    else
-      fileEnd = totalLen - 1;
-    if(filename)
-    {
-    	strncpy(filename,&(srcPath[fileStart]),fileEnd - fileStart + 1);
-    	filename[fileEnd - fileStart + 1] = '\0';
-    }
-    pathStart = 0;
-    pathEnd = fileStart - 2;
-    //Copy the rest into the path name
-	if(path)
-	{
-		strncpy(path, &(srcPath[pathStart]),pathEnd - pathStart + 1);
-	   	path[pathEnd - pathStart + 1] = 0;
-	}
-  }else{
-    //only file, no path
-    fileStart = 0;
-    if(extStart != -1)
-      fileEnd = extStart - 1;
-    else
-      fileEnd = totalLen - 1;
-    if(filename)
-    {
-    	strncpy(filename, &(srcPath[fileStart]), fileEnd - fileStart + 1);
-    	filename[fileEnd - fileStart + 1] = 0;
-    }
-    
-    // Only file no path
-    if(path)
-    {
-    	path[0] = 0;
-    }
-  }
-}
-// Constructs a path in the local file system's syntax
-// 	newPath: stores the constructed path
-//  absolutePathHeader: absolute path on which the sub directories will be appended
-//						(specified in local file system syntax)
-//  takes a variable number of subdirectories which will be concatenated on to the path
-//		the last argument in the list of sub dirs *MUST* be NULL to terminate the list
-void dd_MakePath(char* newPath, const char* absolutePathHeader, const char* subDir, ...)
-{
-  const char delimiter = '/';
-  va_list args;
-  char* currentDir = NULL;
-  int pathLength = 0;
-  
-  ASSERT(newPath);
-  ASSERT(absolutePathHeader);
-  ASSERT(subDir);
-  
-  if (newPath != absolutePathHeader){
-    strcpy(newPath, absolutePathHeader);
-  }
-  // Add the first sub directory
-  pathLength = strlen(newPath);
-  if (newPath[pathLength - 1] != delimiter){
-    newPath[pathLength] = delimiter;	 // add the delimiter
-    newPath[pathLength+1] = 0;         // terminate the string
-  }
-  strcat(newPath, subDir);
-  
-  // Add the additional subdirectories
-  va_start(args, subDir);
-  while ((currentDir = va_arg(args, char*)) != NULL){
-    pathLength = strlen(newPath);		    
-    if (newPath[pathLength - 1] != delimiter){
-      newPath[pathLength] = delimiter; // add the delimiter
-      newPath[pathLength+1] = 0;       // terminate the string
-    }
-    strcat(newPath, currentDir);
-  }
-  va_end(args);	
-}
-#endif
+
 int ModLastError = MODERR_NOERROR;
 //	Returns the real name of the module.  If a given file has an extension, it will
 //	just return that filename.  If the given file has no given extension, the 
@@ -348,16 +96,10 @@ int ModLastError = MODERR_NOERROR;
 void mod_GetRealModuleName(const char *modfilename,char *realmodfilename)
 {
 	char pathname[_MAX_PATH],filename[_MAX_FNAME],extension[_MAX_EXT];
-#ifdef MACINTOSH
-	ddio_SplitPath(modfilename,pathname,filename,extension);
-#else
 	dd_SplitPath(modfilename,pathname,filename,extension);
-#endif
 	if(*extension=='\0')
 #if		defined (WIN32)	
 		strcat(filename,".dll");
-#elif	defined(MACINTOSH)
-		strcat(filename,".msl");
 #elif	defined (__LINUX__)
                 #if defined(MACOSX)
 		strcat(filename,".dylib");
@@ -369,11 +111,6 @@ void mod_GetRealModuleName(const char *modfilename,char *realmodfilename)
 #if		defined (WIN32)
 	  if(!stricmp(extension,".so") || !stricmp(extension,"msl") || !stricmp(extension,"dylib"))
 			strcat(filename,".dll");
-		else
-			strcat(filename,extension);
-#elif	defined (MACINTOSH)
-		if(!stricmp(extension,".dll") || !stricmp(extension,"so") || !stricmp(extension,"dylib"))
-			strcat(filename,".msl");
 		else
 			strcat(filename,extension);
 #elif	defined (__LINUX__) && !defined(MACOSX)
@@ -390,11 +127,7 @@ void mod_GetRealModuleName(const char *modfilename,char *realmodfilename)
 #endif
 	}
 	if(*pathname!='\0')
-#ifdef MACINTOSH
-		ddio_MakePath(realmodfilename,pathname,filename,NULL);
-#else
 		dd_MakePath(realmodfilename,pathname,filename,NULL);
-#endif
 	else
 		strcpy(realmodfilename,filename);
 }
@@ -403,11 +136,13 @@ void mod_GetRealModuleName(const char *modfilename,char *realmodfilename)
 //modfilename is the name of the module (without an extension such as DLL, or so)
 bool mod_LoadModule(module *handle,char *imodfilename,int flags)
 {
-	if(!imodfilename){
+	if(!imodfilename)
+	{
 		ModLastError = MODERR_OTHER;
 		return false;
 	}
-	if(!handle)	{
+	if(!handle)
+	{
 		ModLastError = MODERR_INVALIDHANDLE;
 		return false;
 	}
@@ -416,7 +151,8 @@ bool mod_LoadModule(module *handle,char *imodfilename,int flags)
 	mod_GetRealModuleName(imodfilename,modfilename);
 #if		defined (WIN32)	
 	handle->handle = LoadLibrary(modfilename);
-	if(!handle->handle){
+	if(!handle->handle)
+	{
 		//There was an error loading the module
 		DWORD err = GetLastError();
 		switch(err){
@@ -470,30 +206,6 @@ bool mod_LoadModule(module *handle,char *imodfilename,int flags)
 			}
 		}
 	}
-#elif defined (MACINTOSH)
-	OSErr err = noErr;
-	FSSpec SLSpec;
-	Str255 errName;
-	Str63 toolName;
-	Ptr myMainAddr;
-	CFragConnectionID connID;
-	Str255 symName;	
-	strcpy((char*) symName, modfilename);
-	c2pstr((char*) symName);
-	err = FSMakeFSSpec(0, 0L, symName, &SLSpec);
-	if(err) {
-		mprintf((2, "could not make FSSpec in loadModule\n"));
-//		Int3();
-	}
-	err = GetDiskFragment(&SLSpec, 0, 0, NULL, 5, &connID, (Ptr*)NULL, NULL);
-//	err = GetDiskFragment(&SLSpec, 0, kCFragGoesToEOF, toolName, kPrivateCFragCopy, &connID, (Ptr*)&myMainAddr, errName);
-	if(err) {
-		mprintf((2, "could not get disk fragmet %s\n", modfilename));
-//		Int3();;
-	}
-		
-	handle->handle = connID;
-	mprintf((0, "opening fragment ID 0x%X\n", handle->handle));
 #endif
 	//Success
 	return true;
@@ -516,17 +228,6 @@ bool mod_FreeModule(module *handle)
 	ret = (FreeLibrary(handle->handle)!=0);
 #elif	defined (__LINUX__)
 	dlclose(handle->handle);//dlclose() returns an int, but no docs say what values!!!
-#elif	defined (MACINTOSH)
-/*	//BROKE! but not needed, OS closes connection on quit
-	OSErr err = noErr;
-	if(handle->handle)
-		mprintf((0, "closeing fragment 0x%X\n", handle->handle));
-		err = CloseConnection((CFragConnectionID*)handle->handle);
-		if(err != noErr) {
-			mprintf((2, "could not close fragment 0x%X\n", handle->handle));
-//			return false;
-	}
-*/
 #endif
 	handle->handle = NULL;
 	return ret;
@@ -573,10 +274,11 @@ MODPROCADDRESS mod_GetSymbol(module *handle,char *symstr,unsigned char parmbytes
 		}
 		
 	}
-	if(!sym){
+	if(!sym)
+	{
 		//there was an error
-	
-		switch(err){
+		switch(err)
+		{
 		case ERROR_DLL_INIT_FAILED:
 			ModLastError = MODERR_MODINITFAIL;
 			break;
@@ -594,34 +296,6 @@ MODPROCADDRESS mod_GetSymbol(module *handle,char *symstr,unsigned char parmbytes
 	}
 #elif	defined (__LINUX__)
 	sym = dlsym(handle->handle,symstr);
-	if(!sym){
-		ModLastError = MODERR_OTHER;
-		return NULL;
-	}
-#elif	defined (MACINTOSH)
-	OSErr err = noErr;
-	CFragSymbolClass symClass;
-	CFragConnectionID connID;
-	Str255 symName;	
-	mprintf((0, "finding %s in fragment 0x%X\n", symstr, handle->handle));
-	connID = (CFragConnectionID) handle->handle;
-	
-	//DAJ for testing only
-	long numSym;
-	Ptr symAddr;
-	err = CountSymbols(connID, &numSym);
-	for(int i = 0; i < numSym; i++) {
-		err = GetIndSymbol (connID, i, symName, &symAddr, &symClass);
-	}
-
-	strcpy((char*) symName, symstr);
-	c2pstr((char*) symName);
-	
-	err =  FindSymbol (connID, symName, (Ptr *)&sym, &symClass);
-	if(err) {
-		mprintf((2, "could not find %s in fragment %d\n", symstr, handle->handle));
-		return NULL;
-	}
 	if(!sym){
 		ModLastError = MODERR_OTHER;
 		return NULL;

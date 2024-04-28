@@ -15,56 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/lib/module.h $
-* $Revision: 12 $
-* $Date: 7/14/99 6:43p $
-* $Author: Jeff $
-*
-* Header for Dynamic Loadable Modules
-*
-* $Log: /DescentIII/Main/lib/module.h $
- * 
- * 12    7/14/99 6:43p Jeff
- * don't load modules globally by default
- * 
- * 11    7/13/99 5:40p Jeff
- * fixes for Linux compile
- * 
- * 10    6/25/99 4:58p Jeff
- * default module load as global
- * 
- * 9     5/10/99 10:53p Ardussi
- * changes to compile on Mac
- * 
- * 8     4/19/99 3:57a Jeff
- * changed define for Linux in order for multiplayer games to compile
- * 
- * 7     4/15/99 2:57a Jeff
- * added missing defines for linux
- * 
- * 6     1/11/99 12:53p Jeff
- * added a function that given a module name it will make sure it has an
- * extension.  Made Osiris friendly with modules with no extension
- * 
- * 5     1/04/99 12:24p Jeff
- * updated...added compiler friendly define for dll functions that return
- * a pointer
- * 
- * 4     11/13/98 6:36p Jeff
- * created dmfc_dll (a DLL version of DMFC) and converted current mods to
- * use it
- * 
- * 3     7/06/98 10:45a Jeff
- * Made Linux friendly
- * 
- * 2     6/05/98 2:15p Jeff
- * Initial creation
- * 
- * 1     6/05/98 2:14p Jeff
-*
-* $NoKeywords: $
-*/
 
 #ifndef __DLMODULE_H_
 #define __DLMODULE_H_
@@ -94,9 +44,10 @@
 #define DLLFUNCEXPORT	__declspec (dllexport)
 #define DLLFUNCIMPORT	__declspec (dllimport)
 #define DLLEXPORT		CPPEXTERN DLLFUNCEXPORT
-typedef struct{
+struct module
+{
 	HINSTANCE	handle;	//handle to the DLL
-}module;
+};
 //=======================================================================
 #elif defined (__LINUX__)
 //==========================Linux Definitions============================
@@ -109,26 +60,11 @@ typedef struct{
 #define DLLFUNCIMPORT
 #define DLLEXPORT		CPPEXTERN
 
-typedef struct{
+struct module
+{
 	void *handle;	//handle to the DLL
-}module;
-//=======================================================================
-#elif defined (MACINTOSH)
-//==========================Mac Definitions============================
-#define MODPROCADDRESS	void*
-#define DLLFUNCCALL
-#define DLLFUNCCALLPTR	DLLFUNCCALL*
-#define DLLFUNCEXPORT
-#define DLLFUNCIMPORT
-#define DLLEXPORT
-
-typedef struct{
-	void *handle;	//handle to the DLL
-}module;
-//=======================================================================
-
+};
 #endif
-
 
 //Mod error codes
 #define MODERR_NOERROR		0	//There was no error
@@ -168,6 +104,5 @@ MODPROCADDRESS mod_GetSymbol(module *handle,char *symstr,unsigned char parmbytes
 //this function it not only returns the last error, but it removes it, so if you were to call this function again, it would
 //return no error
 int mod_GetLastError(void);
-
 
 #endif
