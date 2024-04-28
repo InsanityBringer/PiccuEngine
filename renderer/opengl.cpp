@@ -338,8 +338,7 @@ void opengl_UpdateFramebuffer()
 
 	GLenum textureType = GL_TEXTURE_2D; //future MSAA support?
 
-	int i;
-	for (i = 0; i < NUM_FBOS; i++)
+	for (int i = 0; i < NUM_FBOS; i++)
 	{
 		glBindTexture(GL_TEXTURE_2D, framebuffer_color_names[i]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
@@ -366,7 +365,8 @@ void opengl_UpdateFramebuffer()
 		}
 	}
 
-	framebuffer_current_draw = i;
+	framebuffer_current_draw = 0;
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_names[0]);
 }
 
 void opengl_CloseFramebuffer()
