@@ -366,7 +366,9 @@ void opengl_UpdateFramebuffer()
 	}
 
 	framebuffer_current_draw = 0;
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_names[0]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer_names[0]);
+	//Unbind the read framebuffer so that OBS can capture the window properly
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
 void opengl_CloseFramebuffer()
@@ -2710,6 +2712,8 @@ void rend_Flip(void)
 	glBlitFramebuffer(0, 0, OpenGL_state.screen_width, OpenGL_state.screen_height, 
 		framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_x + framebuffer_blit_w, framebuffer_blit_y + framebuffer_blit_h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
@@ -2723,7 +2727,7 @@ void rend_Flip(void)
 #endif
 
 	framebuffer_current_draw = (framebuffer_current_draw + 1) % NUM_FBOS;
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_names[framebuffer_current_draw]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer_names[framebuffer_current_draw]);
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)
