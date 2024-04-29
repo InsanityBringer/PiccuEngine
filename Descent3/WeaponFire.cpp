@@ -317,13 +317,14 @@ void AquireElectricalTarget (object *obj)
 		fvi_query fq;														// Movement query
 		vector dest=obj->pos+(obj->orient.fvec*50.0);
 		
-		fq.p0						= &obj->pos;
+		fq.p0					= &obj->pos;
 		fq.startroom  			= obj->roomnum;
-		fq.p1						= &dest;
+		fq.p1					= &dest;
 		fq.rad		  			= .0001f;
-		fq.thisobjnum 			= Objects-obj;
-		fq.ignore_obj_list	= NULL;
-		fq.flags					= FQ_CHECK_OBJS|FQ_IGNORE_POWERUPS|FQ_IGNORE_WEAPONS;
+		//fq.thisobjnum 		= Objects-obj;
+		fq.thisobjnum			= Objects - ObjGet(obj->parent_handle);
+		fq.ignore_obj_list		= NULL;
+		fq.flags				= FQ_CHECK_OBJS|FQ_IGNORE_POWERUPS|FQ_IGNORE_WEAPONS;
 		
 		fate = fvi_FindIntersection(&fq,&hit_info);
 
