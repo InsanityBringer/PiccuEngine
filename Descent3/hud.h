@@ -576,7 +576,7 @@ void ResetHUD();
 void LoadHUDConfig(const char *filename, bool (*fn)(const char *,const char *, void *) = NULL, void *data=NULL);
 
 //	render cockpit and gauges frame
-void RenderHUDFrame();
+void RenderHUDFrame(float zoom);
 
 // renders hud frame before any graphics are drawn
 void RenderPreHUDFrame();

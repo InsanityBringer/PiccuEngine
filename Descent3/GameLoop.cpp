@@ -1914,31 +1914,23 @@ void GameDrawMainView()
 	DebugBlockPrint ("DR");
 }
 
+//Added by Samir
+constexpr float HUD_RENDER_ZOOM = 0.56f;
 
-// Added by Samir
-#define HUD_RENDER_ZOOM	0.56f
-
-// Do Cockpit/Hud
+//Do Cockpit/Hud
 void GameDrawHud()
 {
-//	Start frame and 3d frame
-	StartFrame(false);
-	g3_StartFrame(&Viewer_object->pos,&Viewer_object->orient,HUD_RENDER_ZOOM);
+	//render HUD
+	//[ISB] Moved frame start and end to RenderHUDFrame so it can make decisions based on the current HUD mode. 
+	RenderHUDFrame(HUD_RENDER_ZOOM);
 
-//	render HUD
-	RenderHUDFrame();
-	
-//	End frame
-	g3_EndFrame();
-	EndFrame();
-
-//	render auxillary consoles
+	//render auxillary consoles
 	StartFrame(0,0,Max_window_w, Max_window_h,false);
 	g3_StartFrame(&Viewer_object->pos,&Viewer_object->orient,HUD_RENDER_ZOOM);
 
 	RenderAuxHUDFrame();
 
-//	End frame
+	//End frame
 	g3_EndFrame();
 	EndFrame();
 }

@@ -901,43 +901,62 @@ void LoadHUDConfig(const char *filename, bool (*fn)(const char *,const char *, v
 //		draws stuff accordingly.
 //		render internal gauges too.
 
-void RenderHUDFrame()
+void RenderHUDFrame(float zoom)
 {
 	extern bool Guided_missile_smallview;			// from smallviews.cpp
+
+	//	Start frame and 3d frame
+
+	// [ISB] Calculate a new 4:3 window from the vertical size
+	tHUDMode hudmode = GetHUDMode();
+
+	int temp_window_w = Game_window_w, temp_window_x = Game_window_x;
+	if (hudmode == HUD_FULLSCREEN || hudmode == HUD_COCKPIT)
+	{
+		int game_window_xmid = Game_window_x + Game_window_w / 2;
+
+		Game_window_w = Game_window_h * 4 / 3;
+		Game_window_x = game_window_xmid - Game_window_w / 2;
+	}
+
+	StartFrame(false);
+	g3_StartFrame(&Viewer_object->pos, &Viewer_object->orient, zoom);
 
 	rend_SetOverlayType(OT_NONE);
 
 // determine hud rendering properties.
 	Hud_aspect_x = (float)Game_window_w/DEFAULT_HUD_WIDTH;
 	Hud_aspect_y = (float)Game_window_h/DEFAULT_HUD_HEIGHT;
-	Small_hud_flag = (((float)Game_window_w/(float)Max_window_w) <= 0.80f) ? true : false;
+	Small_hud_flag = (((float)Game_window_h/(float)Max_window_h) <= 0.80f) ? true : false;
 
+	bool must_render_cockpit = false;
 //	render special missile hud if available
-	if (Players[Player_num].guided_obj && !Guided_missile_smallview) {
+	if (Players[Player_num].guided_obj && !Guided_missile_smallview) 
+	{
 		if(!Cinematic_inuse)
 			RenderMissileReticle();
 	}
-	else if (Players[Player_num].flags & PLAYER_FLAGS_ZOOMED) {
+	else if (Players[Player_num].flags & PLAYER_FLAGS_ZOOMED) 
+	{
 		if(!Cinematic_inuse)
 			RenderZoomReticle();
 	}
-	else if (! (Players[Player_num].flags & PLAYER_FLAGS_REARVIEW)) {
-		switch (GetHUDMode())
+	else if (! (Players[Player_num].flags & PLAYER_FLAGS_REARVIEW)) 
+	{
+		switch (hudmode)
 		{
 		case HUD_FULLSCREEN:
 			RenderHUDItems(Hud_stat_mask);
- 			RenderCockpit();									// needed to render animated deactivation sequence and should be dormant
-			if (Game_toggles.show_reticle) {
+			must_render_cockpit = true; // needed to render animated deactivation sequence and should be dormant								
+			if (Game_toggles.show_reticle) 
 				RenderReticle();
-			}
 			break;
 
 		case HUD_COCKPIT:
 			RenderHUDItems(Hud_stat_mask);
- 			RenderCockpit();									// called when cockpit is activating and functioning.
-			if (Game_toggles.show_reticle) {
+			must_render_cockpit = true; // called when cockpit is activating and functioning.									
+			if (Game_toggles.show_reticle) 
 				RenderReticle();
-			}
 			break;
 
 		case HUD_LETTERBOX:
@@ -958,8 +977,28 @@ void RenderHUDFrame()
 	// Do dll stuff
 	CallGameDLL (EVT_CLIENT_HUD_INTERVAL,&DLLInfo);
 
-	rend_SetZBufferState (1);
-	mprintf_at((2,0,0,"FPS: %f",GetFPS()));
+	//	End frame
+	g3_EndFrame();
+	EndFrame();
+
+	if (hudmode == HUD_FULLSCREEN || hudmode == HUD_COCKPIT)
+	{
+		Game_window_w = temp_window_w;
+		Game_window_x = temp_window_x;
+	}
+
+	// [ISB] extra pass to render the cockpit so it always uses correct window
+	if (must_render_cockpit)
+	{
+		StartFrame(false);
+		g3_StartFrame(&Viewer_object->pos, &Viewer_object->orient, zoom);
+		RenderCockpit();
+		g3_EndFrame();
+		EndFrame();
+	}
+
+	rend_SetZBufferState(1);
+	mprintf_at((2, 0, 0, "FPS: %f", GetFPS()));
 }
 
 
@@ -1120,6 +1159,9 @@ extern bool Demo_make_movie;
 
 #define HUD_KEYS_NEXT_LINE	hudconty+=14
 
+// [ISB] When the vertical resolution exceeds this threshold, start scaling the font up.
+constexpr int PICCU_FONT_SCALE_THRESHOLD = 1080;
+
 //	iterate through entire hud item list to draw.
 void RenderHUDItems(tStatMask stat_mask)
 {
@@ -1135,15 +1177,20 @@ void RenderHUDItems(tStatMask stat_mask)
 	font_aspect_x = (float)Game_window_w/Max_window_w;
 	font_aspect_y = (float)Game_window_h/Max_window_h;
 
-	if (font_aspect_x <= 0.60f) {
-		grtext_SetFontScale(0.60f);
+	//[ISB] If the screen height goes above 1080, start scaling it extra to compensate.
+	//The max stock vertical res was 1200, so this seems like a good cutoff. 
+	float extra_scale = 1.0f;
+	if (Max_window_h > PICCU_FONT_SCALE_THRESHOLD)
+	{
+		extra_scale = (float)Max_window_h / PICCU_FONT_SCALE_THRESHOLD;
 	}
-	else if (font_aspect_x <= 0.80f) {
-		grtext_SetFontScale(0.80f);
-	}
-	else {
-		grtext_SetFontScale(1.0f);
-	}																		 
+
+	if (font_aspect_y <= 0.60f)
+		grtext_SetFontScale(0.60f * extra_scale);
+	else if (font_aspect_y <= 0.80f)
+		grtext_SetFontScale(0.80f * extra_scale);
+	else 
+		grtext_SetFontScale(extra_scale);																	 
 
 //	do framerate calculations
 	framerate_timer -= Frametime;
