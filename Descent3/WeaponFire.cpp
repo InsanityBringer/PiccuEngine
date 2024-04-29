@@ -321,8 +321,8 @@ void AquireElectricalTarget (object *obj)
 		fq.startroom  			= obj->roomnum;
 		fq.p1					= &dest;
 		fq.rad		  			= .0001f;
-		//fq.thisobjnum 		= Objects-obj;
-		fq.thisobjnum			= Objects - ObjGet(obj->parent_handle);
+		fq.thisobjnum			= Objects-obj;
+		//fq.thisobjnum			= Objects - ObjGet(obj->parent_handle);
 		fq.ignore_obj_list		= NULL;
 		fq.flags				= FQ_CHECK_OBJS|FQ_IGNORE_POWERUPS|FQ_IGNORE_WEAPONS;
 		

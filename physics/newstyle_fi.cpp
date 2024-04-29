@@ -387,12 +387,24 @@ bool PolyCollideObject(object *obj)
 
 	ASSERT(obj >= Objects && obj <= &Objects[Highest_object_index]);
 
-	#ifndef NED_PHYSICS
-	if ((Game_mode & GM_MULTI) && !(Netgame.flags & NF_USE_ACC_WEAP) && Objects[fvi_moveobj].type == OBJ_WEAPON && obj->type == OBJ_PLAYER)
-		f_use_big_sphere=true;
-	#endif
+	if (fvi_moveobj > -1)
+	{
+#ifndef NED_PHYSICS
+		if ((Game_mode & GM_MULTI) && !(Netgame.flags & NF_USE_ACC_WEAP) && Objects[fvi_moveobj].type == OBJ_WEAPON && obj->type == OBJ_PLAYER)
+			f_use_big_sphere = true;
+#endif
 
-	fvi_do_orient = (Objects[fvi_moveobj].type == OBJ_WEAPON);
+		fvi_do_orient = (Objects[fvi_moveobj].type == OBJ_WEAPON);
+	}
+	else // [ISB] Huge confusion here about whether or not this should ever be approached with a objnum < 0. Object 0, the local player, is treated differently as a result. 
+	{
+#ifndef NED_PHYSICS
+		if ((Game_mode & GM_MULTI) && !(Netgame.flags & NF_USE_ACC_WEAP) && Objects[-fvi_moveobj].type == OBJ_WEAPON && obj->type == OBJ_PLAYER)
+			f_use_big_sphere = true;
+#endif
+
+		fvi_do_orient = (Objects[-fvi_moveobj].type == OBJ_WEAPON);
+	}
 
 	#ifndef NED_PHYSICS
 	if(f_use_big_sphere)
@@ -402,8 +414,16 @@ bool PolyCollideObject(object *obj)
 		if(addition < MULTI_ADD_SPHERE_MIN)
 		{
 			addition = MULTI_ADD_SPHERE_MIN;
-			if (Objects[fvi_moveobj].mtype.phys_info.flags & PF_NEVER_USE_BIG_SPHERE)
-				addition/=2;
+			if (fvi_moveobj > -1)
+			{
+				if (Objects[fvi_moveobj].mtype.phys_info.flags & PF_NEVER_USE_BIG_SPHERE)
+					addition /= 2;
+			}
+			else
+			{
+				if (Objects[-fvi_moveobj].mtype.phys_info.flags & PF_NEVER_USE_BIG_SPHERE)
+					addition /= 2;
+			}
 		}
 		else if(addition > MULTI_ADD_SPHERE_MAX)
 			addition = MULTI_ADD_SPHERE_MAX;
