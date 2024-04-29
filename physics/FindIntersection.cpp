@@ -2132,6 +2132,10 @@ int fvi_QuickDistCellList(int init_cell_index, vector *pos, float rad, int *quic
 	{
 		for(xcounter = xstart; xcounter <= xend; xcounter++) 
 		{
+			// [ISB] Why are we falling out of bounds here?
+			if (cur_node + TERRAIN_WIDTH + 1 >= TERRAIN_WIDTH * TERRAIN_DEPTH || cur_node < 0)
+				continue;
+			
 			if((Terrain_seg[cur_node].y                     >= pos->y - rad) ||
 				(Terrain_seg[cur_node + TERRAIN_WIDTH + 1].y >= pos->y - rad) ||
 				(Terrain_seg[cur_node + 1].y                 >= pos->y - rad) ||
