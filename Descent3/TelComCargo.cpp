@@ -15,71 +15,12 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/TelComCargo.cpp $
-* $Revision: 16 $
-* $Date: 4/23/99 9:25p $
-* $Author: Matt $
-*
-* TelCom Cargo implentation
-*
-* $Log: /DescentIII/main/TelComCargo.cpp $
- * 
- * 16    4/23/99 9:25p Matt
- * Fixed a dereferencing bug that was causing this screen to use totally
- * different fonts than the code intended.  It now uses the two briefing
- * fonts.
- * 
- * 15    4/19/99 3:47a Jeff
- * fixed min/max for linux
- * 
- * 14    4/14/99 4:19a Jeff
- * more case mismatch fixes in #includes
- * 
- * 13    4/14/99 3:57a Jeff
- * fixed case mismatch in #includes
- * 
- * 12    2/20/99 9:22p Jeff
- * finished telcom level goals screen.  Made it so if you go into the
- * telcom from the game it goes to main menu instead of briefings.
- * 
- * 11    2/01/99 9:17a Matt
- * Fixed compile warning
- * 
- * 10    1/30/99 4:42p Jeff
- * primative ship status
- * 
- * 9     1/29/99 7:13p Jeff
- * localization
- * 
- * 8     10/12/98 8:32p Jeff
- * changed the way focus is handled
- * 
- * 7     10/08/98 4:23p Kevin
- * Changed code to comply with memory library usage. Always use mem_malloc
- * , mem_free and mem_strdup
- * 
- * 6     8/28/98 12:57p Jeff
- * added sounds and some key functionality
- * 
- * 5     8/27/98 2:51p Jeff
- * New TelCom finally checked in
- * 
- * 4     7/11/98 9:17p Jeff
- * looking much better.  Most of the functionality is now done.
- * 
- * 3     7/10/98 7:49p Jeff
- * 
- * 2     7/08/98 8:06p Jeff
- * Initial creation of TelComCargo
-*
-* $NoKeywords: $
-*/
 
 #include "TelComCargo.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <algorithm>
 
 #include "CFILE.H"
 #include "pserror.h"
@@ -115,10 +56,6 @@
 #define LID_SECONDARIES			3
 #define LID_COUNTERMEASURES		4
 #define LID_INVENTORY			5
-
-#ifdef __LINUX__
-#define max(a,b) ((a>b)?a:b)
-#endif
 
 typedef struct{
 	ubyte type;
@@ -167,7 +104,7 @@ int TCCargoCreateLine(int id,int y,char *title,int type)
 			grtext_SetFont(SM_FONT);
 
 			float shields = Player_object->shields;
-			shields = max(shields,0);			
+			shields = std::max(shields,0.f);			
 			int perc = (int) ((shields/INITIAL_SHIELDS)*100.0f);
 			grtext_Printf(TITLE_X,y,title);
 			grtext_Printf(VALUE_X,y,"%d%c",perc,'%'); y+=small_height;
@@ -179,7 +116,7 @@ int TCCargoCreateLine(int id,int y,char *title,int type)
 			grtext_SetFont(SM_FONT);
 
 			float energy = Players[Player_num].energy;
-			energy = max(energy,0);			
+			energy = std::max(energy,0.f);			
 			int perc = (int) ((energy/INITIAL_ENERGY)*100.0f);
 			grtext_Printf(TITLE_X,y,title);
 			grtext_Printf(VALUE_X,y,"%d%c",perc,'%'); y+=small_height;

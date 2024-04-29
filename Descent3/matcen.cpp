@@ -15,129 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/matcen.cpp $
- * $Revision: 71 $
- * $Date: 4/19/00 5:35p $
- * $Author: Matt $
- *
- * Matcen code
- *
- * $Log: /DescentIII/main/matcen.cpp $
- * 
- * 71    4/19/00 5:35p Matt
- * From Duane for 1.4
- * Added include
- * 
- * 70    3/20/00 12:14p Matt
- * Merge of Duane's post-1.3 changes.
- * Check for bad array index.  This change duplicates Jason's fix of the
- * same bug, but Duane's code looks a little more thorough.
- * 
- * 69    1/24/00 11:49p Jason
- * Fixed array indexing error with matcens
- * 
- * 68    10/21/99 4:50p Matt
- * Mac merge
- * 
- * 67    8/15/99 12:22p Gwar
- * more matcen support in NEWEDITOR (almost done)
- * 
- * 66    8/12/99 7:55p Gwar
- * fixed a compiler warning
- * 
- * 65    8/11/99 9:15p Gwar
- * matcen support for NEWEDITOR
- * 
- * 64    7/28/99 4:05p Kevin
- * Mac
- * 
- * 63    5/19/99 3:24p Jason
- * fixed wrong ordering of InitObjectScripts and MultiSendObject
- * 
- * 62    5/10/99 10:22p Ardussi
- * changes to compile on Mac
- * 
- * 61    5/09/99 1:15a Jason
- * got rid of weird post production effect
- * 
- * 60    5/05/99 4:51p Jason
- * don't tile matcens so much
- * 
- * 59    5/04/99 8:51p Chris
- * Fixed homing missile problem (a PTMC matcen created robot would have a
- * parent of a non-AI object).  Homers use the ultimate parent.  Fun bug.
- * :)
- * 
- * 58    5/03/99 1:15p Jason
- * fixed matcen procedural effect
- * 
- * 57    5/02/99 10:26p Matt
- * Fixed silly little bug
- * 
- * 56    5/02/99 7:30p Jason
- * added "none" type procedural creation effect
- * 
- * 55    5/02/99 6:55p Jeff
- * fixed bug where a sound based off an object would not play because the
- * object wasn't created yet (Jason)
- * 
- * 54    4/29/99 4:50p Chris
- * Fixed matcen and Osiris created objects so thier ambient sounds play
- * 
- * 53    4/25/99 3:16p Chris
- * Fixed a coop bug with matcen functioning on the server
- * 
- * 52    4/23/99 11:28a Jason
- * fixed matcen viseffect problem
- * 
- * 51    4/21/99 11:05a Kevin
- * new ps_rand and ps_srand to replace rand & srand
- * 
- * 50    4/19/99 3:45a Jeff
- * fixed min/max problem
- * 
- * 49    4/18/99 10:55p Chris
- * matcens now have defualts sounds
- * 
- * 48    4/14/99 2:51a Jeff
- * fixed some case mismatched #includes
- * 
- * 47    4/12/99 6:15p Samir
- * Sound priorities pass 1
- * 
- * 46    4/02/99 3:58p Jason
- * sped up vis effect stuff
- * 
- * 45    3/22/99 11:24a Chris
- * Matcen generates an osiris call even if no object is produced
- * 
- * 44    3/05/99 9:57a Chris
- * Fixed bugs with walkers
- * 
- * 43    3/04/99 3:24p Chris
- * FIxed matcens and walkers
- * 
- * 42    2/24/99 10:58a Dan
- * CHRIS - Fixed the external room matcen problem
- * 
- * 41    2/19/99 4:49p Dan
- * Matcens *should* be able to be placed on external rooms
- * 
- * 40    2/19/99 4:41p Dan
- * External rooms can now be matcens...  (Objects are created in the
- * connection room)
- * 
- * 39    2/13/99 4:24p Chris
- * Fixed an off by one bug in num_prod_type
- * 
- * 38    2/10/99 1:47p Matt
- * Changed object handle symbolic constants
- * 
- * 37    2/09/99 1:23p Matt
- * Added object-generated notification event
- * 
- */
 
 #ifdef NEWEDITOR
 #include "globals.h"
@@ -173,12 +50,7 @@
 #endif
 #include "psrand.h"
 #include "demofile.h"
-
-#ifdef __LINUX__
-#define max(a,b) ((a>b)?a:b)
-#elif defined(MACINTOSH)
-#include "Macros.h"
-#endif
+#include <algorithm>
 
 // Beginning of the real file
 #define LEVEL_DATA_MATCEN_VERSION 1
@@ -1895,7 +1767,7 @@ void matcen::DoRenderFrame()
 								vis->lifeleft=1;
 								vis->lifetime=1;
 								vis->flags=VF_USES_LIFELEFT|VF_EXPAND|VF_LINK_TO_VIEWER;
-								vis->billboard_info.width=max (1,size/2);
+								vis->billboard_info.width=std::max (1.f,size/2);
 								vis->billboard_info.texture=1;
 								vis->velocity.x=1;
 								vis->velocity.y=1;

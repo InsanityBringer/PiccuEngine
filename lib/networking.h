@@ -15,143 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/networking.h $
- * $Revision: 1.9 $
- * $Date: 2004/12/05 04:00:20 $
- * $Author: ryan $
- *
- *
- *
- * $Log: networking.h,v $
- * Revision 1.10  2004/12/05 04:38:23  ryan
- * Disable IPX support.
- *
- * Revision 1.9  2004/12/05 04:00:20  ryan
- * MacOS X patches.
- *
- * Revision 1.8  2004/03/21 17:11:39  kevinb
- * Fixes so linux will compile again. Tested with gcc-2.96
- *
- * Revision 1.7  2004/02/25 00:04:06  ryan
- * Removed loki_utils dependency and ported to MacOS X (runs, but incomplete).
- *
- * Revision 1.6  2004/02/09 04:14:51  kevinb
- * Added newlines to all headers to reduce number of warnings printed
- *
- * Made some small changes to get everything compiling.
- *
- * All Ready to merge the 1.5 tree.
- *
- * Revision 1.5  2001/01/13 21:48:46  icculus
- * patched to (re)compile on win32.
- *
- * Revision 1.4  2000/09/22 19:05:40  icculus
- * updated
- *
- * Revision 1.3  2000/06/24 01:15:15  icculus
- * patched to compile.
- *
- * Revision 1.2  2000/06/03 14:33:51  icculus
- * Merge with Outrage 1.4 tree...
- *
- * Revision 1.1.1.1  2000/04/18 00:00:38  icculus
- * initial checkin
- *
- * 
- * 49    8/31/99 5:30p Jason
- * network statistics code
- * 
- * 48    8/21/99 3:14a Jeff
- * real async lookup in linux
- * 
- * 47    7/29/99 10:33a Kevin
- * Macintosh Updates
- * 
- * 45		7/28/99 ????? Kevin
- *	Mac Stuff
- *
- *	44    5/22/99 1:57a Kevin
- * increased timeout in reliable code
- * 
- * 43    5/19/99 5:21p Kevin
- * changed return value of nw_GetHostAddressFromNumbers()
- * 
- * 42    5/10/99 10:53p Ardussi
- * changes to compile on Mac
- * 
- * 41    4/30/99 5:06p Kevin
- * misc dedicated server, networking and low memory enhancements
- * 
- * 40    4/17/99 3:44p Kevin
- * Demo2 changes & fixes
- * 
- * 39    4/17/99 6:14a Jeff
- * fixed errors compiling due to typos
- * 
- * 38    4/17/99 5:50a Jeff
- * added defines and macros for Linux port
- * 
- * 37    4/16/99 6:00p Kevin
- * Bunches of Demo stuff
- * 
- * 36    4/15/99 2:57a Jeff
- * added some defines and includes needed for linux ipx
- * 
- * 35    4/12/99 3:16p Kevin
- * Added a bunch of stuff for the linux version
- * 
- * 34    2/24/99 12:48p Kevin
- * Added urgent flag to nw_SendReliable. It causes the packet to go out
- * that frame.
- * 
- * 33    2/05/99 7:24p Kevin
- * Added NAGLE type packet buffering to reliable networking code
- * 
- * 32    1/26/99 9:44p Jeff
- * moved tcplog functions to mono library
- * 
- * 31    1/13/99 6:48a Jeff
- * made linux friendly with some #ifdef's
- * 
- * 29    1/08/99 2:58p Kevin
- * Added TCP mprintf support so you can log to a remote machine.
- * 
- * 28    12/23/98 6:38p Kevin
- * All UDP data (except gamespy) now uses one (registered) port number
- * 
- * 27    12/03/98 9:29a Kevin
- * Added better ip selection code
- * 
- * 26    11/02/98 6:41p Jason
- * changed demo port number
- * 
- * 25    10/12/98 8:39p Kevin
- * removed mprintf's and fixed some smallish bugs
- * 
- * 24    10/01/98 11:37a Kevin
- * UI fixes and stuff
- * 
- * 23    9/28/98 11:02a Kevin
- * added Networking defer, and fixed some UI issues 
- * 
- * 22    9/22/98 2:29p Kevin
- * moved ships allowed code out of dll and into main app. Also added
- * powerup exclusions
- * 
- * 21    9/21/98 11:19a Kevin
- * check protocol before entering multiplayer screens
- * 
- * 20    9/04/98 1:51p Kevin
- * implemented asyncronous gethostbyname
- * 
- * 19    8/14/98 4:54p Kevin
- * More directplay stuff
- * 
- * 18    8/13/98 6:32p Kevin
- * Initial implementation of directplay API
- * 
-*/
+
 #ifndef NETWORKING_H
 #define NETWORKING_H
 
@@ -159,6 +23,7 @@
 
 #if defined(WIN32)
 //Windows includes
+#define NOMINMAX //why do I have to include windows.h in half the project..
 #include <winsock.h>
 
 //helper macros for working with SOCKADDR_IN to make it look nicer between windows and Linux

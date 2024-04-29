@@ -15,209 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/huddisplay.cpp $
- * $Revision: 59 $
- * $Date: 4/19/00 5:16p $
- * $Author: Matt $
- *
- * Hud message and stat display file.
- *
- * $Log: /DescentIII/main/huddisplay.cpp $
- * 
- * 59    4/19/00 5:16p Matt
- * From Duane for 1.4
- * Removed Mac OpenGL hack
- * 
- * 58    10/21/99 6:39p Matt
- * Mac merge
- * This change is mostly setting & clearing the variable
- * use_opengl_1555_format around some blocks of code.  Duane says this
- * won't affect the Windows version. 
- * 
- * 57    7/28/99 4:11p Kevin
- * Mac
- * 
- * 56    6/10/99 9:07p Samir
- * fixed weapon string name localization issues.
- * 
- * 55    5/20/99 12:38p Matt
- * Fixed centering of the timer HUD display.
- * 
- * 54    5/20/99 2:26a Matt
- * Don't use sprintf() for custom_text2 type items, so imbedded percents
- * work.
- * 
- * 53    5/19/99 1:23p Matt
- * Moved the timer display down a bit, and made the time round up.
- * 
- * 52    5/19/99 11:25a Matt
- * Added multisafe functions & Dallas actions for showing a timer on the
- * screen and adding custom HUD messages.
- * 
- * 51    5/13/99 7:00p Samir
- * print score in co-op or robo-anarchy
- * 
- * 50    5/10/99 10:22p Ardussi
- * changes to compile on Mac
- * 
- * 49    5/09/99 6:21a Jeff
- * added missing restore of ZBuffer state
- * 
- * 48    5/05/99 5:46p Samir
- * fixed RenderHUDGetTextWidth.  Hopefully didn't break for higher
- * resolutions.
- * 
- * 47    4/29/99 5:08p Jason
- * fixed wrapping bug with RenderHudQuad
- * 
- * 46    4/28/99 5:23a Jeff
- * use new inventory function that gets a list of inventory items to
- * display inventory and countermeasure on the hud (fixes weird selection
- * bug)
- * 
- * 45    4/24/99 10:38p Samir
- * cleaned up hud text problems in 'small mode'
- * 
- * 44    4/24/99 8:43p Samir
- * when shrinking screen hud messages get rendered in black region.
- * 
- * 43    4/22/99 11:19a Samir
- * render hud text functions shouldn't nest formatted text.
- * 
- * 42    4/21/99 9:29p Samir
- * don't draw score in multiplayer.
- * 
- * 41    4/20/99 3:06p Jeff
- * fixed inventory displaying of non-usable items
- * 
- * 40    4/20/99 1:14p Samir
- * non usable hud inventory.
- * 
- * 39    4/20/99 11:47a Samir
- * shrinking hud fixes.
- * 
- * 38    4/16/99 10:54p Jeff
- * fixed min() for Linux
- * 
- * 37    4/06/99 6:02p Matt
- * Added score system
- * 
- * 36    4/06/99 11:39a Samir
- * added more formatting options for hud items (added two other full
- * screen hud infs for different ships)
- * 
- * 35    3/02/99 6:26p Samir
- * hires font madness.
- * 
- * 34    3/01/99 12:55a Matt
- * Deleted some obsolete strings from the string table, and moved some
- * formatting info from the table to the code.
- * 
- * 33    2/06/99 6:59p Jeff
- * created RenderHUDGetTextLineWidth and RenderHUDGetTextHeight
- * 
- * 32    1/31/99 7:26p Matt
- * Renamed a bunch of functions to have HUD capitalized
- * 
- * 31    1/29/99 2:08p Jeff
- * localization
- * 
- * 30    11/01/98 1:57a Jeff
- * converted the vsprintf calls to use the Pvsprintf, which is a safe
- * vsprintf, no buffer overflows allowed
- * 
- * 29    10/22/98 11:30p Matt
- * Centered the names of non-ammo weapon names with respect to the weapon
- * icon.
- * 
- * 28    10/20/98 1:46p Samir
- * made text version of inventory.
- * 
- * 27    10/14/98 4:27p Samir
- * improved HUD_ITEM_CUSTOMTEXT
- * 
- * 26    10/13/98 4:16p Matt
- * Fixed stupid bug
- * 
- * 25    10/13/98 12:56p Matt
- * Finished (hopefully) with the ammo system.  Added support for napalm
- * fuel.
- * 
- * 24    9/30/98 4:34p Samir
- * hack to prevent display of lock warning at Gametime = 0.
- * 
- * 23    8/25/98 7:08p Samir
- * hud primary weapon ammo.
- * 
- * 22    8/07/98 12:54p Jeff
- * removed () in countermeasures :)
- * 
- * 21    8/07/98 12:54p Jeff
- * inventory doesn't show count if count==1 countermeasure have () around
- * count
- * 
- * 20    7/06/98 7:34p Samir
- * added countermeasures.
- * 
- * 19    6/24/98 7:38p Samir
- * redid graphical/text/cockpit hud item management.
- * 
- * 18    6/17/98 6:31p Samir
- * Added anti-grav warning when dying.
- * 
- * 17    6/16/98 11:10a Jeff
- * fixed merges goofs
- * 
- * 16    6/16/98 10:54a Jeff
- * 
- * 15    6/15/98 6:54p Samir
- * added invulnerability and cloak effect.
- * 
- * 14    6/15/98 2:14p Samir
- * afterburner hud image scale modified.
- * 
- * 13    6/10/98 4:03p Samir
- * restored old hud config.
- * 
- * 12    5/26/98 8:01p Samir
- * don't display placeholder small icon for weapon.
- * 
- * 11    5/26/98 5:06p Samir
- * repositioned shield and energy sub hud items due to new design.
- * 
- * 10    5/25/98 8:31p Samir
- * added call to render hud text with cerntering options.
- * 
- * 9     5/25/98 6:38p Matt
- * Added needed include.
- * 
- * 8     5/22/98 6:25p Samir
- * implemented a lot of hud items.
- * 
- * 7     5/07/98 12:23p Samir
- * RenderHUDText functions added to hud.h
- * 
- * 6     5/05/98 6:28p Samir
- * moved hud_x and hud_y macros to hud.h.
- * 
- * 5     4/27/98 1:14p Jason
- * cleaned up afterburner stuff
- * 
- * 4     4/24/98 5:32p Samir
- * added saturation option to DrawHudQuad.
- * 
- * 3     4/24/98 8:02a Samir
- * display weapon names properly.
- * 
- * 2     4/23/98 4:13a Samir
- * new hud system.
- * 
- * 1     4/23/98 4:05a Samir
- * initial revision.
- *
- * $NoKeywords: $
- */
 
 #include "pstring.h"
 #include "hud.h"
@@ -237,13 +34,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-
-#ifdef __LINUX__
-#define min(a,b) ((a<b)?a:b) //why can't I find a min in Linux at all!?
-#elif defined(MACINTOSH)
-#include "Macros.h"
-#endif
-
+#include <algorithm>
 
 //////////////////////////////////////////////////////////////////////////////
 //	Data
@@ -1038,29 +829,29 @@ void RenderHUDTextFlags(int flags, ddgr_color col, ubyte alpha, int sat_count, i
 void RenderHUDScore(tHUDItem *item)
 {
 	char buf[100];
-	int win_w;
 
-	if (Game_mode & GM_MULTI) {
-		if (!(Netgame.flags & NF_USE_ROBOTS)) {
+	if (Game_mode & GM_MULTI) 
+	{
+		if (!(Netgame.flags & NF_USE_ROBOTS)) 
+		{
 			return;
 		}
 	}
 
 	sprintf(buf,"%s: %d ",TXT_SCORE,Players[Player_num].score);
 
-	win_w = (Max_window_w-Game_window_w)*(Hud_aspect_x);
-//	if (Game_video_resolution==RES_512X384) { win_w = win_w + 10; }
-
+	//int win_w = Game_window_w;
 
 	int w = RenderHUDGetTextLineWidth(buf);// * win_w)/(Game_window_w);
-	RenderHUDText(item->color, HUD_ALPHA, 0, item->x-w-win_w, item->y,buf);
+	RenderHUDText(item->color, HUD_ALPHA, 0, item->x-w, item->y,buf);
 
-	if (Score_added_timer > 0.0) {
+	if (Score_added_timer > 0.0) 
+	{
 		int text_height=grfont_GetHeight(HUD_FONT);
 		sprintf(buf,"%d   ",Score_added);
 		w = RenderHUDGetTextLineWidth(buf);// * win_w/Game_window_w;
-		ubyte alpha = min(HUD_ALPHA,HUD_ALPHA * 4 * Score_added_timer / SCORE_ADDED_TIME);
-		RenderHUDText(item->color,alpha,0,item->x-w-win_w,item->y+text_height,buf);
+		ubyte alpha = std::min((double)HUD_ALPHA,HUD_ALPHA * 4 * Score_added_timer / SCORE_ADDED_TIME);
+		RenderHUDText(item->color,alpha,0,item->x-w,item->y+text_height,buf);
 		Score_added_timer -= Frametime;
 	}
 }
