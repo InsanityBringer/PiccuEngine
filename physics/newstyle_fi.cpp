@@ -434,8 +434,16 @@ bool PolyCollideObject(object *obj)
 
 	if(fvi_do_orient)
 	{
-		fvi_move_fvec = Objects[fvi_moveobj].orient.fvec;
-		fvi_move_uvec = Objects[fvi_moveobj].orient.uvec;
+		if (fvi_moveobj > -1)
+		{
+			fvi_move_fvec = Objects[fvi_moveobj].orient.fvec;
+			fvi_move_uvec = Objects[fvi_moveobj].orient.uvec;
+		}
+		else
+		{
+			fvi_move_fvec = Objects[-fvi_moveobj].orient.fvec;
+			fvi_move_uvec = Objects[-fvi_moveobj].orient.uvec;
+		}
 	}
 
 	Fvi_f_normal = false;
