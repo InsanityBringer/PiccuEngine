@@ -1561,7 +1561,12 @@ void nw_SendReliableAck(SOCKADDR *raddr,unsigned int sig, network_protocol link_
 	network_address send_address;
 	memset(&send_address,0,sizeof(network_address));
 	
-	send_address.connection_type = reliable_sockets[serverconn].connection_type;
+	//[ISB] serverconn can be uninitialized here, why?
+	//I shouldn't have to do this
+	if (serverconn == UINT_MAX)
+		send_address.connection_type = NP_TCP;
+	else
+		send_address.connection_type = reliable_sockets[serverconn].connection_type;
 
     if(NP_TCP==link_type)
 	{
@@ -1649,7 +1654,7 @@ void nw_WorkReliable(ubyte * data,int len,network_address *naddr)
 	
 	reliable_socket *rsocket = NULL;
 	//Check to see if we need to send a packet out.
-	if((reliable_sockets[serverconn].status==RNF_LIMBO) && ((serverconn!=UINT_MAX)&&(timer_GetTime() - last_sent_iamhere)>NETRETRYTIME) )
+	if(serverconn != UINT_MAX && reliable_sockets[serverconn].status==RNF_LIMBO && (timer_GetTime() - last_sent_iamhere)>NETRETRYTIME)
 	{
 		reliable_header conn_header;
 		//Now send I_AM_HERE packet
