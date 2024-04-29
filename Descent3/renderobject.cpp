@@ -15,567 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/renderobject.cpp $
- * $Revision: 182 $
- * $Date: 10/03/01 11:35p $
- * $Author: Kevin $
- *
- * Code to render objects
- *
- * $Log: /DescentIII/Main/renderobject.cpp $
- * 
- * 182   10/03/01 11:35p Kevin
- * multiplayer stripes appear in demo playback
- * 
- * 181   10/12/99 11:07a Jeff
- * created virus infected effect
- * 
- * 180   9/21/99 2:55p Jeff
- * use powerup color for spark colors
- * 
- * 179   9/20/99 5:35p Jeff
- * added -nosparkles command line option to turn off powerup sparkles
- * 
- * 178   9/20/99 5:30p Jeff
- * added pretty powerup particles for Katmai systems
- * 
- * 177   9/18/99 9:28p Jeff
- * motion blur robots and debris
- * 
- * 176   8/09/99 3:27p Jeff
- * fixed render bug with typing indicator
- * 
- * 175   7/28/99 3:44p Kevin
- * Mac!
- * 
- * 174   7/20/99 1:00p Jason
- * added auto katmai support
- * 
- * 173   7/08/99 5:47p Jason
- * changes for new bumpmapping system in 1.1 update patch
- * 
- * 172   5/26/99 3:03a Jason
- * fixed bug where flags attached to players would render incorrectly in
- * multplayer (specifially ctf flags)
- * 
- * 171   5/13/99 3:41p Ardussi
- * changes for compiling on the Mac
- * 
- * 170   5/12/99 3:25p Jason
- * don't render powerup glows if their render type is RT_NONE
- * 
- * 169   5/08/99 1:50p Jason
- * fixed some player colors
- * 
- * 168   5/03/99 9:27p Jason
- * fixed one of Chris's bugs with the attach system
- * 
- * 167   4/29/99 4:58p Jason
- * fixed typing indicator problem
- * 
- * 166   4/21/99 11:05a Kevin
- * new ps_rand and ps_srand to replace rand & srand
- * 
- * 165   4/19/99 3:25p Jason
- * 
- * 164   4/19/99 3:46a Jeff
- * fixed min/max for Linux
- * 
- * 163   4/17/99 4:51p Jason
- * fixed stupid headlight issue for good
- * 
- * 162   4/16/99 11:53a Jason
- * fixed some lighting issues
- * 
- * 161   4/14/99 7:21p Jason
- * made ships more visible in multiplayer
- * 
- * 160   4/14/99 3:57a Jeff
- * fixed case mismatch in #includes
- * 
- * 159   4/09/99 7:04p Jason
- * changed some texture defines
- * 
- * 158   4/06/99 1:51p Jason
- * added new mass driver effect
- * 
- * 157   4/06/99 10:23a Chris
- * More "render even though the parent is invisible" cases
- * 
- * 156   4/03/99 4:56p Jason
- * fixed deform effect just a little
- * 
- * 155   4/03/99 2:20p Jason
- * added better heat damage effect
- * 
- * 154   3/29/99 4:02p Chris
- * Patched/Hacked a solution to the invis. after landing problem.
- * 
- * 153   3/22/99 11:16a Jason
- * Katmai enhancements
- * 
- * 152   3/04/99 11:44a Jeff
- * made it so typing indicator is at max 64x64 when rendering
- * 
- * 151   3/03/99 4:51p Jason
- * fixed divide by zero problem
- * 
- * 150   2/24/99 11:51p Jason
- * fixed object bug for matt
- * 
- * 149   2/23/99 12:40p Jason
- * added more options for generic objects
- * 
- * 148   2/22/99 3:37p Jason
- * fixed LOD problems
- * 
- * 147   2/21/99 4:20p Matt
- * Added SoundSource objects (and reformatted parts of the object header
- * files).
- * 
- * 146   2/18/99 11:05a Jason
- * fixed some cloak effects
- * 
- * 145   2/17/99 1:05p Jason
- * revamped object/face/terrain selection code
- * 
- * 144   2/15/99 4:11p Jason
- * made non-vis objects kill all their attach sounds/objects
- * 
- * 143   2/10/99 12:47p Jeff
- * fixed up typing indicator
- * 
- * 142   2/09/99 6:53p Jeff
- * implemented 'typing inidcator' in multiplayer...players that are typing
- * messages have an icon on them
- * 
- * 141   2/09/99 9:59a Chris
- * Massive BOA update  :)  Terrain happy now.  Vis happy now.  Sound happy
- * now.
- * 
- * 140   2/05/99 3:00p Jason
- * fixed bug with my last rev
- * 
- * 139   2/05/99 12:19p Jason
- * fixed object selection
- * 
- * 138   2/02/99 8:43a Chris
- * I made buildings with AI work correctly (ie really big robots should be
- * buildings)
- * anim to and from states are now shorts instead of bytes
- * 
- * 137   1/27/99 6:08p Jason
- * first pass at markers 
- * 
- * 136   1/21/99 11:29p Jason
- * took out misplaced no_glow flag
- * 
- * 135   1/20/99 5:36p Jason
- * added custom glows for teams
- * 
- * 134   1/19/99 4:22p Matt
- * Added the ability for objects to have their own lighting info,
- * different from the default lighting for that type of object.
- * 
- * 133   1/13/99 12:43p Jason
- * added some more detail settings
- * 
- * 132   1/13/99 6:38a Jeff
- * fixed object.h.  There were numerous struct declarations that were the
- * same name as the instance of the struct (gcc doesn't like this).
- * Changed the struct name.  Also added some #ifdef's for linux build,
- * along with fixing case-sensitive includes
- * 
- * 131   1/08/99 2:56p Samir
- * Ripped out OSIRIS1.
- * 
- * 130   12/14/98 10:53a Jason
- * added bright player ships option
- * 
- * 129   12/10/98 7:09p Jason
- * added cloak fade
- * 
- * 128   12/10/98 12:27p Jason
- * added cooler specular mapping for objects
- * 
- * 127   12/07/98 3:02p Jason
- * added multi_logo_state
- * 
- * 126   11/11/98 7:18p Jeff
- * changes made so that a dedicated server's team is always -1 (team game
- * or not)
- * 
- * 125   11/11/98 12:33p Jason
- * changed black player color
- * 
- * 124   10/21/98 9:28p Jason
- * Made no lightmaps work globally
- * 
- * 123   10/21/98 7:55p Jason
- * d3d changes
- * 
- * 122   10/21/98 7:30p Jason
- * more direct3d changes
- * 
- * 121   10/19/98 3:16p Jason
- * additional error checking for lightning
- * 
- * 120   10/18/98 4:25p Jason
- * fixes for fogged objects
- * 
- * 119   10/16/98 3:39p Chris
- * Improved the object linking system and AI and physics
- * 
- * 118   10/16/98 2:38p Jason
- * made powerup halo detail setting work
- * 
- * 117   10/16/98 2:24p Jason
- * changes for the demo
- * 
- * 116   10/14/98 6:24p Jason
- * made object complexity work
- * 
- * 115   10/08/98 5:59p Jason
- * fixed object and room popping with small views
- * 
- * 114   10/07/98 5:04p Jason
- * made spheres work in WindowGL mode
- * 
- * 113   10/02/98 1:47p Jason
- * added lod player ships
- * 
- * 112   10/02/98 12:23p Jason
- * took off sight vector
- * 
- * 111   10/02/98 11:46a Jason
- * checked in for samir
- * 
- * 110   10/01/98 6:10p Jason
- * added EVT_CLIENT_GETCOLOREDNAME
- * 
- * 109   10/01/98 4:41p Jason
- * fixed colors in team games
- * 
- * 108   10/01/98 4:09p Jason
- * added multicolor ship stuff
- * 
- * 107   9/29/98 12:49p Jason
- * worked on matcen effects and lightning
- * 
- * 106   9/24/98 12:57p Jason
- * more state limited optimizations
- * 
- * 105   9/21/98 5:08p Jason
- * made damage shield not rotate when you get hit
- * 
- * 104   9/21/98 1:03p Jason
- * make sparky damage lightning ramp up depending on amount of damage
- * 
- * 103   9/18/98 8:23p Jason
- * fixed insidious vis effect errors
- * 
- * 102   9/17/98 6:08p Jason
- * more tweaks for effects
- * 
- * 101   9/17/98 3:03p Jason
- * added lightning and invul hit effects 
- * 
- * 100   9/10/98 12:18p Jason
- * more changes to afterburner/thrust effect
- * 
- * 99    9/09/98 7:09p Jason
- * changed afterburner effect for ships
- * 
- * 98    8/27/98 5:19p Jason
- * added first rev of reflected surfaces
- * 
- * 97    8/24/98 1:01p Jason
- * made object specular faces selectable by texture
- * 
- * 96    8/19/98 2:19p Jeff
- * moved detail globals to a struct
- * 
- * 95    8/18/98 11:38a Jason
- * fixed polymodel fog lighting
- * 
- * 94    8/14/98 4:00p Jason
- * added specular objects outside
- * 
- * 93    8/13/98 6:57p Jason
- * made fogged objects render correctly
- * 
- * 92    8/12/98 6:38p Jeff
- * don't render ghosted objects (type==OBJ_DUMMY)
- * 
- * 91    8/03/98 3:59p Chris
- * Added support for FQ_IGNORE_WEAPONS, added .000001 attach code, fix a
- * bug in polymodel collision detection
- * 
- * 90    8/03/98 2:59p Jeff
- * player names only check doors for visibility
- * 
- * 89    8/03/98 11:06a Jason
- * made custom textures work correctly
- * 
- * 88    7/30/98 11:12a Jason
- * fixed player names showing up when cloaked
- * 
- * 87    7/28/98 3:29p Jason
- * fixed z buffer bug with damage disk
- * 
- * 86    7/27/98 5:59p Jason
- * added piggyback mode plus multiplayer colors
- * 
- * 85    7/02/98 6:30p Jason
- * added some multiplayer stuff for Jeff
- * 
- * 84    6/30/98 6:36p Chris
- * Added rev .1 of multiplayer animations - BTW  It is totally not done.
- * 
- * 83    6/25/98 5:17p Jason
- * added multiple colored balls for players
- * 
- * 82    6/22/98 12:27p Jason
- * fixed stupid bug with my last rev
- * 
- * 81    6/22/98 12:15p Jason
- * took out cheap LOD effect with robots
- * 
- * 80    6/15/98 4:00p Jason
- * replaced monochromatic polymodel lighting with rgb lighting
- * 
- * 79    6/11/98 12:48p Jason
- * added better spewing weapons
- * 
- * 78    5/11/98 10:41a Jason
- * made clutter object lodable
- * 
- * 77    5/05/98 6:26p Chris
- * Added BBoxs and spheres to external rooms (in mode 2) 
- * 
- * 76    5/04/98 7:26p Chris
- * Allowed turning off of submodels on robots
- * 
- * 75    5/04/98 3:51p Matt
- * Finished (for now) with breaking glass.
- * 
- * 74    5/04/98 12:28p Matt
- * Added shard objects
- * 
- * 73    5/03/98 8:42p Chris
- * 
- * 72    5/03/98 8:36p Chris
- * Additional debug info
- * 
- * 71    4/30/98 12:22p Jason
- * did some lo-res model optimizations
- * 
- * 70    4/23/98 6:38p Jason
- * made bitmaps use 1555 format
- * 
- * 69    4/19/98 5:00p Jason
- * added cool napalm effect, plus made object effects dynamically
- * allocated
- * 
- * 68    4/17/98 3:57p Jason
- * added microwave effect
- * 
- * 67    4/17/98 1:59p Jason
- * added cool object effects
- * 
- * 66    4/15/98 3:28p Jason
- * changed glow stuff to work with new system
- * 
- * 65    4/13/98 3:51p Chris
- * Added sphere bubbles to weapons (when wanted)  and fixed a small FVI
- * bug
- * 
- * 64    4/10/98 12:41p Jason
- * sped up lighting a little
- * 
- * 63    4/08/98 12:58p Jason
- * fixed cloak effect in software
- * 
- * 62    4/07/98 5:01p Jason
- * more tweaks to cloak effect
- * 
- * 61    4/07/98 4:49p Jason
- * fixed cloak problem
- * 
- * 60    4/06/98 2:54p Jason
- * yet more multiplayer changes
- * 
- * 59    4/02/98 12:24p Jason
- * trimmed some fat from our structures
- * 
- * 58    4/01/98 6:23p Jason
- * added a slew of stuff for multiplayer
- * 
- * 57    4/01/98 12:02p Jason
- * incremental checkin for rendering changes
- * 
- * 56    3/20/98 5:51p Jason
- * more changes for multiplayer
- * 
- * 55    3/20/98 2:18p Jason
- * changes for multiplayer
- * 
- * 54    3/19/98 7:15p Jason
- * more changes for multiplayer
- * 
- * 53    3/13/98 7:00p Chris
- * EDITOR to _DEBUG
- * 
- * 52    3/13/98 12:10p Jason
- * draw a bit of a ring around polygon glows
- * 
- * 51    3/11/98 4:59p Chris
- * Added a few new sphere types (wall and anim)
- * 
- * 50    3/10/98 5:15p Chris
- * DEL+B shows the bounding-sphere of an object
- * 
- * 49    3/09/98 5:58p Jason
- * draw powerups with saturated alpha rings
- * 
- * 48    3/09/98 4:54p Jason
- * don't render objects that can't been seen through a portal
- * 
- * 47    2/25/98 4:31p Jason
- * changes for explosions
- * 
- * 46    2/25/98 2:05p Jason
- * did FOV and object visibility changes
- * 
- * 45    2/20/98 1:46p Chris
- * JASON:  Made dynamic lighting only occur if the object is rendered
- * 
- * 44    2/11/98 6:58p Matt
- * Changed the way cameras are rendered, so they show up on the terrain as
- * well.
- * 
- * 43    2/11/98 6:38p Jason
- * tweaking the glow effects for engines
- * 
- * 42    2/04/98 6:09p Matt
- * Changed object room number to indicate a terrain cell via a flag.  Got
- * rid of the object flag which used to indicate terrain.
- * 
- * 41    2/04/98 2:52p Jason
- * made length of glow dependant on whether or not the player is thrusting
- * 
- * 40    1/30/98 6:07p Matt
- * Added code and menu items to deal with camera objects
- * 
- * 39    1/30/98 2:56p Matt
- * Added support for small views.  Made R toggle rear view, and Delete-F8
- * show a view from object 2.  Also changed main window render flow so
- * could share code with small views.
- * 
- * 38    1/28/98 5:37p Jason
- * added streamer weapons
- * 
- * 37    1/23/98 11:21a Jason
- * incremental multiplayer checkin 
- * 
- * 36    1/21/98 6:09p Jason
- * Got player deaths working in multiplayer
- * 
- * 35    1/21/98 1:11p Jason
- * incremental checkin for multiplayer
- * 
- * 34    1/20/98 2:17p Jason
- * fixed weird sorting problem with objects and viseffects
- * 
- * 33    1/20/98 12:10p Jason
- * implemented vis effect system
- * 
- * 32    1/13/98 4:04p Jason
- * changes for engine glow
- * 
- * 31    1/13/98 3:09p Jason
- * added glow effect for engines
- * 
- * 30    1/05/98 5:59p Jason
- * tweaked z bias code 
- * 
- * 29    12/08/97 6:18p Jason
- * more tweaks for destroyable buildings
- * 
- * 28    12/08/97 5:22p Jason
- * added code for destroyable buildings that leave their base object
- * around
- * 
- * 27    11/25/97 1:36p Jason
- * adjusted LOD switch levels
- * 
- * 26    11/25/97 1:17p Jason
- * added lod system for certain objects
- * 
- * 25    11/18/97 12:26a Sean
- * I don't know (Chris)
- * 
- * 24    11/11/97 8:40p Chris
- * Added an assert.
- * 
- * 23    11/05/97 6:03p Jason
- * added disky colored lighting effects
- * 
- * 22    11/05/97 12:20p Jason
- * made powerups render with halos
- * 
- * 21    10/28/97 11:34a Chris
- * Fixed a bug in the animation code (if keyframe = 0 and the object
- * animates, we need to set the angles)
- * 
- * 20    10/23/97 11:34p Chris
- * Fixed problems with idle animations
- * 
- * 19    10/23/97 5:36p Jason
- * added splinter objects (probably temporary)
- * 
- * 18    10/20/97 4:46p Jason
- * changes for explosions
- * 
- * 17    10/03/97 5:57p Chris
- * Added support for debug fvi_line
- * 
- * 16    10/03/97 4:43p Chris
- * added debug fvi call and object type line
- * 
- * 15    10/01/97 7:00p Jason
- * did more work on object lightmaps
- * 
- * 14    10/01/97 11:35a Jason
- * added IsObjectVisible function
- * 
- * 13    9/30/97 5:08p Chris
- * No changes
- * 
- * 12    9/22/97 6:20p Matt
- * Removed obsolete code
- * 
- * 11    9/16/97 5:04p Matt
- * Changed conditional for debug code
- * 
- * 10    9/12/97 5:38p Jason
- * got doors working
- * 
- * 9     9/10/97 5:17p Jason
- * more lighting improvements
- * 
- * 8     9/09/97 6:15p Jason
- * made dynamic lighting on objects more memory efficient
- * 
- * 7     9/03/97 2:12p Chris
- * Added new weapon battery system and made the animation system usable.
- * 
- * 6     8/20/97 5:19p Matt
- * Draw selected bracket instead of box for current object
- *
- * $NoKeywords: $
- */
+
+#define NOMINMAX //[ISB] something here is including Windows.h
+#include <algorithm>
 #include "object.h"
 #include "object_lighting.h"
 #include "3d.h"
@@ -606,12 +48,6 @@
 #include "ship.h"
 #include "psrand.h"
 
-#ifdef __LINUX__
-#define min(a,b) ((a<b)?a:b)
-#define max(a,b) ((a>b)?a:b)
-#elif defined(MACINTOSH)
-#include "Macros.h"
-#endif
 #include <string.h>
 #ifdef EDITOR
 	#include "editor\d3edit.h"
@@ -1115,15 +551,15 @@ bool SetupTerrainObject (object *obj)
 			scalar=GetTerrainDynamicScalar (&obj->pos,CELLNUM(obj->roomnum));
 			if (obj->effect_info && (obj->effect_info->type_flags & EF_VOLUME_LIT))
 			{
-				scalar_r=min(1,scalar+(obj->effect_info->dynamic_red));
-				scalar_g=min(1,scalar+(obj->effect_info->dynamic_green));
-				scalar_b=min(1,scalar+(obj->effect_info->dynamic_blue));
+				scalar_r = std::min(1.f,scalar+(obj->effect_info->dynamic_red));
+				scalar_g = std::min(1.f,scalar+(obj->effect_info->dynamic_green));
+				scalar_b = std::min(1.f,scalar+(obj->effect_info->dynamic_blue));
 				// If this is a robot, make it at least 10% for each RGB component
 				if (obj->type==OBJ_ROBOT)
 				{
-					scalar_r=max(.1,scalar_r);
-					scalar_g=max(.1,scalar_g);
-					scalar_b=max(.1,scalar_b);
+					scalar_r = std::max(.1f,scalar_r);
+					scalar_g = std::max(.1f,scalar_g);
+					scalar_b = std::max(.1f,scalar_b);
 				}
 				if (obj->type==OBJ_PLAYER && ((Players[obj->id].flags & PLAYER_FLAGS_HEADLIGHT) || ((Game_mode & GM_MULTI) && (Netgame.flags & NF_BRIGHT_PLAYERS))))
 				{
@@ -1194,15 +630,15 @@ bool SetupMineObject(object *objp)
 			else
 				GetRoomDynamicScalar (&vpos,&Rooms[objp->roomnum],&scalar_r,&scalar_g,&scalar_b);
 			
-			scalar_r=min(1,scalar_r+(objp->effect_info->dynamic_red));
-			scalar_g=min(1,scalar_g+(objp->effect_info->dynamic_green));
-			scalar_b=min(1,scalar_b+(objp->effect_info->dynamic_blue));
+			scalar_r = std::min(1.f,scalar_r+(objp->effect_info->dynamic_red));
+			scalar_g = std::min(1.f,scalar_g+(objp->effect_info->dynamic_green));
+			scalar_b = std::min(1.f,scalar_b+(objp->effect_info->dynamic_blue));
 			// If this is a robot, make it at least 10% for each RGB component
 			if (objp->type==OBJ_ROBOT)
 			{
-				scalar_r=max(.1,scalar_r);
-				scalar_g=max(.1,scalar_g);
-				scalar_b=max(.1,scalar_b);
+				scalar_r = std::max(.1f,scalar_r);
+				scalar_g = std::max(.1f,scalar_g);
+				scalar_b = std::max(.1f,scalar_b);
 			}
 			
 			if (objp->type==OBJ_PLAYER && (Game_mode & GM_MULTI))
@@ -1217,12 +653,12 @@ bool SetupMineObject(object *objp)
 				{
 					// Make this ship brighter based on its speed
 					float speed_norm;
-					speed_norm=min(vm_GetMagnitudeFast (&objp->mtype.phys_info.velocity)/20.0,1);
+					speed_norm = std::min(vm_GetMagnitudeFast(&objp->mtype.phys_info.velocity)/20.0,1.);
 					speed_norm*=1;
 					speed_norm+=1;
-					scalar_r=min(1,scalar_r*speed_norm);
-					scalar_g=min(1,scalar_g*speed_norm);
-					scalar_b=min(1,scalar_b*speed_norm);
+					scalar_r = std::min(1.f,scalar_r*speed_norm);
+					scalar_g = std::min(1.f,scalar_g*speed_norm);
+					scalar_b = std::min(1.f,scalar_b*speed_norm);
 				}
 			}
 			if (objp->type==OBJ_PLAYER && (Players[objp->id].flags & PLAYER_FLAGS_HEADLIGHT))
@@ -2299,11 +1735,14 @@ void DrawPlayerTypingIndicator (object *obj)
 		g3Codes cc;
 		ubyte code;
 
+		//[ISB] Fix distortion and crashes with zero fill
+		memset(points, 0, sizeof(points));
+
 		cc.cc_and = 0xFF;
 		cc.cc_or = 0;
 
-		int b_w = min(bm_w(bm_handle,0),32);
-		int b_h = min(bm_h(bm_handle,0),32);
+		int b_w = std::min(bm_w(bm_handle,0),32);
+		int b_h = std::min(bm_h(bm_handle,0),32);
 		bmw = b_w/2;
 		bmh = b_h/2;
 
