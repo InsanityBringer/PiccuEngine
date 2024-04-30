@@ -813,8 +813,9 @@ void RenderHUDTextFlags(int flags, ddgr_color col, ubyte alpha, int sat_count, i
 
 	grtext_SetColor(col);
 
-	x = HUD_X(x);
-	y = HUD_Y(y);
+	// [ISB] Why is this adjustment here? We have a virtual coordinate system for grtext?
+	//x = HUD_X(x);
+	//y = HUD_Y(y);
 
 	for (i = 0; i < sat_count+1; i++)
 	{
