@@ -379,39 +379,43 @@ void mmInterface::OnDestroy()
 void mmInterface::CopyrightText()
 {
 	int i;
-	std::string typestr = ENGINE_NAME;
+	std::string typestr = "";
 
 	if (PROGRAM(beta))
-		typestr += " Beta";
+		typestr += "Beta ";
 
 	if (Program_version.version_type == DEVELOPMENT_VERSION)
-		typestr += " Dev";
+		typestr += "Dev ";
 	else if (Program_version.version_type == RELEASE_VERSION)
-		typestr += " Ver";
+		typestr += "Ver ";
 
-#ifndef RELEASE
-	int x = Max_window_w - 164,y = Max_window_h-29;		//was -128 and -16
-#else
-	int x = Max_window_w - 164,y = Max_window_h-29;		//was -128 and -16
-#endif
+	//Build engine name str
+	std::string engstr = ENGINE_NAME;
+	engstr.push_back(' ');
+	engstr += GIT_DESCRIPTION;
 
-// attempt to print text nicely.
+	//Get 7 character hash
+	char hashbuf[8];
+	strncpy(hashbuf, GIT_HASH, sizeof(hashbuf) - 1);
+	hashbuf[sizeof(hashbuf) - 1] = '\0';
+
+	int x = Max_window_w - 164,y = Max_window_h-37;		//was -128 and -29
+
+	// attempt to print text nicely.
 	grtext_SetFont(BRIEFING_FONT);
 	grtext_SetAlpha(192);
 	grtext_SetColor(GR_RGB(255,32,32));
-#if ( defined(MACINTOSH) || (!defined(RELEASE)) || defined(DEMO) )
-	grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d" : "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor, Program_version.build);
-#else
-	grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d Build %d" : "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor, Program_version.build,D3_RELEASE_BUILD_NO);
-#endif
-//	grtext_CenteredPrintf(0, Max_window_h-16, "(c) 1998 Outrage Entertainment, Inc.");
+	grtext_Printf(x,y, "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor);
+	grtext_Puts(x,y+12, engstr.c_str());
+	grtext_Puts(x, y + 24, hashbuf);
 
 	grtext_SetFlags(GRTEXTFLAG_SATURATE);
 
 	for (i = 0; i < 1; i++)
 	{
-		grtext_Printf(x,y, Program_version.build ? "%s %d.%d.%d" : "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor, Program_version.build);
-//		grtext_CenteredPrintf(0, Max_window_h-16, "(c) 1998 Outrage Entertainment, Inc.");
+		grtext_Printf(x,y, "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor, Program_version.build);
+		grtext_Puts(x, y + 12, engstr.c_str());
+		grtext_Puts(x, y + 24, hashbuf);
 	}
 
 	grtext_Flush();
