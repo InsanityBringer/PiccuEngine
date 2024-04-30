@@ -4,8 +4,6 @@ MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 # allow more human readable "if then else" constructs
 SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 
-
-
 PROJECT(Descent3)
 
 IF (UNIX)
@@ -195,20 +193,20 @@ SET (PLATFORM_LIBS ${SDL_LIBRARY} ncurses )
 SET(CMAKE_EXE_LINKER_FLAGS "-framework IOKit -framework Cocoa -framework OpenGL -framework Carbon")
 ENDIF()
 
-add_executable(Descent3 ${DESCENT3_SOURCES})
-target_link_libraries(Descent3 
+add_executable(PiccuEngine ${DESCENT3_SOURCES})
+target_link_libraries(PiccuEngine 
 	${PLATFORM_LIBS})
 	
-target_compile_definitions(Descent3 PUBLIC "$<$<CONFIG:RELEASE>:RELEASE>")
-target_compile_definitions(Descent3 PUBLIC "$<$<CONFIG:MINSIZEREL>:RELEASE>")
-target_compile_definitions(Descent3 PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
+target_compile_definitions(PiccuEngine PUBLIC "$<$<CONFIG:RELEASE>:RELEASE>")
+target_compile_definitions(PiccuEngine PUBLIC "$<$<CONFIG:MINSIZEREL>:RELEASE>")
+target_compile_definitions(PiccuEngine PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
 
 add_library(dmfc SHARED ${DMFC_SOURCES})
 target_compile_definitions(dmfc PUBLIC -DOUTRAGE_VERSION -DDMFC_DLL)
 target_include_directories(dmfc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/netgames/includes")
-add_dependencies(Descent3 revision_check)
+add_dependencies(PiccuEngine revision_check)
 	
-install(TARGETS Descent3 DESTINATION ${D3_GAMEDIR})
+install(TARGETS PiccuEngine DESTINATION ${D3_GAMEDIR})
 
 source_group("AudioEncode" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/AudioEncode/.+")
 source_group("bitmap" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/bitmap/.+")
