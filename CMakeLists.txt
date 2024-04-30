@@ -65,11 +65,6 @@ MESSAGE("Install will copy files to ${D3_GAMEDIR}")
 
 include_directories("lib" "Descent3" ${PLATFORM_INCLUDES})
 
-# project version
-SET( ${PROJECT_NAME}_MAJOR_VERSION 1 )
-SET( ${PROJECT_NAME}_MINOR_VERSION 5 )
-SET( ${PROJECT_NAME}_PATCH_LEVEL 500 )
-
 ADD_SUBDIRECTORY (AudioEncode)
 ADD_SUBDIRECTORY (bitmap)
 ADD_SUBDIRECTORY (cfile)
@@ -124,6 +119,11 @@ ADD_SUBDIRECTORY (Descent3)
 #ADD_SUBDIRECTORY (netcon)
 #ADD_SUBDIRECTORY (scripts)
 #ENDIF()
+
+#From GZDOOM
+add_custom_target( revision_check ALL
+	COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_SOURCE_DIR}/tools/UpdateRevision.cmake" Descent3/gitinfo.h
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # set default cmake build type to Debug (None Debug Release RelWithDebInfo MinSizeRel)
 IF( NOT CMAKE_BUILD_TYPE )
@@ -206,6 +206,7 @@ target_compile_definitions(Descent3 PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>"
 add_library(dmfc SHARED ${DMFC_SOURCES})
 target_compile_definitions(dmfc PUBLIC -DOUTRAGE_VERSION -DDMFC_DLL)
 target_include_directories(dmfc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/netgames/includes")
+add_dependencies(Descent3 revision_check)
 	
 install(TARGETS Descent3 DESTINATION ${D3_GAMEDIR})
 
