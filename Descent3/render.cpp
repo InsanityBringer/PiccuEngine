@@ -246,7 +246,7 @@ inline bool FaceIsRenderable(room *rp,face *fp)
 //					bm_handle - the handle for the bitmap for this frame, or -1 if don't care about transparence
 //Returns:		bitmask describing the alpha blending for the face
 //					the return bits are the ATF_ flags in renderer.h
-inline int GetFaceAlpha(face *fp,int bm_handle)
+static inline int GetFaceAlpha(face *fp,int bm_handle)
 {
 	int ret = AT_ALWAYS;
 	if (GameTextures[fp->tmap].flags & TF_SATURATE)
@@ -1844,10 +1844,11 @@ void RenderLightmapFace(room *rp,int facenum)
 		return;
 	if (!(fp->flags & FF_LIGHTMAP))
 		return;
+
 	// check for render windows hack
 	if (No_render_windows_hack==1)
 	{
-		if (fp->portal_num!=-1)
+		if (fp->portal_num != -1)
 			return;
 	}
 	if (GameTextures[fp->tmap].flags & TF_SATURATE)
@@ -1899,6 +1900,7 @@ void RenderLightmapFace(room *rp,int facenum)
 	  	
 	if (face_code)	// This entire face is off the scren
 		return;
+	
 	rend_SetAlphaValue (GameTextures[fp->tmap].alpha*255);
 	if (fp->flags & FF_TRIANGULATED)
 		g3_SetTriangulationTest(1);
@@ -1940,7 +1942,7 @@ void RenderFace(room *rp,int facenum)
 	// check for render windows hack
 	if (No_render_windows_hack==1)
 	{
-		if (fp->portal_num!=-1)
+		if (fp->portal_num != -1)
 			return;
 	}
 	if (rp->flags & RF_TRIANGULATE)
@@ -1948,22 +1950,6 @@ void RenderFace(room *rp,int facenum)
 	if (!Render_mirror_for_room && Detail_settings.Specular_lighting && (GameTextures[fp->tmap].flags & TF_SPECULAR) &&
 		((fp->special_handle!=BAD_SPECIAL_FACE_INDEX) || (rp->flags & RF_EXTERNAL)))
 		spec_face=1;
-#ifdef MACINTOSH
-	//DAJ check for off screen early!
-	for (vn=0;vn<fp->num_verts;vn++) 
-	{
-		face_cc.cc_and &= World_point_buffer[rp->wpb_index+fp->face_verts[vn]].p3_codes;
-  	}
- 	if (face_cc.cc_and)	// This entire face is off the screen
-	{
-		if (spec_face && GameTextures[fp->tmap].flags & TF_SMOOTH_SPECULAR)
-		{
-			fp->flags|=FF_SPEC_INVISIBLE;
-			UpdateSpecularFace (rp,fp);
-		}
-		return;
-	}
-#endif
 	// Figure out if there is any texture sliding
 	if (GameTextures[fp->tmap].slide_u!=0)
 	{
@@ -2041,7 +2027,6 @@ void RenderFace(room *rp,int facenum)
 		
 	  	}
 	}
-#ifndef MACINTOSH
 	if (face_cc.cc_and)	// This entire face is off the screen
 	{
 		if (spec_face && GameTextures[fp->tmap].flags & TF_SMOOTH_SPECULAR)
@@ -2049,9 +2034,13 @@ void RenderFace(room *rp,int facenum)
 			fp->flags|=FF_SPEC_INVISIBLE;
 			UpdateSpecularFace (rp,fp);
 		}
+
+		if ((rp - Rooms) == 48 && facenum == 22)
+		{
+			mprintf((0, "rejecting r48 f22, off screen\n"));
+		}
 		return;
 	}
-#endif
 	// Do stupid gouraud shading for lightmap
 	if (NoLightmaps)
 	{
@@ -2103,7 +2092,8 @@ void RenderFace(room *rp,int facenum)
 		}
 	}
   	//Get bitmap handle
-	if ((fp->flags & FF_DESTROYED) && (GameTextures[fp->tmap].flags & TF_DESTROYABLE)) {
+	if ((fp->flags & FF_DESTROYED) && (GameTextures[fp->tmap].flags & TF_DESTROYABLE)) 
+	{
 		bm_handle = GetTextureBitmap(GameTextures[fp->tmap].destroy_handle,0);
 		ASSERT(bm_handle != -1);
 	}
@@ -2152,7 +2142,8 @@ void RenderFace(room *rp,int facenum)
 	{
 		tt = TT_LINEAR;										//default to linear
 		for (vn=0;vn<fp->num_verts;vn++)					//select perspective if close
-			if (pointlist[vn]->p3_vec.z < 35) {
+			if (pointlist[vn]->p3_vec.z < 35) 
+			{
 				tt = TT_PERSPECTIVE;
 				break;
 			}
@@ -2184,6 +2175,10 @@ void RenderFace(room *rp,int facenum)
 		}
 	}
   	//Draw the damn thing
+	if ((rp - Rooms) == 48 && facenum == 22)
+	{
+		mprintf((0, "drew r48 f22\n"));
+	}
 	drawn=g3_DrawPoly(fp->num_verts,pointlist,bm_handle,MAP_TYPE_BITMAP,&face_cc);
 	#ifdef EDITOR
 		if (TSearch_on)
@@ -2601,6 +2596,10 @@ void RenderRoomUnsorted(room *rp)
 
 		if (Render_mirror_for_room==false &&  (fogged_portal || (GetFaceAlpha(fp,-1) & (ATF_CONSTANT+ATF_VERTEX))))
 		{
+			if (rp - Rooms == 48)
+			{
+				mprintf((0, "Adding postrender for room 48. fogged_portal: %d, GetFaceAlpha: %d\n", fogged_portal, GetFaceAlpha(fp, -1)));
+			}
 			// Place alpha faces into our postrender list
 			if (Num_postrenders < MAX_POSTRENDERS)
 			{

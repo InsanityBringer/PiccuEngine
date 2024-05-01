@@ -4649,7 +4649,7 @@ void fvi_rooms_objs(void)
 //					bm_handle - the handle for the bitmap for this frame, or -1 if don't care about transparence
 //Returns:		bitmask describing the alpha blending for the face
 //					the return bits are the ATF_ flags in renderer.h
-inline int GetFaceAlpha(face *fp,int bm_handle)
+static inline int GetFaceAlpha(face *fp,int bm_handle)
 {
 	int ret = AT_ALWAYS;
 	if (GameTextures[fp->tmap].flags & TF_SATURATE)
