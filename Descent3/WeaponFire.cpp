@@ -1508,8 +1508,9 @@ void DrawElectricalWeapon (object *obj)
 
 }
 
-#define FUSION_RAMP_TIME	3.0
-#define FUSION_DAMAGE_SOUND_INTERVAL	.5
+constexpr float FUSION_RAMP_TIME = 3.f;
+constexpr float FUSION_DAMAGE_SOUND_INTERVAL = .5f;
+constexpr float FUSION_FRAMETIME_AT_60FPS = 1.f / 60;
 
 float Last_fusion_damage_time=0;
 
@@ -1546,22 +1547,24 @@ void DoFusionEffect(object *objp,int weapon_type)
 	if (norm>1.0)
 	{
 		norm=1.0;
+		float damagescale = Frametime / FUSION_FRAMETIME_AT_60FPS;
+		float damage = (.125 * abs(move)) * damagescale;
 
 		if ((!(Game_mode & GM_MULTI)) || Netgame.local_role==LR_SERVER)
 		{
 			if ((Gametime-Last_fusion_damage_time)<FUSION_DAMAGE_SOUND_INTERVAL)
 			{
-				ApplyDamageToPlayer (objp,objp,PD_ENERGY_WEAPON,(.125*abs(move)),0,255,0);
+				ApplyDamageToPlayer (objp,objp,PD_ENERGY_WEAPON,damage,0,255,0);
 			}
 			else
 			{
-				ApplyDamageToPlayer (objp,objp,PD_ENERGY_WEAPON,(.125*abs(move)));
+				ApplyDamageToPlayer (objp,objp,PD_ENERGY_WEAPON, damage);
 				Last_fusion_damage_time=Gametime;
 			}
 		}
 		else {
 			Multi_requested_damage_type = PD_ENERGY_WEAPON;
-			Multi_requested_damage_amount +=(.125*abs(move));
+			Multi_requested_damage_amount += damage;
 		}
 	}
 

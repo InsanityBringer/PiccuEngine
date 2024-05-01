@@ -179,7 +179,6 @@ void ddio_MouseReset() {
 // This function has been hacked to use timer_GetTime which can be much more accurate.
 float ddio_MouseBtnDownTime(int btn) 
 {
-    // DWORD ticks, curticks = GetTickCount();
     float time, curtime = timer_GetTime();
 
     // ASSERT(btn >= 0 && btn < N_MSEBTNS);
