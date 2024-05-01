@@ -420,6 +420,8 @@ void llsOpenAL::AdjustSound(int sound_uid, pos_state* cur_pos, float adjusted_vo
 	if (!SoundEntries || id < 0 || id >= NumSoundChannels || SoundEntries[id].soundUID != sound_uid || isnan<float>(cur_pos->position->x)) return;
 
 	ALuint handle = SoundEntries[id].handle;
+	//Undo the source relative hack. 
+	alSourcei(handle, AL_SOURCE_RELATIVE, AL_FALSE);
 	alSource3f(handle, AL_DIRECTION, -cur_pos->orient->fvec.x, cur_pos->orient->fvec.y, cur_pos->orient->fvec.z);
 	ALErrorCheck("Adjusting sound direction.");
 	alSource3f(handle, AL_VELOCITY, -cur_pos->velocity->x, cur_pos->velocity->y, cur_pos->velocity->z);
@@ -893,11 +895,18 @@ void llsOpenAL::InitSourceStreaming(uint32_t handle, float volume)
 void llsOpenAL::InitSource3D(uint32_t handle, sound_info* soundInfo, pos_state* posInfo, float volume)
 {
 	ALErrorCheck("Clearing entry error in 3d source properties.");
-	alSourcei(handle, AL_SOURCE_RELATIVE, AL_FALSE);
+	//HACK: The original LLS only recomputed sound positions when they moved for the first time.
+	//Firing sounds are the one exception where they're started as 3D sounds but never updated.
+	vector delta = ListenerPosition - *posInfo->position;
+	vector position = (delta * ListenerOrient);
+	vector direction = posInfo->orient->fvec * ListenerOrient;
+	vector velocity = *posInfo->velocity * ListenerOrient;
+
+	alSourcei(handle, AL_SOURCE_RELATIVE, AL_TRUE);
 	alSourcef(handle, AL_ROLLOFF_FACTOR, 1.0f);
-	alSource3f(handle, AL_DIRECTION, -posInfo->orient->fvec.x, posInfo->orient->fvec.y, posInfo->orient->fvec.z);
-	alSource3f(handle, AL_VELOCITY, -posInfo->velocity->x, posInfo->velocity->y, posInfo->velocity->z);
-	alSource3f(handle, AL_POSITION, -posInfo->position->x, posInfo->position->y, posInfo->position->z);
+	alSource3f(handle, AL_DIRECTION, -direction.x, direction.y, direction.z);
+	alSource3f(handle, AL_VELOCITY, -velocity.x, velocity.y, velocity.z);
+	alSource3f(handle, AL_POSITION, -position.x, position.y, position.z);
 	ALErrorCheck("Setting 3D sound source position.");
 	alSourcef(handle, AL_MAX_GAIN, 1.f);
 	alSourcef(handle, AL_GAIN, volume);

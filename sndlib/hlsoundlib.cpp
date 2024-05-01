@@ -855,9 +855,7 @@ int hlsSystem::Play3dSound(int sound_index, pos_state *cur_pos, object *cur_obj,
 	m_sounds_played++;
 	// Initialize the play information to nice values
 	memset(&m_sound_objects[i].play_info, 0, sizeof(play_information));
-#ifndef MACINTOSH
 	m_sound_objects[i].play_info.samples_per_22khz_sample = 1.0;
-#endif
 	m_sound_objects[i].play_info.sample_skip_interval = 0;
 	m_sound_objects[i].play_info.priority = priority;		// Set sound's priority rating
 	m_sound_objects[i].m_hlsound_uid = MakeUniqueId(i);
