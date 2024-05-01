@@ -15,120 +15,24 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/Lib/ddio_common.h $
- * $Revision: 1.3 $
- * $Date: 2004/02/09 04:14:51 $
- * $Author: kevinb $
- *
- * Common DDIO functions
- *
- * $Log: ddio_common.h,v $
- * Revision 1.3  2004/02/09 04:14:51  kevinb
- * Added newlines to all headers to reduce number of warnings printed
- *
- * Made some small changes to get everything compiling.
- *
- * All Ready to merge the 1.5 tree.
- *
- * Revision 1.2  2000/09/22 19:04:37  icculus
- * SDLK_WORLD support
- *
- * Revision 1.1.1.1  2000/04/18 00:00:38  icculus
- * initial checkin
- *
- * 
- * 20    10/21/99 9:27p Jeff
- * B.A. Macintosh code merge
- * 
- * 19    5/11/99 11:18a Jeff
- * added serial support
- * 
- * 18    4/24/99 5:41p Samir
- * moved key to ascii, ascii to key to the ddio_common library.
- * 
- * 17    4/22/99 2:48a Jeff
- * fixed changed prototype
- * 
- * 16    4/09/99 12:02p Samir
- * joystick changes (Win32 DirectInput support)
- * 
- * 15    2/21/99 6:38p Samir
- * mouse and key input better. buffered mouse.
- * 
- * 14    1/25/99 6:47p Samir
- * allow slow keyboard
- * 
- * 13    1/25/99 11:02a Samir
- * revamped mouse and key controls.
- * 
- * 12    10/20/98 12:58a Jeff
- * added a way to force a lo-resolution timer
- * 
- * 11    9/17/98 12:50p Samir
- * added ddio_KeyFlushKey.
- * 
- * 10    8/12/98 2:54p Matt
- * Renamed the slash and backslash key constants.
- * 
- * 9     7/01/98 4:55p Samir
- * new simplified mouse system.
- * 
- * 8     6/30/98 4:20p Samir
- * added ddio_Close as standalone.   ddio_Init will no longer close
- * itself.
- * 
- * 7     6/24/98 3:26p Samir
- * changed codes for pause and NUMLOCK, since they seem different under
- * windows.
- * 
- * 6     3/24/98 4:26p Samir
- * added function to return the state of an adjusted key.
- * 
- * 5     2/25/98 6:11p Samir
- * Added functions to better deal with key flushing.
- * 
- * 4     12/10/97 1:12p Samir
- * Pass time to ddio_UpdateKeyState
- * 
- * 3     10/29/97 4:14p Samir
- * Keep record of key down count per key.
- * 
- * 2     10/16/97 2:28p Samir
- * move keyboard init into ddio_init and added preemptive select for
- * keyboard.
- * 
- * 4     6/11/97 1:07p Samir
- * The removal of gameos and replaced with oeApplication, oeDatabase
- * 
- * 3     5/09/97 6:45p Samir
- * Common keystate update function
- * 
- * 2     5/08/97 1:55p Samir
- * Move initialization stuff to ddio_common.h
- * 
- * 1     5/08/97 12:34p Samir
- * Moved functions from ddio.h to ddio_common.h
- *
- * $NoKeywords: $
- */
+
 
 #ifndef DDIO_COMMON_H
 #define DDIO_COMMON_H
 
 #include "pstypes.h"
 
-
 class oeApplication;
 
 #define DDIO_MOUSE_LITE			2					// some ddio systems support the 'lite' extension of mice.
 
-typedef struct ddio_init_info {
+struct ddio_init_info 
+{
 	oeApplication *obj;								// App object used to initialize to IO system
 	bool use_lo_res_time;
 	bool key_emulation;								// keyboard emulation
 	bool joy_emulation;								// joystick emulation
-} ddio_init_info;
+};
 
 
 // ----------------------------------------------------------------------------
@@ -237,109 +141,109 @@ extern volatile ubyte DDIO_key_state[];
 #define KEY_STATE_SYSTEM	0x40000000
 
 //	codes
-#define KEY_0           0x0B
-#define KEY_1           0x02
-#define KEY_2           0x03
-#define KEY_3           0x04
-#define KEY_4           0x05
-#define KEY_5           0x06
-#define KEY_6           0x07
-#define KEY_7           0x08
-#define KEY_8           0x09
-#define KEY_9           0x0A
-#define KEY_A           0x1E
-#define KEY_B           0x30
-#define KEY_C           0x2E
-#define KEY_D           0x20
-#define KEY_E           0x12
-#define KEY_F           0x21
-#define KEY_G           0x22
-#define KEY_H           0x23
-#define KEY_I           0x17
-#define KEY_J           0x24
-#define KEY_K           0x25
-#define KEY_L           0x26
-#define KEY_M           0x32
-#define KEY_N           0x31
-#define KEY_O           0x18
-#define KEY_P           0x19
-#define KEY_Q           0x10
-#define KEY_R           0x13
-#define KEY_S           0x1F
-#define KEY_T           0x14
-#define KEY_U           0x16
-#define KEY_V           0x2F
-#define KEY_W           0x11
-#define KEY_X           0x2D
-#define KEY_Y           0x15
-#define KEY_Z           0x2C
-#define KEY_MINUS       0x0C
-#define KEY_EQUAL       0x0D
-#define KEY_SLASH			0x35		//was KEY_DIVIDE in Descent & D2
-#define KEY_BACKSLASH	0x2B		//was KEY_SLASH in Descent and D2
-#define KEY_BSLASH_UK	0x56		//UK keyboards have diffent backslash scan code
-#define KEY_COMMA       0x33
-#define KEY_PERIOD      0x34
-#define KEY_SEMICOL     0x27
-#define KEY_LBRACKET    0x1A
-#define KEY_RBRACKET    0x1B
-#define KEY_RAPOSTRO    0x28
-#define KEY_LAPOSTRO    0x29
-#define KEY_ESC         0x01
-#define KEY_ENTER       0x1C
-#define KEY_BACKSP      0x0E
-#define KEY_TAB         0x0F
-#define KEY_SPACEBAR    0x39
-#define KEY_NUMLOCK     0xC5
-#define KEY_SCROLLOCK   0x46
-#define KEY_CAPSLOCK    0x3A
-#define KEY_LSHIFT      0x2A
-#define KEY_RSHIFT      0x36
-#define KEY_LALT        0x38
-#define KEY_RALT        0xB8
-#define KEY_LCTRL       0x1D
-#define KEY_RCTRL       0x9D
+#define KEY_0				0x0B
+#define KEY_1				0x02
+#define KEY_2				0x03
+#define KEY_3				0x04
+#define KEY_4				0x05
+#define KEY_5				0x06
+#define KEY_6				0x07
+#define KEY_7				0x08
+#define KEY_8				0x09
+#define KEY_9				0x0A
+#define KEY_A				0x1E
+#define KEY_B				0x30
+#define KEY_C				0x2E
+#define KEY_D				0x20
+#define KEY_E				0x12
+#define KEY_F				0x21
+#define KEY_G				0x22
+#define KEY_H				0x23
+#define KEY_I				0x17
+#define KEY_J				0x24
+#define KEY_K				0x25
+#define KEY_L				0x26
+#define KEY_M				0x32
+#define KEY_N				0x31
+#define KEY_O				0x18
+#define KEY_P				0x19
+#define KEY_Q				0x10
+#define KEY_R				0x13
+#define KEY_S				0x1F
+#define KEY_T				0x14
+#define KEY_U				0x16
+#define KEY_V				0x2F
+#define KEY_W				0x11
+#define KEY_X				0x2D
+#define KEY_Y				0x15
+#define KEY_Z				0x2C
+#define KEY_MINUS			0x0C
+#define KEY_EQUAL			0x0D
+#define KEY_SLASH			0x35	//was KEY_DIVIDE in Descent & D2
+#define KEY_BACKSLASH		0x2B	//was KEY_SLASH in Descent and D2
+#define KEY_BSLASH_UK		0x56	//UK keyboards have diffent backslash scan code
+#define KEY_COMMA			0x33
+#define KEY_PERIOD			0x34
+#define KEY_SEMICOL			0x27
+#define KEY_LBRACKET		0x1A
+#define KEY_RBRACKET		0x1B
+#define KEY_RAPOSTRO		0x28
+#define KEY_LAPOSTRO		0x29
+#define KEY_ESC				0x01
+#define KEY_ENTER			0x1C
+#define KEY_BACKSP			0x0E
+#define KEY_TAB				0x0F
+#define KEY_SPACEBAR		0x39
+#define KEY_NUMLOCK			0xC5
+#define KEY_SCROLLOCK		0x46
+#define KEY_CAPSLOCK		0x3A
+#define KEY_LSHIFT			0x2A
+#define KEY_RSHIFT			0x36
+#define KEY_LALT			0x38
+#define KEY_RALT			0xB8
+#define KEY_LCTRL			0x1D
+#define KEY_RCTRL			0x9D
 
-#define KEY_F1          0x3B
-#define KEY_F2          0x3C
-#define KEY_F3          0x3D
-#define KEY_F4          0x3E
-#define KEY_F5          0x3F
-#define KEY_F6          0x40
-#define KEY_F7          0x41
-#define KEY_F8          0x42
-#define KEY_F9          0x43
-#define KEY_F10         0x44
-#define KEY_F11         0x57
-#define KEY_F12         0x58
+#define KEY_F1				0x3B
+#define KEY_F2				0x3C
+#define KEY_F3				0x3D
+#define KEY_F4				0x3E
+#define KEY_F5				0x3F
+#define KEY_F6				0x40
+#define KEY_F7				0x41
+#define KEY_F8				0x42
+#define KEY_F9				0x43
+#define KEY_F10				0x44
+#define KEY_F11				0x57
+#define KEY_F12				0x58
 
-#define KEY_PAD0        0x52
-#define KEY_PAD1        0x4F
-#define KEY_PAD2        0x50
-#define KEY_PAD3        0x51
-#define KEY_PAD4        0x4B
-#define KEY_PAD5        0x4C
-#define KEY_PAD6        0x4D
-#define KEY_PAD7        0x47
-#define KEY_PAD8        0x48
-#define KEY_PAD9        0x49
-#define KEY_PADMINUS    0x4A
-#define KEY_PADPLUS     0x4E
-#define KEY_PADPERIOD   0x53
-#define KEY_PADDIVIDE   0xB5
-#define KEY_PADMULTIPLY 0x37
-#define KEY_PADENTER    0x9C
+#define KEY_PAD0			0x52
+#define KEY_PAD1			0x4F
+#define KEY_PAD2			0x50
+#define KEY_PAD3			0x51
+#define KEY_PAD4			0x4B
+#define KEY_PAD5			0x4C
+#define KEY_PAD6			0x4D
+#define KEY_PAD7			0x47
+#define KEY_PAD8			0x48
+#define KEY_PAD9			0x49
+#define KEY_PADMINUS		0x4A
+#define KEY_PADPLUS			0x4E
+#define KEY_PADPERIOD		0x53
+#define KEY_PADDIVIDE		0xB5
+#define KEY_PADMULTIPLY		0x37
+#define KEY_PADENTER		0x9C
 
-#define KEY_INSERT      0xD2
-#define KEY_HOME        0xC7
-#define KEY_PAGEUP      0xC9
-#define KEY_DELETE      0xD3
-#define KEY_END         0xCF
-#define KEY_PAGEDOWN    0xD1
-#define KEY_UP          0xC8
-#define KEY_DOWN        0xD0
-#define KEY_LEFT        0xCB
-#define KEY_RIGHT       0xCD
+#define KEY_INSERT			0xD2
+#define KEY_HOME			0xC7
+#define KEY_PAGEUP			0xC9
+#define KEY_DELETE			0xD3
+#define KEY_END				0xCF
+#define KEY_PAGEDOWN		0xD1
+#define KEY_UP				0xC8
+#define KEY_DOWN			0xD0
+#define KEY_LEFT			0xCB
+#define KEY_RIGHT			0xCD
 #define KEY_PRINT_SCREEN	0xB7
 #define KEY_PAUSE			0x45
 

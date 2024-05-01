@@ -537,7 +537,7 @@ void GetMultiAPI (multi_api *api)
 	api->vp[2]=(int *)&Game_is_master_tracker_game;
 	api->vp[3]=(int *)&Game_mode;
 	api->vp[4]=(int *)NULL;//Current_pilot; no longer a struct
-	api->vp[5]=(int *)Base_directory;
+	api->vp[5] =(int*)Base_directory; //[ISB] aa, should this be working dir or user dir? Probably working. 
 	api->vp[6]=(int *)&MultiDLLGameStarting;
 	api->vp[7]=(int *)MTPilotinfo;
 	api->vp[8]=(int *)&Num_network_games_known;

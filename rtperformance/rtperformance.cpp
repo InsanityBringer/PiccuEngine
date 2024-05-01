@@ -107,7 +107,7 @@ void rtp_WriteBufferLog(void)
 	Num_frames = min(Runtime_performance_counter,MAX_RTP_SAMPLES);
 
 	// Open the log file for writing
-	ddio_MakePath(buffer,LocalD3Dir,"D3Performance.txt",NULL);	
+	ddio_MakePath(buffer,User_directory,"D3Performance.txt",NULL);	
 	CFILE *file = cfopen(buffer,"wt");
 
 	if(file){

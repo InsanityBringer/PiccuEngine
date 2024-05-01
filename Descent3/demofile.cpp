@@ -15,254 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/demofile.cpp $
- * $Revision: 74 $
- * $Date: 10/21/01 7:15p $
- * $Author: Matt $
- *
- * 
- *
- * $Log: /DescentIII/Main/demofile.cpp $
- * 
- * 74    10/21/01 7:15p Matt
- * Hack to set the ship_index field for each Player[] so the LOD models
- * work right.
- * 
- * 73    10/04/01 9:49a Matt
- * Added missing semicolon.
- * 
- * 72    10/03/01 11:39p Kevin
- * init hud on demo playback
- * 
- * 71    10/03/01 11:35p Kevin
- * multiplayer stripes appear in demo playback
- * 
- * 70    9/11/01 11:25a Matt
- * Fixed rear-view camera problem when a demo using a player other than 0
- * started and the rear-view was already on.
- * 
- * 69    9/10/01 2:30p Matt
- * Added code to clear the 'press space to continue...' message after
- * player respawn.
- * 
- * 68    9/10/01 2:07p Matt
- * Made add-on data load before level is loaded so texture are mapped
- * right.
- * 
- * 67    4/21/00 2:50p Matt
- * Added check for killing an invalid object type.
- * 
- * 66    4/19/00 5:07p Matt
- * From Duane for 1.4
- * Added checks, asserts, and fixes for bad return values
- * 
- * 65    3/23/00 2:35p Matt
- * Added generic object id translastion when creating objects during demo
- * playback.
- * 
- * 64    10/22/99 2:38p Jay
- * Update for the FinalBoss Laser Effect
- * 
- * 63    7/28/99 9:39a Kevin
- * 
- * 62    7/27/99 12:58p Kevin
- * fixed napalm, omega & vauss rendering for other players in a
- * multiplayer game
- * 
- * 61    7/21/99 7:17p Chris
- * Fixed an attach related crash in the load/save game code
- * 
- * 60    7/21/99 2:32p Kevin
- * currupt demo will no longer let you keep playing when the demo ends...
- * 
- * 59    7/21/99 12:03p Kevin
- * Changed version numbers around
- * 
- * 58    7/14/99 4:59p Kevin
- * fixed multiplayer weapons sitting still bug
- * 
- * 57    6/10/99 9:07p Samir
- * fixed weapon string name localization issues.
- * 
- * 56    5/24/99 1:26a Matt
- * Correctly deal with hit_info == NULL being passed to collision
- * routines.
- * 
- * 55    5/12/99 6:01p Jeff
- * flip order of saving/loading objects and players
- * 
- * 54    5/06/99 1:19a Samir
- * shortened filename length to 128 because of problems with fopen and
- * huge filenames.
- * 
- * 53    5/06/99 12:34a Samir
- * made the editbox take up to _MAX_FNAME characters.  The cfile code has
- * been changed to handle larger paths too, but just to keep some
- * consistancy.
- * 
- * 52    4/27/99 9:59p Kevin
- * CD not requred for dedicated server. Also improved demo playback
- * 
- * 51    4/25/99 10:19p Matt
- * Fixed multiplayer and demo problems will killing an object from script,
- * and cleaned up the death code a bit in the process.
- * 
- * 50    4/23/99 11:39p Kevin
- * doh!
- * 
- * 49    4/23/99 10:28p Kevin
- * fixed problems with minimal install and demo/savegames
- * 
- * 48    4/21/99 11:05a Kevin
- * new ps_rand and ps_srand to replace rand & srand
- * 
- * 47    4/16/99 6:00p Kevin
- * Bunches of Demo stuff
- * 
- * 46    4/15/99 1:38a Jeff
- * changes for linux compile
- * 
- * 45    4/14/99 2:50a Jeff
- * fixed some case mismatched #includes
- * 
- * 44    3/16/99 6:43p Kevin
- * OEM Split fixes
- * 
- * 43    3/12/99 7:53p Jeff
- * save player rotating balls info, handle obj_observer with obj_player,
- * handle objects that use life left, handle 2d sound playing
- * 
- * 42    3/11/99 11:40a Kevin
- * Added SetObjDead code for multiplayer stuff
- * 
- * 41    3/10/99 6:20p Jeff
- * many fixes to demo system.  Fixed IGC so cameras move...fixed osiris to
- * be restored correctly, and it handles errors on restore
- * 
- * 40    3/10/99 2:25p Kevin
- * Save/Load and Demo file fixes
- * 
- * 39    2/25/99 10:58a Matt
- * Added new explosion system.
- * 
- * 38    2/23/99 10:45a Kevin
- * 
- * 37    2/23/99 10:37a Kevin
- * Added camera to list of objects that are saved when changed
- * 
- * 36    2/23/99 12:44a Jeff
- * added support for in-game-cinematics in demo system
- * 
- * 35    2/22/99 9:22p Kevin
- * Added DT_CINEMATICS
- * 
- * 34    2/17/99 2:44p Kevin
- * Adde movie making capabilities to the demo playback system
- * 
- * 33    2/15/99 11:48p Matt
- * Fixed compile warnings
- * 
- * 32    2/15/99 1:22p Kevin
- * Changes for GameGauge
- * 
- * 31    2/08/99 8:59p Kevin
- * Fixed powerups
- * 
- * 30    2/08/99 7:05p Kevin
- * Trying to get demo system working with powerup scripts
- * 
- * 29    2/07/99 1:17a Jeff
- * peppered UI dialogs that were missing NEWUIRES_FORCEQUIT to handle it
- * 
- * 28    2/02/99 1:20p Kevin
- * Added script saving
- * 
- * 27    2/02/99 12:43p Kevin
- * Fixes to the Save/Load game system, and the demo system to work with
- * the new OSIRIS
- * 
- * 26    1/31/99 7:25p Matt
- * Renamed a bunch of functions to have HUD capitalized
- * 
- * 25    1/31/99 3:44p Matt
- * Streamlined game sequencing
- * 
- * 24    1/29/99 2:08p Jeff
- * localization
- * 
- * 23    1/29/99 12:47p Matt
- * Rewrote the doorway system
- * 
- * 22    1/23/99 10:10p Kevin
- * Added the start of osiris support into the demo system
- * 
- * 21    1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 20    1/15/99 7:52p Chris
- * Updated ObjSetPos() to include a f_update_attach_children flag
- * 
- * 19    1/08/99 2:55p Samir
- * Ripped out OSIRIS1.
- * 
- * 18    11/24/98 3:57p Kevin
- * Demo system immprovements
- * 
- * 17    11/24/98 12:08p Kevin
- * 
- * 16    11/24/98 10:41a Kevin
- * Demo system
- * 
- * 15    11/23/98 4:52p Kevin
- * Demo system enhancments
- * 
- * 14    11/23/98 3:11p Kevin
- * Demo system
- * 
- * 13    11/19/98 5:53p Kevin
- * 
- * 12    11/19/98 5:40p Kevin
- * Demo system
- * 
- * 11    11/17/98 4:16p Kevin
- * Demo recording system
- * 
- * 10    11/11/98 2:46p Kevin
- * Demo recording system work
- * 
- * 9     11/09/98 4:12p Kevin
- * 
- * 8     11/05/98 5:54p Kevin
- * Demo system work
- * 
- * 7     10/15/98 12:22a Matt
- * Fixed compile warnings
- * 
- * 6     10/12/98 1:46p Samir
- * new Program_version parameters.
- * 
- * 5     10/08/98 12:00p Kevin
- * Demo system work
- * 
- * 4     10/06/98 5:45p Kevin
- * Added new configuration for demo
- * 
- * 3     10/05/98 12:09p Kevin
- * Converted projects to VC6 and demo file stuff added
- * 
- * 2     10/05/98 10:32a Kevin
- * Initial version
- * 
- * 1     10/05/98 10:22a Kevin
- *
- * $NoKeywords: $
- */
 
 #include <stdio.h>
 #include "CFILE.H"
@@ -366,7 +118,7 @@ void DemoToggleRecording()
 		{
 			strcat(szfile,".dem");
 		}
-		ddio_MakePath(Demo_fname,Base_directory,"demo",szfile,NULL);
+		ddio_MakePath(Demo_fname,User_directory,"demo",szfile,NULL);
 		mprintf((0,"Saving demo to file: %s\n",Demo_fname));
 		//Try to create the file
 		Demo_cfp = cfopen(Demo_fname,"wb");
@@ -1591,7 +1343,7 @@ bool LoadDemoDialog()
 	
 	char file[_MAX_PATH*2];
 
-	ddio_MakePath(file,Base_directory,"demo",NULL);
+	ddio_MakePath(file,User_directory,"demo",NULL);
 
 	if(DoPathFileDialog(false,file,TXT_VIEWDEMO,"*.dem",PFDF_FILEMUSTEXIST))
 	{
@@ -1878,7 +1630,7 @@ void DemoPlayAutoDemo(void)
 	char wcard_fname[_MAX_PATH*2];
 	char auto_fname[_MAX_PATH*2];
 	int idx=0;
-	ddio_MakePath(wcard_fname,Base_directory,"demo","*.dem",NULL);
+	ddio_MakePath(wcard_fname,User_directory,"demo","*.dem",NULL);
 	if(ddio_FindFileStart(wcard_fname,auto_fname))
 	{
 		//Get to the next demo file we are scheduled to do.

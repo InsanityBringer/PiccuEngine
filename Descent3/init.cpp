@@ -137,6 +137,7 @@ ubyte Use_motion_blur = 0;
 
 // The "root" directory of the D3 file tree
 char Base_directory[_MAX_PATH];
+char* User_directory;
 
 extern int Min_allowed_frametime;
 
@@ -663,10 +664,11 @@ void LoadGameSettings()
 }
 
 
-typedef struct
+struct tTempFileInfo
 {
 	char *wildcard;
-}tTempFileInfo;
+};
+
 tTempFileInfo temp_file_wildcards[] = 
 {
 	{"d3s*.tmp"},
@@ -685,6 +687,66 @@ bool MercInstalled()
 	return Merc_IsInstalled;
 }
 
+//Copies a file specified by full filename in srcpath to the destination dir destdir.
+static void CopyFileToDir(const char* srcfile, const char* destdir)
+{
+	char destpath[MAX_PATH];
+	char name[MAX_PATH], ext[MAX_PATH];
+	ddio_SplitPath(srcfile, nullptr, name, ext);
+	strcat(name, ext);
+	ddio_MakePath(destpath, destdir, name, nullptr);
+	ddio_CopyFile(srcfile, destpath);
+}
+
+static void CopyPatternToDir(const char* srcpattern, const char* destdir)
+{
+	char srcfile[MAX_PATH];
+	char srcdir[MAX_PATH];
+	char srcpath[MAX_PATH];
+	//heh, ddio_FindFile* only returns the filename.
+	ddio_SplitPath(srcpattern, srcdir, nullptr, nullptr);
+
+	if (ddio_FindFileStart(srcpattern, srcfile))
+	{
+		if (strcmp(srcfile, ".") && strcmp(srcfile, ".."))
+		{
+			ddio_MakePath(srcpath, srcdir, srcfile, nullptr);
+			CopyFileToDir(srcpath, destdir);
+		}
+		while (ddio_FindNextFile(srcfile))
+		{
+			if (strcmp(srcfile, ".") && strcmp(srcfile, ".."))
+			{
+				ddio_MakePath(srcpath, srcdir, srcfile, nullptr);
+				CopyFileToDir(srcpath, destdir);
+			}
+		}
+
+		ddio_FindFileClose();
+	}
+}
+
+static void TransferUserData(const char* dest)
+{
+	char destpath[MAX_PATH];
+	char temp[MAX_PATH];
+
+	//Transfer pilots
+	ddio_MakePath(temp, Base_directory, "*.plt", nullptr);
+	CopyPatternToDir(temp, dest);
+
+	//Transfer savegames. 
+	ddio_MakePath(destpath, dest, "savegame", nullptr);
+	ddio_CreateDir(destpath);
+	ddio_MakePath(temp, Base_directory, "savegame", "*", nullptr);
+	CopyPatternToDir(temp, destpath);
+
+	//Transfer demos. 
+	ddio_MakePath(destpath, dest, "demo", nullptr);
+	ddio_CreateDir(destpath);
+	ddio_MakePath(temp, Base_directory, "demo", "*", nullptr);
+	CopyPatternToDir(temp, destpath);
+}
 
 /*
 	I/O systems initialization
@@ -694,15 +756,27 @@ void InitIOSystems(bool editor)
 	ddio_init_info io_info;
 	int dirlen = _MAX_PATH;
 
+	
+	//Dedicated server is always portable on Windows, not the most ideal but it will make admin's lives easier.
+	if (FindArg("-portable") != 0 || Dedicated_server)
+	{
+		Portable = true;
+	}
+
 	//Set the base directory
 	int dirarg = FindArg("-setdir");
 	int exedirarg = FindArg("-useexedir");
+
+	//[ISB] If the base is explicitly set, don't do any portable nonsense.
+	bool modifiedbase = false;
 	if(dirarg)
 	{
+		modifiedbase = true;
 		strcpy(Base_directory,GameArgs[dirarg+1]);
 	}
 	else if(exedirarg)
 	{
+		modifiedbase = true;
 		strcpy(Base_directory,GameArgs[0]);
 		int len = strlen(Base_directory);
 		for(int i=(len-1);i>=0;i--)
@@ -720,6 +794,63 @@ void InitIOSystems(bool editor)
 	}
 
 	ddio_SetWorkingDir(Base_directory);
+
+	bool portableexists = cfexist("piccu_portable") != 0;
+	char* userdir = ddio_GetUserDir(ENGINE_NAME);
+	if (portableexists || !userdir)
+		Portable = true;
+
+	//If the install isn't flagged as portable, 
+	if (!portableexists && !Portable)
+	{
+		if (!ddio_DirExists(userdir))
+		{
+			char temp[MAX_PATH];
+			if (ddio_FindFileStart("*.plt", temp))
+			{
+				ddio_FindFileClose();
+				int value = OutrageMessageBox(MBOX_YESNO, "A .plt file has been found in the working directory. \nWould you like to convert this install to a portable install?\nNote that this will not work if installed in Program Files!");
+				if (value == 7)
+				{
+					ddio_CreateDir(userdir);
+					TransferUserData(userdir);
+				}
+				else
+					Portable = true;
+			}
+		}
+	}
+
+	if (Portable || modifiedbase)
+	{
+		//In portable mode, the user directory is the same as the base directory.
+		User_directory = Base_directory;
+		if (!portableexists && !modifiedbase)
+		{
+			CFILE* fp = cfopen("piccu_portable", "wb");
+			if (!fp)
+				Error("Failed to create piccu_portable marker!");
+			cfclose(fp);
+		}
+	}
+	else
+	{
+		char* userdir = ddio_GetUserDir(ENGINE_NAME);
+		if (!userdir)
+			User_directory = Base_directory;
+		else
+		{
+			User_directory = userdir;
+
+			if (!ddio_DirExists(User_directory))
+			{
+				if (!ddio_CreateDir(User_directory))
+				{
+					Error("Failed to create user directory %s!\n", User_directory);
+				}
+			}
+		}
+	}
 
 	Descent->set_defer_handler(D3DeferHandler);
 
@@ -1375,17 +1506,25 @@ void SetupTempDirectory(void)
 	}else
 	{
 		//initialize it to custom/cache
-		ddio_MakePath(Descent3_temp_directory,Base_directory,"custom","cache",NULL);
+		ddio_MakePath(Descent3_temp_directory,User_directory,"custom","cache",NULL);
 	}
 
 	//verify that temp directory exists
 	if(!ddio_SetWorkingDir(Descent3_temp_directory))
 	{
-		ddio_MakePath(Descent3_temp_directory, Base_directory, "custom", NULL);
-		ddio_CreateDir(Descent3_temp_directory);
-		ddio_MakePath(Descent3_temp_directory, Base_directory, "custom", "cache", NULL);
-		ddio_CreateDir(Descent3_temp_directory);
-		if (!ddio_SetWorkingDir(Descent3_temp_directory))
+		if (t_arg == 0)
+		{
+			ddio_MakePath(Descent3_temp_directory, User_directory, "custom", NULL);
+			ddio_CreateDir(Descent3_temp_directory);
+			ddio_MakePath(Descent3_temp_directory, User_directory, "custom", "cache", NULL);
+			ddio_CreateDir(Descent3_temp_directory);
+			if (!ddio_SetWorkingDir(Descent3_temp_directory))
+			{
+				Error("Unable to create temporary directory \"%s\"", Descent3_temp_directory);
+				exit(1);
+			}
+		}
+		else
 		{
 			Error("Unable to set temporary directory to: \"%s\"", Descent3_temp_directory);
 			exit(1);

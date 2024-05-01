@@ -753,7 +753,7 @@ void DoScreenshot ()
 	while (!done)
 	{
 		sprintf (str,"Screenshot%.3d.tga",count);
-		ddio_MakePath (filename,Base_directory,str,NULL);
+		ddio_MakePath (filename,User_directory,str,NULL);
 		infile=(CFILE *)cfopen (filename,"rb");
 		if (infile==NULL)
 		{

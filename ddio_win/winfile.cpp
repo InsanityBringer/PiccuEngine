@@ -15,131 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/ddio_win/winfile.cpp $
- * $Revision: 27 $
- * $Date: 10/22/99 1:23p $
- * $Author: Kevin $
- *
- * File operations not covered properly in ANSI C
- *
- * $Log: /DescentIII/Main/ddio_win/winfile.cpp $
- * 
- * 27    10/22/99 1:23p Kevin
- * Made ddio_GetCDDrive return null if the cd isn't found
- * 
- * 26    7/12/99 6:44p Jeff
- * added directory lock file API functions
- * 
- * 25    6/24/99 2:04p Kevin
- * Fixed bug with 2 CD rom drives & ddio_GetCDDrive
- * 
- * 24    3/19/99 1:53p Kevin
- * Fixed a bug with ddio_GetCDDrive
- * 
- * 23    2/09/99 4:46p Jeff
- * removed int3 in CopyFileTime
- * 
- * 22    2/04/99 11:19a Kevin
- * Added function to find a CD drive letter based on it's volume name
- * 
- * 21    12/08/98 12:17p Jeff
- * added 3 functions (similar to ddio_FindFiles) for finding directories
- * in a path
- * 
- * 20    11/19/98 5:40p Kevin
- * Demo system
- * 
- * 19    10/16/98 11:55a Kevin
- * Made dlls loadable in a hog
- * 
- * 18    10/08/98 4:23p Kevin
- * Changed code to comply with memory library usage. Always use mem_malloc
- * , mem_free and mem_strdup
- * 
- * 17    8/19/98 2:18p Jeff
- * changed ddio_CleanPath
- * 
- * 16    8/16/98 2:04p Matt
- * Fixed super-stupid bug
- * 
- * 15    8/15/98 3:42p Matt
- * Added new function, ddio_GetFullPath()
- * 
- * 14    7/29/98 5:38p Jeff
- * added ddio functions to get parent path, and to clean a path name into
- * the real path
- * 
- * 13    7/28/98 6:05p Jeff
- * added functions to get root directories (aka drives in windows/dos)
- * 
- * 12    6/01/98 10:34a Matt
- * If can't copy file time, wait half a second and try again.
- * 
- * 11    5/26/98 7:35p Jason
- * took out filetime int 3
- * 
- * 10    4/06/98 1:24p Samir
- * support NULL arguments to ddio_SpltPath.
- * 
- * 9     3/19/98 3:18p Samir
- * enforce constant char* arguments when needed.  done in CFILE and bitmap
- * libraries as well as ddio.
- * 
- * 8     2/20/98 3:37p Jason
- * fixed error message to print out before subsequent file operations
- * happen
- * 
- * 7     2/17/98 9:40p Jason
- * print out error number for copy file time
- * 
- * 6     2/16/98 11:08a Jason
- * fixed copyfiletime bug
- * 
- * 5     2/16/98 1:48a Matt
- * Added some additional error checking
- * 
- * 4     9/10/97 12:06p Samir
- * FIxed FindFile functions.
- * 
- * 3     8/15/97 6:31p Samir
- * Added findfile functions.
- * 
- * 2     7/17/97 3:00p Jason
- * took out int3 on copy file time
- * 
- * 10    6/11/97 2:39p Samir
- * Fixed bools
- * 
- * 9     5/06/97 4:27p Samir
- * Added ddio_MakePath
- * 
- * 8     5/06/97 12:35p Samir
- * Impllemented DirectoryExists and Save/Restore Working paths.
- * 
- * 7     4/25/97 6:16p Jason
- * added ddio_Deletefile function
- * 
- * 6     4/03/97 4:34p Jason
- * added CopyFileTime to the cfile, ddio libs
- * 
- * 5     3/14/97 6:52p Samir
- * Fixed jeremy bugs.
- * 
- * 4     3/14/97 6:53 PM Jeremy
- * added implementation of ddio_GetFileLength, ddio_SplitPath
- * 
- * 3     3/14/97 6:38p Samir
- * Added ddio_FileDiff
- * 
- * 2     3/13/97 11:09a Samir
- * Moved file stuff from gameos to ddio library
- * 
- * 1     3/13/97 11:01a Samir
- * Moved from gameos library
- * 
- * $NoKeywords: $
- */
 
 #include "ddio.h"
 #include "ddio_win.h"
@@ -153,6 +28,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
+#include <ShlObj.h>
 
 
 //	---------------------------------------------------------------------------
@@ -451,6 +327,52 @@ void ddio_FindDirClose()
 	hFindDir = INVALID_HANDLE_VALUE;
 }
 
+char* ddio_GetUserDir(const char* extraname)
+{
+	PWSTR str;
+	HRESULT res = SHGetKnownFolderPath(FOLDERID_SavedGames, 0, nullptr, &str);
+	if (res != S_OK)
+		return nullptr; 
+
+	//I don't like this, but until I get support for UTF-8 strings, I gotta do this nonsense
+	int length = WideCharToMultiByte(CP_ACP, 0, str, -1, nullptr, 0, nullptr, nullptr);
+	if (length < 0)
+	{
+		mprintf((0, "ddio_GetUserDir: Failed to size ANSI string!\n"));
+		return nullptr;
+	}
+
+	int extrachars = 0;
+	if (extraname)
+		extrachars = strlen(extraname) + 1; //[ISB] one for the path separator
+
+	char* narrowstr = (char*)malloc(length + extrachars);
+	if (!narrowstr)
+	{
+		mprintf((0, "ddio_GetUserDir: malloc failure, something is really wrong if you see this\n"));
+		return nullptr;
+	}
+	int len2 = WideCharToMultiByte(CP_ACP, 0, str, -1, narrowstr, length, nullptr, nullptr);
+	if (len2 < 0)
+	{
+		mprintf((0, "ddio_GetUserDir: Failed to convert to ANSI string!\n"));
+		return nullptr;
+	}
+
+	if (extraname)
+	{
+		//The strcpy will null terminate this.
+		narrowstr[length-1] = '\\';
+		strcpy(&narrowstr[length], extraname);
+	}
+	else
+	{
+		//Must manually terminate. 
+		narrowstr[length] = '\0';
+	}
+	return narrowstr;
+}
+
 
 //	 pass in a pathname (could be from ddio_SplitPath), root_path will have the drive name.
 void ddio_GetRootFromPath(const char *srcPath, char *root_path)
@@ -676,6 +598,14 @@ bool ddio_RenameFile(char *oldfile,char *newfile)
 		return true;
 	else
 		return false;	
+}
+
+bool ddio_CopyFile(const char* srcfile, const char* destfile)
+{
+	if (CopyFile(srcfile, destfile, TRUE))
+		return true;
+
+	return false;
 }
 
 //Give a volume label to look for, and if it's found returns a path 

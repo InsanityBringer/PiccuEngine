@@ -64,6 +64,9 @@ extern bool Descent_overrided_intro;
 
 // The "root" directory of the D3 file tree
 extern char Base_directory[];
+//[ISB] User directory for pilots, demos, savegames, and other user generated files.
+//May equal Base_directory when in portable mode. 
+extern char* User_directory;
 
 //	---------------------------------------------------------------------------
 //	Globals
@@ -71,6 +74,7 @@ extern char Base_directory[];
 extern oeApplication *Descent;		// The Descent object
 extern oeAppDatabase *Database;		// The Database
 extern char Descent3_temp_directory[_MAX_PATH];	//temp directory to put temp files
+extern bool Portable;		// [ISB] True if the paths should be portable. 
 extern bool Katmai;			// whether or not katmai is detected
 //	---------------------------------------------------------------------------
 //	Functions

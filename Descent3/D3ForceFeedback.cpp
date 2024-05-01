@@ -89,6 +89,7 @@
 
 #include <stdlib.h>
 
+#include "descent.h"
 #include "forcefeedback.h"
 #include "D3ForceFeedback.h"
 #include "pserror.h"
@@ -705,7 +706,7 @@ void ForceEffectsInit(void)
 
 	if(cfexist("D3Force.ifr"))
 	{
-		ddio_MakePath(path,LocalD3Dir,"custom","cache","D3Force.ifr",NULL);
+		ddio_MakePath(path,User_directory,"custom","cache","D3Force.ifr",NULL);
 		cf_CopyFile(path,"D3Force.ifr",0);
 		prj = ddio_ForceLoadProject(IGNORE_TABLE(path),kJoy1);
 	}else

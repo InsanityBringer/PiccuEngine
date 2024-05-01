@@ -218,6 +218,10 @@ void ddio_FindDirClose();
 bool ddio_FindDirStart(const char *wildcard, char *namebuf);
 bool ddio_FindNextDir(char *namebuf);
 
+//[ISB] Gets a string that contains the current user directory.
+//On Windows this will be user home\Saved Games\Piccu Engine\.
+char* ddio_GetUserDir(const char* extraname);
+
 
 //	given a path (with no filename), it will return the parent path
 //	srcPath is the source given path
@@ -250,6 +254,9 @@ bool ddio_GetTempFileName(char *basedir,char *prefix,char *filename);
 //Renames file
 //Returns true on success or false on an error
 bool ddio_RenameFile(char *oldfile,char *newfile);
+
+//Copies a file
+bool ddio_CopyFile(const char* srcfile, const char* destfile);
 
 
 //Give a volume label to look for, and if it's found returns a path 
@@ -294,5 +301,11 @@ int ddio_CreateLockFile(const char *dir);
 //		-2		A lock file exists in the directory, but wasn't deleted...illegal format
 //		-3		Unable to delete file
 int ddio_DeleteLockFile(const char *dir);
+
+#if defined(WIN32)
+#define DDIO_PATH_SEPARATOR "\\"
+#else
+#define DDIO_PATH_SEPARATOR "/"
+#endif
 
 #endif

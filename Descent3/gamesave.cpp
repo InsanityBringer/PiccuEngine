@@ -102,13 +102,9 @@ void QuickSaveGame()
 		i = Quicksave_game_slot;
 
 		sprintf(filename, "saveg00%d", i);
-		ddio_MakePath(pathname, Base_directory, "savegame", filename, NULL);
+		ddio_MakePath(pathname, User_directory, "savegame", filename, NULL);
 
-#ifdef MACINTOSH
-		fp = mac_fopen(pathname, "rb");
-#else
 		fp = fopen(pathname, "rb");
-#endif
 		if (fp) {
 		// slot valid, save here.
 			fclose(fp);
@@ -152,7 +148,7 @@ void SaveGameDialog()
 #endif
 
 // setup paths.
-	ddio_MakePath(savegame_dir, Base_directory, "savegame", NULL);
+	ddio_MakePath(savegame_dir, User_directory, "savegame", NULL);
 //	ddio_MakePath(pathname, savegame_dir, "*.sav", NULL); -unused
 
 // create savegame directory if it didn't exist before.
@@ -319,7 +315,7 @@ void __cdecl LoadGameDialogCB(newuiTiledWindow *wnd, void *data)
 
 		mprintf((0, "savegame slot=%d\n", id-SAVE_HOTSPOT_ID));
 
-		ddio_MakePath(savegame_dir, Base_directory, "savegame", NULL);
+		ddio_MakePath(savegame_dir, User_directory, "savegame", NULL);
 		sprintf(filename, "saveg00%d", (id-SAVE_HOTSPOT_ID));
 		ddio_MakePath(pathname, savegame_dir, filename, NULL);
 
@@ -366,7 +362,7 @@ bool LoadGameDialog()
 	}
 
 // setup paths.
-	ddio_MakePath(savegame_dir, Base_directory, "savegame", NULL);
+	ddio_MakePath(savegame_dir, User_directory, "savegame", NULL);
 	ddio_MakePath(pathname, savegame_dir, "*.sav", NULL);
 
 // create savegame directory if it didn't exist before.

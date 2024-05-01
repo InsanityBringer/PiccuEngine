@@ -15,559 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/pilot.cpp $
- * $Revision: 175 $
- * $Date: 3/20/00 12:07p $
- * $Author: Matt $
- *
- * Player/Pilot configuration
- *
- * $Log: /DescentIII/main/pilot.cpp $
- * 
- * 175   3/20/00 12:07p Matt
- * Merge of Duane's post-1.3 changes.
- * Changed difficulty level to be a global variable instead of a function
- * call
- * 
- * 174   11/30/99 5:08p Jeff
- * don't let the Black Pyro be selected in LInux
- * 
- * 173   10/21/99 9:27p Jeff
- * B.A. Macintosh code merge
- * 
- * 172   10/19/99 4:55p Jeff
- * only let them select Black Pyro if they own Mercenary
- * 
- * 171   10/04/99 9:57a Kevin
- * #ifdef for demo, only pyro is available
- * 
- * 170   9/12/99 12:09a Jeff
- * fixed stupid axtoi bug
- * 
- * 169   9/03/99 4:37p Jeff
- * fixed bug related to highlighting an oaf if it is supposed to be
- * selected in the pilot config dialog
- * 
- * 168   7/23/99 2:36p Jeff
- * put in warning message if imported oaf file is too large
- * 
- * 167   7/06/99 11:47p Jeff
- * Added delete buttons for audio taunts and logos
- * 
- * 166   5/25/99 3:09a Jeff
- * don't let a player start in secret levels if they beat the game
- * 
- * 165   5/24/99 7:24p Samir
- * use correct string length for DoEditDialog now.
- * 
- * 164   5/23/99 2:22a Jeff
- * don't update some mission stuff for secret levels. correctly update
- * when finished the level
- * 
- * 163   5/12/99 2:24p Jeff
- * Descent3 now has a setable temp directory for all temp files
- * 
- * 162   5/12/99 2:02p Samir
- * don't open pilot interface until inputted name of new pilot.
- * 
- * 161   5/10/99 10:23p Ardussi
- * changes to compile on Mac
- * 
- * 160   5/09/99 6:30a Jeff
- * fixed copy controls bug when there was .pld's but only 1 plt
- * 
- * 159   5/05/99 12:43a Jeff
- * selected imported logo, don't stop sounds
- * 
- * 158   5/03/99 8:38a Jeff
- * fixed copy controls
- * 
- * 157   5/02/99 12:55a Jeff
- * save ship permissions at highest level achieved and use that on restore
- * to a level previously played
- * 
- * 156   5/01/99 12:17a Jeff
- * adjusted config due to new artwork
- * 
- * 155   4/29/99 5:52p Jeff
- * if displaying 1 pilot pic, don't put index number at the end of name
- * 
- * 154   4/29/99 2:19a Samir
- * updated art for options style menu.
- * 
- * 153   4/28/99 5:06p Jeff
- * widened copy controls dialog
- * 
- * 152   4/27/99 1:56p Jeff
- * audio taunts stuff in pilot menu, added stringtables
- * 
- * 151   4/26/99 2:13p Jeff
- * go right into preset select on new pilot
- * 
- * 150   4/25/99 4:53p Jeff
- * fixed startframe/endframe bugs in D3D
- * 
- * 149   4/25/99 2:32a Jeff
- * fixed bug trying to read pilot files that are too new
- * 
- * 148   4/23/99 9:52p Jeff
- * fixed messed up string for ship selection
- * 
- * 147   4/21/99 4:54p Jeff
- * display name of pilot being configured
- * 
- * 146   4/21/99 12:58p Samir
- * progress bar for ship config.
- * 
- * 145   4/21/99 12:43p Samir
- * redid pilot taunt menu for newui.
- * 
- * 144   4/20/99 7:28p Jeff
- * added guidebot name
- * 
- * 143   4/18/99 7:55p Samir
- * new progress indicator for delays when loading data.
- * 
- * 142   4/16/99 6:00p Kevin
- * Bunches of Demo stuff
- * 
- * 141   4/16/99 12:05p Matt
- * Changed code to use cfile functions, & took out include of io.h.
- * 
- * 140   4/16/99 12:39a Matt
- * Took out Linux ifdef around include of io.h, since it's a system header
- * file and there's no harm in including it in the Windows version.
- * 
- * 139   4/14/99 3:57a Jeff
- * fixed case mismatch in #includes
- * 
- * 138   4/09/99 7:04p Jason
- * changed some texture defines
- * 
- * 137   4/04/99 3:27p Jeff
- * localized pilot.cpp
- * 
- * 136   4/03/99 9:26p Jeff
- * changed dialogs that weren't using UID_OK and UID_CANCEL to use and
- * handle them properly
- * 
- * 135   4/03/99 2:18a Jeff
- * added profanity filter stuff
- * 
- * 134   3/30/99 7:41p Jeff
- * error handling...reset ppic if there isn't a valid one
- * 
- * 133   3/30/99 5:30p Jeff
- * fixed bug when canceling out of multiplayer ship config
- * 
- * 132   3/24/99 1:41p Jeff
- * some dedicated server fixups...ability to set number of teams
- * 
- * 131   3/23/99 4:26p Jeff
- * new pilot choose dialog
- * 
- * 130   3/23/99 12:45p Jeff
- * added preset control selection for pilot
- * 
- * 129   3/22/99 6:22p Jeff
- * added 2 more audio taunts.  a mulitplayer event when someone plays an
- * audio taunt.  option to disable audio taunts.
- * 
- * 128   3/19/99 9:14p Jeff
- * converted multiplayer ship selection dialog
- * 
- * 127   3/18/99 2:33p Jeff
- * fixed bug clearing the Current pilot stuff before we were done using it
- * 
- * 126   3/17/99 11:48a Jeff
- * enter selects pilot on dialog display
- * 
- * 125   3/15/99 9:24p Gwar
- * 
- * 124   3/15/99 4:31p Jeff
- * fixed some memory leaks
- * 
- * 123   3/04/99 6:07p Samir
- * fixed bug with entering pilot names for the first time (buffer sent to
- * DoEditDialog was not null terminated.)  Also added wait screen.
- * 
- * 122   3/04/99 11:40a Jeff
- * better error messages on pilot write error
- * 
- * 121   3/03/99 5:09p Samir
- * fixed audio taunt combobox.   Passed incorrect flag values.
- * 
- * 120   3/01/99 4:39p Samir
- * made AddOption to AddSimpleOption for options without sheets.
- * 
- * 119   2/28/99 6:05p Jeff
- * use UID_OK and UID_CANCEL
- * 
- * 118   2/28/99 3:17p Jeff
- * multiplayer ship selection only has Pyro-GL
- * 
- * 117   2/28/99 3:06a Jeff
- * converted "select pilot pic" dialog
- * 
- * 116   2/27/99 4:18p Jeff
- * added support for .pld files (used to copy pilot default controls),
- * audio taunt size import error fixed...removed dead code
- * 
- * 115   2/25/99 4:30p Jeff
- * mission data of pilot keeps track of all missions, not just after you
- * beat a level
- * 
- * 114   2/23/99 7:34p Jeff
- * use new ui for add dialog
- * 
- * 113   2/23/99 1:47a Jeff
- * attempted to convert add new pilot
- * 
- * 109   2/19/99 12:14a Jeff
- * start of new ui conversion
- * 
- * 108   2/15/99 7:50p Jeff
- * new pilot file class and read/write system checked in...should be more
- * robust than old
- * 
- * 107   2/10/99 4:45p Jeff
- * table file parser stuff
- * 
- * 106   1/29/99 5:22p Jeff
- * localization
- * 
- * 105   1/27/99 5:47p Jeff
- * audio taunts implemented!
- * 
- * 104   1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 103   1/16/99 2:55p Jeff
- * mission data doesn't get updated  in a multiplayer game
- * 
- * 102   1/11/99 4:08p Jason
- * added multiplayer taunt macros
- * 
- * 101   12/30/98 6:51p Matt
- * Fixed compile warnings
- * 
- * 100   12/17/98 5:59p Samir
- * moved mouse enabled and joy enabled to config menu.
- * 
- * 99    12/17/98 12:44p Samir
- * fixed bugs in writing 0 length strings in pilot file!
- * 
- * 98    12/16/98 1:57p Samir
- * added finished field to mission data structure.
- * 
- * 97    12/15/98 4:28p Jeff
- * added mission data information to the pilot files to save what the
- * highest level they achieved on a mission is.  Added level select dialog
- * (not hooked up) and level warp cheat.
- * 
- * 96    12/03/98 11:06a Samir
- * added axis sensitivity 
- * 
- * 95    12/02/98 11:43a Samir
- * added better code to handle changes in controller function list for
- * pilot files (needed to have a constant giving number of controller
- * functions in demo 1.0)
- * 
- * 94    12/01/98 5:47p Jeff
- * created pilot picture selection dialog
- * 
- * 93    11/30/98 11:56a Jeff
- * fixed bug, allowing unlimited pilots
- * 
- * 92    11/23/98 11:25a Jeff
- * fixed import animated bitmap message box bug
- * 
- * 91    10/27/98 2:31p Jeff
- * adjusted play button for audio taunts on ship config dialog
- * 
- * 90    10/23/98 2:58p Samir
- * set defaults for controller sensitivities.
- * 
- * 89    10/22/98 10:55p Jeff
- * return error if reading a pilot file that is newer than we support
- * 
- * 88    10/22/98 10:38p Jeff
- * a decent pilot file version check for later pilot file versions
- * 
- * 87    10/22/98 2:58p Chris
- * Difficulty levels are in beta
- * 
- * 86    10/22/98 2:41p Samir
- * fixed autoselection for good.
- * 
- * 85    10/22/98 2:25p Jeff
- * fixed bug
- * 
- * 84    10/22/98 1:35p Jeff
- * 
- * 83    10/22/98 1:30p Jeff
- * brought back difficulty
- * 
- * 82    10/21/98 11:54p Samir
- * fixed typos.
- * 
- * 81    10/21/98 7:15p Samir
- * added joy and mouse sensitivities for pilot.
- * 
- * 80    10/21/98 10:36a Samir
- * added code to turn on or off joystick or mouse.
- * 
- * 79    10/20/98 1:41a Jeff
- * a couple more improvements to ImportGraphic
- * 
- * 78    10/20/98 12:59a Jeff
- * fixed pilot import bitmap
- * 
- * 77    10/19/98 10:41a Jeff
- * moved pilot select window down to uncover "demo"
- * 
- * 76    10/18/98 10:07p Jeff
- * automatically chooses the last used pilot
- * 
- * 75    10/17/98 7:31p Samir
- * added invertible axes
- * 
- * 74    10/15/98 1:36p Jeff
- * allow cancel out of pilot select menu
- * 
- * 73    10/15/98 11:48a Samir
- * fixed pilot create so it initializes the proper defaults.
- * 
- * 72    10/14/98 6:39p Samir
- * save screen size for game. 
- * 
- * 71    10/14/98 2:48p Kevin
- * Changed memory code to comply with mem lib
- * 
- * 70    10/12/98 3:02p Jeff
- * added a verify function, give warning when they go into Multiplayer
- * ship customize with a bad ship
- * 
- * 69    10/11/98 3:02a Jeff
- * handle the case where a player has a ship selected in his pilot file,
- * but the ship doesn't exist in the game
- * 
- * 68    10/09/98 3:32p Kevin
- * New memory library
- * 
- * 67    10/09/98 3:36p Jeff
- * attempted to fix Pyro-SE for demo again
- * 
- * 66    10/09/98 3:06p Jeff
- * fixed default_ship for demo
- * 
- * 65    10/08/98 6:41p Jeff
- * when creating your first pilot it immediatly returns you to main menu
- * 
- * 64    10/08/98 4:23p Kevin
- * Changed code to comply with memory library usage. Always use mem_malloc
- * , mem_free and mem_strdup
- * 
- * 63    10/06/98 5:34p Jeff
- * various UI changes/improvements
- * 
- * 62    10/01/98 2:19p Samir
- * took out DEMO define.
- * 
- * 61    10/01/98 12:58p Samir
- * save autoselect ordering.
- * 
- * 60    9/29/98 11:20a Jeff
- * set buffer length on pilotcreate to correct size
- * 
- * 59    9/28/98 4:35p Jeff
- * general UI changes and improvements
- * 
- * 58    9/24/98 10:45a Jeff
- * keep PyroGL the only ship to be allowed to be selected
- * 
- * 57    9/23/98 6:19p Jeff
- * finished up (hopefully) updating the config/ui dialogs to meet our
- * standard.  Keyboard/joystick config still needs some work
- * 
- * 56    9/23/98 3:07p Jeff
- * updated the colors and various other items of config and UI
- * 
- * 55    9/22/98 3:56p Samir
- * special demo code doesn't allow pilot and mission stuff.
- * 
- * 54    9/08/98 11:41a Jeff
- * new pilot selection interface
- * 
- * 53    9/04/98 3:52p Jeff
- * changes made from UI meeting
- * 
- * 52    9/04/98 1:20p Jeff
- * updates to ship selection, now includes audio taunts, strips crc's from
- * filenames when displaying
- * 
- * 51    9/02/98 2:54p Jeff
- * added defines for text colors to be used throughout the game...fixed up
- * buddy menu too
- * 
- * 50    8/31/98 5:20p Jeff
- * put in callback for ship selection UI
- * 
- * 49    8/31/98 12:38p Samir
- * don't call setlistindex.
- * 
- * 48    8/29/98 6:53p Jeff
- * added single-player ship selection
- * 
- * 47    8/15/98 5:16p Matt
- * Added new Base_directory variable.  Got rid of D3_LOCAL check and
- * 'local directory' registry variable.
- * 
- * 46    8/14/98 2:24p Jeff
- * give error message on error import
- * 
- * 45    8/06/98 4:59p Jeff
- * now imports graphic files to ogfs
- * 
- * 44    8/04/98 5:41p Jeff
- * fixed bug if user selected none for texture
- * 
- * 43    8/03/98 12:20p Jeff
- * fixed some more bugs in ship config
- * 
- * 42    8/03/98 10:42a Jeff
- * forgot to DrawPolymodel with effect on ship config
- * 
- * 41    7/30/98 2:48p Jeff
- * 
- * 40    7/30/98 12:32p Jeff
- * everything working for ship customization, including importing of ifl
- * 
- * 39    7/29/98 5:39p Jeff
- * updated
- * 
- * 38    7/28/98 4:16p Jeff
- * ship dialog is in and working good
- * 
- * 37    7/27/98 6:26p Jeff
- * basic implementation of ship configurations...needs to be purtied up
- * 
- * 36    6/22/98 7:31p Samir
- * added UIEdit::Activate, which activates an edit box manually.
- * 
- * 35    6/19/98 5:39p Samir
- * save out hud mode too.
- * 
- * 34    6/19/98 3:32p Samir
- * initialize hud layout in PilotInit.
- * 
- * 33    6/19/98 3:30p Samir
- * added hud layout info in pilot file.
- * 
- * 32    6/18/98 4:48p Samir
- * added changes for multiple configs for joystick controls.
- * 
- * 31    6/17/98 3:28p Jeff
- * localization changes.  made an init function
- * 
- * 30    6/16/98 10:54a Jeff
- * 
- * 29    6/12/98 5:56p Jeff
- * localization test
- * 
- * 28    6/01/98 10:57a Jeff
- * Fixed Pilot read bug.  Fixed name length on Pilot create dialog
- * 
- * 27    5/24/98 2:56a Jeff
- * Pilot dialogs up to date
- * 
- * 26    4/23/98 11:14p Samir
- * added read controller flag to pilot
- * 
- * 25    4/14/98 7:31p Matt
- * Changed code to use ddio_MakePath() instead of sprintf() to create file
- * spec
- * 
- * 24    4/13/98 7:01p Samir
- * added snazzy listbox and edit box art.
- * 
- * 23    4/02/98 7:58p Samir
- * Fixed up control setting saving and restoring.
- * 
- * 22    4/01/98 3:34p Jeff
- * ship_model is now a string
- * 
- * 21    3/23/98 11:09a Jeff
- * Fixed up the "Choose A Pilot" window
- * 
- * 20    3/20/98 5:34p Jeff
- * Added Copy Controls from a pilot support
- * 
- * 19    3/20/98 1:19p Jeff
- * Changes made to use Default_pilot string for pilot filename to use.
- * 
- * 18    3/19/98 6:57p Jeff
- * Pilot stuff reads and writes to the correct directories
- * 
- * 17    3/18/98 7:49p Samir
- * Maybe fixed controller config init mess.
- * 
- * 16    3/16/98 3:26p Samir
- * Fixed controller need ID and index discrepancy.
- * 
- * 15    3/13/98 8:55p Jeff
- * Various changes to move control configuration into Pilot file
- * 
- * 14    3/13/98 5:32p Jeff
- * close the display window before displaying delete confirmation box
- * 
- * 13    3/13/98 5:19p Jeff
- * UIListBoxes have scroll button code now
- * 
- * 12    3/12/98 7:10p Jeff
- * double clicking on pilot list selects pilot
- * 
- * 11    3/12/98 2:00p Jeff
- * Various changes to improve pilot dialogs
- * 
- * 10    3/11/98 5:38p Jeff
- * Now use the NewUIMessageBox for small windows
- * 
- * 9     3/10/98 7:08p Jeff
- * Various changes due to new window class
- * 
- * 8     3/10/98 11:57a Jeff
- * Corrected some function comments and made '.' a valid filename
- * character
- * 
- * 7     3/10/98 11:50a Jeff
- * Added filename field to pilot structure, which keeps track of the pilot
- * filename...fixes any bugs that come with renaming a file.  Made changes
- * to take advantage of this.
- * 
- * 6     3/10/98 11:12a Jeff
- * Made various changes to accomodate Samir's Listbox callback paradigm
- * 
- * 5     3/09/98 6:27p Jeff
- * Cleaned up code, made file operations more robust, pretty sturdy now
- * 
- * 4     3/09/98 4:00p Jeff
- * Various improvements
- * 
- * 3     3/06/98 6:32p Jeff
- * Added Pilot files and major functionality
- * 
- * 2     3/05/98 4:28p Jeff
- * Initial creation
-*
-* $NoKeywords: $
-*/
 
 #include <stdlib.h>
 #include <string.h>
@@ -669,7 +116,8 @@ void PilotCopyDefaultControls(pilot *Pilot);
 int Pilot_NewRead(pilot *Pilot,bool read_keyconfig,bool read_missiondata);
 int Pilot_NewWrite(pilot *Pilot,bool newpilot);
 
-typedef struct{
+struct tCustomListInfo
+{
 	newuiListBox *custom_bitmap_list;
 	int needed_size;			//size of allocated memory for files
 	char *files;				//string list of file names
@@ -688,12 +136,12 @@ typedef struct{
 		custom_bitmap_list = NULL;
 		needed_size = 0;
 	}
-}tCustomListInfo;
+};
 
-typedef struct
+struct tAudioTauntComboBoxes
 {
 	newuiComboBox *taunt_a,*taunt_b,*taunt_c,*taunt_d;
-}tAudioTauntComboBoxes;
+};
 
 // Deletes the currently selected audio taunt #4
 void ShipSelectDeleteTaunt(pilot *Pilot,tCustomListInfo *cust_snds,newuiComboBox *lb,tAudioTauntComboBoxes *taunt_boxex);
@@ -1823,11 +1271,7 @@ bool PltDelete(pilot *Pilot)
 
 	if(pfilename[0]!=0)
 	{
-#ifdef MACINTOSH
-		ddio_MakePath(filename,Base_directory,"pilots",pfilename,NULL);
-#else
-		ddio_MakePath(filename,Base_directory,pfilename,NULL);
-#endif
+		ddio_MakePath(filename, User_directory,pfilename,NULL);
 		return (ddio_DeleteFile(pfilename)==1);
 	}
 	else
@@ -1845,11 +1289,7 @@ bool PltDelete(pilot *Pilot)
 
 		strcpy(pfilename,pname);
 		strcat(pfilename,PLTEXTENSION);
-#ifdef MACINTOSH
-		ddio_MakePath(filename,Base_directory,"pilots",pfilename,NULL);
-#else
-		ddio_MakePath(filename,Base_directory,pfilename,NULL);
-#endif
+		ddio_MakePath(filename, User_directory,pfilename,NULL);
 		return (ddio_DeleteFile(filename)==1);
 	}
 }
@@ -1895,11 +1335,7 @@ void PltReadFile(pilot *Pilot,bool keyconfig,bool missiondata)
 		return;
 
 	//open and process file
-#ifdef MACINTOSH
-	ddio_MakePath(filename,Base_directory,"pilots",pfilename,NULL);
-#else
-	ddio_MakePath(filename,Base_directory,pfilename,NULL);
-#endif
+	ddio_MakePath(filename,User_directory,pfilename,NULL);
 	try
 	{
 		file = cfopen(filename,"rb");
@@ -1943,10 +1379,11 @@ void PltReadFile(pilot *Pilot,bool keyconfig,bool missiondata)
 
 //////////////////////////////////////////////////////////////
 //returns the filelist of pilots available
-typedef struct tPGetPilotStruct{
+struct tPGetPilotStruct
+{
 	char *filename;
 	tPGetPilotStruct *next;
-}tPGetPilotStruct;
+};
 static char **pltgetname_list = NULL;
 static int pltgetname_count = 0;
 
@@ -1981,47 +1418,21 @@ char **PltGetPilots(int *count,char *ignore_filename,int display_default_configs
 	{
 		switch(display_default_configs)
 		{
-#ifdef MACINTOSH
 		case 0:
 			ASSERT(loop_count==0);
-			ddio_MakePath(search,Base_directory,"pilots",PLTWILDCARD,NULL);
+			ddio_MakePath(search, User_directory,PLTWILDCARD,NULL);
 			break;
 		case 1:
-			ddio_MakePath(search,Base_directory,"pilots",(loop_count==0)?PLTWILDCARD:DPLTWILDCARD,NULL);
+			ddio_MakePath(search, User_directory,(loop_count==0)?PLTWILDCARD:DPLTWILDCARD,NULL);
 			break;
 		case 2:
 			ASSERT(loop_count==0);
-			ddio_MakePath(search,Base_directory,"pilots",DPLTWILDCARD,NULL);
+			ddio_MakePath(search, Base_directory,DPLTWILDCARD,NULL);
 			break;
-#else
-		case 0:
-			ASSERT(loop_count==0);
-			ddio_MakePath(search,Base_directory,PLTWILDCARD,NULL);
-			break;
-		case 1:
-			ddio_MakePath(search,Base_directory,(loop_count==0)?PLTWILDCARD:DPLTWILDCARD,NULL);
-			break;
-		case 2:
-			ASSERT(loop_count==0);
-			ddio_MakePath(search,Base_directory,DPLTWILDCARD,NULL);
-			break;
-#endif
 		default:
 			Int3();
 			break;
 		}
-			
-#ifdef MACINTOSH
-	// create pilots directory if it didn't exist before.
-		char path[_MAX_PATH];
-		ddio_MakePath(path,Base_directory,"pilots",NULL);
-		if (!ddio_DirExists(path)) {
-			if (!ddio_CreateDir(path)) {
-				DoMessageBox(TXT_ERROR, TXT_ERRCREATEDIR, MSGBOX_OK);
-				return;
-			}
-		}
-#endif		
 	
 		if(ddio_FindFileStart(search,buffer)){
 
@@ -3270,11 +2681,7 @@ bool PltSelectShip(pilot *Pilot)
 				char path[_MAX_PATH];
 				char newf[_MAX_FNAME];
 				char wildcards[100];
-#if defined (MACINTOSH) 
-				ddio_MakePath(path,Base_directory,"custom","graphics",NULL);
-#else
 				path[0] = '\0';
-#endif
 				strcpy(wildcards,"*.ogf;*.tga;*.pcx;*.iff");
 				if(DoPathFileDialog(false,path,TXT_CHOOSE,wildcards,PFDF_FILEMUSTEXIST)){
 					if(ImportGraphic(path,newf)){
@@ -3293,11 +2700,7 @@ bool PltSelectShip(pilot *Pilot)
 				char path[_MAX_PATH];
 				char opath[_MAX_PATH];
 				char wildcards[100];
-#if defined (MACINTOSH) 
-				ddio_MakePath(path,Base_directory,"custom","graphics",NULL);
-#else
 				path[0] = '\0';
-#endif
 				strcpy(opath,path);
 				strcpy(wildcards,"*.ifl");
 				if(DoPathFileDialog(false,path,TXT_CHOOSE,wildcards,PFDF_FILEMUSTEXIST)){
@@ -3427,11 +2830,7 @@ bool PltSelectShip(pilot *Pilot)
 				//and place in custom/sounds.  Then update the audio taunt combo boxes
 				char path[_MAX_PATH];
 				char wildcards[100];
-#ifdef MACINTOSH
-				ddio_MakePath(path,Base_directory,"custom","sounds",NULL);
-#else
 				path[0] = '\0';
-#endif
 				strcpy(wildcards,"*.wav");
 				if(DoPathFileDialog(false,path,TXT_CHOOSE,wildcards,PFDF_FILEMUSTEXIST))
 				{
@@ -4202,11 +3601,7 @@ void _ReadOldPilotFile(pilot *Pilot,bool keyconfig,bool missiondata)
 	Pilot->get_filename(pfilename);	
 
 	//open and process file
-#ifdef MACINTOSH
-	ddio_MakePath(filename,Base_directory,"pilots",pfilename,NULL);
-#else
-	ddio_MakePath(filename,Base_directory,pfilename,NULL);
-#endif
+	ddio_MakePath(filename,User_directory,pfilename,NULL);
 	CFILE *file = cfopen(filename,"rb");
 	if(!file)
 		return;

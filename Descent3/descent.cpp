@@ -63,6 +63,7 @@ oeAppDatabase *Database = NULL;		// Application database.
 bool Descent_overrided_intro = false;
 
 extern bool Game_gauge_do_time_test;
+bool Portable = false;
 bool Katmai=true;
 
 char Descent3_temp_directory[_MAX_PATH];	//temp directory to put temp files
@@ -309,7 +310,7 @@ void MainLoop()
 	{
 		char fpsfile[_MAX_PATH*2];
 		CFILE *cfp;
-		ddio_MakePath(fpsfile,Base_directory,"fps.txt",NULL);
+		ddio_MakePath(fpsfile,User_directory,"fps.txt",NULL);
 		cfp = cfopen(fpsfile,"wt");
 		if(cfp)
 		{
@@ -572,17 +573,12 @@ file_vols file_volumes[] =
 	{"level5.mve","movies",2,true},
 	{"end.mve","movies",2,true},
 	{"intro.mve","movies",1,true},
-#ifdef MACINTOSH
-	{"ppics.hog","missions",1,true},
-	{"training.mn3","missions",1,true},
-#else
 	{"dolby1.mv8","movies",1,true},
-#endif
 	{"d3voice1.hog","missions",1,true},
 	{"d3voice2.hog","missions",2,true}
 };
 
-int num_cd_files = sizeof(file_volumes)/sizeof(file_vols);
+constexpr int num_cd_files = sizeof(file_volumes)/sizeof(file_vols);
 
 //This function figures out whether or not a file needs to be loaded off of
 //CD or off of the local drive. If it needs to come from a CD, it figures out
@@ -590,7 +586,21 @@ int num_cd_files = sizeof(file_volumes)/sizeof(file_vols);
 //returns NULL.
 char * GetMultiCDPath(char *file)
 {
-	static char filepath[_MAX_PATH*2];
+	static char filepath[_MAX_PATH * 2];
+	static char fullpath[_MAX_PATH * 2];
+
+	for (int i = 0; i < num_cd_files; i++)
+	{
+		if (!strcmp(file, file_volumes[i].file))
+		{
+			ddio_MakePath(fullpath, Base_directory, file_volumes[i].localpath, file_volumes[i].file, nullptr);
+			return fullpath;
+		}
+	}
+
+	return file;
+
+	/*static char filepath[_MAX_PATH*2];
 	static char fullpath[_MAX_PATH*2];
 	int volume = 0;
 	int i;
@@ -628,7 +638,7 @@ char * GetMultiCDPath(char *file)
 		if(strcmpi(vol_filename,file)==0)
 		{
 			volume = file_volumes[i].volume;			
-			ddio_MakePath(fullpath,LocalD3Dir,file_volumes[i].localpath,file,NULL);
+			ddio_MakePath(fullpath,User_directory,file_volumes[i].localpath,file,NULL);
 			//See if the file is in the local dir already.
 			if(cfexist(fullpath))
 			{
@@ -675,5 +685,5 @@ char * GetMultiCDPath(char *file)
 		}		
 	}
 
-	return NULL;
+	return NULL;*/
 }
