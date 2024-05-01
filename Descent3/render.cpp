@@ -2034,11 +2034,6 @@ void RenderFace(room *rp,int facenum)
 			fp->flags|=FF_SPEC_INVISIBLE;
 			UpdateSpecularFace (rp,fp);
 		}
-
-		if ((rp - Rooms) == 48 && facenum == 22)
-		{
-			mprintf((0, "rejecting r48 f22, off screen\n"));
-		}
 		return;
 	}
 	// Do stupid gouraud shading for lightmap
@@ -2175,10 +2170,6 @@ void RenderFace(room *rp,int facenum)
 		}
 	}
   	//Draw the damn thing
-	if ((rp - Rooms) == 48 && facenum == 22)
-	{
-		mprintf((0, "drew r48 f22\n"));
-	}
 	drawn=g3_DrawPoly(fp->num_verts,pointlist,bm_handle,MAP_TYPE_BITMAP,&face_cc);
 	#ifdef EDITOR
 		if (TSearch_on)
@@ -2596,10 +2587,6 @@ void RenderRoomUnsorted(room *rp)
 
 		if (Render_mirror_for_room==false &&  (fogged_portal || (GetFaceAlpha(fp,-1) & (ATF_CONSTANT+ATF_VERTEX))))
 		{
-			if (rp - Rooms == 48)
-			{
-				mprintf((0, "Adding postrender for room 48. fogged_portal: %d, GetFaceAlpha: %d\n", fogged_portal, GetFaceAlpha(fp, -1)));
-			}
 			// Place alpha faces into our postrender list
 			if (Num_postrenders < MAX_POSTRENDERS)
 			{
