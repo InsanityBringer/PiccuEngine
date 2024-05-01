@@ -773,9 +773,7 @@ void RenderShipMonitor(tGauge *gauge, bool modified)
 
 	if (Players[Player_num].flags & PLAYER_FLAGS_INVULNERABLE)
 	{
-		// get to the view matrix so we have direction vectors to move along
-		matrix view_matrix;
-		g3_GetUnscaledMatrix( &view_matrix );
+		float aspect = (float)Game_window_w / Game_window_h;
 
 		float inv_time_frame = (Gametime - (int)Gametime);
 		float inv_alpha  = (ubyte)(255*(1.0f-(inv_time_frame/2.0f)));
@@ -789,19 +787,26 @@ void RenderShipMonitor(tGauge *gauge, bool modified)
 		}
 
 		float amount = (inv_time_frame*GAUGE_INVSHIPRING_DELTA);
-		invpts[0].p3_x -= amount;
-		invpts[0].p3_y += amount;
-		invpts[1].p3_x += amount;
-		invpts[1].p3_y += amount;
-		invpts[2].p3_x += amount;
-		invpts[2].p3_y -= amount;
-		invpts[3].p3_x -= amount;
-		invpts[3].p3_y -= amount;
-
-		invpts[0].p3_vecPreRot = invpts[0].p3_vecPreRot - ( view_matrix.rvec * amount ) + ( view_matrix.uvec * amount );
-		invpts[1].p3_vecPreRot = invpts[1].p3_vecPreRot + ( view_matrix.rvec * amount ) + ( view_matrix.uvec * amount );
-		invpts[2].p3_vecPreRot = invpts[2].p3_vecPreRot + ( view_matrix.rvec * amount ) - ( view_matrix.uvec * amount );
-		invpts[3].p3_vecPreRot = invpts[3].p3_vecPreRot - ( view_matrix.rvec * amount ) - ( view_matrix.uvec * amount );
+		float xamount, yamount;
+		if (aspect >= 1.0f)
+		{
+			xamount = amount / aspect;
+			yamount = amount;
+			
+		}
+		else
+		{
+			xamount = amount;
+			yamount = amount * aspect;
+		}
+		invpts[0].p3_x -= xamount;
+		invpts[0].p3_y += yamount;
+		invpts[1].p3_x += xamount;
+		invpts[1].p3_y += yamount;
+		invpts[2].p3_x += xamount;
+		invpts[2].p3_y -= yamount;
+		invpts[3].p3_x -= xamount;
+		invpts[3].p3_y -= yamount;
 		
 		DrawGaugeQuad(invpts, HUD_resources.invpulse_bmp, inv_alpha);
 		DrawGaugeQuad(invpts, HUD_resources.invpulse_bmp, inv_alpha, true);
