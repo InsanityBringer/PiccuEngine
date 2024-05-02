@@ -911,7 +911,7 @@ void InitIOSystems(bool editor)
 	}
 
 	//Init hogfiles
-	int d3_hid=-1,extra_hid=-1,merc_hid=-1,sys_hid=-1,extra13_hid=-1;
+	int d3_hid=-1,extra_hid=-1,extra1_hid=-1,merc_hid=-1,sys_hid=-1,extra13_hid=-1;
 	char fullname[_MAX_PATH];
 	
 	#ifdef DEMO
@@ -937,13 +937,27 @@ void InitIOSystems(bool editor)
 	ddio_MakePath(fullname, LocalD3Dir, "extra.hog", NULL);
 	extra_hid = cf_OpenLibrary(fullname);
 
-	// non-windows platforms always get merc!
-	merc_hid = cf_OpenLibrary("merc.hog");
-	if (merc_hid)
-		Merc_IsInstalled = true;
+	//Nonsense for the steam version which packs Merc differently
+	ddio_MakePath(fullname, LocalD3Dir, "extra1.hog", NULL);
+	extra1_hid = cf_OpenLibrary(fullname);
+
+	//Try the normal merc.hog for old installs.
+	ddio_MakePath(fullname, LocalD3Dir, "merc.hog", NULL);
+	merc_hid = cf_OpenLibrary(fullname);
+
 	// Open this for extra 1.3 code (Black Pyro, etc)
+	//BUG: Should this actually be mounted after merc.hog?
 	ddio_MakePath(fullname, LocalD3Dir, "extra13.hog", NULL);
 	extra13_hid = cf_OpenLibrary(fullname);
+
+	//Try opening a couple of known Mercenary only files
+	if (cfexist("BP_hud.inf")
+		&& cfexist("BlackPyroCockpit.OOF")
+		&& cfexist("Blackpyrocockpit.inf")
+		&& cfexist("alienboss.OOF"))
+	{
+		Merc_IsInstalled = true;
+	}
 
 	//Check to see if there is a -mission command line option
 	//if there is, attempt to open that hog/mn3 so it can override such
@@ -978,6 +992,8 @@ void InitIOSystems(bool editor)
 	Osiris_InitModuleLoader();	
 	if(extra13_hid!=-1)
 		Osiris_ExtractScriptsFromHog(extra13_hid,false);
+	if (extra1_hid != -1)
+		Osiris_ExtractScriptsFromHog(extra1_hid, false);
 	if(extra_hid!=-1)
 		Osiris_ExtractScriptsFromHog(extra_hid,false);
 	if(merc_hid!=-1)
