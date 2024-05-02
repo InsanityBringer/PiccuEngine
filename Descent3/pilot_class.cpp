@@ -466,11 +466,7 @@ int pilot::flush(bool new_file)
 	char real_filename[_MAX_PATH];
 
 	//open and process file
-#ifdef MACINTOSH
-	ddio_MakePath(real_filename,Base_directory,"pilots",filename,NULL);
-#else
-	ddio_MakePath(real_filename,Base_directory,filename,NULL);
-#endif
+	ddio_MakePath(real_filename,User_directory,filename,NULL);
 
 	if(new_file && cfexist(real_filename))
 	{
@@ -580,11 +576,7 @@ int pilot::read(bool skip_config,bool skip_mission_data)
 	char real_filename[_MAX_PATH];
 
 	//open and process file
-#ifdef MACINTOSH
-	ddio_MakePath(real_filename,Base_directory,"pilots",filename,NULL);
-#else
-	ddio_MakePath(real_filename,Base_directory,filename,NULL);
-#endif
+	ddio_MakePath(real_filename,User_directory,filename,NULL);
 
 	if(!cfexist(real_filename))
 	{

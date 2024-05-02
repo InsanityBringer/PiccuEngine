@@ -343,6 +343,7 @@ void PilotListSelectChangeCallback(int index)
 	ubyte difficulty;
 	bool profanity,audiotaunts;
 	bool in_edit = false;
+	char fullpath[MAX_PATH];
 
 	if(PilotChooseDialogInfo.menu->GetCurrentOption()==IDP_EDIT)
 	{
@@ -357,7 +358,8 @@ void PilotListSelectChangeCallback(int index)
 		char filename[PAGENAME_LEN];
 		working_pilot.get_filename(filename);
 
-		if(cfexist(filename))
+		ddio_MakePath(fullpath, User_directory, filename, nullptr);
+		if(cfexist(fullpath))
 		{
 			if(in_edit)
 				PilotChooseDialogInfo.edit->sheet->UpdateReturnValues();
@@ -423,6 +425,7 @@ void PilotSelect(void)
 	newuiMenu menu;
 	pilot_select_menu select;
 	pilot_edit_menu edit;
+	char fullpath[MAX_PATH];
 
 	PilotChooseDialogInfo.menu = &menu;
 	PilotChooseDialogInfo.select = &select;
@@ -435,7 +438,8 @@ void PilotSelect(void)
 	int res=-1;
 	bool done = false;
 
-	if(cfexist(Default_pilot)!=CF_NOT_FOUND){
+	ddio_MakePath(fullpath, User_directory, Default_pilot, NULL);
+	if(cfexist(fullpath)!=CF_NOT_FOUND){
 		//ok so the default pilot file is around, mark this as the current pilot
 		Current_pilot.set_filename(Default_pilot);
 		PltReadFile(&Current_pilot);
@@ -482,12 +486,13 @@ void PilotSelect(void)
 	NewPltUpdate(select.pilot_list,filelist,filecount,0,pfilename);
 
 	//if we get here than there is at least one pilot already
-	char old_file[_MAX_FNAME];
+	char old_file[MAX_PATH];
 
 	//use this in case they cancel out
 	Current_pilot.get_filename(pfilename);
-	if(cfexist(pfilename)!=CF_NOT_FOUND){
-		strcpy(old_file,pfilename);
+	ddio_MakePath(fullpath, User_directory, pfilename, NULL);
+	if(cfexist(fullpath)!=CF_NOT_FOUND){
+		strcpy(old_file,fullpath);
 	}else{
 		old_file[0] = '\0';
 	}
@@ -1021,6 +1026,7 @@ void NewPltUpdate(newuiListBox *list,char **flist,int filecount,int selected,cha
 {
 	int index;
 	pilot tPilot;
+	char fullpath[MAX_PATH];
 
 	list->RemoveAll();
 
@@ -1046,17 +1052,22 @@ void NewPltUpdate(newuiListBox *list,char **flist,int filecount,int selected,cha
 
 		list->SetCurrentIndex(selected);
 		
-		if(filename && (cfexist(filename)!=CF_NOT_FOUND)){
-			//get the selected pilot from the filename
-			mprintf((0,"Looking for Pilot: %s\n",filename));
-			for(int d=0;d<filecount;d++){
-				if(!stricmp(flist[d],filename)){
-					//ok we found the filename that they want as the pilot
-					list->SetCurrentIndex(d);
-					break;
+		if (filename)
+		{
+			ddio_MakePath(fullpath, User_directory, filename, NULL);
+			if (cfexist(fullpath) != CF_NOT_FOUND) 
+			{
+				//get the selected pilot from the filename
+				mprintf((0, "Looking for Pilot: %s\n", filename));
+				for (int d = 0; d < filecount; d++) {
+					if (!stricmp(flist[d], filename)) {
+						//ok we found the filename that they want as the pilot
+						list->SetCurrentIndex(d);
+						break;
+					}
 				}
-			}			
-		}			
+			}
+		}
 	}
 }
 
