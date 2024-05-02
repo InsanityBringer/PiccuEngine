@@ -20,6 +20,11 @@ Piccu Engine provides the following features:
 Piccu Engine can be dropped directly into an existing Descent 3 directory, but this may not be desired if you wish to run the 1.4 release.
 In addition, Piccu Engine cannot currently be run from Program Files without issues. This will change in a future release.
 
+When first running Piccu Engine, the game will save user generated content, namely savegames, demos, and pilot files into the user's Saved Games directory.
+If you do not wish to do this, put an empty file named "piccu_portable" in the directory with Piccu Engine's executable, and the old behavior will be retained.
+If there are any pilot files in the current directory, and the Piccu Engine saved games directory doesn't exist, it will ask if you want to make the install portable. 
+Select "Yes" to make the install portable. Otherwise, Piccu Engine will copy all of the demos, pilots, and saves into the user's save game directory. 
+
 If you want to install Piccu Engine into another directory, the following files should be copied over from a patched 1.4 installation.
 - d3.hog
 - extra.hog
@@ -52,3 +57,9 @@ The following features are intended for future releases of Piccu Engine
 - Ability to run either in "portable" mode (save config locally instead of in registry, and save locally) or to save data in user directories, so it can be placed in Program Files on Windows.
 - Fix long-standing resource management issues, including assets being loaded by custom missions persisiting across level changes and game saves and loads.
 - Automatic detection and loading of Descent 3 installs on the Steam and GOG platforms.
+
+# Credits
+- btb: MVE source from D2X
+- GZDoom: Revision checking CMake script
+- OpenAL Soft: Primary sound library
+
