@@ -23,7 +23,7 @@ oeApplication* ParentApplication = nullptr;
 
 bool Renderer_initted;
 bool Renderer_close_flag;
-bool UseHardware;
+bool UseHardware = true;
 bool StateLimited;
 bool NoLightmaps;
 bool UseMultitexture;
@@ -773,11 +773,6 @@ void rend_SetZBias(float z_bias)
 	if (Z_bias != z_bias)
 	{
 		Z_bias = z_bias;
-
-		// Force refresh our transforms to take the Zbias into account		
-		/*g3_GetModelViewMatrix( &View_position, &Unscaled_matrix, (float*)gTransformModelView );
-		g3_UpdateFullTransform();
-		g3_ForceTransformRefresh();*/
 	}
 }
 

@@ -92,7 +92,7 @@ void opengl_SetUploadBufferSize(int width, int height);
 void opengl_FreeUploadBuffers(void);
 
 //gl_draw.cpp
-extern int OpenGL_Alpha_factor;
+extern float OpenGL_Alpha_factor;
 extern float Alpha_multiplier;
 extern bool OpenGL_blending_on;
 extern bool OpenGL_multitexture_state;

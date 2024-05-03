@@ -33,8 +33,8 @@ color_array GL_colors[100];
 tex_array GL_tex_coords[100];
 tex_array GL_tex_coords2[100];
 
-int OpenGL_Alpha_factor = 1.0f;
-float Alpha_multiplier;
+float OpenGL_Alpha_factor = 1.0f;
+float Alpha_multiplier = 1.0f;
 
 int OpenGL_polys_drawn;
 int OpenGL_verts_processed;
