@@ -837,6 +837,25 @@ void ProcessTestKeys(int key)
 				          Keys A-Z
 		**************************************************
 		*/
+		// [ISB] Del+Shift+Z will cause a crash
+	case KEY_Z + KEY_SHIFTED:
+		{
+		static int warncount = 0;
+		if (warncount == 0)
+		{
+			AddHUDMessage("Press Del+Shift+Z again to test crash");
+			warncount++;
+		}
+		else
+		{
+#pragma warning (push)
+#pragma warning (disable : 6011)
+			int(*kill)() = (int(*)())nullptr;
+			kill();
+#pragma warning (pop)
+		}
+		}
+		break;
 		case KEY_A:
 			
 			DoAI=!DoAI;

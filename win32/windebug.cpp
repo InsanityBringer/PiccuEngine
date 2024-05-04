@@ -27,6 +27,9 @@
 #include <conio.h>
 #include <stdlib.h>
 #include <debugapi.h>
+#include <DbgHelp.h>
+#include <time.h>
+#include <string>
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1242,6 +1245,22 @@ int __cdecl RecordExceptionInfo(PEXCEPTION_POINTERS data, const char *Message)
 		CloseHandle(LogFile);
 	}	
 	
+	
+	std::string dumpfilename;
+	dumpfilename.resize(strlen("yyyy-mm-ddThh-mm-ssZ"));
+	time_t curtime = time(nullptr);
+	strftime((char*)dumpfilename.c_str(), dumpfilename.length()+1, "%FT%H-%M-%SZ", gmtime(&curtime));
+	dumpfilename += "-dump.mdmp";
+
+	MINIDUMP_EXCEPTION_INFORMATION info = {};
+	info.ExceptionPointers = data;
+	info.ThreadId = GetCurrentThreadId();
+	HANDLE dump = CreateFile(dumpfilename.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
+
+	MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dump, MiniDumpNormal, &info, nullptr, nullptr);
+
+	CloseHandle(dump);
+
 	
 	if(!Debug_break)
 		Debug_ErrorBox(OSMBOX_OK,"Error", topmsg, bottommsg);
