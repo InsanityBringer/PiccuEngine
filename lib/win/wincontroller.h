@@ -308,6 +308,7 @@ private:
 //	thread info.
 	longlong m_frame_timer_ms;
 	float m_frame_time;
+	float m_frame_timer;
 
 //	note id is id value from controller in control list.
 	void extctl_getpos(int id);

@@ -78,6 +78,7 @@ gameWinController::gameWinController(int num_funcs, ct_function* funcs, char* re
 
 	m_Suspended = 0;
 	m_frame_timer_ms = -1;
+	m_frame_timer = -.001;
 	m_frame_time = 1.0f;
 	g_last_frame_timer_ms = -1;
 	g_accum_frame_time = 0.0f;
@@ -100,7 +101,41 @@ gameWinController::~gameWinController()
 
 void gameWinController::poll()
 {
-	longlong cur_frame_timer_ms;
+	if (m_Suspended)
+		return;
+
+	float cur_frame_timer = timer_GetTime();
+
+	if (m_frame_timer_ms == -1) {
+		// don't poll this frame.
+		m_frame_timer_ms = cur_frame_timer * 1000;
+		g_last_frame_timer_ms = cur_frame_timer * 1000;
+		g_accum_frame_time = 0.0f;
+		return;
+	}
+
+	m_frame_time = (cur_frame_timer - m_frame_timer);
+	m_frame_timer = cur_frame_timer;
+	m_frame_timer_ms = cur_frame_timer * 1000;
+	g_accum_frame_time += m_frame_time;
+
+	if (g_accum_frame_time >= MOUSE_POLLING_TIME) {
+		g_accum_frame_time = 0.0f;
+	}
+
+	for (int ctl = 0; ctl < m_NumControls; ctl++)
+	{
+		if (m_ControlList[ctl].id >= CTID_EXTCONTROL0)
+		{
+			extctl_getpos(m_ControlList[ctl].id);
+		}
+		else if (m_ControlList[ctl].id == CTID_MOUSE)
+		{
+			mouse_geteval();
+		}
+	}
+
+	/*longlong cur_frame_timer_ms;
 
 	if (m_Suspended)
 		return;
@@ -132,7 +167,9 @@ void gameWinController::poll()
 		{
 			mouse_geteval();
 		}
-	}
+	}*/
+
+
 }
 
 
@@ -146,6 +183,7 @@ void gameWinController::resume()
 {
 	m_Suspended = 0;
 	m_frame_timer_ms = -1;
+	m_frame_timer = -.001;
 	m_frame_time = 1.0f;
 }
 
@@ -166,7 +204,7 @@ void gameWinController::flush()
 
 bool gameWinController::get_packet(int id, ct_packet* packet, ct_format alt_format)
 {
-	float val = (float)0.0;
+	float val = 0.0f;
 	int i;
 
 	ASSERT(id < CT_MAX_ELEMENTS);
@@ -565,6 +603,7 @@ unsigned gameWinController::get_joy_raw_values(int* x, int* y)
 	return 0;
 }
 
+constexpr float FRAMETIME_AT_60FPS = (1.f / 60.f);
 
 //	note controller is index into ControlList.
 float gameWinController::get_axis_value(sbyte controller, ubyte axis, ct_format format, bool invert)
@@ -613,7 +652,8 @@ float gameWinController::get_axis_value(sbyte controller, ubyte axis, ct_format 
 			m_frame_time = kMinFrameTime;
 		}
 
-		normalizer = ctldev->normalizer[axisIndex] * m_frame_time;
+		//normalizer = ctldev->normalizer[axisIndex] * m_frame_time;
+		normalizer = ctldev->normalizer[axisIndex] * FRAMETIME_AT_60FPS;
 		nullzone = MOUSE_DEADZONE;
 	}
 	else
