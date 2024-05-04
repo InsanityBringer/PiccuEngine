@@ -795,7 +795,9 @@ void InitIOSystems(bool editor)
 
 	ddio_SetWorkingDir(Base_directory);
 
-	bool portableexists = cfexist("piccu_portable") != 0;
+	char portablepath[MAX_PATH];
+	ddio_MakePath(portablepath, Base_directory, "piccu_portable", nullptr);
+	bool portableexists = cfexist(portablepath) != 0;
 	char* userdir = ddio_GetUserDir(ENGINE_NAME);
 	if (portableexists || !userdir)
 		Portable = true;
