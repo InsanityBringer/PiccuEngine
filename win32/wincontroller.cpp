@@ -1282,9 +1282,6 @@ void gameWinController::mouse_geteval()
 	if (!m_MouseActive)
 		return;
 
-	if (g_accum_frame_time != 0.0f)
-		return;
-
 	int x, y, dx, dy;
 	unsigned int btnmask = (unsigned int)ddio_MouseGetState(&x, &y, &dx, &dy);
 
