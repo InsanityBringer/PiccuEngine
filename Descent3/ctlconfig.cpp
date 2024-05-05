@@ -302,7 +302,7 @@
 					
 // used for adjusting settings.
 #define CFG_AXIS_SENS_RANGE		20
-#define CFG_MOUSE_AXIS_SENS_RANGE		160
+#define CFG_MOUSE_AXIS_SENS_RANGE		80
 const short UID_JOYCFG = 0x1000;
 
 #ifdef MACINTOSH
