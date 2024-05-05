@@ -88,6 +88,7 @@ static struct mses_state
     float last_read_time; // [ISB] This is the time that the last WM_INPUT came in at
     float expire_time; // [ISB] How long a delta should be held for, to smooth out low poll devices at high framerates
     bool polled;            // [ISB] When a latched delta is read, this should be set to true. This will zero the deltas next read
+    int reads;              // [ISB] Number of reads at poll time. 
 } DDIO_mouse_state;
 
 static t_mse_button_info DIM_buttons;
@@ -218,11 +219,11 @@ int ddio_MouseGetState(int* x, int* y, int* dx, int* dy, int* z, int* dz)
     if (z)
         *z = DDIO_mouse_state.z;
     if (dx)
-        *dx = DDIO_mouse_state.dx;
+        *dx = DDIO_mouse_state.dx / DDIO_mouse_state.reads;
     if (dy)
-        *dy = DDIO_mouse_state.dy;
+        *dy = DDIO_mouse_state.dy / DDIO_mouse_state.reads;
     if (dz)
-        *dz = DDIO_mouse_state.dz;
+        *dz = DDIO_mouse_state.dz / DDIO_mouse_state.reads;
 
     if (timer_GetTime() > DDIO_mouse_state.expire_time)
     {
@@ -437,8 +438,10 @@ int RawInputHandler(HWND hWnd, unsigned int msg, unsigned int wParam, long lPara
                     DDIO_mouse_state.dx = 0;
                     DDIO_mouse_state.dy = 0;
                     DDIO_mouse_state.polled = false;
+                    DDIO_mouse_state.reads = 0;
                 }
 
+                DDIO_mouse_state.reads++;
                 DDIO_mouse_state.dx += rawinput->data.mouse.lLastX;
                 DDIO_mouse_state.dy += rawinput->data.mouse.lLastY;
                 DDIO_mouse_state.expire_time = curtime + (1.f / 125);

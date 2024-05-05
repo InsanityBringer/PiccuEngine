@@ -302,7 +302,7 @@
 					
 // used for adjusting settings.
 #define CFG_AXIS_SENS_RANGE		20
-#define CFG_MOUSE_AXIS_SENS_RANGE		40
+#define CFG_MOUSE_AXIS_SENS_RANGE		160
 const short UID_JOYCFG = 0x1000;
 
 #ifdef MACINTOSH
@@ -587,44 +587,12 @@ void joy_cfg_screen::setup(newuiLargeMenu *menu)
 	m_menu = menu;
 	m_sheet = menu->AddOption(IDV_CCONFIG,TXT_OPTCUSTCONT);
 	
-#ifdef MACINTOSH
-	short curpos;
-	tSliderSettings slider_set;
-	int axis_str[N_JOY_AXIS] = { TXI_KB_HEADING, TXI_KB_PITCH, TXI_KB_BANK, TXI_KB_SLIDEHORIZ,TXI_KB_SLIDEVERT, TXI_KB_FORWARD };
-
-	for (i = 0; i < N_JOY_AXIS; i++)
-	{
-		old_sens[i] = Controller->get_axis_sensitivity(ctAxis, i+1);
-	}
-	m_controller_settings.Create(m_menu, UID_CFGSETTINGS, TXT_SPROCKETS_CONFIG, KEYCFG_EXTRAS_X+m_sheet->X()+KEYCFG_EXTRAS_W, KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
-// sensitivity sliders for joystick
-	m_sheet->NewGroup(TXT_SENSITIVITY, 80, 60);
-	for (i = 0; i < N_JOY_AXIS; i++)
-	{
-		char str[16];
-		float val = Controller->get_axis_sensitivity(ctAxis, i+1);
-		slider_set.min_val.f = 0.0f;
-		slider_set.max_val.f = JOY_AXIS_SENS_RANGE;
-		slider_set.type = SLIDER_UNITS_FLOAT;
-		curpos = CALC_SLIDER_POS_FLOAT(val, &slider_set, CFG_AXIS_SENS_RANGE); 
-		sprintf(str, "%s", TXT(axis_str[i]));
-		joy_sens[i] = m_sheet->AddSlider(str, CFG_AXIS_SENS_RANGE, curpos, &slider_set);
-	}
-	m_sheet->NewGroup(TXT_JOYSTICK_DEADZONE, 320, 60);
-	int val = Controller->get_controller_deadzone(MC_JOY);
-	slider_set.min_val.i = 0;
-	slider_set.max_val.i = 25;
-	slider_set.type = SLIDER_UNITS_INT;
-	curpos = CALC_SLIDER_POS_INT(val, &slider_set, 25); 
-	deadzone = m_sheet->AddSlider("", 25, curpos, &slider_set);
-#else
 // save original settings.
 	for (i = 0; i < N_JOY_CFG_FN; i++)
 	{
 		Controller->get_controller_function(Cfg_joy_elements[i].fn_id, m_old_controls[i].type, 
 									&m_old_controls[i].value, m_old_controls[i].flags);
 	}
-#endif
 }
 void joy_cfg_screen::finish()
 {
@@ -633,30 +601,6 @@ void joy_cfg_screen::process(int res)
 {
 	int i;
 	
-#ifdef MACINTOSH
-		
-		float uval = CALC_SLIDER_FLOAT_VALUE(*deadzone, 0.0, 25, 25);
-		Controller->set_controller_deadzone(MC_JOY, uval);
-		for (i = 0; i < N_JOY_AXIS; i++)
-		{
-			float val = CALC_SLIDER_FLOAT_VALUE(*joy_sens[i], 0.0f, JOY_AXIS_SENS_RANGE, CFG_AXIS_SENS_RANGE);
-			Controller->set_axis_sensitivity(ctAxis, i+1, val);
-		}
-	switch (res) {
-		case UID_RESETDEFAULTS:
-			for (i = 0; i < N_JOY_AXIS; i++)
-				Controller->set_axis_sensitivity(ctAxis, i+1, 1.0);
-		break;
-		case UID_CFGSETTINGS:
-			inSprocket_Configure();
-		break;
-		case UID_REVERT:
-			for (i = 0; i < N_JOY_AXIS; i++)
-				Controller->set_axis_sensitivity(ctAxis, i+1, old_sens[i]);
-		break;
-	}
-
-#else
 	for (i = 0; i < N_JOY_CFG_FN; i++)
 	{
 		if (m_elem[i].GetID() != -1 && m_elem[i].GetID() == res) {
@@ -696,7 +640,6 @@ void joy_cfg_screen::process(int res)
 		}
 		break;
 	}
-#endif
 }
 
 void joy_cfg_screen::realize()
