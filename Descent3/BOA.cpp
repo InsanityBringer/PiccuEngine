@@ -1340,10 +1340,10 @@ void compute_blockage_info()
 			if(j == Highest_room_index + 1 && i > Highest_room_index)
 				continue;
 
-			if(j <= Highest_room_index && (!Rooms[i].used)) 
+			if(j <= Highest_room_index && (i <= Highest_room_index && !Rooms[i].used)) 
 				continue;
 
-			if(j <= Highest_room_index && (Rooms[i].flags & RF_EXTERNAL)) 
+			if(j <= Highest_room_index && (i <= Highest_room_index && (Rooms[i].flags & RF_EXTERNAL)))
 				continue;
 
 			if(BOA_NEXT_ROOM(cur_room, j) != BOA_NO_PATH && BOA_NEXT_ROOM(cur_room, j) != cur_room)
@@ -2273,10 +2273,10 @@ void compute_robot_path_info()
 		{
 			int cur_room = i;
 
-			if(j <= Highest_room_index && (!Rooms[i].used)) 
+			if(j <= Highest_room_index && (i <= Highest_room_index && !Rooms[i].used)) 
 				continue;
 
-			if(j <= Highest_room_index && (Rooms[i].flags & RF_EXTERNAL)) 
+			if(j <= Highest_room_index && (i <= Highest_room_index && (Rooms[i].flags & RF_EXTERNAL))) 
 				continue;
 
 			if(i == j)
