@@ -139,7 +139,7 @@ ubyte Use_motion_blur = 0;
 char Base_directory[_MAX_PATH];
 char* User_directory;
 
-extern int Min_allowed_frametime;
+extern float Min_allowed_frametime;
 
 extern bool Mem_low_memory_mode;
 extern bool Render_powerup_sparkles;
@@ -301,26 +301,26 @@ void PreInitD3Systems()
 	int iframelmtarg = FindArg("-limitframe");
 	if(iframelmtarg)
 	{
-		Min_allowed_frametime = atoi(GameArgs[iframelmtarg+1]);
+		Min_allowed_frametime = atoi(GameArgs[iframelmtarg+1]) / 1000.f;
 		mprintf((0,"Using %d as a minimum frametime\n",Min_allowed_frametime));
 	}
 	else
 	{
 		if(FindArg("-dedicated"))
-			Min_allowed_frametime=30;
+			Min_allowed_frametime=1.f/30;
 		else
 			Min_allowed_frametime=0;
 	}
 	iframelmtarg = FindArg("-framecap");
 	if(iframelmtarg)
 	{
-		Min_allowed_frametime = ((float)1.0/(float)atoi(GameArgs[iframelmtarg+1]))*1000;
+		Min_allowed_frametime = ((float)1.0/(float)atoi(GameArgs[iframelmtarg+1]));
 		mprintf((0,"Using %d as a minimum frametime\n",Min_allowed_frametime));
 	}
 	else
 	{
 		// Default to a framecap of 60
-		Min_allowed_frametime = (1.0/60.0)*1000;
+		Min_allowed_frametime = (1.0/60.0);
 		mprintf ((0,"Using default framecap of 60\n"));
 	}
 

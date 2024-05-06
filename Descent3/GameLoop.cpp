@@ -134,7 +134,7 @@ int Clear_screen=0;
 bool Game_paused = false;
 
 // Used for limiting the framerate
-int Min_allowed_frametime = 0;
+float Min_allowed_frametime = 0;
 
 // determines if we're rendering the main view
 bool Rendering_main_view=false;
@@ -157,7 +157,7 @@ bool Game_gauge_do_time_test = false;
 char Game_gauge_usefile[_MAX_PATH] = "gg.dem";
 //#endif
 
-longlong last_timer = 0;
+float last_timer = 0;
 
 // contains information for the music system.
 tMusicSeqInfo Game_music_info;
@@ -2114,15 +2114,17 @@ int timer_paused=0;
 //Stop the Frametime clock
 void StopTime()
 {
-   if (! timer_paused) {
-      last_timer = timer_GetMSTime() - last_timer;
-      if (last_timer < 0) {
+	if (! timer_paused) 
+	{
+		last_timer = timer_GetTime() - last_timer;
+		if (last_timer < 0) 
+		{
 			//Int3();
-         last_timer = 0;
+			last_timer = 0;
 		}
-   }
+	}
 
-   timer_paused++;
+	timer_paused++;
 }
 
 //Restart the Frametime clock
@@ -2133,10 +2135,10 @@ void StartTime()
 
 	timer_paused--;
 
-   ASSERT(timer_paused >= 0);
+	ASSERT(timer_paused >= 0);
 
-   if (! timer_paused)
-      last_timer = timer_GetMSTime() - last_timer;
+	if (!timer_paused)
+		last_timer = timer_GetTime() - last_timer;
 }
 
 float Min_frametime = 500;
@@ -2149,15 +2151,13 @@ unsigned int Frames_counted = 0;
 //Compute how long last frame took
 void CalcFrameTime(void)
 {
-	longlong current_timer;
-
 	if (timer_paused) 
 		return;
 
-	current_timer = timer_GetMSTime();
+	float current_timer = timer_GetTime();
 	if (current_timer >= last_timer)
 	{
-		Frametime = static_cast<float>(current_timer - last_timer) / 1000.0f;
+		Frametime = current_timer - last_timer;
 	}
 	else
 	{
@@ -2210,14 +2210,12 @@ void CalcFrameTime(void)
 //	called before first call to StopTime, StartTime or CalcFrameTime
 void InitFrameTime(void)
 {
-	
 	if (timer_paused)
 	{
 		mprintf((1,"Timer paused in InitFrameTime()\n"));
 	}
-	last_timer = timer_GetMSTime();
+	last_timer = timer_GetTime();
 	timer_paused = 0;
-
 }
 
 //Pauses game
@@ -2564,7 +2562,8 @@ void GameFrame(void)
 		RTP_tENDTIME(renderframe_time,curr_time);
 	}
 
-	if (!Game_paused) {
+	if (!Game_paused) 
+	{
 		// Do pending events
 		RTP_tSTARTTIME(normalevent_time,curr_time);
 		ProcessNormalEvents();
@@ -2572,15 +2571,18 @@ void GameFrame(void)
 
 		//float start_delay = timer_GetTime();
 		//Slow down the game if the user asked us to
-		
-		longlong current_timer;
-		unsigned int sleeptime;
-		current_timer = timer_GetMSTime();
-		if((current_timer-last_timer)<Min_allowed_frametime)
+		if (!Render_preferred_state.vsync_on) //[ISB] If vsynced, let the vsync handle framerate deltas. 
 		{
-			sleeptime = (unsigned int)Min_allowed_frametime-(current_timer-last_timer);
-			//mprintf((0,"Sleeping for %d ms\n",sleeptime));
-			Sleep(sleeptime);
+			float current_timer = timer_GetTime();
+			float target_time = last_timer + Min_allowed_frametime;
+			if ((current_timer - last_timer) < Min_allowed_frametime)
+			{
+				unsigned int sleeptime = (Min_allowed_frametime - (current_timer - last_timer)) * 1000;
+				//mprintf((0,"Sleeping for %d ms\n",sleeptime));
+				if (sleeptime > 2)
+					Sleep(sleeptime - 2);
+			}
+			while (timer_GetTime() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
 		}
 
 		static int graph_id = -2;
