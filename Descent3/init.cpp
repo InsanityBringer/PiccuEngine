@@ -474,7 +474,7 @@ void LoadGameSettings()
 	Render_preferred_bitdepth = 16;
 	Default_player_terrain_leveling = 2;
 	Default_player_room_leveling = 2;
-	Render_preferred_state.gamma = 1.5;
+	Render_preferred_state.gamma = 1.0;
 	PreferredRenderer = RENDERER_NONE;
 
 
