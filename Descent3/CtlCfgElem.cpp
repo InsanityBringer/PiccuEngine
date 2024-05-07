@@ -15,103 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/CtlCfgElem.cpp $
- * $Revision: 26 $
- * $Date: 3/20/00 12:03p $
- * $Author: Matt $
- *
- * Control config element gadgets
- *
- * $Log: /DescentIII/main/CtlCfgElem.cpp $
- * 
- * 26    3/20/00 12:03p Matt
- * Merge of Duane's post-1.3 changes.
- * Added Mac international keys (Mac only)
- * 
- * 25    10/22/99 10:47a Matt
- * Mac merge
- * 
- * 24    7/30/99 1:05p Samir
- * read POVs before buttons since most controllers map hat positions to
- * buttons as well.
- * 
- * 23    7/16/99 11:15a Samir
- * multiple hat support
- * 
- * 22    6/11/99 1:15a Samir
- * localization issues.
- * 
- * 21    5/20/99 9:11p Samir
- * no bind '-' and '=' keys.
- * 
- * 20    5/06/99 1:40a Samir
- * adjusted some text.
- * 
- * 19    4/29/99 2:59p Samir
- * added help and made CTRL-C clear for controller screens.
- * 
- * 18    4/29/99 2:23a Samir
- * moved binding text functions to wincontroller.cpp and new text for
- * multiple joysticks.
- * 
- * 17    4/15/99 1:38a Jeff
- * changes for linux compile
- * 
- * 16    4/14/99 12:35p Samir
- * localization issues.
- * 
- * 15    4/14/99 2:50a Jeff
- * fixed some case mismatched #includes
- * 
- * 14    3/23/99 9:04p Samir
- * moved mouse binding text to mouse library.
- * 
- * 13    3/09/99 6:26p Samir
- * flush mouse queue after configuring button.
- * 
- * 12    3/05/99 4:34p Samir
- * multiplayer bug in controller config.
- * 
- * 11    3/02/99 1:17p Samir
- * resume and suspend controls for config instead of directly going
- * through controller. this is done so mask_controllers gets called with
- * the latest Current_pillot.read_controller values...
- * 
- * 10    2/26/99 2:09a Samir
- * added '?' button.
- * 
- * 9     2/21/99 6:36p Samir
- * focusing changes and key input changes to ui.,
- * 
- * 8     2/16/99 12:07p Samir
- * redid controller config with new ui.
- * 
- * 7     1/28/99 3:58p Jeff
- * localization update
- * 
- * 6     11/30/98 4:54p Samir
- * added rear view config item.
- * 
- * 5     10/23/98 12:51p Samir
- * bail out of config if server says so: note there still is a bug with
- * this system.
- * 
- * 4     10/18/98 1:07p Samir
- * tweaked user interface for controller config.
- * 
- * 3     10/17/98 7:31p Samir
- * added invertible axes
- * 
- * 2     9/30/98 4:37p Samir
- * 'incremental checkin'
- * 
- * 1     9/28/98 3:47p Samir
- * initial revision.
- *
- * $NoKeywords: $
- */
-
 
 #include "CtlCfgElem.h"
 #include "descent.h"
@@ -137,25 +40,13 @@ char Ctltext_KeyBindings[][16] = {
 	"tab\0\0\0\0\0\0",
 	"q","w","e","r","t","y","u","i","o","p","[","]",
 	"enter\0\0\0\0\0",
-#ifdef MACINTOSH
-	"ctrl\0\0\0\0\0",
-#else
 	"lctrl\0\0\0\0\0",
-#endif
 	"a","s","d","f","g","h","j","k","l",";","'","`",        
-#ifdef MACINTOSH
-	"shift\0\0\0\0\0",
-#else
 	"lshft\0\0\0\0\0",
-#endif
 	"\\","z","x","c","v","b","n","m",",",".","/",
 	"rshft\0\0\0\0\0",
 	"pad*\0\0\0\0\0",
-#ifdef MACINTOSH
-	"opt\0\0\0\0\0",
-#else
 	"lalt\0\0\0\0\0",
-#endif
 	"spc\0\0\0\0\0",      
 	"caps\0\0\0\0\0",
 	"","","","","","","","","","",
@@ -179,19 +70,11 @@ char Ctltext_KeyBindings[][16] = {
 	"","","","","","","","","","","","","","","","","","","","",
 	"","","","","","","","","","","","","","","","","","",
 	"pad�\0\0\0\0\0\0",
-#ifdef MACINTOSH
-	"ctrl\0\0\0\0\0",
-#else
 	"rctrl\0\0\0\0\0",
-#endif
 	"","","","","","","","","","","","","","","","","","","","","","","",
 	"pad/\0\0\0\0\0\0",
 	"","",
-#ifdef MACINTOSH
-	"opt\0\0\0\0\0\0",
-#else
 	"ralt\0\0\0\0\0\0",
-#endif
 	"","","","","","","","","","","","","","",
 	"home\0\0\0\0\0\0",
 	"up\0\0\0\0\0\0\0",
@@ -207,11 +90,7 @@ char Ctltext_KeyBindings[][16] = {
 	"ins\0\0\0\0\0\0",       
 	"del\0\0\0\0\0\0",
 	"","","","","","","","","","","","",
-#ifdef MACINTOSH
-	"cmd\0\0\0\0\0\0",
-#else
 	"",
-#endif
 	"","","","",    
 	"","","","","","","","","","","","","","","","","","","","",     
 	"","","","","","","" 
@@ -222,9 +101,6 @@ static short key_binding_indices[] = {
 	KEY_PAD5, KEY_PAD6, KEY_PADPLUS, KEY_PAD1, KEY_PAD2, KEY_PAD3, KEY_PAD0, KEY_PADPERIOD, KEY_PADENTER,
 	KEY_RCTRL, KEY_PADDIVIDE, KEY_RALT, KEY_HOME, KEY_UP, KEY_PAGEUP, KEY_LEFT, KEY_RIGHT, KEY_END, KEY_DOWN, 
 	KEY_PAGEDOWN, KEY_INSERT, KEY_DELETE, 
-#ifdef MACINTOSH
-	KEY_CMD, KEY_LBRACKET, KEY_RBRACKET, KEY_BACKSLASH, KEY_PERIOD, KEY_SLASH,	//DAJ for mac international
-#endif
 	0xff
 };
 

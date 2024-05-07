@@ -40,6 +40,7 @@
 
 extern float Mouselook_sensitivity;
 extern float Mouse_sensitivity;
+extern bool Mouse_limitpolling;
 
 #define JOY_DEADZONE	0.20f
 #define MOUSE_DEADZONE 0.00f
@@ -1320,6 +1321,9 @@ void gameWinController::extctl_geteval(int id)
 void gameWinController::mouse_geteval()
 {
 	if (!m_MouseActive)
+		return;
+
+	if (Mouse_limitpolling && g_accum_frame_time != 0.0f)
 		return;
 
 	int x, y, dx, dy;

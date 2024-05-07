@@ -152,6 +152,7 @@ const float kAnglesPerDegree             = 65536.0f / 360.0f;
 int CD_inserted = 0;
 float Mouselook_sensitivity = kAnglesPerDegree * kDefaultMouselookSensitivity;
 float Mouse_sensitivity     = 1.0f;
+bool Mouse_limitpolling = false;
 
 int IsLocalOk(void)
 {
@@ -420,6 +421,8 @@ void SaveGameSettings()
 	if(D3Force_gain>1.0f) D3Force_gain = 1.0f;
 	force_gain = (ubyte)((100.0f * D3Force_gain)+0.5f);
 	Database->write("ForceFeedbackGain",force_gain);
+	// [ISB] Don't want to change pilot format so this is database for now
+	Database->write("LimitMousePolling", Mouse_limitpolling);
 
 #ifndef RELEASE			// never save this value out in release.
 	Database->write("SoundMixer", Sound_mixer);
@@ -568,6 +571,7 @@ void LoadGameSettings()
 	Database->read("ForceFeedbackGain",&force_gain,sizeof(force_gain));
 	if(force_gain>100) force_gain = 100;
 	D3Force_gain = ((float)force_gain)/100.0f;
+	Database->read("LimitMousePolling", &Mouse_limitpolling);
 	Database->read_int("PreferredRenderer",&PreferredRenderer);
 	Database->read_int("MissileView",&Missile_camera_window);
 	Database->read("FastHeadlight",&Detail_settings.Fast_headlight_on);

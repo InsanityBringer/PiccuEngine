@@ -15,267 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/ctlconfig.cpp $
- * $Revision: 78 $
- * $Date: 4/19/00 5:25p $
- * $Author: Matt $
- * 
- * <insert description of file here>
- *
- * $Log: /DescentIII/main/ctlconfig.cpp $
- * 
- * 78    4/19/00 5:25p Matt
- * From Duane for 1.4
- * Several Mac config changes
- * Fixed a bug that caused the deadzone value to be decreased each time
- * you the  config dialog was used.
- * 
- * 77    3/20/00 12:03p Matt
- * Merge of Duane's post-1.3 changes.
- * Mac deadzone stuff (Mac only)
- * 
- * 76    10/22/99 3:40p Kevin
- * Mac merge fixes
- * 
- * 75    10/22/99 10:50a Matt
- * Mac merge
- * 
- * 74    7/28/99 4:18p Kevin
- * Macintosh!
- * 
- * 73    7/16/99 11:16a Samir
- * multiple hat support.
- * 
- * 72    6/10/99 9:07p Samir
- * fixed weapon string name localization issues.
- * 
- * 71    5/12/99 1:18p Samir
- * play music during game too when in menus.
- * 
- * 70    5/06/99 1:40a Samir
- * adjusted some text.
- * 
- * 69    5/02/99 2:19a Samir
- * new weapon autoselect interface (a little more like D2)
- * 
- * 68    4/30/99 12:12p Samir
- * added strings for key ramping, other buttons in general config menu.
- * 
- * 67    4/29/99 2:59p Samir
- * added help and made CTRL-C clear for controller screens.
- * 
- * 66    4/29/99 2:18a Samir
- * updated art for options style menu.
- * 
- * 65    4/22/99 3:43p Kevin
- * Training missions show controls on screen
- * 
- * 64    4/19/99 5:09p Samir
- * ugh, forgot to destroy revert gadget when unrealizing ui page.
- * 
- * 63    4/18/99 4:21p Samir
- * added restore settings for either joystick or keyboard settings.
- * 
- * 62    4/15/99 2:55p Samir
- * added UI for mouselook.
- * 
- * 61    3/22/99 6:20p Jeff
- * added 2 more audio taunts.  a mulitplayer event when someone plays an
- * audio taunt.  option to disable audio taunts.
- * 
- * 60    3/17/99 4:18p Samir
- * added button to calibrate joystick.
- * 
- * 59    3/05/99 2:44p Samir
- * needs to be cleaned up later, but mouse and joystick sensitivities are
- * read in always, and set by the controller system.   A cancel method
- * needs to be implemented for these functions.
- * 
- * 58    3/05/99 12:24p Samir
- * weapon select screen has more help to determine what's high and what's
- * low.
- * 
- * 57    3/03/99 3:41a Samir
- * moved ok and cancel buttons in weapon_select_dialog.
- * 
- * 56    3/02/99 1:14p Samir
- * added joystick/mouse enable and gamma help.
- * 
- * 55    3/01/99 8:51p Samir
- * fixed potential crash with no forcefeedback.
- * 
- * 54    3/01/99 8:12p Samir
- * don;t display force feedback menu if no stick.
- * 
- * 53    3/01/99 5:01a Samir
- * made sure NEWUIRES_FORCEQUIT was added to all new interfaces.
- * 
- * 52    2/28/99 3:22a Samir
- * added rearview text.
- * 
- * 51    2/26/99 2:13a Samir
- * massive reorg of weapon select prec
- * 
- * 50    2/24/99 6:21p Samir
- * moved sensitivity sliders to config key/controller and cleaned up
- * weapon select menu.
- * 
- * 49    2/24/99 12:41p Samir
- * put in weapon selection.
- * 
- * 48    2/23/99 2:00p Samir
- * added keyboard ramping slider.
- * 
- * 47    2/19/99 11:07p Samir
- * don't verify control changes if new element has a NULL controller
- * instead of a null binding (hats can have a 'null binding' and be valid.
- * 
- * 46    2/16/99 12:07p Samir
- * redid controller config with new ui.
- * 
- * 45    2/10/99 3:39p Samir
- * table file parsing stuff
- * 
- * 44    1/28/99 3:58p Jeff
- * localization update
- * 
- * 43    1/06/99 6:33p Samir
- * more hacks for demo.
- * 
- * 42    1/06/99 6:28p Samir
- * demo hack for controller checkbox code not in sync with UI checkbox
- * code.
- * 
- * 41    12/17/98 5:59p Samir
- * moved mouse enabled and joy enabled to config menu.
- * 
- * 40    11/30/98 4:54p Samir
- * added rear view config item.
- * 
- * 39    10/22/98 10:54p Samir
- * put mouse or joystick disabled messages if pilot disabled them, to help
- * those configuring.
- * 
- * 38    10/21/98 11:14a Samir
- * added generic code to skip rendering while in game controller config or
- * telcom.
- * 
- * 37    10/18/98 7:24p Samir
- * added a reset to defaults options for key and joystick config.
- * 
- * 36    10/18/98 1:07p Samir
- * tweaked user interface for controller config.
- * 
- * 35    10/17/98 7:33p Samir
- * fixed bug when initializing elements list per panel.  
- * 
- * 34    10/13/98 6:33p Samir
- * poll mulitplayer every frame if needed in controller config screen.
- * 
- * 33    10/07/98 6:29p Samir
- * bail if multiplayer game ended in ui.
- * 
- * 32    10/02/98 4:15p Samir
- * added fancy artwork for config screens.
- * 
- * 31    10/01/98 12:57p Samir
- * basic weapon autoselect config working.
- * 
- * 30    9/30/98 4:35p Samir
- * revamped control configuration ui,
- * 
- * 29    9/23/98 6:19p Jeff
- * finished up (hopefully) updating the config/ui dialogs to meet our
- * standard.  Keyboard/joystick config still needs some work
- * 
- * 28    9/17/98 3:24p Samir
- * added headlight configuration.
- * 
- * 27    9/10/98 12:39p Samir
- * added senstivity issures for controller.
- * 
- * 26    8/31/98 6:49p Jeff
- * made inventory and countermeasure keys customizable
- * 
- * 25    6/29/98 6:42p Samir
- * Properly handle controller pausing and resumption.
- * 
- * 24    6/18/98 5:49p Samir
- * finished controller string localization minus the binding stuff.
- * 
- * 23    6/18/98 4:48p Samir
- * added changes for multiple configs for joystick controls.
- * 
- * 22    6/17/98 3:27p Jeff
- * Changes made for localization
- * 
- * 21    6/16/98 10:38a Jeff
- * localization, strings pulled out to stringtable.h and d3.str
- * 
- * 20    6/05/98 5:34p Samir
- * new config system.
- * 
- * 19    5/19/98 3:36p Samir
- * added automap key.
- * 
- * 18    5/15/98 3:13p Samir
- * added 2 key support for controller functions.
- * 
- * 17    5/12/98 3:04p Samir
- * added button control for pbh.
- * 
- * 16    5/11/98 4:53p Samir
- * added axis sliding, config.
- * 
- * 15    5/05/98 5:15p Samir
- * adjusted menus to work in 512x384 as well as 640x480.
- * 
- * 14    4/24/98 2:43a Samir
- * added ability to turn off controller.
- * 
- * 13    4/13/98 7:01p Samir
- * added snazzy listbox and edit box art.
- * 
- * 12    4/08/98 3:44p Samir
- * added toggle bank and configuration for afterburner
- * 
- * 11    3/20/98 1:19p Jeff
- * Changes made to use Default_pilot string for pilot filename to use.
- * 
- * 10    3/17/98 2:36p Samir
- * Added Macros.h
- * 
- * 9     3/05/98 6:38p Samir
- * Use UI_FONT now.
- * 
- * 8     2/16/98 9:27p Samir
- * Simple joystick configuration working.
- * 
- * 7     2/16/98 3:02p Samir
- * Joystick config sort of working.
- * 
- * 6     2/15/98 7:06p Samir
- * Keyboard configuration system done.  Not joystick.
- * 
- * 5     2/13/98 7:10p Samir
- * Fixed prob when pressing ALT (since it set a bit in the return key
- * value that's greater that 256)
- * 
- * 4     2/13/98 6:37p Samir
- * Simple keyboard configuration.
- * 
- * 3     2/10/98 4:55p Samir
- * Added rudimentary items for controller config.
- * 
- * 2     2/10/98 3:45p Samir
- * Added list of configuration items.
- * 
- * 1     2/10/98 11:49a Samir
- * Initial revision.
- *
- * $NoKeywords: $
- */
+
 #include "ctlconfig.h"
 #include "CtlCfgElem.h"
 #include "ctlconfigtxt.h"
@@ -303,13 +43,6 @@
 // used for adjusting settings.
 #define CFG_AXIS_SENS_RANGE		20
 #define CFG_MOUSE_AXIS_SENS_RANGE		80
-const short UID_JOYCFG = 0x1000;
-
-#ifdef MACINTOSH
-short *joy_sens[N_JOY_AXIS] = {0, 0, 0, 0, 0, 0};
-float old_sens[N_JOY_AXIS];
-short *deadzone = 0;
-#endif
 
 //	Setup of config screens.
 #define CCITEM_WPN_X					0
@@ -320,6 +53,7 @@ short *deadzone = 0;
 #define CCITEM_THRUST_Y				20
 #define CCITEM_ROT_X					295
 #define CCITEM_ROT_Y					160
+
 t_cfg_element Cfg_key_elements[] = 
 {
 // column1 -indices 0-15
@@ -1176,16 +910,8 @@ int weapon_select_dialog(int wpn, bool is_secondary)
 	
 	return retval;
 }
-void joystick_calibration()
-{
-#if defined(WIN32)
-	extern bool Win32JoystickCalibrate();
-	if (!Win32JoystickCalibrate())
-	{
-		DoMessageBox(TXT_ERROR, TXT_CALIBJOYSTICKFAIL, MB_OK);
-	}
-#endif
-}
+
+extern bool Mouse_limitpolling;
 void joystick_settings_dialog()
 {
 	newuiTiledWindow wnd;
@@ -1204,6 +930,7 @@ void joystick_settings_dialog()
 	bool *joy_enabled;
 	bool *mse_enabled;
 	int *msectl;
+	int* mousepolllimit;
 	
 	wnd.Create(TXT_JOYMOUSESETTINGS, 0,0,480,384);
 	sheet = wnd.GetSheet();
@@ -1224,7 +951,6 @@ void joystick_settings_dialog()
 		sprintf(str, TXT_CONTAXIS, axis_str[i]);
 		joy_sens[i] = sheet->AddSlider(str, CFG_AXIS_SENS_RANGE, curpos, &slider_set);
 	}
-#ifndef MACINTOSH	//DAJ
 	sheet->NewGroup(TXT_MSESENS, 0, 220);
 	
 	for (i = 0; i < N_MOUSE_AXIS; i++)
@@ -1251,10 +977,12 @@ void joystick_settings_dialog()
 	sheet->AddLongRadioButton(TXT_MOUSELOOK);
 	*msectl = Current_pilot.mouselook_control ? 1 : 0;
 	y += 50;
-	sheet->NewGroup(NULL, 210, y);
-	sheet->AddLongButton(TXT_CALIBJOYSTICK, UID_JOYCFG);
+	sheet->NewGroup("Mouse poll limit", 210, y);
+	mousepolllimit = sheet->AddFirstLongRadioButton("Unlimited");
+	sheet->AddLongRadioButton("Original (20hz)");
+	*mousepolllimit = Mouse_limitpolling ? 1 : 0;
+	y += 50;
 // force feedback stuff
-	y += 30;
 	ddio_ff_GetInfo(&ff_found, NULL);
 	if (ff_found) {
 		sheet->NewGroup(TXT_TITLE_FORCEFEEDBACK, 210, y);
@@ -1269,27 +997,16 @@ void joystick_settings_dialog()
 		slider_set.type = SLIDER_UNITS_PERCENT; 
 		ff_gain = sheet->AddSlider(TXT_CFG_FORCEGAIN,50,curpos,&slider_set);
 	}
-#else
-	sheet->NewGroup(NULL, 210, 20);
-	sheet->AddLongButton("Input Sprocket", UID_JOYCFG);
-#endif
 	wnd.Open();
 	do
 	{
 		res = wnd.DoUI();
-		if (res == NEWUIRES_FORCEQUIT) {
+		if (res == NEWUIRES_FORCEQUIT) 
 			break;
-		}
-		if (res == UID_JOYCFG) {
-#ifdef MACINTOSH
-			inSprocket_Configure();
-#else
-			joystick_calibration();
-#endif
-		}
 	}
 	while (res != UID_OK && res != UID_CANCEL);
-	if (res == UID_OK) {
+	if (res == UID_OK) 
+	{
 		float f_temp;
 		
 		Current_pilot.read_controller = (*joy_enabled) ? READF_JOY : 0;
@@ -1298,7 +1015,6 @@ void joystick_settings_dialog()
 			float val = CALC_SLIDER_FLOAT_VALUE(*joy_sens[i], 0.0f, JOY_AXIS_SENS_RANGE, CFG_AXIS_SENS_RANGE);
 			Controller->set_axis_sensitivity(ctAxis, i+1, val);
 		}
-#ifndef MACINTOSH
 		Current_pilot.read_controller |= (*mse_enabled) ? READF_MOUSE : 0;
 		for (i = 0; i < N_MOUSE_AXIS; i++)
 		{
@@ -1306,37 +1022,33 @@ void joystick_settings_dialog()
 			Controller->set_axis_sensitivity(ctMouseAxis, i+1, val);
 		}
 		Current_pilot.mouselook_control = (*msectl) ? true : false;
+		Mouse_limitpolling = !!*mousepolllimit;
 	// force feedback stuff
-		if (ff_enabled) {
-			if (*ff_enabled) {
+		if (ff_enabled) 
+		{
+			if (*ff_enabled)
 				ForceEnable();
-			}
-			else {
+			else 
 				ForceDisable();
-			}
 		}
-		if (ff_auto_center_support) {
-			if (*ff_auto_center) {
+		if (ff_auto_center_support)
+		{
+			if (*ff_auto_center)
 				ForceEnableAutoCenter();
-			}
-			else {
+			else
 				ForceDisableAutoCenter();
-			}
 		}
-		if (ff_gain) {
+		if (ff_gain) 
+		{
 			f_temp = (*ff_gain)*0.5f;
 			ForceSetGain(f_temp);
 		}
-#endif
 	}
 	wnd.Close();
 	wnd.Destroy();
 }
-#ifdef MACINTOSH
-#define CFG_KEY_RAMP_MAX 			2.0f
-#else
+
 #define CFG_KEY_RAMP_MAX			1.0f
-#endif
 #define CFG_KEY_RAMP_RANGE			20
 void key_settings_dialog()
 {
@@ -1372,21 +1084,24 @@ void key_settings_dialog()
 	wnd.Close();
 	wnd.Destroy();
 }
+
 //////////////////////////////////////////////////////////////////////////////
 // configure controller new way
-typedef struct t_ctlcfgswitchcb_data
+struct t_ctlcfgswitchcb_data
 {
 	joy_cfg_screen *joycfg;
 	key_cfg_screen *keycfg;
 	wpnsel_cfg_screen *wpncfg;
 	cfg_screen *curcfg;
-} t_ctlcfgswitchcb_data;
+};
+
 // called when we switch menus
 void CtlConfigSwitchCB(newuiMenu *menu, short old_option_id, short new_option_id, void *data)
 {
 	t_ctlcfgswitchcb_data *cfgdata = (t_ctlcfgswitchcb_data *)data;
 // performs custom gadget deinitialization and reinitilization
-	if (cfgdata->curcfg) {
+	if (cfgdata->curcfg) 
+	{
 		cfgdata->curcfg->unrealize();
 	}
 			
@@ -1397,19 +1112,22 @@ void CtlConfigSwitchCB(newuiMenu *menu, short old_option_id, short new_option_id
 	case IDV_WPNSEL: cfgdata->curcfg = cfgdata->wpncfg; break;
 	default:	cfgdata->curcfg = NULL;
 	}
-	if (cfgdata->curcfg) {
+	if (cfgdata->curcfg) 
+	{
 		cfgdata->curcfg->realize();
 	}
 }
 // keep multiplayer going!
 void CtlConfigUICB()
 {
-	if (Game_mode & (GM_MULTI)) {
+	if (Game_mode & (GM_MULTI)) 
+	{
 		Skip_render_game_frame = true;
 		GameFrame();
 		Skip_render_game_frame = false;
 	}
-	else if (GetFunctionMode() == GAME_MODE) {
+	else if (GetFunctionMode() == GAME_MODE) 
+	{
 		extern void GameProcessMusic();
 		float saved_frame_time = Frametime;
 		Frametime = UIFrameTime;
