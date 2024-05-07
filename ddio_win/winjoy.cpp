@@ -15,88 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/ddio_win/winjoy.cpp $
- * $Revision: 19 $
- * $Date: 8/10/99 5:11p $
- * $Author: Jeff $
- *
- * joystick header
- *
- * $Log: /DescentIII/Main/ddio_win/winjoy.cpp $
- * 
- * 19    8/10/99 5:11p Jeff
- * always call detachforce, it needs to free DLLs
- * 
- * 18    7/30/99 1:06p Samir
- * fixed hat code for direct input and apply sensitivities for calibration
- * of axes.
- * 
- * 17    7/26/99 11:59a Samir
- * add code to get name of joystick
- * 
- * 16    7/16/99 11:14a Samir
- * multiple hat support and improved direct input support.
- * 
- * 15    5/23/99 12:45a Samir
- * if joystick was never found, when returning from joygetpos, set all
- * position values to a neutral value.
- * 
- * 14    5/19/99 4:38p Samir
- * trying 'centered' flag for joyGetPosEx to automatically center joystick
- * on midpoint of min and max values for axis.  I don't know why this
- * isn't the case anyway, but...
- * 
- * 13    5/10/99 9:22p Samir
- * added CH Flightstick Pro hack.
- * 
- * 12    5/08/99 1:05a Samir
- * initialize joysticks always, but return NULL values if the joystick is
- * unplugged.
- * 
- * 11    5/05/99 10:55p Samir
- * moved force feedback code so it's always initialized.
- * 
- * 10    4/24/99 8:41p Samir
- * added debug code to get controller positions on mono.
- * 
- * 9     4/12/99 12:12p Samir
- * took out int3.
- * 
- * 8     4/09/99 12:02p Samir
- * joystick changes (Win32 DirectInput support)
- * 
- * 7     2/21/99 6:38p Samir
- * mouse and key input better. buffered mouse.
- * 
- * 6     2/03/99 6:47p Jeff
- * (Samir) hacked pov value, so it's always a word
- * 
- * 5     10/18/98 7:25p Samir
- * made joy_GetPos safe.
- * 
- * 4     6/02/98 4:37p Samir
- * multiple joysticks supported.
- * 
- * 3     6/01/98 4:27p Samir
- * pov may return multiple positions.
- * 
- * 2     12/03/97 7:33p Samir
- * Improved joystick interface.
- * 
- * 4     6/11/97 2:40p Samir
- * fixed bools.
- * 
- * 3     2/26/97 6:16p Samir
- * joy_init returns a 0 if no joysticks are present.
- * 
- * 2     2/26/97 12:09p Samir
- * Added some debug and error checking.
- *
- * $NoKeywords: $
- */
-
-
 
 #include "joystick.h"
 #include "forcefeedback.h"
@@ -116,7 +34,7 @@
 
 
 //////////////////////////////////////////////////////////////////////////////
-typedef struct tJoystickRecord
+struct tJoystickRecord
 {
 	ubyte valid;								// is this a valid device.
 	ubyte flags;								// defined in ddio_win.h
@@ -131,8 +49,7 @@ typedef struct tJoystickRecord
 
 	tJoyInfo caps;								// controller capabilities
 	tJoyPos pos;								// current position
-}
-tJoystickRecord;
+};
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -184,7 +101,7 @@ bool joy_Init(bool emulation)
 	}	
 
 // initialize data structures.
-	n = 2;
+	n = 15;
 	if (n) {
 		WJD.joystick = (tJoystickRecord *)mem_malloc(sizeof(tJoystickRecord)*n);
 		for (i = 0;i < n;i++)
@@ -346,8 +263,12 @@ void ddio_InternalJoyFrame()
 bool joymm_init()
 {
 	joymm_init_stick(JOYSTICKID1);
-	if (!joy_chpro_hack) {
-		joymm_init_stick(JOYSTICKID2);
+	if (!joy_chpro_hack) 
+	{
+		for (int i = 1; i < WJD.njoy; i++)
+		{
+			joymm_init_stick(JOYSTICKID1+i);
+		}
 	}
 
 	return true;
