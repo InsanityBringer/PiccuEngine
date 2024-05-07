@@ -33,7 +33,6 @@ PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
 HWND hOpenGLWnd = NULL;
 HDC hOpenGLDC = NULL;
 HGLRC ResourceContext;
-WORD Saved_gamma_values[256 * 3];
 #endif
 
 bool Already_loaded = false;
@@ -74,7 +73,6 @@ void opengl_SetDefaults()
 	rend_SetColorModel(CM_RGB);
 	rend_SetZBufferState(1);
 	rend_SetZValues(0, 3000);
-	opengl_SetGammaValue(OpenGL_preferred_state.gamma);
 	OpenGL_last_bound[0] = 9999999;
 	OpenGL_last_bound[1] = 9999999;
 	Last_texel_unit_set = -1;
@@ -270,9 +268,6 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 		opengl_Close();
 		return 0;
 	}
-
-	// Save gamma values for later
-	GetDeviceGammaRamp(hOpenGLDC, (LPVOID)Saved_gamma_values);
 
 #elif defined(__LINUX__)
 	/***********************************************************

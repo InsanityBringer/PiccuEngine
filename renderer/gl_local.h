@@ -34,6 +34,7 @@
 #include "mem.h"
 #include "mono.h"
 #include "pserror.h"
+#include "gl_shader.h"
 
 #define CHECK_ERROR(n) //need to decide what it does. 
 
@@ -105,3 +106,30 @@ void rend_SetMipState(sbyte mipstate);
 void opengl_DrawMultitexturePolygon3D(int handle, g3Point** p, int nv, int map_type);
 void opengl_SetMultitextureBlendMode(bool state);
 void opengl_DrawFlatPolygon3D(g3Point** p, int nv);
+
+//gl_framebuffer.cpp
+class Framebuffer
+{
+	GLuint		m_name;
+	GLuint		m_colorname, m_depthname;
+	uint32_t	m_width, m_height;
+public:
+	Framebuffer();
+	void Update(int width, int height);
+	void Destroy();
+	//Blits to the target framebuffer using glBlitFramebuffer.
+	//Will set current read framebuffer to m_name.
+	void BlitToRaw(GLuint target, unsigned int x, unsigned int y, unsigned int w, unsigned int h);
+	//Blits to the target framebuffer using a draw. Bind desired shader before calling. 
+	//Will set current read framebuffer to m_name. Will not trash viewport. 
+	void BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned int w, unsigned int h);
+
+	GLuint Handle() const
+	{
+		return m_name;
+	}
+};
+
+//temporary
+void GL_InitFramebufferVAO(void);
+void GL_DestroyFramebufferVAO(void);

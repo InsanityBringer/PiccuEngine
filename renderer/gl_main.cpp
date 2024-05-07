@@ -18,6 +18,7 @@
 */
 #include "gl_local.h"
 #include "rtperformance.h"
+#include "gl_shader.h"
 
 oeApplication* ParentApplication = nullptr;
 
@@ -34,12 +35,13 @@ bool OpenGL_packed_pixels;
 bool Fast_test_render = false;
 
 constexpr int NUM_FBOS = 2;
-GLuint framebuffer_names[NUM_FBOS];
-GLuint framebuffer_color_names[NUM_FBOS];
-GLuint framebuffer_depth_names[NUM_FBOS];
+Framebuffer framebuffers[NUM_FBOS];
 int framebuffer_current_draw;
 
 unsigned int framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h;
+
+ShaderProgram blitshader;
+GLint blitshader_gamma = -1;
 
 // Init our renderer
 int rend_Init(renderer_type state, oeApplication* app, renderer_preferred_state* pref_state)
@@ -65,6 +67,17 @@ int rend_Init(renderer_type state, oeApplication* app, renderer_preferred_state*
 	mprintf((0, "Renderer init is set to %d\n", Renderer_initted));
 
 	retval = opengl_Init(app, pref_state);
+
+	extern const char* blitVertexSrc;
+	extern const char* blitFragmentSrc;
+	blitshader.AttachSource(blitVertexSrc, blitFragmentSrc);
+	blitshader_gamma = blitshader.FindUniform("gamma");
+	if (blitshader_gamma == -1)
+		Error("rend_Init: Failed to find gamma uniform!");
+
+	//[ISB] moved here.. stupid. 
+	opengl_SetGammaValue(OpenGL_preferred_state.gamma);
+
 	return retval;
 #else
 	return 0;
@@ -77,6 +90,7 @@ void rend_Close(void)
 	if (!Renderer_initted)
 		return;
 
+	blitshader.Destroy();
 	opengl_Close();
 
 	Renderer_initted = false;
@@ -259,20 +273,14 @@ void rend_Flip(void)
 	OpenGL_polys_drawn = 0;
 	OpenGL_verts_processed = 0;
 
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_names[framebuffer_current_draw]);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-	err = glGetError();
-	if (err != GL_NO_ERROR)
+	if (OpenGL_preferred_state.gamma == 1.0)
+		framebuffers[framebuffer_current_draw].BlitToRaw(0, framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h);
+	else
 	{
-		mprintf((0, "Error unbinding draw framebuffer: %d\n", err));
+		blitshader.Use();
+		framebuffers[framebuffer_current_draw].BlitTo(0, framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h);
+		glUseProgram(0);
 	}
-
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glBlitFramebuffer(0, 0, OpenGL_state.screen_width, OpenGL_state.screen_height,
-		framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_x + framebuffer_blit_w, framebuffer_blit_y + framebuffer_blit_h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
@@ -289,7 +297,7 @@ void rend_Flip(void)
 #endif
 
 	framebuffer_current_draw = (framebuffer_current_draw + 1) % NUM_FBOS;
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer_names[framebuffer_current_draw]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffers[framebuffer_current_draw].Handle());
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -331,6 +339,11 @@ bool opengl_CheckExtension(char* extName)
 
 void opengl_SetGammaValue(float val)
 {
+	blitshader.Use();
+
+	glUniform1f(blitshader_gamma, 1.f / val);
+
+	glUseProgram(0);
 }
 
 void rend_SetFlatColor(ddgr_color color)
@@ -959,57 +972,27 @@ void rend_Screenshot(int bm_handle)
 
 void opengl_UpdateFramebuffer(void)
 {
-	if (UseMultitexture)
-	{
-		glActiveTextureARB(GL_TEXTURE0_ARB);
-	}
-	if (framebuffer_color_names[0] == 0)
-	{
-		glGenTextures(NUM_FBOS, framebuffer_color_names);
-		glGenTextures(NUM_FBOS, framebuffer_depth_names);
-		glGenFramebuffers(NUM_FBOS, framebuffer_names);
-	}
-
-	GLenum textureType = GL_TEXTURE_2D; //future MSAA support?
-
 	for (int i = 0; i < NUM_FBOS; i++)
 	{
-		glBindTexture(GL_TEXTURE_2D, framebuffer_color_names[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-		glBindTexture(GL_TEXTURE_2D, framebuffer_depth_names[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-		OpenGL_last_bound[0] = -1;
-		OpenGL_last_bound[1] = -1;
-		Last_texel_unit_set = -1;
-
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_names[i]);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureType, framebuffer_color_names[i], 0);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, textureType, framebuffer_depth_names[i], 0);
-
-		GLenum fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if (fbstatus != GL_FRAMEBUFFER_COMPLETE)
-		{
-			Error("opengl_UpdateFramebuffer(): Framebuffer object is incomplete!");
-		}
+		framebuffers[i].Update(OpenGL_state.screen_width, OpenGL_state.screen_height);
 	}
 
 	framebuffer_current_draw = 0;
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer_names[0]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffers[0].Handle());
 	//Unbind the read framebuffer so that OBS can capture the window properly
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+	GL_InitFramebufferVAO();
 }
 
 void opengl_CloseFramebuffer(void)
 {
-	glDeleteTextures(NUM_FBOS, framebuffer_color_names);
-	glDeleteTextures(NUM_FBOS, framebuffer_depth_names);
-	memset(framebuffer_color_names, 0, sizeof(framebuffer_color_names));
-	memset(framebuffer_depth_names, 0, sizeof(framebuffer_depth_names));
-	glDeleteFramebuffers(NUM_FBOS, framebuffer_names);
+	for (int i = 0; i < NUM_FBOS; i++)
+	{
+		framebuffers[i].Destroy();
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	GL_DestroyFramebufferVAO();
 }

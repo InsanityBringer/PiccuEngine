@@ -3,10 +3,14 @@ SET (RENDERER_SOURCES
 		renderer/RendererConfig.h
 		renderer/globalvars.cpp
 		renderer/gl_draw.cpp
+		renderer/gl_framebuffer.cpp
 		renderer/gl_image.cpp
 		renderer/gl_init.cpp
 		renderer/gl_local.h
 		renderer/gl_main.cpp
+		renderer/gl_shader.cpp
+		renderer/gl_shader.h
+		renderer/gl_shadersource.cpp
 		
 		#GLAD gl loader
 		renderer/gl.c
