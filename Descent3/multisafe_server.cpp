@@ -183,6 +183,7 @@ void MultiDoMSafeFunction (ubyte *data)
 		case MSAFE_OBJECT_SHAKE_AREA:
 			GET_AND_VERIFY_OBJECT(mstruct->objhandle);
 			mstruct->scalar=MultiGetFloat(data,&count);
+			mstruct->amount = 1.0f; //[ISB] Doesn't transmit an amount, but shaking needs an amount..
 			break;
 		case MSAFE_OBJECT_SETONFIRE:
 			GET_AND_VERIFY_OBJECT(mstruct->objhandle);
