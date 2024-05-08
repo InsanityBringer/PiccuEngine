@@ -136,7 +136,10 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	Last_texel_unit_set = 0;
+	glClientActiveTextureARB(GL_TEXTURE0_ARB);
 	glActiveTextureARB(GL_TEXTURE0_ARB);
+	OpenGL_last_bound[0] = m_colorname;
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, m_colorname);
 	GLenum err = glGetError();
