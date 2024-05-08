@@ -575,8 +575,15 @@ int pilot::read(bool skip_config,bool skip_mission_data)
 	CFILE *file;
 	char real_filename[_MAX_PATH];
 
+	//[ISB] please fix this hack
+	char ext[_MAX_PATH];
+	ddio_SplitPath(filename, nullptr, nullptr, ext);
+
 	//open and process file
-	ddio_MakePath(real_filename,User_directory,filename,NULL);
+	if (!stricmp(ext, ".pld"))
+		ddio_MakePath(real_filename,Base_directory,filename,NULL);
+	else
+		ddio_MakePath(real_filename,User_directory,filename,NULL);
 
 	if(!cfexist(real_filename))
 	{

@@ -15,323 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/weapon.cpp $
- * $Revision: 91 $
- * $Date: 4/19/00 5:07p $
- * $Author: Matt $
- *
- * $Log: /DescentIII/main/weapon.cpp $
- * 
- * 91    4/19/00 5:07p Matt
- * From Duane for 1.4
- * Added checks, asserts, and fixes for bad return values
- * 
- * 90    11/03/99 6:29p Chris
- * Improved the auto-selection code for dual fire secondary weapons
- * 
- * 89    10/21/99 9:30p Jeff
- * B.A. Macintosh code merge
- * 
- * 88    5/20/99 9:56p Jeff
- * AddWeaponToPlayer checks for max ammo when adding it
- * 
- * 87    5/17/99 12:20p Samir
- * don't print out any poweup weapon pickup messages in AddWeaponToPlayer.
- * 
- * 86    5/08/99 6:18p Chris
- * Fixed up no hearing cases
- * 
- * 85    5/08/99 4:12p Chris
- * Added AI hearing noises... version 1
- * 
- * 84    4/14/99 4:19a Jeff
- * more case mismatch fixes in #includes
- * 
- * 83    4/12/99 12:49p Jeff
- * added recoil_force to weapon's page
- * 
- * 82    3/31/99 10:27a Samir
- * code to reset auto select states when ship is initializiaed and code to
- * save and load these states from disk.
- * 
- * 81    3/05/99 12:19p Matt
- * Delete now-unused function AddWeaponAmmoToPlayer()
- * 
- * 80    3/03/99 5:08p Samir
- * AddWeaponAmmoToPlayer added.
- * 
- * 79    2/25/99 1:29p Jason
- * fixed zoom problem
- * 
- * 78    2/20/99 7:06p Matt
- * Changed a few HUD messages
- * 
- * 77    2/10/99 3:48p Jason
- * table filter changes
- * 
- * 76    1/31/99 7:26p Matt
- * Renamed a bunch of functions to have HUD capitalized
- * 
- * 75    12/15/98 11:51a Samir
- * fixed bugs with autoselect weapons when they're supposed to be skipped.
- * 
- * 74    12/04/98 5:13p Jason
- * took out extra mprintfs
- * 
- * 73    10/22/98 2:41p Samir
- * fixed autoselection for good.
- * 
- * 72    10/21/98 11:52p Samir
- * print different message if autoselecting a recently acquired weapon.
- * 
- * 71    10/21/98 12:19p Samir
- * fixed small bug in SwitchPlayerWeapon for skipped weapons.
- * 
- * 70    10/21/98 11:14a Samir
- * autoselect bug when selecting into a higher class without ammo/energy
- * fixed.
- * 
- * 69    10/19/98 11:31p Samir
- * cycle up instead of down.
- * 
- * 68    10/19/98 11:27p Samir
- * fixed weapon cycling (switchplayerweapon)
- * 
- * 67    10/07/98 9:46p Samir
- * fixed small bug in SwitchPlayerWeapon
- * 
- * 66    10/07/98 9:36p Samir
- * added a function to switch a player's weapon to another in the given
- * weapon class.
- * 
- * 65    10/07/98 5:23p Jeff
- * samir fixed an autoselect bug
- * 
- * 64    10/07/98 4:13p Samir
- * cleaned up weapon selection code.
- * 
- * 63    9/30/98 4:31p Samir
- * added functions to handle weapon select list.
- * 
- * 62    7/31/98 5:17p Samir
- * fixed weapon selection bug because secondaries weren't working properly
- * and removed guided missile from autoselect list.
- * 
- * 61    7/30/98 11:09a Jason
- * added weapons that freeze and deform terrain
- * 
- * 60    7/01/98 12:12p Jason
- * added countermeasures
- * 
- * 59    6/22/98 6:26p Jason
- * added gravity field effect for weapons
- * 
- * 58    6/19/98 12:04p Jason
- * 
- * 57    6/17/98 3:27p Jeff
- * Changes made for localization
- * 
- * 56    6/16/98 10:54a Jeff
- * 
- * 55    5/27/98 7:12p Samir
- * yet another silly weapon selection(primary) bug fixed due to hasty
- * checking in.
- * 
- * 54    5/27/98 6:02p Samir
- * foolishly, I don't check for primary weapon ammo when selecting
- * weapons.
- * 
- * 53    5/26/98 10:48p Samir
- * weapon selection FIXED!
- * 
- * 52    5/26/98 5:06p Samir
- * changed name of weapon indices and added function to get weapon's icon
- * image.
- * 
- * 51    5/25/98 6:39p Jason
- * got icons working for weapons
- * 
- * 50    5/22/98 6:25p Samir
- * fixed 'Rocker' bug.
- * 
- * 49    5/22/98 11:59a Chris
- * Fixed improper uses of FindSoundName and made the proper static sounds
- * 
- * 48    5/14/98 12:56p Jason
- * changes to help lower memory usage
- * 
- * 47    4/24/98 5:32p Samir
- * added reset reticle when setting a new weapon.
- * 
- * 46    4/24/98 8:02a Samir
- * added a short weapon name array.
- * 
- * 45    4/22/98 1:08p Chris
- * Fixed auto-firing of weapons after auto-selection
- * 
- * 44    4/08/98 12:16p Samir
- * Weapon selection should be improved.
- * 
- * 43    4/07/98 3:31p Jason
- * got particle effects working with weapons
- * 
- * 42    4/06/98 4:53p Jason
- * got pageable polymodels working correctly with editor
- * 
- * 41    4/02/98 3:54p Jason
- * first pass in getting polymodel paging to work
- * 
- * 40    3/23/98 3:52p Jason
- * added weapon names
- * 
- * 39    3/17/98 2:40p Samir
- * reorg of hud/gauge system.
- * 
- * 38    2/26/98 6:00p Jason
- * fixed a bug where a OBJ_GHOST object (ie a dead player) could try to
- * select a new weapon
- * 
- * 37    2/17/98 11:33p Matt
- * Use new function to stop player firing activity when switching weapons
- * 
- * 36    2/17/98 5:04p Samir
- * Fixed selection of secondary weapons.
- * 
- * 35    2/17/98 4:06p Jason
- * Fixed DrawAlphaBlendedScreen not zbuffering correctly
- * 
- * 34    2/17/98 3:47p Matt
- * Revamped weapon system and got sounds for spray and fusion weapons
- * working.  Still need to implements getting continuous & cutoff sounds
- * from player ship.
- * 
- * 33    2/15/98 1:18a Jason
- * fixed zbuffer problem
- * 
- * 32    2/14/98 10:48p Jason
- * got preferred rendering working
- * 
- * 31    2/11/98 2:04p Jason
- * got spawning weapons working
- * 
- * 30    2/05/98 7:06p Jason
- * fixed weapon naming bug
- * 
- * 29    2/05/98 6:53p Jason
- * added new weapon slot
- * 
- * 28    2/05/98 6:29p Jason
- * added user settable explode time/size
- * 
- * 27    2/04/98 9:28p Jason
- * added some new weapons effects
- * 
- * 26    2/02/98 4:07p Jason
- * added a couple of  weapons
- * 
- * 25    1/29/98 6:06p Jason
- * added new weapons
- * 
- * 24    1/28/98 3:18p Jason
- * Made AddWeaponToPlayer take a playernum
- * 
- * 
- * 23    1/26/98 11:01a Jason
- * incremental checkin for multiplayer
- * 
- * 22    1/23/98 6:25p Jason
- * Got spray weapons working
- * 
- * 21    12/22/97 6:19p Chris
- * Moved weapon battery firing sound off the projectile (weapon) and into
- * the weapon battery.
- * 
- * 20    11/14/97 6:57p Samir
- * Maybe fixed selection of weapons <-> auto selection dependencies.
- * 
- * 19    11/14/97 5:47p Mark
- * Fixed some weapon selection hokeyness.
- * 
- * 18    11/12/97 6:01p Samir
- * Added omega and guided names to weapon list.
- * 
- * 17    11/12/97 1:13p Jason
- * added weapons that can ramp up
- * 
- * 16    11/11/97 1:28p Samir
- * Weapon selection should change hud, I think.
- * 
- * 15    11/05/97 12:21p Chris
- * Added weapon remap for player ship weapon batteries
- * 
- * 14    11/04/97 5:52p Jason
- * added DrawAplhaBlendedScreen function
- * 
- * 13    10/30/97 4:02p Matt
- * Added the flare
- * 
- * 12    10/15/97 5:20p Jason
- * did a HUGE overhaul of the bitmap system
- * 
- * 11    9/16/97 3:03p Samir
- * fixed autoselection of weapons when you don't have enough energy.
- * 
- * 10    9/15/97 3:37p Samir
- * Updated some more names for weapons.
- * 
- * 9     9/10/97 11:45a Chris
- * FIXED a major remapping bug
- * Added support for weapon batteries
- * 
- * 8     9/10/97 10:12a Samir
- * Added weapon name text.
- * 
- * 7     9/08/97 5:12p Samir
- * Fixed weapon selection
- * 
- * 6     9/05/97 12:25p Samir
- * Added autoselection of weapons.
- * 
- * 5     9/04/97 3:59p Samir
- * Added code to switch weapons.
- * 
- * 4     8/07/97 3:28p Jason
- * Assign -1 as the default sound for weapons
- * 
- * 3     8/07/97 1:01p Mark
- * fixed a dumb bug
- * 
- * 2     8/07/97 12:53p Mark
- * FROM JASON: Made oof readable as discharge files
- * 
- * 7     4/28/97 6:46p Jason
- * made ships have multiple gun points
- * 
- * 6     4/25/97 3:59p Jason
- * fixed a bug that my last checkin caused
- * 
- * 5     4/25/97 3:31p Jason
- * implemented better memory management for vclips and bitmaps
- * 
- * 4     4/17/97 2:54p Jason
- * added clueless weapon picker upper
- * 
- * 3     4/14/97 1:50p Jason
- * first pass at getting weapons to fire
- * 
- * 2     3/31/97 4:35p Jason
- * added weapon page functionality
- * 
- * 1     3/31/97 4:13p Jason
- * weapons implementation file
- * 
- 
-*
-* $NoKeywords: $
-*/
-
-
 
 #include "weapon.h"
 #include "pstypes.h"
@@ -366,7 +49,8 @@
 weapon Weapons[MAX_WEAPONS];
 int Num_weapons=0;
 
-const char *Static_weapon_names[]={
+const char *Static_weapon_names[]=
+{
 //	Primary weapons
 	"Laser", 
 	"Vauss",
@@ -393,7 +77,8 @@ const char *Static_weapon_names[]={
 	"Yellow Flare",
 };
 
-int	Static_weapon_names_msg[]={
+int	Static_weapon_names_msg[]=
+{
 //	Primary weapons
 	TXI_WPN_LASER, 
 	TXI_WPN_VAUSS,
@@ -420,7 +105,8 @@ int	Static_weapon_names_msg[]={
 	TXI_WPN_YELL_FLARE,
 };
 
-int Static_weapon_ckpt_names[][2] = {
+int Static_weapon_ckpt_names[][2] = 
+{
 //	Primary weapons
 	{TXI_WPNC_LASER_1,TXI_WPNC_LASER_2}, 
 	{TXI_WPNC_VAUSS_1,TXI_WPNC_VAUSS_2},
@@ -447,7 +133,6 @@ int Static_weapon_ckpt_names[][2] = {
 	{TXI_WPNC_YELFLARE_1,TXI_WPNC_YELFLARE_2},
 };
 
-
 // Sets all weapons to unused
 void InitWeapons ()
 {
@@ -457,7 +142,6 @@ void InitWeapons ()
 		Weapons[i].name[0]=0;
 	}
 	Num_weapons=0;
-
 }
 
 // Allocs a weapon for use, returns -1 if error, else index on success
@@ -591,7 +275,6 @@ int GetWeaponHudImage (int handle,int framenum)
 	}
 	else
 		return (Weapons[handle].hud_image_handle);
-
 }
 
 // Given a filename, loads either the bitmap or vclip found in that file.  If type
@@ -661,7 +344,6 @@ int LoadWeaponFireImage (char *filename,int *type,int *anim,int pageable)
 
 	strncpy (extension,&filename[len-3],5);
 
-
 	if ((!strnicmp ("pof",extension,3)) || (!strnicmp ("oof",extension,3)))
 		model=1;
 
@@ -680,14 +362,11 @@ int LoadWeaponFireImage (char *filename,int *type,int *anim,int pageable)
 	return bm_handle;
 }
 
-
-
 // Given a weapon name, assigns that weapon to a specific index into
 // the Weapons array.  Returns -1 if the named weapon is not found, 0 if the weapon
 // is already in its place, or 1 if successfully moved
 int MatchWeaponToIndex (char *name,int dest_index)
 {
-
 	ASSERT (dest_index>=0 && dest_index<MAX_WEAPONS);
 
 	int cur_index=FindWeaponName(name);
@@ -731,7 +410,6 @@ int MatchWeaponToIndex (char *name,int dest_index)
 	return new_index;		// we made it!
 }
 
-
 // Moves a weapon from a given index into a new one (above MAX_STATIC_WEAPONS)
 // returns new index
 int MoveWeaponFromIndex (int index)
@@ -745,7 +423,6 @@ int MoveWeaponFromIndex (int index)
 
 	return new_index;
 }
-
 
 // This is a very confusing function.  It takes all the weapons that we have loaded 
 // and remaps then into their proper places (if they are static). 
@@ -818,7 +495,6 @@ void RemapWeapons ()
 	
 }
 
-
 // goes thru every entity that could possible have a weapon index (ie objects, weapons, etc)
 // and changes the old index to the new index
 void RemapAllWeaponObjects (int old_index,int new_index)
@@ -884,13 +560,11 @@ void RemapAllWeaponObjects (int old_index,int new_index)
 
 }
 
-
 bool IsWeaponSecondary(int index)
 {
 	if (index < SECONDARY_INDEX) return false;
 	else return true;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 //	Weapon acquirement
@@ -958,7 +632,6 @@ inline bool is_weapon_available(unsigned player_weapon_flags, int new_weapon, us
 	return ((player_weapon_flags & HAS_FLAG(new_weapon)) && ammo > 0) ? true : false;
 }
 
-
 // used for sequencing
 void ResetWeaponSelectStates(ushort new_state)
 {
@@ -976,7 +649,6 @@ void LoadWeaponSelectStates(CFILE *fp)
 	ResetWeaponSelectStates(state);
 }
 
-
 void SelectWeapon(int slot)
 {
 	if (Player_object->type!=OBJ_PLAYER)
@@ -987,7 +659,6 @@ void SelectWeapon(int slot)
 	else 
 		SelectSecondaryWeapon(slot);
 }
-
 
 //	slot ranges 0-4
 void SelectPrimaryWeapon(int slot)
@@ -1003,14 +674,17 @@ void SelectPrimaryWeapon(int slot)
 
 //	do selection.  if we are selecting the same slot of weapon, then we select to the next
 //	level of weapon.  when going from highest level, go to lowest
-	if (oldslot == slot) {
+	if (oldslot == slot) 
+	{
 		ushort nw_low = (plr->weapon[PW_PRIMARY].index+NUM_PRIMARY_SLOTS) % MAX_PRIMARY_WEAPONS;
 
-		if (is_weapon_available(avail_flags, nw_low)) {
+		if (is_weapon_available(avail_flags, nw_low)) 
+		{
 		// toggle class of weapon in specified slot (save for selection)
 			SetPrimaryWeapon(nw_low, slot);
 		}
-		else {
+		else 
+		{
 			AddHUDMessage(TXT_WPNNOTAVAIL);
 			Sound_system.Play2dSound(SOUND_DO_NOT_HAVE_IT);
 
@@ -1024,19 +698,23 @@ void SelectPrimaryWeapon(int slot)
 
 		return;
 	}
-	else {
+	else 
+	{
 	//	we are selecting a new weapon slot.
 		nw_low = slot % NUM_PRIMARY_SLOTS;
 		nw_high = nw_low + NUM_PRIMARY_SLOTS;
 
-		if (Weapon_slot_mask & (1<<slot)) {
+		if (Weapon_slot_mask & (1<<slot))
+		{
 		// we think we have a higher class of weapon.
-			if (is_weapon_available(avail_flags, nw_high)) {
+			if (is_weapon_available(avail_flags, nw_high)) 
+			{
 			// if this slot had the higher class of weapon then check if we still have the higher class weapon.
 			// toggle class of weapon in specified slot (save for selection)
 				SetPrimaryWeapon(nw_high, slot);
 			}
-			else if (is_weapon_available(avail_flags, nw_low)) {
+			else if (is_weapon_available(avail_flags, nw_low)) 
+			{
 			// check if we have the lower class.			
 			// toggle class of weapon in specified slot (save for selection)
 				SetPrimaryWeapon(nw_low, slot);
@@ -1053,19 +731,23 @@ void SelectPrimaryWeapon(int slot)
 				AINotify(&Objects[Players[Player_num].objnum], AIN_HEAR_NOISE, (void *)&hear);
 			}
 		}
-		else {
+		else 
+		{
 		//	if this is a lower class of weapon, make sure this slot is flagged as having the lower version
-			if (is_weapon_available(avail_flags, nw_low)) {
+			if (is_weapon_available(avail_flags, nw_low)) 
+			{
 			// if this slot had the higher class of weapon then check if we still have the higher class weapon.
 			// toggle class of weapon in specified slot (save for selection)
 				SetPrimaryWeapon(nw_low, slot);
 			}
-			else if (is_weapon_available(avail_flags, nw_high)) {
+			else if (is_weapon_available(avail_flags, nw_high)) 
+			{
 			// check if we have the lower class.			
 			// toggle class of weapon in specified slot (save for selection)
 				SetPrimaryWeapon(nw_high, slot);
 			}
-			else {
+			else 
+			{
 				AddHUDMessage(TXT_WPNNOTAVAIL);
  				Sound_system.Play2dSound(SOUND_DO_NOT_HAVE_IT);
 
@@ -1079,7 +761,6 @@ void SelectPrimaryWeapon(int slot)
 		}
 	}
 }
-
 
 // slot ranges 5-9
 void SelectSecondaryWeapon(int slot)

@@ -105,7 +105,7 @@ bool DisplayFileDialog(char *path,char *title,char *wildcards,int flags);
 
 //internal function prototypes
 bool PltDelete(pilot *Pilot);
-void NewPltUpdate(newuiListBox *list,char **flist,int filecount,int selected,char *filename=NULL);
+void NewPltUpdate(newuiListBox *list,char **flist,int filecount,int selected,char *filename=nullptr, bool presets=false);
 bool PilotChoose(pilot *Pilot,bool presets=false);
 bool PltCopyKeyConfig(pilot *src,pilot *dest);
 bool PltSelectShip(pilot *Pilot);
@@ -957,7 +957,7 @@ bool PilotChoose(pilot *Pilot,bool presets)
 	sheet->NewGroup(NULL,7,40);
 	pilot_list = sheet->AddListBox(284,100,IDP_PCLIST);
 	pilot_list->SetCurrentIndex(0);
-	NewPltUpdate(pilot_list,filelist,filecount,0);
+	NewPltUpdate(pilot_list,filelist,filecount,0,nullptr, presets);
 
 	sheet->NewGroup(NULL,80,180,NEWUI_ALIGN_HORIZ);
 	sheet->AddButton(TXT_OK,UID_OK);
@@ -1022,7 +1022,7 @@ bool PilotCopy(pilot *Src,pilot *Dest)
 ***************************************************/
 /////////////////////////////////////////////////////
 // Updates the pilot listbox
-void NewPltUpdate(newuiListBox *list,char **flist,int filecount,int selected,char *filename)
+void NewPltUpdate(newuiListBox *list,char **flist,int filecount,int selected,char *filename, bool presets)
 {
 	int index;
 	pilot tPilot;
@@ -1054,13 +1054,18 @@ void NewPltUpdate(newuiListBox *list,char **flist,int filecount,int selected,cha
 		
 		if (filename)
 		{
-			ddio_MakePath(fullpath, User_directory, filename, NULL);
+			if (presets)
+				ddio_MakePath(fullpath, Base_directory, filename, NULL);
+			else
+				ddio_MakePath(fullpath, User_directory, filename, NULL);
 			if (cfexist(fullpath) != CF_NOT_FOUND) 
 			{
 				//get the selected pilot from the filename
 				mprintf((0, "Looking for Pilot: %s\n", filename));
-				for (int d = 0; d < filecount; d++) {
-					if (!stricmp(flist[d], filename)) {
+				for (int d = 0; d < filecount; d++) 
+				{
+					if (!stricmp(flist[d], filename)) 
+					{
 						//ok we found the filename that they want as the pilot
 						list->SetCurrentIndex(d);
 						break;
@@ -1338,6 +1343,7 @@ void PltReadFile(pilot *Pilot,bool keyconfig,bool missiondata)
 
 	char filename[_MAX_PATH];
 	char pfilename[_MAX_FNAME];
+	char ext[_MAX_PATH];
 	CFILE *file;
 	int filever;
 
@@ -1345,8 +1351,13 @@ void PltReadFile(pilot *Pilot,bool keyconfig,bool missiondata)
 	if(pfilename[0]==0)
 		return;
 
+	ddio_SplitPath(pfilename, nullptr, nullptr, ext);
+
 	//open and process file
-	ddio_MakePath(filename,User_directory,pfilename,NULL);
+	if (!stricmp(ext, ".pld")) //[ISB] presets are part of the base data
+		ddio_MakePath(filename, Base_directory, pfilename, nullptr);
+	else
+		ddio_MakePath(filename, User_directory, pfilename, nullptr);
 	try
 	{
 		file = cfopen(filename,"rb");
