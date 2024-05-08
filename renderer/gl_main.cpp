@@ -296,7 +296,7 @@ void rend_Flip(void)
 	SDL_GL_SwapBuffers();
 #endif
 
-	//framebuffer_current_draw = (framebuffer_current_draw + 1) % NUM_FBOS;
+	framebuffer_current_draw = (framebuffer_current_draw + 1) % NUM_FBOS;
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffers[framebuffer_current_draw].Handle());
 
 	err = glGetError();
