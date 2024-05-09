@@ -2571,19 +2571,16 @@ void GameFrame(void)
 
 		//float start_delay = timer_GetTime();
 		//Slow down the game if the user asked us to
-		if (!Render_preferred_state.vsync_on) //[ISB] If vsynced, let the vsync handle framerate deltas. 
+		float current_timer = timer_GetTime();
+		float target_time = last_timer + Min_allowed_frametime;
+		if ((current_timer - last_timer) < Min_allowed_frametime)
 		{
-			float current_timer = timer_GetTime();
-			float target_time = last_timer + Min_allowed_frametime;
-			if ((current_timer - last_timer) < Min_allowed_frametime)
-			{
-				unsigned int sleeptime = (Min_allowed_frametime - (current_timer - last_timer)) * 1000;
-				//mprintf((0,"Sleeping for %d ms\n",sleeptime));
-				if (sleeptime > 2)
-					Sleep(sleeptime - 2);
-			}
-			while (timer_GetTime() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
+			unsigned int sleeptime = (Min_allowed_frametime - (current_timer - last_timer)) * 1000;
+			//mprintf((0,"Sleeping for %d ms\n",sleeptime));
+			if (sleeptime > 2)
+				Sleep(sleeptime - 2);
 		}
+		while (timer_GetTime() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
 
 		static int graph_id = -2;
 		if(graph_id==-2)
