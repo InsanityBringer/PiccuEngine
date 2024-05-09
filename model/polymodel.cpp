@@ -1571,7 +1571,7 @@ int ReadNewModelFile (int polynum,CFILE *infile)
 		if (pm->submodel[i].flags & SOF_FACING)
 		{
 			ASSERT (pm->submodel[i].num_faces==1);  // This facing has more than one face
-			vector vecs[30];
+			vector vecs[100];
 			vector avg;
 
 			int newt;
@@ -1590,7 +1590,7 @@ int ReadNewModelFile (int polynum,CFILE *infile)
 		if (pm->submodel[i].flags & (SOF_GLOW | SOF_THRUSTER))
 		{
 			ASSERT (pm->submodel[i].num_faces==1);  // This glow has more than one face
-			vector vecs[30];
+			vector vecs[100];
 
 			for (t=0;t<pm->submodel[i].faces[0].nverts;t++)
 				vecs[t]=pm->submodel[i].verts[pm->submodel[i].faces[0].vertnums[t]];
