@@ -1143,6 +1143,9 @@ const int StackColumns = 8;		// Number of columns in stack dump.
 #include "buildno.h"
 #endif
 
+//[ISB] incoming hack
+extern char* User_directory;
+
 int __cdecl RecordExceptionInfo(PEXCEPTION_POINTERS data, const char *Message)
 {
 	static int BeenHere;
@@ -1245,25 +1248,35 @@ int __cdecl RecordExceptionInfo(PEXCEPTION_POINTERS data, const char *Message)
 		CloseHandle(LogFile);
 	}	
 	
-	
+	if (!Debug_break)
+		Debug_ErrorBox(OSMBOX_OK, "Error", topmsg, bottommsg);
+
 	std::string dumpfilename;
 	dumpfilename.resize(strlen("yyyy-mm-ddThh-mm-ssZ"));
 	time_t curtime = time(nullptr);
 	strftime((char*)dumpfilename.c_str(), dumpfilename.length()+1, "%FT%H-%M-%SZ", gmtime(&curtime));
 	dumpfilename += "-dump.mdmp";
 
+	std::string fullfilename;
+	if (!User_directory) //In case initialization didn't get to the point where User_directory is initialized. 
+		fullfilename = dumpfilename;
+	else
+	{
+		fullfilename.append(User_directory);
+		fullfilename.push_back('\\');
+		fullfilename.append(dumpfilename);
+	}
+
 	MINIDUMP_EXCEPTION_INFORMATION info = {};
 	info.ExceptionPointers = data;
 	info.ThreadId = GetCurrentThreadId();
-	HANDLE dump = CreateFile(dumpfilename.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
+	HANDLE dump = CreateFile(fullfilename.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
 
-	MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dump, MiniDumpNormal, &info, nullptr, nullptr);
-
-	CloseHandle(dump);
-
-	
-	if(!Debug_break)
-		Debug_ErrorBox(OSMBOX_OK,"Error", topmsg, bottommsg);
+	if (dump)
+	{
+		MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dump, MiniDumpNormal, &info, nullptr, nullptr);
+		CloseHandle(dump);
+	}
 
 	BeenHere = false;
 	if(Debug_break)
