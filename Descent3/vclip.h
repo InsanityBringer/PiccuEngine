@@ -30,16 +30,17 @@
 #define VCF_NOT_RESIDENT		1
 #define VCF_WANTS_MIPPED		2
 
-typedef struct 
+struct vclip
 {
-	char name[PAGENAME_LEN];
+	char	name[PAGENAME_LEN];
 	short	num_frames;
-	short *frames;	// bitmap indices
-	float frame_time;   //time (in seconds) of each frame
-	int flags;
-	ubyte target_size;	// what size this vclip should use (texture wise)
-	ubyte used;			// Is this vclip in use?
-} vclip;
+	short	*frames;			// bitmap indices
+	float	frame_time;			//time (in seconds) of each frame
+	int		flags;
+	short   allocated_frames;	// [ISB] Last allocated frame count. Defaults to VCLIP_MAX_FRAMES, but can go higher.
+	ubyte	target_size;		// what size this vclip should use (texture wise)
+	ubyte	used;				// Is this vclip in use?
+};
 
 extern vclip GameVClips[MAX_VCLIPS];
 extern int Num_vclips;

@@ -211,6 +211,7 @@ int AllocVClip ()
 		{
 			memset (&GameVClips[i],0,sizeof(vclip));
 			GameVClips[i].frames=(short *)mem_malloc (VCLIP_MAX_FRAMES*sizeof(short));
+			GameVClips[i].allocated_frames = VCLIP_MAX_FRAMES;
 			ASSERT (GameVClips[i].frames);
 			GameVClips[i].frame_time=DEFAULT_FRAMETIME;
 			GameVClips[i].flags=VCF_NOT_RESIDENT;
@@ -370,6 +371,17 @@ void PageInVClip (int vcnum)
 		vc->frame_time=DEFAULT_FRAMETIME;
 	}
 
+	//[ISB] Ensure enough frames are actually allocated
+	//the 50 frame max was never documented and isn't enforced anywhere. Dynamic allocation was already used? Why?
+	if (vc->num_frames > vc->allocated_frames)
+	{
+		int old_frames = vc->allocated_frames;
+		mem_free(vc->frames);
+		vc->frames = (short*)mem_malloc(sizeof(vc->frames[0]) * vc->num_frames);
+		vc->allocated_frames = vc->num_frames;
+		mprintf((0, "Vclip exceeded frame limit! Was %d, now %d\n", old_frames, vc->allocated_frames));
+	}
+
 	for (int i=0;i<vc->num_frames;i++)
 	{
 		int n=bm_AllocLoadBitmap (infile,mipped);
@@ -384,11 +396,7 @@ void PageInVClip (int vcnum)
 			h=TEXTURE_HEIGHT;
 
 			#ifndef EDITOR
-#ifdef MACINTOSH
-				if (Render_state.cur_texture_quality <= 1 || Low_vidmem)
-#else
 				if (Mem_low_memory_mode || Low_vidmem)
-#endif
 				{
 					w=TEXTURE_WIDTH/2;		
 					h=TEXTURE_HEIGHT/2;
@@ -402,11 +410,7 @@ void PageInVClip (int vcnum)
 			h=TEXTURE_HEIGHT/2;
 
 			#ifndef EDITOR
-#ifdef MACINTOSH
-			if (Render_state.cur_texture_quality <= 1 || Low_vidmem)
-#else
 			if (Mem_low_memory_mode || Low_vidmem)
-#endif
 				{
 					w=TEXTURE_WIDTH/4;		
 					h=TEXTURE_HEIGHT/4;
