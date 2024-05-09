@@ -99,18 +99,14 @@ void DDIOShowCursor(BOOL show)
 {
     if (show) 
     {
-        if (DDIO_mouse_state.cursor_count == -1) 
-        {
-            ShowCursor(TRUE);
-        }
+        //if (DDIO_mouse_state.cursor_count == -1) 
+        //    ShowCursor(TRUE);
         DDIO_mouse_state.cursor_count = 0;
     }
     else 
     {
-        if (DDIO_mouse_state.cursor_count == 0) 
-        {
-            ShowCursor(FALSE);
-        }
+        //if (DDIO_mouse_state.cursor_count == 0) 
+        //    ShowCursor(FALSE);
         DDIO_mouse_state.cursor_count = -1;
     }
 }
@@ -584,9 +580,12 @@ bool ddio_MouseInit()
     // standard initialization
     DDIO_mouse_state.emulated = (DDIO_mouse_state.lpdimse) ? false : true;
     DDIO_mouse_state.cursor_count = ShowCursor(TRUE); // get initial count
-    while (DDIO_mouse_state.cursor_count >= 0)        // hide cursor until truly hidden.
+
+    //Never hide the cursor when the game is in dedicated server mode. 
+    if (!(DInputData.app->flags() & OEAPP_CONSOLE))
     {
-        DDIO_mouse_state.cursor_count = ShowCursor(FALSE);
+        while (DDIO_mouse_state.cursor_count >= 0)        // hide cursor until truly hidden.
+            DDIO_mouse_state.cursor_count = ShowCursor(FALSE);
     }
 
     ddio_MouseMode(MOUSE_STANDARD_MODE);
