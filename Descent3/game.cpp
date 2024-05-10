@@ -116,7 +116,7 @@ gamemode Gamemode_info;
 bool InitGameScript();
 void CloseGameScript();
 
-float GetFPS ()
+double GetFPS ()
 {
 	if (Frametime == 0.0f) { Frametime = 0.1f; }
 	return 1.0 / Frametime;

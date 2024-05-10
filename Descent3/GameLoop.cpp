@@ -2150,12 +2150,14 @@ unsigned int Frames_counted = 0;
 
 
 //Compute how long last frame took
-void CalcFrameTime(void)
+void CalcFrameTime(double current_timer)
 {
 	if (timer_paused) 
 		return;
 
-	float current_timer = timer_GetTime64();
+	//[ISB] This doesn't read the timer anymore, and instead uses the target time.
+	//This is because there might be a very 
+	//float current_timer = timer_GetTime64();
 	if (current_timer >= last_timer)
 	{
 		Frametime = current_timer - last_timer;
@@ -2588,11 +2590,11 @@ void GameFrame(void)
 			//mprintf((0,"Sleeping for %d ms\n",sleeptime));
 			//[ISB] It's more CPU muscle, but at high refresh rates just consume the CPU to be precise.
 			//Stuttering was reported without this. 
-			if (sleeptime > 8)
+			if (sleeptime > 10)
 				Sleep(sleeptime - 2);
 		}
 		while (timer_GetTime64() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
-
+		
 		static int graph_id = -2;
 		if(graph_id==-2)
 		{
@@ -2610,7 +2612,7 @@ void GameFrame(void)
 		}		
 
 		//Compute how long frame took
-		CalcFrameTime();
+		CalcFrameTime(target_time);
 
 		//Update Gametime
 		Gametime += Frametime;

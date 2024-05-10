@@ -245,11 +245,13 @@ static int OpenGL_last_uploaded = 0;
 // Flips the screen
 void rend_Flip(void)
 {
+#ifndef NDEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
 		mprintf((0, "Error entering flip: %d\n", err));
 	}
+#endif
 #ifndef RELEASE
 	int i;
 
@@ -284,11 +286,13 @@ void rend_Flip(void)
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
+#ifndef NDEBUG
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
 		mprintf((0, "Error blitting to real framebuffer: %d\n", err));
 	}
+#endif
 
 #if defined(WIN32)	
 	SwapBuffers((HDC)hOpenGLDC);
@@ -299,11 +303,13 @@ void rend_Flip(void)
 	framebuffer_current_draw = (framebuffer_current_draw + 1) % NUM_FBOS;
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffers[framebuffer_current_draw].Handle());
 
+#ifndef NDEBUG
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
 		mprintf((0, "Error setting framebuffer back: %d\n", err));
 	}
+#endif
 
 #ifdef __PERMIT_GL_LOGGING
 	if (__glLog == true)

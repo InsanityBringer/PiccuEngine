@@ -83,7 +83,7 @@ void RotateRoomPoints (room *rp,vector4 *world_vecs);
 
 
 static int Faces_rendered=0;
-extern float GetFPS();
+extern double GetFPS();
 extern ubyte Outline_release_mode;
 //3d point for each vertex for use during rendering a room
 ubyte Room_clips[MAX_VERTS_PER_ROOM];		// used for face culling

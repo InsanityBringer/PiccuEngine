@@ -1157,7 +1157,7 @@ constexpr int PICCU_FONT_SCALE_THRESHOLD = 1080;
 void RenderHUDItems(tStatMask stat_mask)
 {
 	static float framerate_timer = 0;
-	static float last_fps;
+	static double last_fps;
 	float font_aspect_x, font_aspect_y;
 	int i;
 
@@ -1193,7 +1193,7 @@ void RenderHUDItems(tStatMask stat_mask)
 
 //	show framerate text gauge
 	if (stat_mask & STAT_FPS) {
-		RenderHUDText(HUD_COLOR, HUD_ALPHA, 0, 10, 10, "FPS: %.1f",last_fps);
+		RenderHUDText(HUD_COLOR, HUD_ALPHA, 0, 10, 10, "FPS: %.8f",last_fps);
 	}
 
 // show music spew

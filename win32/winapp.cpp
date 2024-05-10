@@ -254,8 +254,11 @@ void oeWin32Application::change_window()
 		m_W = r.right - r.left;
 		m_H = r.bottom - r.top;
 
-		SetWindowPos((HWND)m_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-		ShowWindow((HWND)m_hWnd, SW_SHOWMAXIMIZED);
+		int hehwidth = GetSystemMetrics(SM_CXSCREEN);
+		int hehheight = GetSystemMetrics(SM_CYSCREEN);
+
+		SetWindowPos((HWND)m_hWnd, HWND_TOP, 0, 0, hehwidth, hehheight, SWP_NOZORDER | SWP_FRAMECHANGED);
+		ShowWindow((HWND)m_hWnd, SW_NORMAL);
 	}
 	else 
 	{

@@ -194,7 +194,7 @@ void PlayGame(void);
 //	meant for 'instant' action	(usually run from editor, but...)
 void QuickPlayGame();
 
-float GetFPS ();
+double GetFPS ();
 
 //Stop the Frame_time clock
 void StopTime(void);
@@ -203,7 +203,7 @@ void StopTime(void);
 void StartTime(void);
 
 //Compute how long last frame took
-void CalcFrameTime(void);
+void CalcFrameTime(double current_time);
 
 //	Initialize frame timer
 void InitFrameTime(void);
