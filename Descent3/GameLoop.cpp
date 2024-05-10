@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <chrono>
 #include "gameloop.h"
 #include "game.h"
 #include "render.h"
@@ -2051,7 +2052,7 @@ void GameRenderFrame(void)
 	//Do UI Frame
 	if (Game_interface_mode == GAME_INTERFACE && !Menu_interface_mode) { 
 		DoUIFrameWithoutInput();
-		rend_Flip();
+		//
 	}
 
 	//Restore normal view
@@ -2569,6 +2570,14 @@ void GameFrame(void)
 		ProcessNormalEvents();
 		RTP_tENDTIME(normalevent_time,curr_time);
 
+		//[ISB] Flip right before timing.
+		//This seems to be a huge step in reducing stuttering, I'm not actually sure why..
+		if (!Skip_render_game_frame)
+		{
+			if (Game_interface_mode == GAME_INTERFACE && !Menu_interface_mode)
+				rend_Flip();
+		}
+
 		//float start_delay = timer_GetTime();
 		//Slow down the game if the user asked us to
 		double current_timer = timer_GetTime64();
@@ -2577,7 +2586,9 @@ void GameFrame(void)
 		{
 			unsigned int sleeptime = (Min_allowed_frametime - (current_timer - last_timer)) * 1000;
 			//mprintf((0,"Sleeping for %d ms\n",sleeptime));
-			if (sleeptime > 2)
+			//[ISB] It's more CPU muscle, but at high refresh rates just consume the CPU to be precise.
+			//Stuttering was reported without this. 
+			if (sleeptime > 8)
 				Sleep(sleeptime - 2);
 		}
 		while (timer_GetTime64() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
