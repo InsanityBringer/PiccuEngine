@@ -316,7 +316,7 @@ void PreInitD3Systems()
 	if(iframelmtarg)
 	{
 		Min_allowed_frametime = ((float)1.0/(float)atoi(GameArgs[iframelmtarg+1]));
-		mprintf((0,"Using %d as a minimum frametime\n",Min_allowed_frametime));
+		mprintf((0,"Using %f as a minimum frametime\n",Min_allowed_frametime));
 	}
 	else
 	{

@@ -2051,7 +2051,7 @@ void GameRenderFrame(void)
 	//Do UI Frame
 	if (Game_interface_mode == GAME_INTERFACE && !Menu_interface_mode) { 
 		DoUIFrameWithoutInput();
-		rend_Flip();
+		//rend_Flip();
 	}
 
 	//Restore normal view
@@ -2605,7 +2605,11 @@ void GameFrame(void)
 		Gametime += Frametime;
 	}
 
-	
+	if (!Skip_render_game_frame)
+	{
+		if (Game_interface_mode == GAME_INTERFACE && !Menu_interface_mode) 
+			rend_Flip();
+	}
 
 	// End Gameloop Loop stuff
 	Sound_system.EndSoundFrame();
