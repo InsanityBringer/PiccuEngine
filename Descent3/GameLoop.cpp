@@ -2584,16 +2584,23 @@ void GameFrame(void)
 		//Slow down the game if the user asked us to
 		double current_timer = timer_GetTime64();
 		double target_time = last_timer + Min_allowed_frametime;
-		if ((current_timer - last_timer) < Min_allowed_frametime)
+		if (current_timer > target_time) //If running slow, drop frames
 		{
-			unsigned int sleeptime = (Min_allowed_frametime - (current_timer - last_timer)) * 1000;
-			//mprintf((0,"Sleeping for %d ms\n",sleeptime));
-			//[ISB] It's more CPU muscle, but at high refresh rates just consume the CPU to be precise.
-			//Stuttering was reported without this. 
-			if (sleeptime > 10)
-				Sleep(sleeptime - 2);
+			target_time = current_timer;
 		}
-		while (timer_GetTime64() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
+		else
+		{
+			if ((current_timer - last_timer) < Min_allowed_frametime)
+			{
+				unsigned int sleeptime = (Min_allowed_frametime - (current_timer - last_timer)) * 1000;
+				//mprintf((0,"Sleeping for %d ms\n",sleeptime));
+				//[ISB] It's more CPU muscle, but at high refresh rates just consume the CPU to be precise.
+				//Stuttering was reported without this. 
+				if (sleeptime > 10)
+					Sleep(sleeptime - 2);
+			}
+			while (timer_GetTime64() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
+		}
 		
 		static int graph_id = -2;
 		if(graph_id==-2)
