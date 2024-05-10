@@ -134,7 +134,7 @@ int Clear_screen=0;
 bool Game_paused = false;
 
 // Used for limiting the framerate
-float Min_allowed_frametime = 0;
+double Min_allowed_frametime = 0;
 
 // determines if we're rendering the main view
 bool Rendering_main_view=false;
@@ -157,7 +157,7 @@ bool Game_gauge_do_time_test = false;
 char Game_gauge_usefile[_MAX_PATH] = "gg.dem";
 //#endif
 
-float last_timer = 0;
+double last_timer = 0;
 
 // contains information for the music system.
 tMusicSeqInfo Game_music_info;
@@ -2051,7 +2051,7 @@ void GameRenderFrame(void)
 	//Do UI Frame
 	if (Game_interface_mode == GAME_INTERFACE && !Menu_interface_mode) { 
 		DoUIFrameWithoutInput();
-		//rend_Flip();
+		rend_Flip();
 	}
 
 	//Restore normal view
@@ -2116,7 +2116,7 @@ void StopTime()
 {
 	if (! timer_paused) 
 	{
-		last_timer = timer_GetTime() - last_timer;
+		last_timer = timer_GetTime64() - last_timer;
 		if (last_timer < 0) 
 		{
 			//Int3();
@@ -2138,7 +2138,7 @@ void StartTime()
 	ASSERT(timer_paused >= 0);
 
 	if (!timer_paused)
-		last_timer = timer_GetTime() - last_timer;
+		last_timer = timer_GetTime64() - last_timer;
 }
 
 float Min_frametime = 500;
@@ -2154,7 +2154,7 @@ void CalcFrameTime(void)
 	if (timer_paused) 
 		return;
 
-	float current_timer = timer_GetTime();
+	float current_timer = timer_GetTime64();
 	if (current_timer >= last_timer)
 	{
 		Frametime = current_timer - last_timer;
@@ -2214,7 +2214,7 @@ void InitFrameTime(void)
 	{
 		mprintf((1,"Timer paused in InitFrameTime()\n"));
 	}
-	last_timer = timer_GetTime();
+	last_timer = timer_GetTime64();
 	timer_paused = 0;
 }
 
@@ -2571,8 +2571,8 @@ void GameFrame(void)
 
 		//float start_delay = timer_GetTime();
 		//Slow down the game if the user asked us to
-		float current_timer = timer_GetTime();
-		float target_time = last_timer + Min_allowed_frametime;
+		double current_timer = timer_GetTime64();
+		double target_time = last_timer + Min_allowed_frametime;
 		if ((current_timer - last_timer) < Min_allowed_frametime)
 		{
 			unsigned int sleeptime = (Min_allowed_frametime - (current_timer - last_timer)) * 1000;
@@ -2580,7 +2580,7 @@ void GameFrame(void)
 			if (sleeptime > 2)
 				Sleep(sleeptime - 2);
 		}
-		while (timer_GetTime() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
+		while (timer_GetTime64() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
 
 		static int graph_id = -2;
 		if(graph_id==-2)
@@ -2605,11 +2605,7 @@ void GameFrame(void)
 		Gametime += Frametime;
 	}
 
-	if (!Skip_render_game_frame)
-	{
-		if (Game_interface_mode == GAME_INTERFACE && !Menu_interface_mode) 
-			rend_Flip();
-	}
+	
 
 	// End Gameloop Loop stuff
 	Sound_system.EndSoundFrame();

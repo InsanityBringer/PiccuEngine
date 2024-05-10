@@ -71,6 +71,7 @@ void timer_Close();
 
 //	returns time in seconds
 float timer_GetTime();
+double timer_GetTime64();
 
 //returns time in milliseconds
 longlong timer_GetMSTime();

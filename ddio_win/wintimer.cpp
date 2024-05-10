@@ -43,6 +43,7 @@ bool timerhi_Init(void);
 void timerhi_Close(void);
 float ddio_TickToSeconds(LARGE_INTEGER ticks);
 float timerhi_GetTime();
+double timerhi_GetTime64();
 longlong timerhi_GetMSTime();
 void timerhi_Normalize();
 LARGE_INTEGER Timer_hi_sys_start_time;
@@ -189,6 +190,23 @@ float timer_GetTime()
 	return 0;
 }
 
+double timer_GetTime64()
+{
+	if (Timer_use_highres_timer){
+		return timerhi_GetTime64();
+	}else{
+		DWORD time_ms;
+
+		timer_Normalize();
+		time_ms = GetTickCount() - Timer_sys_start_time;
+
+		return ((double)time_ms/1000.0);
+	}
+
+	Int3(); //ack!!
+	return 0;
+}
+
 
 longlong timer_GetMSTime()
 {
@@ -246,34 +264,6 @@ void timer_Normalize()
 //	We support a timer callback function which we can hook functions to.
 //	Call function hooks at specified period 
 //	---------------------------------------------------------------------------
-
-
-
-//@@void CALLBACK timer_Proc(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2)
-//@@{
-//@@	static int ticks = 0;
-//@@	static BOOL in_func = FALSE;
-//@@	int i;
-//@@
-//@@/*	Hopefully this will prevent some reentrance, but the timer functions should be very minimal
-//@@	and follow Win32 conventions 
-//@@*/
-//@@	if (!in_func) {
-//@@		in_func = TRUE;
-//@@
-//@@		for (i = 0; i < MAX_TIMER_HOOKS; i++)
-//@@		{
-//@@			if (Timer_function_hook[i] && !(ticks % Timer_function_period[i])) 
-//@@				(*Timer_function_hook[i])();
-//@@		}
-//@@
-//@@		in_func = FALSE;
-//@@	}
-//@@	
-//@@	ticks++;
-//@@	if (ticks == 256) ticks = 0;
-//@@} 
-
 bool timerhi_Init(void)
 {
 	// See if we can get the Windows hi res time
@@ -312,6 +302,17 @@ float timerhi_GetTime()
 	QueryPerformanceCounter(&time_tick);
 
 	return (float) ( ((double)time_tick.QuadPart - Timer_hi_sys_start_time.QuadPart)/((double)Timer_hi_resolution.QuadPart));
+}
+
+double timerhi_GetTime64()
+{
+	LARGE_INTEGER time_tick;
+
+	timerhi_Normalize();
+
+	QueryPerformanceCounter(&time_tick);
+
+	return ((double)time_tick.QuadPart - Timer_hi_sys_start_time.QuadPart)/((double)Timer_hi_resolution.QuadPart);
 }
 
 
