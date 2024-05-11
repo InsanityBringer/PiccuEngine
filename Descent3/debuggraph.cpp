@@ -1,5 +1,5 @@
-/* 
-* Descent 3 
+/*
+* Descent 3
 * Copyright (C) 2024 Parallax Software
 *
 * This program is free software: you can redistribute it and/or modify
@@ -15,28 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/debuggraph.cpp $
-* $Revision: 4 $
-* $Date: 9/23/99 12:02p $
-* $Author: Jeff $
-*
-* Debug graph visual log
-*
-* $Log: /DescentIII/main/debuggraph.cpp $
- * 
- * 4     9/23/99 12:02p Jeff
- * include stdlib for atexit
- * 
- * 3     5/10/99 10:21p Ardussi
- * changes to compile on Mac
- * 
- * 2     4/04/99 8:14p Jeff
- * added debug graph stuff
-*
-* $NoKeywords: $
-*/
-
 
 #include <stdlib.h>
 #include "debuggraph.h"
@@ -64,13 +42,13 @@ int graph_bmp = -1;
 int graph_mask = 0;
 int graph_num_nodes = 0;
 
-typedef struct
+struct tGraphColor
 {
-	char *color_name;
+	char* color_name;
 	ddgr_color color;
-}tGraphColor;
+};
 
-tGraphColor GraphColors[MAX_GRAPH_NODES] = 
+tGraphColor GraphColors[MAX_GRAPH_NODES] =
 {
 	{"Green",	GR_RGB(40,255,40)},
 	{"Red",		GR_RGB(255,40,40)},
@@ -90,7 +68,7 @@ tGraphColor GraphColors[MAX_GRAPH_NODES] =
 	{"Dk.Purple",GR_RGB(100,4,104)}
 };
 
-typedef struct
+struct tAddDebugGraph
 {
 	ubyte data_input;
 	int flags;
@@ -106,7 +84,7 @@ typedef struct
 		float f_max_value;
 	};
 
-}tAddDebugGraph;
+};
 
 class tGraphNode
 {
@@ -116,7 +94,7 @@ public:
 
 	ddgr_color color;
 
-	void Initialize(tAddDebugGraph *data);
+	void Initialize(tAddDebugGraph* data);
 	void Update(int value);
 	void Update(float value);
 	void Render(void);
@@ -138,34 +116,35 @@ private:
 };
 
 
-typedef struct tDebugGraphNode
+struct tDebugGraphNode
 {
-	tGraphNode *node;
-	tDebugGraphNode *next;
-}tDebugGraphNode;
-tDebugGraphNode *DebugGraphNode_root = NULL;
+	tGraphNode* node;
+	tDebugGraphNode* next;
+};
+tDebugGraphNode* DebugGraphNode_root = NULL;
 
-tGraphNode *DebugGraph_AddNode(void)
+tGraphNode* DebugGraph_AddNode(void)
 {
-	if(graph_num_nodes==MAX_GRAPH_NODES)
+	if (graph_num_nodes == MAX_GRAPH_NODES)
 		return NULL;
 
-	tDebugGraphNode *curr = DebugGraphNode_root;
+	tDebugGraphNode* curr = DebugGraphNode_root;
 
-	if(!curr)
+	if (!curr)
 	{
-		curr = DebugGraphNode_root = (tDebugGraphNode *)mem_malloc(sizeof(tDebugGraphNode));
-	}else
+		curr = DebugGraphNode_root = (tDebugGraphNode*)mem_malloc(sizeof(tDebugGraphNode));
+	}
+	else
 	{
-		while(curr->next)
+		while (curr->next)
 		{
 			curr = curr->next;
 		}
-		curr->next = (tDebugGraphNode *)mem_malloc(sizeof(tDebugGraphNode));
+		curr->next = (tDebugGraphNode*)mem_malloc(sizeof(tDebugGraphNode));
 		curr = curr->next;
 	}
 
-	if(!curr)
+	if (!curr)
 	{
 		Error("Out of Memory");
 	}
@@ -174,7 +153,7 @@ tGraphNode *DebugGraph_AddNode(void)
 	curr->next = NULL;
 	curr->node = new tGraphNode;
 
-	if(!curr->node)
+	if (!curr->node)
 	{
 		Error("Out of Memory");
 	}
@@ -183,15 +162,16 @@ tGraphNode *DebugGraph_AddNode(void)
 	return curr->node;
 }
 
-tGraphNode *DebugGraph_FindNode(int index)
+tGraphNode* DebugGraph_FindNode(int index)
 {
-	if(index>=graph_num_nodes)
+	if (index >= graph_num_nodes)
 		return NULL;
-	tDebugGraphNode *curr = DebugGraphNode_root;
+
+	tDebugGraphNode* curr = DebugGraphNode_root;
 	int ci = 0;
-	while(curr)
+	while (curr)
 	{
-		if(ci==index)
+		if (ci == index)
 		{
 			return curr->node;
 		}
@@ -204,10 +184,10 @@ tGraphNode *DebugGraph_FindNode(int index)
 
 void DebugGraph_Free(void)
 {
-	tDebugGraphNode *curr,*next;
+	tDebugGraphNode* curr, * next;
 	curr = DebugGraphNode_root;
 
-	while(curr)
+	while (curr)
 	{
 		delete curr->node;
 		next = curr->next;
@@ -217,7 +197,7 @@ void DebugGraph_Free(void)
 
 	DebugGraphNode_root = NULL;
 
-	if(graph_bmp>BAD_BITMAP_HANDLE)
+	if (graph_bmp > BAD_BITMAP_HANDLE)
 	{
 		bm_FreeBitmap(graph_bmp);
 	}
@@ -231,78 +211,78 @@ void DebugGraph_Initialize(void)
 	DebugGraphNode_root = NULL;
 	graph_bmp = -1;
 	graph_mask = 0;
-	graph_num_nodes = 0;	
+	graph_num_nodes = 0;
 }
 
-int DebugGraph_Add(int min,int max,char *name,int flags)
+int DebugGraph_Add(int min, int max, char* name, int flags)
 {
 	tAddDebugGraph data;
-	tGraphNode *node = DebugGraph_AddNode();
-	if(!node)
+	tGraphNode* node = DebugGraph_AddNode();
+	if (!node)
 		return -1;
 
-	int index = graph_num_nodes-1;
+	int index = graph_num_nodes - 1;
 	data.data_input = DATA_TYPE_INT;
 	data.i_max_value = max;
 	data.i_min_value = min;
 	data.flags = flags;
 	node->Initialize(&data);
 	node->color = GraphColors[index].color;
-	strncpy(node->name,name,MAX_NAME-1);
-	node->name[MAX_NAME-1] = '\0';
+	strncpy(node->name, name, MAX_NAME - 1);
+	node->name[MAX_NAME - 1] = '\0';
 	return index;
 }
 
-int DebugGraph_Add(float min,float max,char *name,int flags)
+int DebugGraph_Add(float min, float max, char* name, int flags)
 {
 	tAddDebugGraph data;
-	tGraphNode *node = DebugGraph_AddNode();
-	if(!node)
+	tGraphNode* node = DebugGraph_AddNode();
+	if (!node)
 		return -1;
 
-	int index = graph_num_nodes-1;
+	int index = graph_num_nodes - 1;
 	data.data_input = DATA_TYPE_FLOAT;
 	data.f_max_value = max;
 	data.f_min_value = min;
 	data.flags = flags;
 	node->Initialize(&data);
 	node->color = GraphColors[index].color;
-	strncpy(node->name,name,MAX_NAME-1);
-	node->name[MAX_NAME-1] = '\0';
+	strncpy(node->name, name, MAX_NAME - 1);
+	node->name[MAX_NAME - 1] = '\0';
 	return index;
 }
 
 void DebugGraph_Enable(int id)
 {
-	int bit = 0x01<<id;
+	int bit = 0x01 << id;
 	graph_mask |= bit;
 }
 
 void DebugGraph_Disable(int id)
 {
-	int bit = 0x01<<id;
+	int bit = 0x01 << id;
 	graph_mask &= ~bit;
 }
 
-void DebugGraph_Update(int id,int value)
+void DebugGraph_Update(int id, int value)
 {
-	if(id<0 || id>=graph_num_nodes)
+	if (id < 0 || id >= graph_num_nodes)
 		return;
 
-	tGraphNode *node = DebugGraph_FindNode(id);
-	if(!node)
+	tGraphNode* node = DebugGraph_FindNode(id);
+	if (!node)
 		return;
 
 	node->Update(value);
 }
 
-void DebugGraph_Update(int id,float value)
+void DebugGraph_Update(int id, float value)
 {
-	if(id<0 || id>=graph_num_nodes)
+	if (id < 0 || id >= graph_num_nodes)
 		return;
 
-	tGraphNode *node = DebugGraph_FindNode(id);
-	if(!node)
+	tGraphNode* node = DebugGraph_FindNode(id);
+	if (!node)
 		return;
 
 	node->Update(value);
@@ -313,116 +293,119 @@ void DebugGraph_Update(int id,float value)
 
 void DebugGraph_Render(void)
 {
-	if(graph_bmp==-1)
+	if (graph_bmp == -1)
 	{
 		//create the bitmap
-		graph_bmp = bm_AllocBitmap(64,64,0);
-		if(graph_bmp>BAD_BITMAP_HANDLE)
+		graph_bmp = bm_AllocBitmap(64, 64, 0);
+		if (graph_bmp > BAD_BITMAP_HANDLE)
 		{
-			ushort *data = bm_data(graph_bmp,0);
-			for(int i=0;i<64*64;i++)
+			ushort* data = bm_data(graph_bmp, 0);
+			for (int i = 0; i < 64 * 64; i++)
 			{
-				data[i] = GR_RGB16(0,0,0)|OPAQUE_FLAG;
+				data[i] = GR_RGB16(0, 0, 0) | OPAQUE_FLAG;
 			}
 		}
 	}
-	if(graph_bmp<=BAD_BITMAP_HANDLE)
+	if (graph_bmp <= BAD_BITMAP_HANDLE)
 		return;
 
-	if(graph_mask==0)
+	if (graph_mask == 0)
 		return;
 
-	rend_SetAlphaType (AT_CONSTANT_TEXTURE);
-	rend_SetAlphaValue (240);
-	rend_SetLighting (LS_NONE);
-	rend_SetColorModel (CM_MONO);
-	rend_SetOverlayType (OT_NONE);
-	rend_SetWrapType (WT_CLAMP);
-	rend_SetFiltering (0);
+	rend_SetAlphaType(AT_CONSTANT_TEXTURE);
+	rend_SetAlphaValue(240);
+	rend_SetLighting(LS_NONE);
+	rend_SetColorModel(CM_MONO);
+	rend_SetOverlayType(OT_NONE);
+	rend_SetWrapType(WT_CLAMP);
+	rend_SetFiltering(0);
 
-	rend_DrawScaledBitmap(TOP_L,TOP_T,TOP_L+256,TOP_T+64,graph_bmp,0,0,1,1);
+	rend_DrawScaledBitmap(TOP_L, TOP_T, TOP_L + 256, TOP_T + 64, graph_bmp, 0, 0, 1, 1);
 
 	int bit = 0x01;
-	tGraphNode *node;
-	bool multi_game = (bool)((Game_mode&GM_MULTI)!=0);
+	tGraphNode* node;
+	bool multi_game = (bool)((Game_mode & GM_MULTI) != 0);
 	bool ok_to_render;
 
-	for(int i=0;i<graph_num_nodes;i++)
+	for (int i = 0; i < graph_num_nodes; i++)
 	{
 		node = DebugGraph_FindNode(i);
 		ok_to_render = true;
 
-		if(node && (graph_mask&bit))
+		if (node && (graph_mask & bit))
 		{
-			if(multi_game)
+			if (multi_game)
 			{
-				if(!(node->init_data.flags&DGF_MULTIPLAYER))
+				if (!(node->init_data.flags & DGF_MULTIPLAYER))
 					ok_to_render = false;
-			}else
+			}
+			else
 			{
-				if(!(node->init_data.flags&DGF_SINGLEPLAYER))
+				if (!(node->init_data.flags & DGF_SINGLEPLAYER))
 					ok_to_render = false;
 			}
 
-			if(ok_to_render)
+			if (ok_to_render)
 				node->Render();
 		}
-		bit = bit<<1;
+		bit = bit << 1;
 	}
 
-	rend_SetFiltering (1);
+	rend_SetFiltering(1);
 }
 
 ////////////////////////////////////////////
-void tGraphNode::Initialize(tAddDebugGraph *data)
+void tGraphNode::Initialize(tAddDebugGraph* data)
 {
-	if(!data)
+	if (!data)
 		return;
 
-	memcpy(&init_data,data,sizeof(tAddDebugGraph));
+	memcpy(&init_data, data, sizeof(tAddDebugGraph));
 	cur_write_pos = 0;
 	first_pos = 0;
 	num_items_stored = 0;
 
-	color = GR_RGB(255,40,40);
-	memset(i_data,0,sizeof(int)*NUM_FRAMES_TO_DISPLAY);
+	color = GR_RGB(255, 40, 40);
+	memset(i_data, 0, sizeof(int) * NUM_FRAMES_TO_DISPLAY);
 }
 
 void tGraphNode::Update(int value)
 {
-	ASSERT(init_data.data_input==DATA_TYPE_INT);
+	ASSERT(init_data.data_input == DATA_TYPE_INT);
 
-	bool multi_game = (bool)((Game_mode&GM_MULTI)!=0);
-	if(multi_game)
+	bool multi_game = (bool)((Game_mode & GM_MULTI) != 0);
+	if (multi_game)
 	{
-		if(!(init_data.flags&DGF_MULTIPLAYER))
+		if (!(init_data.flags & DGF_MULTIPLAYER))
 			return;
-	}else
+	}
+	else
 	{
-		if(!(init_data.flags&DGF_SINGLEPLAYER))
+		if (!(init_data.flags & DGF_SINGLEPLAYER))
 			return;
 	}
 
-	if(cur_write_pos!=0 && (cur_write_pos%NUM_FRAMES_TO_DISPLAY)==0)
+	if (cur_write_pos != 0 && (cur_write_pos % NUM_FRAMES_TO_DISPLAY) == 0)
 	{
 		cur_write_pos = 0;
 	}
 
-	if(num_items_stored==NUM_FRAMES_TO_DISPLAY)
+	if (num_items_stored == NUM_FRAMES_TO_DISPLAY)
 	{
 		first_pos++;
-		if(first_pos!=0 && (first_pos%NUM_FRAMES_TO_DISPLAY)==0)
+		if (first_pos != 0 && (first_pos % NUM_FRAMES_TO_DISPLAY) == 0)
 		{
 			first_pos = 0;
 		}
-	}else
+	}
+	else
 	{
 		num_items_stored++;
 	}
 
-	if(value < init_data.i_min_value)
+	if (value < init_data.i_min_value)
 		value = init_data.i_min_value;
-	if(value > init_data.i_max_value)
+	if (value > init_data.i_max_value)
 		value = init_data.i_max_value;
 
 	i_data[cur_write_pos] = value;
@@ -431,39 +414,41 @@ void tGraphNode::Update(int value)
 
 void tGraphNode::Update(float value)
 {
-	ASSERT(init_data.data_input==DATA_TYPE_FLOAT);
+	ASSERT(init_data.data_input == DATA_TYPE_FLOAT);
 
-	bool multi_game = (bool)((Game_mode&GM_MULTI)!=0);
-	if(multi_game)
+	bool multi_game = (bool)((Game_mode & GM_MULTI) != 0);
+	if (multi_game)
 	{
-		if(!(init_data.flags&DGF_MULTIPLAYER))
+		if (!(init_data.flags & DGF_MULTIPLAYER))
 			return;
-	}else
+	}
+	else
 	{
-		if(!(init_data.flags&DGF_SINGLEPLAYER))
+		if (!(init_data.flags & DGF_SINGLEPLAYER))
 			return;
 	}
 
-	if(cur_write_pos!=0 && (cur_write_pos%NUM_FRAMES_TO_DISPLAY)==0)
+	if (cur_write_pos != 0 && (cur_write_pos % NUM_FRAMES_TO_DISPLAY) == 0)
 	{
 		cur_write_pos = 0;
 	}
 
-	if(num_items_stored==NUM_FRAMES_TO_DISPLAY)
+	if (num_items_stored == NUM_FRAMES_TO_DISPLAY)
 	{
 		first_pos++;
-		if(first_pos!=0 && (first_pos%NUM_FRAMES_TO_DISPLAY)==0)
+		if (first_pos != 0 && (first_pos % NUM_FRAMES_TO_DISPLAY) == 0)
 		{
 			first_pos = 0;
 		}
-	}else
+	}
+	else
 	{
 		num_items_stored++;
 	}
 
-	if(value < init_data.f_min_value)
+	if (value < init_data.f_min_value)
 		value = init_data.f_min_value;
-	if(value > init_data.f_max_value)
+	if (value > init_data.f_max_value)
 		value = init_data.f_max_value;
 
 	f_data[cur_write_pos] = value;
@@ -471,65 +456,65 @@ void tGraphNode::Update(float value)
 	cur_write_pos++;
 }
 
-void GetGraphY(int *y,int value,int max,int min)
+void GetGraphY(int* y, int value, int max, int min)
 {
 	float range;
-	range = float(value-min)/float(max-min);
+	range = float(value - min) / float(max - min);
 
-	*y = TOP_T + 64 - int(range*64.0);
+	*y = TOP_T + 64 - int(range * 64.0);
 }
 
-void GetGraphY(int *y,float value,float max,float min)
+void GetGraphY(int* y, float value, float max, float min)
 {
 	float range;
-	range = (value-min)/(max-min);
+	range = (value - min) / (max - min);
 
-	*y = TOP_T + 64 - int(range*64.0);
+	*y = TOP_T + 64 - int(range * 64.0);
 }
 
 void tGraphNode::Render(void)
 {
-	if(num_items_stored<2)
+	if (num_items_stored < 2)
 		return;
 	rend_SetFlatColor(color);
 
-	int last_x,last_y,y;
+	int last_x, last_y, y;
 	int index = first_pos;
 	int count = num_items_stored;
 	count--;
 
-	switch(init_data.data_input)
+	switch (init_data.data_input)
 	{
 	case DATA_TYPE_FLOAT:
-		GetGraphY(&last_y,f_data[index],init_data.f_max_value,init_data.f_min_value);
+		GetGraphY(&last_y, f_data[index], init_data.f_max_value, init_data.f_min_value);
 		break;
 	case DATA_TYPE_INT:
-		GetGraphY(&last_y,i_data[index],init_data.i_max_value,init_data.i_min_value);
+		GetGraphY(&last_y, i_data[index], init_data.i_max_value, init_data.i_min_value);
 		break;
 	};
 	index++;
 	last_x = TOP_L;
 
-	while(count > 0 )
+	while (count > 0)
 	{
-		if(index!=0 && (index%NUM_FRAMES_TO_DISPLAY)==0)
+		if (index != 0 && (index % NUM_FRAMES_TO_DISPLAY) == 0)
 		{
 			index = 0;
 		}
 
-		switch(init_data.data_input)
+		switch (init_data.data_input)
 		{
 		case DATA_TYPE_FLOAT:
-			GetGraphY(&y,f_data[index],init_data.f_max_value,init_data.f_min_value);
+			GetGraphY(&y, f_data[index], init_data.f_max_value, init_data.f_min_value);
 			break;
 		case DATA_TYPE_INT:
-			GetGraphY(&y,i_data[index],init_data.i_max_value,init_data.i_min_value);
+			GetGraphY(&y, i_data[index], init_data.i_max_value, init_data.i_min_value);
 			break;
 		};
 
-		rend_DrawLine(last_x,last_y,last_x+1,y);
+		rend_DrawLine(last_x, last_y, last_x + 1, y);
 		count--;
-		last_x+=2;
+		last_x += 2;
 		last_y = y;
 		index++;
 	}
@@ -541,90 +526,92 @@ void tGraphNode::Render(void)
 
 void DebugGraph_DisplayOptions(void)
 {
-	if(graph_num_nodes==0)
+	if (graph_num_nodes == 0)
 		return;
 
 	newuiTiledWindow window;
-	newuiSheet *sheet;
+	newuiSheet* sheet;
 
-	bool **bool_values = NULL;
+	bool** bool_values = NULL;
 	bool exit_menu = false;
-	tGraphNode *node;
+	tGraphNode* node;
 
-	bool_values = (bool **)mem_malloc(sizeof(bool *)*graph_num_nodes);
-	if(!bool_values)
+	bool_values = (bool**)mem_malloc(sizeof(bool*) * graph_num_nodes);
+	if (!bool_values)
 		return;
 
-	window.Create("Debug Graph",0,0,256,384);
+	window.Create("Debug Graph", 0, 0, 256, 384);
 	sheet = window.GetSheet();
 
-	sheet->NewGroup(NULL,0,0);
+	sheet->NewGroup(NULL, 0, 0);
 	char buffer[256];
 	int bit = 0x01;
 
-	bool multi_game = (bool)((Game_mode&GM_MULTI)!=0);
+	bool multi_game = (bool)((Game_mode & GM_MULTI) != 0);
 
-	for(int i=0;i<graph_num_nodes;i++)
+	for (int i = 0; i < graph_num_nodes; i++)
 	{
 		bool_values[i] = NULL;
-		node = DebugGraph_FindNode(i);		
-		if(!node){	
-			bit = bit<<1;
+		node = DebugGraph_FindNode(i);
+		if (!node)
+		{
+			bit = bit << 1;
 			continue;
 		}
 
 		//see if we should add it
-		if(multi_game)
+		if (multi_game)
 		{
-			if(!(node->init_data.flags&DGF_MULTIPLAYER))
+			if (!(node->init_data.flags & DGF_MULTIPLAYER))
 			{
-				bit = bit<<1;
+				bit = bit << 1;
 				continue;
 			}
-		}else
+		}
+		else
 		{
-			if(!(node->init_data.flags&DGF_SINGLEPLAYER))
+			if (!(node->init_data.flags & DGF_SINGLEPLAYER))
 			{
-				bit = bit<<1;
+				bit = bit << 1;
 				continue;
 			}
 		}
 
-		sprintf(buffer,"%s (%s)",node->name,GraphColors[i].color_name);
+		sprintf(buffer, "%s (%s)", node->name, GraphColors[i].color_name);
 		bool_values[i] = sheet->AddLongCheckBox(buffer);
-		if(bool_values[i])
+		if (bool_values[i])
 		{
-			*bool_values[i] = (bool)((graph_mask&bit)!=0);
+			*bool_values[i] = (bool)((graph_mask & bit) != 0);
 		}
 
-		bit = bit<<1;
+		bit = bit << 1;
 	}
 
-	sheet->NewGroup(NULL,50,200);
-	sheet->AddButton(TXT_OK,UID_OK);	
+	sheet->NewGroup(NULL, 50, 200);
+	sheet->AddButton(TXT_OK, UID_OK);
 
 	//process
 	window.Open();
 
-	while (!exit_menu) 
+	while (!exit_menu)
 	{
 		int res = window.DoUI();
 
 		// handle all UI results.
-		switch (res) 
+		switch (res)
 		{
 		case UID_OK:
+		{
+			for (int x = 0; x < graph_num_nodes; x++)
 			{
-				for(int x=0;x<graph_num_nodes;x++)
+				if (bool_values[x])
 				{
-					if(bool_values[x])
-					{
-						(*bool_values[x])?DebugGraph_Enable(x):DebugGraph_Disable(x);
-					}
+					(*bool_values[x]) ? DebugGraph_Enable(x) : DebugGraph_Disable(x);
 				}
-
-				exit_menu = true;
 			}
+
+			exit_menu = true;
+		}
 		};
 	}
 
@@ -633,4 +620,3 @@ void DebugGraph_DisplayOptions(void)
 
 	mem_free(bool_values);
 }
-

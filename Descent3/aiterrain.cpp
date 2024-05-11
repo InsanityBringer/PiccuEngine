@@ -15,37 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/aiterrain.cpp $
-* $Revision: 7 $
-* $Date: 2/04/98 6:09p $
-* $Author: Matt $
-*
-* Terrain specific AI stuff
-*
-* $Log: /DescentIII/main/aiterrain.cpp $
- * 
- * 7     2/04/98 6:09p Matt
- * Changed object room number to indicate a terrain cell via a flag.  Got
- * rid of the object flag which used to indicate terrain.
- * 
- * 6     8/20/97 3:16p Chris
- * Working on the edge of terrain problems
- * 
- * 5     7/31/97 3:12p Chris
- * Fixed a problem with the new iterator based radius checker
- * 
- * 4     7/30/97 1:31p Chris
- * Made helicopters slightly more interesting.
- * 
- * 3     7/29/97 12:20p Chris
- * Incremental improvements.  Fixed a memory bug.
- * 
- * 2     7/28/97 1:19p Chris
- * Expanding the AI system
-*
-* $NoKeywords: $
-*/
 
 #include "vecmat.h"
 #include "terrain.h"

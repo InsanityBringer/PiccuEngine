@@ -15,24 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/gamepath.h $
- * $Revision: 12 $
- * $Date: 10/08/98 4:23p $
- * $Author: Kevin $
- *
- * Header for gamepath.cpp
- *
- * $Log: /DescentIII/main/gamepath.h $
- * 
- * 12    10/08/98 4:23p Kevin
- * Changed code to comply with memory library usage. Always use mem_malloc
- * , mem_free and mem_strdup
- * 
- * 11    2/10/98 10:48a Matt
- * Moved editor code from gamepath.cpp to epath.cpp
- * 
- */
 
 #ifndef GAME_PATH_H
 #define GAME_PATH_H
@@ -50,14 +32,14 @@
 #define MAX_GAME_PATHS		300
 #define MAX_NODES_PER_PATH	100
 
-typedef struct
+struct node
 {
 	vector pos;				// where this node is in the world
-	int roomnum;				// what room?
+	int roomnum;			// what room?
 	int flags;				// if this point lives over the terrain, etc
 	vector fvec;
 	vector uvec;
-} node;
+};
 
 class game_path
 {
@@ -67,7 +49,7 @@ class game_path
 
 	node *pathnodes;		
 	int num_nodes;					// how many nodes in this path?
-	char name[PAGENAME_LEN];	// the name of this path
+	char name[PAGENAME_LEN];		// the name of this path
 	ubyte flags;					// special properties of this path
 	bool used;						// if this path is in use
 };

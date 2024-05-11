@@ -15,46 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/D3ForceFeedback.h $
-* $Revision: 9 $
-* $Date: 1/28/99 12:09p $
-* $Author: Jeff $
-*
-* High Level Force Feedback implementation
-*
-* $Log: /DescentIII/main/D3ForceFeedback.h $
- * 
- * 9     1/28/99 12:09p Jeff
- * added force feedback to player shake...fixed spelling error in define
- * for forcefeedback
- * 
- * 8     11/18/98 5:50p Jeff
- * added some cheap recoil effects for ForceFeedback...not fully
- * implemented
- * 
- * 7     11/10/98 5:16p Jeff
- * updated forcefeedback system...pretty complete now
- * 
- * 6     11/06/98 7:00p Jeff
- * first round of new force feedback installed
- * 
- * 5     11/03/98 6:43p Jeff
- * new low-level & high level Force Feedback system implemented, handles
- * window losing focus, etc.
- * 
- * 4     10/12/98 3:49p Jeff
- * struct changes
- * 
- * 3     9/21/98 11:10a Jeff
- * general update, new low level, small high level implementation
- * 
- * 2     9/18/98 7:38p Jeff
- * creation of low-level forcefeedback and beginning of high-level
- * forcefeedback
-*
-* $NoKeywords: $
-*/
 
 #ifndef __D3FORCEFEEDBACK_H_
 #define __D3FORCEFEEDBACK_H_

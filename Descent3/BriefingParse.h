@@ -15,37 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/BriefingParse.h $
-* $Revision: 7 $
-* $Date: 4/17/99 6:15p $
-* $Author: Samir $
-*
-* 
-*
-* $Log: /DescentIII/main/BriefingParse.h $
- * 
- * 7     4/17/99 6:15p Samir
- * replaced gr.h with grdefs.h and fixed resulting compile bugs.
- * 
- * 6     4/16/99 1:51a Jeff
- * include linux fix for stricmp
- * 
- * 5     4/14/99 3:56a Jeff
- * fixed case mismatch in #includes
- * 
- * 4     1/04/99 12:32p Jeff
- * added support for mission flag parsing
- * 
- * 3     9/11/98 6:06p Jeff
- * Briefing Editor completed
- * 
- * 2     9/09/98 7:02p Jeff
- * Initial Creation
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef __BRIEFPARSE_H_
 #define __BRIEFPARSE_H_
@@ -61,8 +30,8 @@
 #define PBERR_FILENOTEXIST	-1
 #define PBERR_NOERR			0
 
-
-typedef struct{
+struct tBriefParseCallbacks
+{
 	void (*AddTextEffect)(LPTCTEXTDESC desc,char *text,char *description,int id);
 	void (*AddBmpEffect)(LPTCBMPDESC desc,char *description);
 	void (*AddMovieEffect)(LPTCMOVIEDESC desc,char *description);
@@ -77,14 +46,15 @@ typedef struct{
 	void (*SetStatic)(float amount);
 	void (*SetGlitch)(float amount);
 	void (*AddVoice)(char *filename,int flags,char *description);
-}tBriefParseCallbacks;
+};
 
-typedef struct{
+struct tTextBufferDesc
+{
 	TCTEXTDESC textdesc;
 	int text_id;
 	int teffect;
 	char description[128];
-}tTextBufferDesc;
+};
 
 class CBriefParse
 {
@@ -123,6 +93,5 @@ private:
 	int linenum;
 	bool parse_error;
 };
-
 
 #endif

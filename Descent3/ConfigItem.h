@@ -15,46 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/ConfigItem.h $
-* $Revision: 8 $
-* $Date: 10/19/98 6:30p $
-* $Author: Jeff $
-*
-* Contains the class info for ConfigItem [config dialog UI objects]
-*
-* $Log: /DescentIII/main/ConfigItem.h $
- * 
- * 8     10/19/98 6:30p Jeff
- * changes made for detail variables.  Put in preset values.  Preset
- * options.  Removed terrain_cast from detail.  Put new callbacks in
- * UIListBox and UISlider
- * 
- * 7     10/16/98 1:42p Jeff
- * added CIF_USEGROUP and general dialog look
- * 
- * 6     9/02/98 2:54p Jeff
- * added defines for text colors to be used throughout the game...fixed up
- * buddy menu too
- * 
- * 5     6/05/98 5:59p Jeff
- * Added a CIT_CHECKBOX style
- * 
- * 4     5/23/98 6:33p Jeff
- * Added some flags for the slider, and fixed it up a bit
- * 
- * 3     5/22/98 5:02p Jeff
- * Increased functionality
- * 
- * 2     5/21/98 10:35p Jeff
- * Initial creation
-*
-* $NoKeywords: $
-*/
 
 #ifndef __CONFIGITEM_H_
 #define __CONFIGITEM_H_
-
 
 #include "newui.h"
 

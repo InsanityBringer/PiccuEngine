@@ -142,7 +142,6 @@
 #include "pilot.h"
 #include "Mission.h"
 #include "stringtable.h"
-#include "d3serial.h"
 #include "ship.h"
 
 #define WEAPONS_LOAD_UPDATE_INTERVAL	2.0
@@ -195,7 +194,7 @@ void MultiSendMyInfo ()
 		count+=len;
 	}
 	int ser = 0;
-	GetInternalSerializationNumber(&ser);
+	//GetInternalSerializationNumber(&ser);
 	MultiAddInt (ser,data,&count);
 
 	// Send packets per second

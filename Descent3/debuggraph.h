@@ -15,21 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/debuggraph.h $
-* $Revision: 2 $
-* $Date: 4/04/99 8:15p $
-* $Author: Jeff $
-*
-* Debug graph visual log
-*
-* $Log: /DescentIII/Main/debuggraph.h $
- * 
- * 2     4/04/99 8:15p Jeff
- * added debug graph stuff
-*
-* $NoKeywords: $
-*/
 
 #ifndef __DEBUGGRAPH_H_
 #define __DEBUGGRAPH_H_

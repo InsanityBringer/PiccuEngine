@@ -64,7 +64,6 @@
 #include "networking.h"
 #include "args.h"
 #include "pilot.h"
-#include "d3serial.h"
 #include "gameloop.h"
 #include "trigger.h"
 #include "PHYSICS.H"
@@ -271,16 +270,6 @@ void PreInitD3Systems()
 
 	error_Init(debugging, console_output, PRODUCT_NAME);
 
-	#ifndef EDITOR
-	{
-		int serial_error = SerialCheck();	//determine if its ok to run based on serialization
-	
-		if(serial_error) {
-			SerialError(serial_error);
-			exit(1);
-		}
-	}
-#endif
 	if(FindArg("-lowmem"))
 		Mem_low_memory_mode = true;
 	if(FindArg("-superlowmem"))

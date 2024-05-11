@@ -15,10 +15,10 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef __BUDDYMENU_H_
 #define __BUDDYMENU_H_
 
 void BuddyDisplay(void);
-
 
 #endif

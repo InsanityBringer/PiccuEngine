@@ -15,68 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/gamecinematics_external.h $
-* $Revision: 13 $
-* $Date: 5/10/99 10:22p $
-* $Author: Ardussi $
-*
-* Defines and structs external for DLLs
-*
-* $Log: /DescentIII/Main/gamecinematics_external.h $
- * 
- * 13    5/10/99 10:22p Ardussi
- * changes to compile on Mac
- * 
- * 12    5/04/99 6:53p Jeff
- * added new canned cinematic to fade screen to white and endlevel.  Fixed
- * crash bug with invalid player path for canned cine with player paths
- * 
- * 11    4/04/99 8:21p Matt
- * Fixed include problems with osiris vector stuff.  Osiris headers now
- * include vecmat_external.h, instead of defining the typedefs, structs,
- * and inlines on the Osiris side.
- * 
- * 10    3/27/99 7:22p Jeff
- * fixed cinematics when going from one cut to another immediatly.  Added
- * start transition
- * 
- * 9     2/28/99 8:32p Jeff
- * added fade and move player dallas action.  Fixed the end-level sequence
- * changing view back to player for split second.
- * 
- * 8     2/22/99 1:20a Jeff
- * added support for inventory (simple) in dallas.  Moved end-level
- * sequence to use IGC.  Add position clipboard stuff for dallas.  Fixed
- * some inventory bug with storing object handles
- * 
- * 7     2/21/99 8:36p Jeff
- * misc changes to handle new matcen and path types of dallas
- * 
- * 6     2/16/99 9:36p Jeff
- * added low text layout for cinematics
- * 
- * 5     2/14/99 1:16a Jeff
- * added canned cinematic function/structures.  Added a flag to push
- * target to end of path if on a path (quick exit).  Added canned intro
- * cine.  Determine correct velocity on player ship for intro cine.
- * 
- * 4     2/12/99 2:45a Jeff
- * added end-cinematic transitions
- * 
- * 3     2/02/99 3:58p Jeff
- * started to implement level intro cinematic (need ai functions first).
- * No longer need camera object to do cinematic (auto-created)...path
- * cameras use speed based on distance needed to travel.
- * 
- * 2     2/01/99 12:55p Jeff
- * restore correct hud mode, added flag to stop cinematics if target dies
- * 
- * 1     1/31/99 10:28p Jeff
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef __GAMECINEMATICS_EXTERNAL_H_
 #define __GAMECINEMATICS_EXTERNAL_H_
@@ -94,7 +32,7 @@
 #define CANNED_MOVE_PLAYER_FADE	4	//fade the screen out and move the player to a new position
 #define CANNED_LEVEL_END_FADE_WHITE 5	//fade the screen to white and end level
 
-typedef struct
+struct tCannedCinematicInfo
 {
 	int type;
 	/*
@@ -146,7 +84,7 @@ typedef struct
 	vector pos;
 	matrix orient;
 	
-}tCannedCinematicInfo ;
+};
 
 //========================================================
 
@@ -189,12 +127,12 @@ typedef struct
 #define GCTT_FADEINOUT	3
 #define GCTT_FADEWHITE	4
 
-typedef struct
+struct PercentageRange
 {
 	float min,max; //0.0f->1.0f
-}PercentageRange;
+};
 
-typedef struct
+struct tGameCinematic
 {
 	unsigned int flags;
 	
@@ -222,7 +160,6 @@ typedef struct
 	PercentageRange in_camera_view;		// range that the view is from the camera
 	PercentageRange quick_exit;			// range where a key-press will quick exit cinematic
 
-}tGameCinematic;
-
+};
 
 #endif

@@ -15,57 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/gamepath.cpp $
- * $Revision: 15 $
- * $Date: 10/08/98 4:23p $
- * $Author: Kevin $
- *
- *	Game automated path routines.
- *
- * $Log: /DescentIII/main/gamepath.cpp $
- * 
- * 15    10/08/98 4:23p Kevin
- * Changed code to comply with memory library usage. Always use mem_malloc
- * , mem_free and mem_strdup
- * 
- * 14    2/10/98 10:48a Matt
- * Moved editor code from gamepath.cpp to epath.cpp
- * 
- * 13    2/05/98 4:25p Chris
- * Fixed a few bugs in the path system, improved the insert node function,
- * and made the fvec and uvec of the node work (is even loaded and saved)
- * correctly.
- * 
- * 12    2/05/98 1:42p Chris
- * Fixed the problems with DrawNumber.  It use to only be able to draw
- * numbers between 0 and 9.
- * 
- * 11    2/04/98 6:09p Matt
- * Changed object room number to indicate a terrain cell via a flag.  Got
- * rid of the object flag which used to indicate terrain.
- * 
- * 10    2/03/98 5:01p Chris
- * UPdated the path system
- * 
- * 9     2/02/98 8:16p Chris
- * FIxed some problems and added some functionality
- * 
- * 8     1/27/98 12:01p Chris
- * Game path system now works with new, load, and save in the editor.
- * Also, the game path system is further bug proved.
- * 
- * 7     1/26/98 6:32p Chris
- * Incremental fixes to the path system.
- * 
- * 6     12/23/97 6:18p Samir
- * Moved all gr.h references to EDITOR block.
- * 
- * 5     9/17/97 1:22p Samir
- * BIG SEGMENT RIPOUT
- *
- * $NoKeywords: $
- */
 
 #include "gamepath.h"
 #include <stdlib.h>
@@ -128,23 +77,4 @@ int FindGamePathName (char *name)
 	}
 	return -1;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -484,9 +484,7 @@ char * GetCDVolume(int cd_num)
 {
 	char *p = NULL;
 
-#if defined (MACINTOSH)
-	char volume_labels[3][_MAX_PATH] = {"","Descent3","Descent3"};
-#elif !defined (OEM)
+#if !defined (OEM)
 	char volume_labels[3][_MAX_PATH] = {"","D3_1","D3_2"};
 #else
 	char volume_labels[3][_MAX_PATH] = {"","D3OEM_1",""};
@@ -513,12 +511,7 @@ char * GetCDVolume(int cd_num)
 		do
 		{
 			char message_txt[50];
-#ifdef MACINTOSH
-			strcpy(message_txt,TXT_CDPROMPT);
-			message_txt[strlen(message_txt)-2] = '\0';
-#else
 			sprintf(message_txt,TXT_CDPROMPT,cd_num);
-#endif
 			//We need a background drawn!
 #if defined(LINUX)
 			void (*ui_cb)() = GetUICallback();

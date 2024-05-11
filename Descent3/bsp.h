@@ -15,28 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/bsp.h $
- * $Revision: 13 $
- * $Date: 4/19/00 5:30p $
- * $Author: Matt $
- *
- * Header for bsp.cpp
- *
- * $Log: /DescentIII/Main/bsp.h $
- * 
- * 13    4/19/00 5:30p Matt
- * From Duane for 1.4
- * Added extern
- * 
- * 12    4/14/99 3:56a Jeff
- * fixed case mismatch in #includes
- * 
- * 11    9/22/98 12:01p Matt
- * Added SourceSafe headers
- * 
- */
-
 
 #ifndef BSP_H
 #define BSP_H
@@ -57,13 +35,13 @@
 #define BSP_EMPTY_LEAF	1
 #define BSP_SOLID_LEAF	2
 
-typedef struct
+struct bspplane
 {
 	float a,b,c,d;
 	ubyte used;
-} bspplane;
+};
 
-typedef struct
+struct bsppolygon
 {
 	vector *verts;
 	int nv;
@@ -75,9 +53,9 @@ typedef struct
 
 	int color;
 
-}	bsppolygon;
+};
 
-typedef struct bspnode 
+struct bspnode 
 {
 	ubyte type;
 	bspplane plane;
@@ -90,14 +68,14 @@ typedef struct bspnode
 
 	list *polylist;
 	int num_polys;
-} bspnode;
+};
 
-typedef struct bsptree 
+struct bsptree 
 {
-	list           *vertlist;
-	list				*polylist;
-	bspnode        *root;
-} bsptree;
+	list        *vertlist;
+	list		*polylist;
+	bspnode     *root;
+};
 
 // Builds a bsp tree for the indoor rooms
 void BuildBSPTree ();
@@ -134,5 +112,3 @@ extern ubyte BSP_initted;
 extern ubyte UseBSP;
 
 #endif
-
-

@@ -27,7 +27,6 @@ SET (MAIN_SOURCES
 		Descent3/ctlconfig.h
 		Descent3/ctlconfigtxt.h
 		Descent3/D3ForceFeedback.h
-		Descent3/d3serial.h
 		Descent3/damage.h
 		Descent3/damage_external.h
 		Descent3/DeathInfo.h
@@ -164,7 +163,6 @@ SET (MAIN_SOURCES
 		Descent3/CtlCfgElem.cpp
 		Descent3/ctlconfig.cpp
 		Descent3/D3ForceFeedback.cpp
-		Descent3/d3serial.cpp
 		Descent3/damage.cpp
 		Descent3/debuggraph.cpp
 		Descent3/dedicated_server.cpp

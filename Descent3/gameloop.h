@@ -16,6 +16,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
 #include "grdefs.h"
 #include "object.h"
 
@@ -57,5 +59,3 @@ void ResumeGame();
 //	initializes test systems.
 void InitTestSystems();
 #endif
-
-

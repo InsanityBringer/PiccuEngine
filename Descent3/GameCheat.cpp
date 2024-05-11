@@ -15,120 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/GameCheat.cpp $
-* $Revision: 32 $
-* $Date: 10/20/99 5:40p $
-* $Author: Chris $
-*
-* Code for in-game cheats
-*
-* $Log: /DescentIII/Main/GameCheat.cpp $
- * 
- * 32    10/20/99 5:40p Chris
- * Added the Red Guidebot
- * 
- * 31    7/15/99 6:38p Jeff
- * added outlinemode cheat code and rendering stats cheat
- * 
- * 30    5/21/99 10:43p Jeff
- * don't delete guidebot on kill robots cheat
- * 
- * 29    5/10/99 1:00a Jeff
- * release cheat codes
- * 
- * 28    5/09/99 10:48p Jason
- * change game cheats slightly
- * 
- * 27    5/04/99 9:27p Jeff
- * quad super lasers on cheat
- * 
- * 26    5/04/99 8:45p Jeff
- * quad super lasers on cheat
- * 
- * 25    5/01/99 12:53a Jeff
- * made fullmap cheat a 'cheater' cheat
- * 
- * 24    4/30/99 8:31p Jeff
- * added fullmap cheat
- * 
- * 23    4/19/99 12:09a Matt
- * Added Teletubbies cheat.
- * 
- * 22    3/05/99 5:36p Kevin
- * Changed framrate cheat back to 'frametime'
- * 
- * 21    3/04/99 7:08p Jeff
- * only give max ammo on weapon cheat
- * 
- * 20    3/04/99 3:20p Jeff
- * include only whats allowed for oem
- * 
- * 19    3/03/99 4:07p Jeff
- * new oem cheat codes
- * 
- * 18    2/28/99 9:28p Jeff
- * 
- * 17    2/24/99 11:21a Jason
- * Fixed bugs for OEM build
- * 
- * 16    2/10/99 6:55p Jeff
- * added proxmines to the game
- * 
- * 15    2/02/99 8:43a Chris
- * I made buildings with AI work correctly (ie really big robots should be
- * buildings)
- * anim to and from states are now shorts instead of bytes
- * 
- * 14    1/31/99 7:25p Matt
- * Renamed a bunch of functions to have HUD capitalized
- * 
- * 13    1/29/99 2:08p Jeff
- * localization
- * 
- * 12    1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 11    12/15/98 4:28p Jeff
- * added mission data information to the pilot files to save what the
- * highest level they achieved on a mission is.  Added level select dialog
- * (not hooked up) and level warp cheat.
- * 
- * 10    12/11/98 10:36a Jason
- * fixed external
- * 
- * 9     10/20/98 6:33p Jeff
- * added cool texture cheat (badtexture)
- * 
- * 8     10/19/98 10:23p Jeff
- * added cheats to start/stop rt log profiling
- * 
- * 7     10/19/98 7:18p Matt
- * Added system to support different types of damage to the player and
- * have these different types make different sounds.
- * 
- * 6     10/18/98 9:24p Jeff
- * fixed frametime cheat
- * 
- * 5     10/17/98 6:08p Jeff
- * weapon cheat gives quad
- * 
- * 4     10/15/98 1:32p Jeff
- * added suicide cheat
- * 
- * 3     10/14/98 1:02p Jason
- * fixed FindSoundName issues
- * 
- * 2     10/11/98 3:01a Jeff
- * moved from TelCom into here
-*
-* $NoKeywords: $
-*/
 
 #include "player.h"
 #include "object.h"
@@ -330,7 +216,8 @@ void DemoCheats(int key)
 	int i;
 	char *cryptstring,*oldcryptstring;
 
-	if(snd_cheat == -1){
+	if(snd_cheat == -1)
+	{
 		snd_cheat = SOUND_CHEATER;
 	}
 
@@ -348,15 +235,19 @@ void DemoCheats(int key)
 	cryptstring=jcrypt(&CheatBuffer[7]);
 	oldcryptstring=oldjcrypt(&OldCheatBuffer[7]);
 
-	for (i=0;i<N_LAMER_CHEATS;i++){
+	for (i=0;i<N_LAMER_CHEATS;i++)
+	{
 		if (!(strcmp (oldcryptstring,LamerCheats[i])))
 		{
 			if(snd_cheat!=-1)
 				Sound_system.Play2dSound(snd_cheat);
 
-			if(Game_mode&GM_MULTI){
+			if(Game_mode&GM_MULTI)
+			{
 				SendCheaterAttemptText();
-			}else{
+			}
+			else
+			{
 				AddHUDMessage(TXT_LAMER);
 				Objects[Players[Player_num].objnum].shields = 1;
 				Players[Player_num].energy = 1;
@@ -382,21 +273,25 @@ void DemoCheats(int key)
 		AddHUDMessage("%s",(Force_one_texture)?TXT_COOLTEXTURES:TXT_NORMALTEXTURES);
 	}
 
-	if (!(memcmp (cryptstring,CameraCheat,8))){
+	if (!(memcmp (cryptstring,CameraCheat,8)))
+	{
 		Player_has_camera = !Player_has_camera;
 	}
 
 #ifdef USE_RTP
-	if (!(memcmp (cryptstring,StartLogCheat,8))){
+	if (!(memcmp (cryptstring,StartLogCheat,8)))
+	{
 		rtp_StartLog();
 	}
 
-	if (!(memcmp (cryptstring,StopLogCheat,8))){
+	if (!(memcmp (cryptstring,StopLogCheat,8)))
+	{
 		rtp_StopLog();
 	}
 #endif
 
-	if (!(memcmp (cryptstring,TeletubbiesCheat,8))){
+	if (!(memcmp (cryptstring,TeletubbiesCheat,8)))
+	{
 		int merc_sun = FindTextureName("MercSun11");
 		int camile_sun = FindTextureName("CamileSun");
 		if ((merc_sun != -1) && (camile_sun != -1))
@@ -404,7 +299,8 @@ void DemoCheats(int key)
 	}
 
 	static int state = 0;
-	if (!(memcmp (cryptstring,OutlineModeCheat,8))){
+	if (!(memcmp (cryptstring,OutlineModeCheat,8)))
+	{
 		ubyte new_mode;
 		char buffer[128];
 		switch(state)
@@ -442,7 +338,8 @@ void DemoCheats(int key)
 		AddHUDMessage("Outline mode: %s",buffer);
 	}
 
-	if (!(memcmp (cryptstring,PolygonCountCheat,8))){
+	if (!(memcmp (cryptstring,PolygonCountCheat,8)))
+	{
 		Display_renderer_stats = !Display_renderer_stats;
 		AddHUDMessage("Renderer Stats: %s",(Display_renderer_stats)?"On":"Off");
 	}
@@ -455,7 +352,8 @@ void DemoCheats(int key)
 	//					in a multiplayer game
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-	if (!(memcmp (cryptstring,FullmapCheat,8))){
+	if (!(memcmp (cryptstring,FullmapCheat,8)))
+	{
 		AddHUDMessage(TXT_FULLMAP);
 		
 		for (int i=0;i<MAX_ROOMS;i++)
@@ -470,7 +368,8 @@ void DemoCheats(int key)
 		Players[Player_num].score = 0;
 	}
 
-	if (!(memcmp (cryptstring,LevelWarpCheat,8))){
+	if (!(memcmp (cryptstring,LevelWarpCheat,8)))
+	{
 		// gets highest level flown for mission
 		Game_interface_mode = GAME_LEVEL_WARP;
 		IsCheater = true;
@@ -478,10 +377,13 @@ void DemoCheats(int key)
 	}
 
 	if (!(memcmp (cryptstring,InvulnCheat,8))){
-		if (Players[Player_num].flags & PLAYER_FLAGS_INVULNERABLE) {
+		if (Players[Player_num].flags & PLAYER_FLAGS_INVULNERABLE) 
+		{
 			MakePlayerVulnerable(Player_num);
 			AddHUDMessage(TXT_INVULNCHEATON);
-		}else {
+		}
+		else 
+		{
 			MakePlayerInvulnerable(Player_num,10000);
 			AddHUDMessage(TXT_INVULNCHEAT);
 			if(snd_cheat!=-1)
@@ -492,10 +394,13 @@ void DemoCheats(int key)
 	}
 
 	if (!(memcmp (cryptstring,CloakCheat,8))){
-		if (Player_object->effect_info->type_flags & EF_CLOAKED) {
+		if (Player_object->effect_info->type_flags & EF_CLOAKED) 
+		{
 			MakeObjectVisible(Player_object);
 			AddHUDMessage(TXT_CLOAKCHEATOFF);
-		}else {
+		}
+		else 
+		{
 			MakeObjectInvisible(Player_object,10000);
 			AddHUDMessage(TXT_CLOAKCHEATON);
 			if(snd_cheat!=-1)
@@ -505,8 +410,8 @@ void DemoCheats(int key)
 		Players[Player_num].score = 0;
 	}
 
-	if (!(memcmp (cryptstring,WeaponsCheat,8))){
-
+	if (!(memcmp (cryptstring,WeaponsCheat,8)))
+	{
 		#ifdef DEMO
 			Players[Player_num].weapon_flags = HAS_FLAG(LASER_INDEX)|HAS_FLAG(VAUSS_INDEX)|HAS_FLAG(SUPER_LASER_INDEX)|
 												HAS_FLAG(NAPALM_INDEX)|HAS_FLAG(CONCUSSION_INDEX)|HAS_FLAG(HOMING_INDEX)|
@@ -523,8 +428,10 @@ void DemoCheats(int key)
 			
 
 		int i;
-		for (i=0;i<MAX_PLAYER_WEAPONS;i++){
-			if(HAS_FLAG(i)){
+		for (i=0;i<MAX_PLAYER_WEAPONS;i++)
+		{
+			if(HAS_FLAG(i))
+			{
 				Players[Player_num].weapon_ammo[i] = Ships[Players[Player_num].ship_index].max_ammo[i];
 			}
 		}
@@ -646,7 +553,8 @@ void DemoCheats(int key)
 		static ubyte buffer[20] = {0x80,0x95,0x9E,0xFA,0x89,0xAE,0xA8,0xB3,0xB1,0xBF,0xA9,0xFA,0x88,0xBF,0xAC,0xBF,0xB4,0xBD,0xBF,0xDA};
 		char tb[20];
 
-		for(int i=0;i<20;i++){
+		for(int i=0;i<20;i++)
+		{
 			tb[i] = buffer[i]^0xDA;
 		}
 

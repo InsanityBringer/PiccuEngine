@@ -15,31 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/audiotaunts.h $
-* $Revision: 4 $
-* $Date: 4/29/99 11:02p $
-* $Author: Jeff $
-*
-* in-game audio taunt API
-*
-* $Log: /DescentIII/main/audiotaunts.h $
- * 
- * 4     4/29/99 11:02p Jeff
- * added the ability for the server to set audio taunt delay time via
- * command line option and/or dedicated server console
- * 
- * 3     3/22/99 6:20p Jeff
- * added 2 more audio taunts.  a mulitplayer event when someone plays an
- * audio taunt.  option to disable audio taunts.
- * 
- * 2     1/27/99 5:47p Jeff
- * audio taunts implemented!
- * 
- * 1     1/27/99 1:31a Jeff
-*
-* $NoKeywords: $
-*/
 
 #ifndef __AUDIO_TAUNT_H_
 #define __AUDIO_TAUNT_H_

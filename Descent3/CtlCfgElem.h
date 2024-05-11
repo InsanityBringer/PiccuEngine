@@ -15,63 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/CtlCfgElem.h $
- * $Revision: 15 $
- * $Date: 7/16/99 11:15a $
- * $Author: Samir $
- *
- * Header file
- *
- * $Log: /DescentIII/Main/CtlCfgElem.h $
- * 
- * 15    7/16/99 11:15a Samir
- * multiple hat support
- * 
- * 14    4/14/99 3:56a Jeff
- * fixed case mismatch in #includes
- * 
- * 13    2/26/99 2:09a Samir
- * added '?' button.
- * 
- * 12    2/21/99 6:36p Samir
- * focusing changes and key input changes to ui.,
- * 
- * 11    2/16/99 12:07p Samir
- * redid controller config with new ui.
- * 
- * 10    11/30/98 4:54p Samir
- * added rear view config item.
- * 
- * 9     10/22/98 4:11p Samir
- * put inventory keys back in.
- * 
- * 8     10/22/98 2:40p Samir
- * took out inventory keys for demo.
- * 
- * 7     10/21/98 12:32p Samir
- * fixed problem with size of gadget.
- * 
- * 6     10/18/98 1:07p Samir
- * tweaked user interface for controller config.
- * 
- * 5     10/17/98 7:31p Samir
- * added invertible axes
- * 
- * 4     10/08/98 10:52a Samir
- * added countermeasure and weapon cycling.
- * 
- * 3     10/02/98 4:15p Samir
- * added fancy artwork for config screens.
- * 
- * 2     9/30/98 4:37p Samir
- * 'incremental checkin'
- * 
- * 1     9/28/98 3:48p Samir
- * initial revision
- *
- * $NoKeywords: $
- */
 
 #ifndef CTLCFGELEM_H
 #define CTLCFGELEM_H
@@ -117,11 +60,10 @@ protected:
 };
 
 
-typedef struct tCfgDataParts
+struct tCfgDataParts
 {
 	ubyte bind_0, bind_1, ctrl_0, ctrl_1;
-}
-tCfgDataParts;
+};
 
 inline void parse_config_data(tCfgDataParts *parts, ct_type type0, ct_type type1, ct_config_data cfgdata)
 {

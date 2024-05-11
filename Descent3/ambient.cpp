@@ -15,62 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/ambient.cpp $
- * $Revision: 13 $
- * $Date: 8/10/99 2:10p $
- * $Author: Gwar $
- *
- * Ambient sound system
- *
- * $Log: /DescentIII/Main/ambient.cpp $
- * 
- * 13    8/10/99 2:10p Gwar
- * added sound support to neweditor
- * 
- * 12    5/10/99 10:00p Ardussi
- * changes to compile on Mac
- * 
- * 11    4/21/99 11:05a Kevin
- * new ps_rand and ps_srand to replace rand & srand
- * 
- * 10    4/14/99 2:50a Jeff
- * fixed some case mismatched #includes
- * 
- * 9     3/24/99 7:49p Jason
- * fixed multiplayer bugs
- * 
- * 8     2/10/99 4:44p Jeff
- * table file parser stuff
- * 
- * 7     2/10/99 2:31p Matt
- * Deleted some unused code and fixed a slightly stupid thing.
- * 
- * 6     1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 5     10/09/98 4:13p Matt
- * Don't specify explicit path for ambient sound pattern file.
- * 
- * 4     10/08/98 4:23p Kevin
- * Changed code to comply with memory library usage. Always use mem_malloc
- * , mem_free and mem_strdup
- * 
- * 3     8/20/98 12:35p Matt
- * Added nice editing for ambient sound patterns
- * 
- * 2     8/17/98 8:32p Craig
- * Fixed Matt's bug.
- * 
- * 1     8/17/98 7:00p Matt
- * Added ambient sound system
- * 
- */
 
 #include <stdlib.h>
 #include <string.h>
@@ -105,8 +49,8 @@ void ProcessASP(asp *asp)
 	asp->delay -= Frametime;
 
 	//Time to play?
-	if (asp->delay < 0.0) {
-
+	if (asp->delay < 0.0) 
+	{
 		//Figure out which sound to play
 		int roll = (ps_rand() * 100) / (RAND_MAX+1);	//roll = 0..99
 		int s;
@@ -143,7 +87,8 @@ void DoAmbientSounds()
 void InitAmbientSounds()
 {
 	//Loop through all ambient sound patterns
-	for (int p=0;p<Num_ambient_sound_patterns;p++) {
+	for (int p=0;p<Num_ambient_sound_patterns;p++) 
+	{
 		asp *asp = &Ambient_sound_patterns[p];
 
 		//Initialize delay
@@ -184,7 +129,8 @@ void InitAmbientSoundSystem()
 	ReadAmbientData();
 
 	//Get rid of deleted patterns
-	for (int p=0;p<Num_ambient_sound_patterns;p++) {
+	for (int p=0;p<Num_ambient_sound_patterns;p++) 
+	{
 
 		asp *asp = &Ambient_sound_patterns[p];
 
@@ -231,14 +177,16 @@ void ReadAmbientData()
 	//Build filename
 	ifile = cfopen(AMBIENT_FILE_NAME,"rb");
 
-	if (!ifile) {
+	if (!ifile) 
+	{
 		Int3();
 		return;
 	}
 
 	//Read file ID
 	cf_ReadBytes((unsigned char *) file_id,strlen(AMBIENT_FILE_ID),ifile);
-	if (strncmp(file_id,AMBIENT_FILE_ID,strlen(AMBIENT_FILE_ID)) != 0) {
+	if (strncmp(file_id,AMBIENT_FILE_ID,strlen(AMBIENT_FILE_ID)) != 0) 
+	{
 		Int3();
 		cfclose(ifile);
 		return;
@@ -247,7 +195,8 @@ void ReadAmbientData()
 	//Read version
 	version = cf_ReadInt(ifile);
 
-	if (version > AMBIENT_FILE_VERSION) {
+	if (version > AMBIENT_FILE_VERSION) 
+	{
 		Int3();
 		cfclose(ifile);
 		return;
@@ -257,8 +206,8 @@ void ReadAmbientData()
 	Num_ambient_sound_patterns = cf_ReadInt(ifile);
 
 	//Read the patterns
-	for (int p=0;p<Num_ambient_sound_patterns;p++) {
-
+	for (int p=0;p<Num_ambient_sound_patterns;p++) 
+	{
 		asp *asp = &Ambient_sound_patterns[p];
 
 		cf_ReadString(asp->name,sizeof(asp->name),ifile);
@@ -274,7 +223,8 @@ void ReadAmbientData()
 			asp->sounds=NULL;
 
 		int prob=0;
-		for (int s=0;s<asp->num_sounds;s++) {
+		for (int s=0;s<asp->num_sounds;s++) 
+		{
 			char tbuf[PAGENAME_LEN];
 
 			cf_ReadString(tbuf,sizeof(tbuf),ifile);
@@ -287,7 +237,8 @@ void ReadAmbientData()
 			prob += asp->sounds[s].probability;
 		}
 
-		if (asp->num_sounds && (prob != 100)) {
+		if (asp->num_sounds && (prob != 100)) 
+		{
 			Int3();
 			asp->sounds[0].probability += 100 - prob;		//make it total 100
 		}
@@ -313,7 +264,8 @@ void WriteAmbientData()
 #endif
 	ofile = cfopen(filename,"wb");
 
-	if (!ofile) {
+	if (!ofile) 
+	{
 		Int3();
 		return;
 	}
@@ -326,8 +278,8 @@ void WriteAmbientData()
 	cf_WriteInt(ofile,Num_ambient_sound_patterns);
 
 	//Read the patterns
-	for (int p=0;p<Num_ambient_sound_patterns;p++) {
-
+	for (int p=0;p<Num_ambient_sound_patterns;p++) 
+	{
 		asp *asp = &Ambient_sound_patterns[p];
 
 		cf_WriteString(ofile,asp->name);
@@ -337,7 +289,8 @@ void WriteAmbientData()
 
 		cf_WriteInt(ofile,asp->num_sounds);
 
-		for (int s=0;s<asp->num_sounds;s++) {
+		for (int s=0;s<asp->num_sounds;s++) 
+		{
 			cf_WriteString(ofile,Sounds[asp->sounds[s].handle].name);
 
 			cf_WriteFloat(ofile,asp->sounds[s].min_volume);

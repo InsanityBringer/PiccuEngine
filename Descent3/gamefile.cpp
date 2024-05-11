@@ -1,5 +1,5 @@
-/* 
-* Descent 3 
+/*
+* Descent 3
 * Copyright (C) 2024 Parallax Software
 *
 * This program is free software: you can redistribute it and/or modify
@@ -25,31 +25,29 @@
 #include "game.h"
 #include "gamefile.h"
 
-
 gamefile Gamefiles[MAX_GAMEFILES];
-int Num_gamefiles=0;
+int Num_gamefiles = 0;
 
 // Sets all gamefiles to unused
 void InitGamefiles()
 {
-	for (int i=0;i<MAX_GAMEFILES;i++)
+	for (int i = 0; i < MAX_GAMEFILES; i++)
 	{
-		Gamefiles[i].used=0;
-		Gamefiles[i].name[0]=0;
+		Gamefiles[i].used = 0;
+		Gamefiles[i].name[0] = 0;
 	}
-	Num_gamefiles=0;
-
+	Num_gamefiles = 0;
 }
 
 // Allocs a gamefile for use, returns -1 if error, else index on success
-int AllocGamefile ()
+int AllocGamefile()
 {
-	for (int i=0;i<MAX_GAMEFILES;i++)
+	for (int i = 0; i < MAX_GAMEFILES; i++)
 	{
-		if (Gamefiles[i].used==0)
+		if (Gamefiles[i].used == 0)
 		{
 			memset(&Gamefiles[i], 0, sizeof(gamefile));
-			Gamefiles[i].used=1;
+			Gamefiles[i].used = 1;
 			Num_gamefiles++;
 			return i;
 		}
@@ -60,29 +58,27 @@ int AllocGamefile ()
 }
 
 // Frees gamefile index n and all associated images
-void FreeGamefile (int n)
+void FreeGamefile(int n)
 {
-	ASSERT (Gamefiles[n].used>0);
+	ASSERT(Gamefiles[n].used > 0);
 
-	Gamefiles[n].used=0;
-	Gamefiles[n].name[0]=0;
+	Gamefiles[n].used = 0;
+	Gamefiles[n].name[0] = 0;
 	Num_gamefiles--;
 }
 
 // Gets next gamefile from n that has actually been alloced
-int GetNextGamefile (int n)
+int GetNextGamefile(int n)
 {
-	int i;
+	ASSERT(n >= 0 && n < MAX_GAMEFILES);
 
-	ASSERT (n>=0 && n<MAX_GAMEFILES);
-
-	if (Num_gamefiles==0)
+	if (Num_gamefiles == 0)
 		return -1;
 
-	for (i=n+1;i<MAX_GAMEFILES;i++)
+	for (int i = n + 1; i < MAX_GAMEFILES; i++)
 		if (Gamefiles[i].used)
 			return i;
-	for (i=0;i<n;i++)
+	for (int i = 0; i < n; i++)
 		if (Gamefiles[i].used)
 			return i;
 
@@ -92,21 +88,19 @@ int GetNextGamefile (int n)
 }
 
 // Gets previous gamefile from n that has actually been alloced
-int GetPrevGamefile (int n)
+int GetPrevGamefile(int n)
 {
-	int i;
+	ASSERT(n >= 0 && n < MAX_GAMEFILES);
 
-	ASSERT (n>=0 && n<MAX_GAMEFILES);
-
-	if (Num_gamefiles==0)
+	if (Num_gamefiles == 0)
 		return -1;
 
-	for (i=n-1;i>=0;i--)
+	for (int i = n - 1; i >= 0; i--)
 	{
 		if (Gamefiles[i].used)
 			return i;
 	}
-	for (i=MAX_GAMEFILES-1;i>n;i--)
+	for (int i = MAX_GAMEFILES - 1; i > n; i--)
 	{
 		if (Gamefiles[i].used)
 			return i;
@@ -116,18 +110,16 @@ int GetPrevGamefile (int n)
 	return n;
 
 }
+
 // Searches thru all gamefiles for a specific name, returns -1 if not found
 // or index of gamefile with name
-int FindGamefileName (char *name)
+int FindGamefileName(char* name)
 {
-	int i;
+	ASSERT(name != NULL);
 
-	ASSERT (name!=NULL);
-
-	for (i=0;i<MAX_GAMEFILES;i++)
-		if (Gamefiles[i].used && !stricmp (name,Gamefiles[i].name))
+	for (int i = 0; i < MAX_GAMEFILES; i++)
+		if (Gamefiles[i].used && !stricmp(name, Gamefiles[i].name))
 			return i;
 
 	return -1;
 }
-

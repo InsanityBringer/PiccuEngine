@@ -16,12 +16,12 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
- //	D3 Cockpit system
- //		needs a model with textures.
- //		major functions:
- //			activate cockpit
- //			render cockpit
- //			deactivate cockpit.
+//	D3 Cockpit system
+//		needs a model with textures.
+//		major functions:
+//			activate cockpit
+//			render cockpit
+//			deactivate cockpit.
 #include "cockpit.h"
 #include "game.h"
 #include "polymodel.h"
@@ -45,7 +45,7 @@
 #define MAX_BUFFET_STRENGTH 0.75f
 #define BUFFET_PERIOD 0.25f
 #define COCKPIT_SHIFT_DELTA 0.02f
-typedef struct tCockpitCfgInfo
+struct tCockpitCfgInfo
 {
 	char modelname[PSFILENAME_LEN];
 	char shieldrings[NUM_SHIELD_GAUGE_FRAMES][PSFILENAME_LEN];
@@ -53,9 +53,8 @@ typedef struct tCockpitCfgInfo
 	char burnimg[PSFILENAME_LEN];
 	char energyimg[PSFILENAME_LEN];
 	char invpulseimg[PSFILENAME_LEN];
-}
-tCockpitCfgInfo;
-typedef struct tCockpitInfo
+};
+struct tCockpitInfo
 {
 	int state;									// current state of cockpit on screen.
 	int ship_index;							// index into ships page.
@@ -74,8 +73,8 @@ typedef struct tCockpitInfo
 	float buffet_time;						// current position in buffet wave along time axis.
 
 	matrix orient;								// orientation of cockpit
-}
-tCockpitInfo;
+};
+
 static tCockpitInfo Cockpit_info;
 float KeyframeAnimateCockpit();
 //	loads cockpit. model_name = NULL, then will not load in model name.
@@ -100,7 +99,8 @@ void InitCockpit(int ship_index)
 	HUD_resources.energy_bmp = bm_AllocLoadFileBitmap(IGNORE_TABLE(cfginfo.energyimg), 0);
 	HUD_resources.afterburn_bmp = bm_AllocLoadFileBitmap(IGNORE_TABLE(cfginfo.burnimg), 0);
 	HUD_resources.invpulse_bmp = bm_AllocLoadFileBitmap(IGNORE_TABLE(cfginfo.invpulseimg), 0);
-	if (cfginfo.modelname[0] == 0) {
+	if (cfginfo.modelname[0] == 0) 
+	{
 		Cockpit_info.model_num = -1;
 		mprintf((0, "No cockpit found for ship.\n"));
 		return;
@@ -140,7 +140,8 @@ void FreeCockpit()
 	int i;
 	CloseGauges();
 
-	if (Cockpit_info.model_num > -1) {
+	if (Cockpit_info.model_num > -1) 
+	{
 		FreePolyModel(Cockpit_info.model_num);
 		Cockpit_info.model = NULL;
 		Cockpit_info.model_num = -1;
@@ -164,50 +165,59 @@ bool IsValidCockpit()
 bool CockpitFileParse(const char* command, const char* operand, void* data)
 {
 	tCockpitCfgInfo* cfginf = (tCockpitCfgInfo*)data;
-	if (!strcmp(command, "ckptmodel")) {
+	if (!strcmp(command, "ckptmodel")) 
+	{
 		// cockpit model name
 		if (cfginf)
 			strcpy(cfginf->modelname, operand);
 	}
-	else if (!strncmp(command, "shieldimg", strlen("shieldimg"))) {
+	else if (!strncmp(command, "shieldimg", strlen("shieldimg"))) 
+	{
 		//	cockpit shield ring names
 		char buf[16];
 		int i;
 		for (i = 0; i < NUM_SHIELD_GAUGE_FRAMES; i++)
 		{
 			sprintf(buf, "shieldimg%d", i);
-			if (!strcmpi(command, buf)) {
+			if (!strcmpi(command, buf)) 
+			{
 				if (cfginf)
 					strcpy(cfginf->shieldrings[i], operand);
 				break;
 			}
 		}
 	}
-	else if (!strcmp(command, "shipimg")) {
+	else if (!strcmp(command, "shipimg")) 
+	{
 		// ship image name
 		if (cfginf)
 			strcpy(cfginf->shipimg, operand);
 	}
-	else if (!strcmp(command, "afterburnimg")) {
+	else if (!strcmp(command, "afterburnimg")) 
+	{
 		// ship image name
 		if (cfginf)
 			strcpy(cfginf->burnimg, operand);
 	}
-	else if (!strcmp(command, "energyimg")) {
+	else if (!strcmp(command, "energyimg")) 
+	{
 		// ship image name
 		if (cfginf)
 			strcpy(cfginf->energyimg, operand);
 	}
-	else if (!strcmp(command, "invpulseimg")) {
+	else if (!strcmp(command, "invpulseimg")) 
+	{
 		// ship image name
 		if (cfginf)
 			strcpy(cfginf->invpulseimg, operand);
 	}
-	else if (!strcmp(command, "fullhudinf")) {
+	else if (!strcmp(command, "fullhudinf")) 
+	{
 		if (cfginf)
 			strcpy(HUD_resources.hud_inf_name, operand);
 	}
-	else {
+	else 
+	{
 		return false;
 	}
 	return true;
@@ -216,7 +226,8 @@ bool CockpitFileParse(const char* command, const char* operand, void* data)
 void LoadCockpitInfo(const char* ckt_file, tCockpitCfgInfo* cfginfo)
 {
 	//	clear out return values.
-	if (cfginfo) {
+	if (cfginfo) 
+	{
 		memset(cfginfo, 0, sizeof(tCockpitCfgInfo));
 		ASSERT(NUM_SHIELD_GAUGE_FRAMES == 5);
 		strcpy(cfginfo->shieldrings[0], TBL_GAMEFILE("shieldring01.ogf"));
@@ -239,7 +250,8 @@ void OpenCockpit()
 {
 	//	this should allow for opening cockpit while in closing mode.
 	//	do this to insure that an immediate call to CloseCockpit will force it to close again.
-	if (Cockpit_info.this_keyframe <= COCKPIT_COMPLETE_FRAME) {
+	if (Cockpit_info.this_keyframe <= COCKPIT_COMPLETE_FRAME) 
+	{
 		Cockpit_info.state = COCKPIT_STATE_QUASI;
 		Cockpit_info.this_keyframe = COCKPIT_DORMANT_FRAME;
 		Cockpit_info.next_keyframe = COCKPIT_COMPLETE_FRAME;
@@ -250,12 +262,14 @@ void OpenCockpit()
 	//	load hud information for cockpit.
 	LoadCockpitInfo(Ships[Cockpit_info.ship_index].cockpit_name, NULL);
 }
+
 //	forces complete closing of cockpit
 void CloseCockpit()
 {
 	//	this should allow for closing cockpit while in opening mode.
 	//	do this to insure that an immediate call to OpenCockpit will force it to open again.
-	if (Cockpit_info.this_keyframe >= COCKPIT_DORMANT_FRAME) {
+	if (Cockpit_info.this_keyframe >= COCKPIT_DORMANT_FRAME) 
+	{
 		Cockpit_info.next_keyframe = COCKPIT_DORMANT_FRAME;
 		Cockpit_info.this_keyframe = COCKPIT_COMPLETE_FRAME;
 		if (Cockpit_info.frame_time > 0.0f)
@@ -264,6 +278,7 @@ void CloseCockpit()
 	FlagGaugesNonfunctional(STAT_ALL);
 	Sound_system.Play2dSound(Cockpit_info.snd_open);
 }
+
 //	forces quick opening of cockpit
 void QuickOpenCockpit()
 {
@@ -282,11 +297,13 @@ void QuickCloseCockpit()
 	Cockpit_info.this_keyframe = Cockpit_info.next_keyframe = COCKPIT_DORMANT_FRAME;
 	FlagGaugesNonfunctional(STAT_ALL);
 }
+
 //	resizes cockpit.
 void ResizeCockpit()
 {
 	Cockpit_info.resized = true;
 }
+
 //	cockpit orientation.
 void StartCockpitShake(float mag, vector* vec)
 {
@@ -298,6 +315,7 @@ void StartCockpitShake(float mag, vector* vec)
 	Cockpit_info.buffet_wave = FixSin(0);
 	Cockpit_info.buffet_time = 0.0f;
 }
+
 //////////////////////////////////////////////////////////////////////////////
 //	renders the cockpit.
 extern float GetTerrainDynamicScalar(vector* pos, int seg);
@@ -317,7 +335,8 @@ void RenderCockpit()
 		return;
 	//	position cockpit correctly.
 	bsp_info* viewer_subobj = CockpitGetMonitorSubmodel(SOF_VIEWER);
-	if (!viewer_subobj) {
+	if (!viewer_subobj) 
+	{
 		mprintf((0, "Cockpit missing viewer!\n"));
 		return;
 	}
@@ -375,10 +394,12 @@ void RenderCockpit()
 	keyframe = KeyframeAnimateCockpit();
 	SetNormalizedTimeAnim(keyframe, normalized_time, Cockpit_info.model);
 	//	must put after animation.
-	if (Cockpit_info.buffet_amp > 0.04f) {
+	if (Cockpit_info.buffet_amp > 0.04f) 
+	{
 		angle buffet_angle;
 		Cockpit_info.buffet_time += Frametime;
-		if (Cockpit_info.buffet_time > BUFFET_PERIOD) {
+		if (Cockpit_info.buffet_time > BUFFET_PERIOD) 
+		{
 			Cockpit_info.buffet_time = 0.0f;
 			Cockpit_info.buffet_amp *= 0.5f;
 		}
@@ -392,7 +413,8 @@ void RenderCockpit()
 			Cockpit_info.buffet_wave = 0.0f;
 		Cockpit_info.animating = true;
 	}
-	else if (Cockpit_info.buffet_amp > 0.0f) {
+	else if (Cockpit_info.buffet_amp > 0.0f) 
+	{
 		Cockpit_info.animating = true;
 		Cockpit_info.buffet_amp = 0.0f;
 	}
@@ -405,6 +427,7 @@ void RenderCockpit()
 
 	Cockpit_info.resized = false;
 }
+
 //////////////////////////////////////////////////////////////////////////////
 //	
 //	adjusts current keyframe and dormancy
@@ -415,41 +438,51 @@ float KeyframeAnimateCockpit()
 	newkeyframe = Cockpit_info.this_keyframe + (Cockpit_info.next_keyframe - Cockpit_info.this_keyframe) * (Cockpit_info.frame_time / COCKPIT_ANIM_TIME);
 	//	mprintf((0, "this=%.1f next=%.1f ft=%.1f\n", Cockpit_info.this_keyframe, Cockpit_info.next_keyframe, Cockpit_info.frame_time));
 	//	going up in keyframes
-	if (Cockpit_info.this_keyframe < Cockpit_info.next_keyframe) {
-		if (newkeyframe >= Cockpit_info.next_keyframe) {
+	if (Cockpit_info.this_keyframe < Cockpit_info.next_keyframe) 
+	{
+		if (newkeyframe >= Cockpit_info.next_keyframe) 
+		{
 			Cockpit_info.frame_time = 0.0f;
 			Cockpit_info.this_keyframe = Cockpit_info.next_keyframe;
 		}
 	}
 	//	going down in keyframes
-	else if (Cockpit_info.this_keyframe > Cockpit_info.next_keyframe) {
-		if (newkeyframe <= Cockpit_info.next_keyframe) {
+	else if (Cockpit_info.this_keyframe > Cockpit_info.next_keyframe) 
+	{
+		if (newkeyframe <= Cockpit_info.next_keyframe) 
+		{
 			Cockpit_info.frame_time = 0.0f;
 			Cockpit_info.this_keyframe = Cockpit_info.next_keyframe;
 		}
 	}
-	else {
+	else 
+	{
 		Cockpit_info.animating = false;
 		return newkeyframe;
 	}
 
 	//	decide if we can process cockpit
 	Cockpit_info.animating = true;
-	if (Cockpit_info.this_keyframe != Cockpit_info.next_keyframe) {
+	if (Cockpit_info.this_keyframe != Cockpit_info.next_keyframe) 
+	{
 		Cockpit_info.frame_time += Frametime;
 	}
-	if (Cockpit_info.this_keyframe == COCKPIT_COMPLETE_FRAME && Cockpit_info.next_keyframe == Cockpit_info.this_keyframe) {
+	if (Cockpit_info.this_keyframe == COCKPIT_COMPLETE_FRAME && Cockpit_info.next_keyframe == Cockpit_info.this_keyframe) 
+	{
 		FlagGaugesFunctional(STAT_ALL);
 		Cockpit_info.state = COCKPIT_STATE_FUNCTIONAL;
 	}
-	else if (Cockpit_info.this_keyframe == COCKPIT_DORMANT_FRAME && Cockpit_info.next_keyframe == COCKPIT_DORMANT_FRAME) {
+	else if (Cockpit_info.this_keyframe == COCKPIT_DORMANT_FRAME && Cockpit_info.next_keyframe == COCKPIT_DORMANT_FRAME) 
+	{
 		Cockpit_info.state = COCKPIT_STATE_DORMANT;
 	}
-	else {
+	else 
+	{
 		Cockpit_info.state = COCKPIT_STATE_QUASI;
 	}
 	return newkeyframe;
 }
+
 //////////////////////////////////////////////////////////////////////////////
 //	
 //	returns the submodel number of the monitor requested
@@ -464,6 +497,7 @@ bsp_info* CockpitGetMonitorSubmodel(ushort monitor_flag)
 	}
 	return NULL;
 }
+
 //	returns the polymodel for the hud
 poly_model* CockpitGetPolyModel()
 {
@@ -471,6 +505,7 @@ poly_model* CockpitGetPolyModel()
 
 	return &Poly_models[Cockpit_info.model_num];
 }
+
 //Tell whether the cockpit is animating
 int CockpitState()
 {

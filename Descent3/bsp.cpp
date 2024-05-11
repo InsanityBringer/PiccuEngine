@@ -15,34 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/bsp.cpp $
- * $Revision: 32 $
- * $Date: 4/19/00 10:18a $
- * $Author: Matt $
- *
- * Some more of BSP tree code, I presume.
- *
- * $Log: /DescentIII/main/bsp.cpp $
- * 
- * 32    4/19/00 10:18a Matt
- * Added check for BSP tree initialized before freeing it.
- * 
- * 31    4/21/99 11:05a Kevin
- * new ps_rand and ps_srand to replace rand & srand
- * 
- * 30    1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 29    9/22/98 12:01p Matt
- * Added SourceSafe headers
- * 
- */
 
 #include "bsp.h"
 #include "room.h"
@@ -53,7 +25,6 @@
 #include "psrand.h"
 
 #define BSP_TREE_VERSION	10003
-
 
 bsptree MineBSP;
 ubyte BSP_initted=0;

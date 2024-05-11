@@ -15,42 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/gamecinematics.h $
-* $Revision: 8 $
-* $Date: 4/28/99 3:32a $
-* $Author: Jeff $
-*
-* In-Game Cinematics system
-*
-* $Log: /DescentIII/main/gamecinematics.h $
- * 
- * 8     4/28/99 3:32a Jeff
- * created cinematic level reset function
- * 
- * 7     4/27/99 8:31p Jason
- * fixed cinematic bug
- * 
- * 6     3/10/99 6:20p Jeff
- * many fixes to demo system.  Fixed IGC so cameras move...fixed osiris to
- * be restored correctly, and it handles errors on restore
- * 
- * 5     2/23/99 12:44a Jeff
- * added support for in-game-cinematics in demo system
- * 
- * 4     2/14/99 1:16a Jeff
- * added canned cinematic function/structures.  Added a flag to push
- * target to end of path if on a path (quick exit).  Added canned intro
- * cine.  Determine correct velocity on player ship for intro cine.
- * 
- * 3     2/01/99 12:55p Jeff
- * restore correct hud mode, added flag to stop cinematics if target dies
- * 
- * 2     1/31/99 8:48p Jeff
- * new in game cinematics system finished
-*
-* $NoKeywords: $
-*/
 
 #ifndef __INGAME_CINEMATICS_H_
 #define __INGAME_CINEMATICS_H_

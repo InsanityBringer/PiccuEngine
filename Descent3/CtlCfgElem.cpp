@@ -139,13 +139,14 @@ void Localize_ctl_bindings()
 	if (Localization_GetLanguage() == LANGUAGE_ENGLISH) 
 		return;
 
-	if (CreateStringTable("bindkey.str",&strtable,&n_strings)) {
+	if (CreateStringTable("bindkey.str",&strtable,&n_strings)) 
+	{
 		i = 0;
 		while (key_binding_indices[i] != 0xff)
 		{
-			if (i >= n_strings) {
+			if (i >= n_strings) 
 				break;
-			}
+			
 			strcpy(Ctltext_KeyBindings[key_binding_indices[i]], strtable[i]);
 			i++;
 		}
@@ -153,38 +154,40 @@ void Localize_ctl_bindings()
 	}
 
 // mouse translations.
-	if (CreateStringTable("bindmse.str",&strtable,&n_strings)) {
+	if (CreateStringTable("bindmse.str",&strtable,&n_strings)) 
+	{
 		for (i = 0; i < 6; i++)
 		{
- 			if (i >= n_strings) {
+ 			if (i >= n_strings)
 				break;
-			}
+			
 			strcpy(Ctltext_MseBtnBindings[i], strtable[i]);
 		}
 		for (i = 0; i < 3; i++)
 		{
-			if ((i+6) >= n_strings) {
+			if ((i+6) >= n_strings)
 				break;
-			}
+			
 			strcpy(Ctltext_MseAxisBindings[i], strtable[i+6]);
 		}
 		DestroyStringTable(strtable,n_strings);
 	}
 
 // joystick translations.
-	if (CreateStringTable("bindjoy.str",&strtable,&n_strings)) {
+	if (CreateStringTable("bindjoy.str",&strtable,&n_strings)) 
+	{
 		for (i = 0; i < 6; i++)
 		{
-			if (i >= n_strings) {
+			if (i >= n_strings)
 				break;
-			}
+			
 			strcpy(Ctltext_AxisBindings[i+1], strtable[i]);
 		}
 		for (i = 0; i < 4; i++)
 		{
-			if ((i+6) >= n_strings) {
+			if ((i+6) >= n_strings) 
 				break;
-			}
+			
 			strcpy(Ctltext_PovBindings[i+1], strtable[i+6]);
 		}
 		DestroyStringTable(strtable,n_strings);
@@ -197,9 +200,8 @@ const char *cfg_binding_text(ct_type ctype, ubyte ctrl, ubyte binding)
 {
 	const char *str;
 
-	if (ctrl == NULL_CONTROLLER) {
+	if (ctrl == NULL_CONTROLLER) 
 		return NULL;
-	}
 
 	switch (ctype)
 	{
@@ -222,7 +224,8 @@ const char *cfg_binding_text(ct_type ctype, ubyte ctrl, ubyte binding)
 		break;
 
 	default:
-		if (ctype == ctNone) {
+		if (ctype == ctNone) 
+		{
 			Int3();
 		}
 		return ("");

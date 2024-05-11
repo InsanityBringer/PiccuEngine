@@ -29,11 +29,8 @@
 #include "D3ForceFeedback.h"
 #include "hlsoundlib.h"
 #include "ddio.h"
-#ifdef MACINTOSH
-#include "insprocket.h"	//DAJ
-#include "maccontroller.h"
-#endif
 #include <string.h>
+
 //////////////////////////////////////////////////////////////////////////////
 #define IDV_KCONFIG			10	  
 #define IDV_CCONFIG			11
@@ -41,7 +38,7 @@
 #define IDV_OPTIONS			18
 					
 // used for adjusting settings.
-#define CFG_AXIS_SENS_RANGE		20
+#define CFG_AXIS_SENS_RANGE				20
 #define CFG_MOUSE_AXIS_SENS_RANGE		80
 
 //	Setup of config screens.
@@ -49,50 +46,50 @@
 #define CCITEM_WPN_Y					20
 #define CCITEM_AUX_X					0
 #define CCITEM_AUX_Y					160
-#define CCITEM_THRUST_X				295
-#define CCITEM_THRUST_Y				20
+#define CCITEM_THRUST_X					295
+#define CCITEM_THRUST_Y					20
 #define CCITEM_ROT_X					295
 #define CCITEM_ROT_Y					160
 
 t_cfg_element Cfg_key_elements[] = 
 {
 // column1 -indices 0-15
-	{ -1,									CtlText_WeaponGroup,		CCITEM_WPN_X, CCITEM_WPN_Y },
-	{ ctfFIREPRIMARY_KEY,			CtlText_FirePrimary,		0, 0 },
+	{ -1,							CtlText_WeaponGroup,	CCITEM_WPN_X, CCITEM_WPN_Y },
+	{ ctfFIREPRIMARY_KEY,			CtlText_FirePrimary,	0, 0 },
 	{ ctfFIRESECONDARY_KEY,			CtlText_FireSecondary,	0, 0 },
 	{ ctfFIREFLARE_KEY,				CtlText_FireFlare,		0, 0 },
-	{ ctfWPNSEL_PCYCLEKEY,			CtlText_WpnCycP,			0, 0 },
-	{ ctfWPNSEL_SCYCLEKEY,			CtlText_WpnCycS,			0, 0 },
-	{ -1,									CtlText_MiscGroup,		CCITEM_AUX_X, CCITEM_AUX_Y },
+	{ ctfWPNSEL_PCYCLEKEY,			CtlText_WpnCycP,		0, 0 },
+	{ ctfWPNSEL_SCYCLEKEY,			CtlText_WpnCycS,		0, 0 },
+	{ -1,							CtlText_MiscGroup,		CCITEM_AUX_X, CCITEM_AUX_Y },
 	{ ctfHEADLIGHT_KEY,				CtlText_Headlight,		0, 0 },
-	{ ctfREARVIEW_KEY,				CtlText_Rearview,			0, 0 },
-	{ ctfAUTOMAP_KEY,					CtlText_Automap,			0, 0 },
-	{ ctfPREV_INVKEY,					CtlText_PrevInv,			0, 0 },
-	{ ctfNEXT_INVKEY,					CtlText_NextInv,			0, 0 },
-	{ ctfINV_USEKEY,					CtlText_InvUse,			0, 0 },
+	{ ctfREARVIEW_KEY,				CtlText_Rearview,		0, 0 },
+	{ ctfAUTOMAP_KEY,				CtlText_Automap,		0, 0 },
+	{ ctfPREV_INVKEY,				CtlText_PrevInv,		0, 0 },
+	{ ctfNEXT_INVKEY,				CtlText_NextInv,		0, 0 },
+	{ ctfINV_USEKEY,				CtlText_InvUse,			0, 0 },
 	{ ctfPREV_CNTMSKEY,				CtlText_PrevCntMs,		0, 0 },
 	{ ctfNEXT_CNTMSKEY,				CtlText_NextCntMs,		0, 0 },
-	{ ctfCNTMS_USEKEY,				CtlText_CntMsUse,			0, 0 },
-	{ ctfAUDIOTAUNT1_KEY,			CtlText_AudioTaunt1,		0, 0 },
-	{ ctfAUDIOTAUNT2_KEY,			CtlText_AudioTaunt2,		0, 0 },
-	{ ctfAUDIOTAUNT3_KEY,			CtlText_AudioTaunt3,		0, 0 },
-	{ ctfAUDIOTAUNT4_KEY,			CtlText_AudioTaunt4,		0, 0 },
-	{ -1,									CtlText_ThrustGroup,		CCITEM_THRUST_X, CCITEM_THRUST_Y },
+	{ ctfCNTMS_USEKEY,				CtlText_CntMsUse,		0, 0 },
+	{ ctfAUDIOTAUNT1_KEY,			CtlText_AudioTaunt1,	0, 0 },
+	{ ctfAUDIOTAUNT2_KEY,			CtlText_AudioTaunt2,	0, 0 },
+	{ ctfAUDIOTAUNT3_KEY,			CtlText_AudioTaunt3,	0, 0 },
+	{ ctfAUDIOTAUNT4_KEY,			CtlText_AudioTaunt4,	0, 0 },
+	{ -1,							CtlText_ThrustGroup,	CCITEM_THRUST_X, CCITEM_THRUST_Y },
 	{ ctfFORWARD_THRUSTKEY,			CtlText_Accelerate,		0, 0 },
-	{ ctfREVERSE_THRUSTKEY,			CtlText_Reverse,			0, 0 },
+	{ ctfREVERSE_THRUSTKEY,			CtlText_Reverse,		0, 0 },
 	{ ctfAFTERBURN_KEY,				CtlText_Afterburn,		0, 0 },
-	{ ctfTOGGLE_SLIDEKEY,			CtlText_ToggleSlide,		0, 0 },
-	{ ctfLEFT_THRUSTKEY,				CtlText_SlideLeft,		0, 0 },
+	{ ctfTOGGLE_SLIDEKEY,			CtlText_ToggleSlide,	0, 0 },
+	{ ctfLEFT_THRUSTKEY,			CtlText_SlideLeft,		0, 0 },
 	{ ctfRIGHT_THRUSTKEY,			CtlText_SlideRight,		0, 0 },
-	{ ctfUP_THRUSTKEY,				CtlText_SlideUp,			0, 0 },
-	{ ctfDOWN_THRUSTKEY,				CtlText_SlideDown,		0, 0 },
-	{ -1,									CtlText_TurningGroup,	CCITEM_ROT_X, CCITEM_ROT_Y },
-	{ ctfPITCH_UPKEY,					CtlText_PitchUp,			0, 0 },
+	{ ctfUP_THRUSTKEY,				CtlText_SlideUp,		0, 0 },
+	{ ctfDOWN_THRUSTKEY,			CtlText_SlideDown,		0, 0 },
+	{ -1,							CtlText_TurningGroup,	CCITEM_ROT_X, CCITEM_ROT_Y },
+	{ ctfPITCH_UPKEY,				CtlText_PitchUp,		0, 0 },
 	{ ctfPITCH_DOWNKEY,				CtlText_PitchDown,		0, 0 },
-	{ ctfHEADING_LEFTKEY,			CtlText_TurnLeft,			0, 0 },
+	{ ctfHEADING_LEFTKEY,			CtlText_TurnLeft,		0, 0 },
 	{ ctfHEADING_RIGHTKEY,			CtlText_TurnRight,		0, 0 },
-	{ ctfTOGGLE_BANKKEY,				CtlText_ToggleBank,		0, 0 },
-	{ ctfBANK_LEFTKEY,				CtlText_BankLeft,			0, 0 },
+	{ ctfTOGGLE_BANKKEY,			CtlText_ToggleBank,		0, 0 },
+	{ ctfBANK_LEFTKEY,				CtlText_BankLeft,		0, 0 },
 	{ ctfBANK_RIGHTKEY,				CtlText_BankRight,		0, 0 }
 };
 #define CCITEM_WPN_X2				0
@@ -105,50 +102,51 @@ t_cfg_element Cfg_key_elements[] =
 #define CCITEM_ROT_Y2				200
 t_cfg_element Cfg_joy_elements[] = 
 {
-	{ -1,									CtlText_WeaponGroup,		CCITEM_WPN_X2, CCITEM_WPN_Y2 },
-	{ ctfFIREPRIMARY_BUTTON,		CtlText_FirePrimary,		0, 0 },
+	{ -1,							CtlText_WeaponGroup,	CCITEM_WPN_X2, CCITEM_WPN_Y2 },
+	{ ctfFIREPRIMARY_BUTTON,		CtlText_FirePrimary,	0, 0 },
 	{ ctfFIRESECONDARY_BUTTON,		CtlText_FireSecondary,	0, 0 },
 	{ ctfFIREFLARE_BUTTON,			CtlText_FireFlare,		0, 0 },
-	{ ctfWPNSEL_PCYCLEBTN,			CtlText_WpnCycP,			0, 0 },
-	{ ctfWPNSEL_SCYCLEBTN,			CtlText_WpnCycS,			0, 0 },
-	{ -1,									CtlText_MiscGroup,		CCITEM_AUX_X2, CCITEM_AUX_Y2 },
+	{ ctfWPNSEL_PCYCLEBTN,			CtlText_WpnCycP,		0, 0 },
+	{ ctfWPNSEL_SCYCLEBTN,			CtlText_WpnCycS,		0, 0 },
+	{ -1,							CtlText_MiscGroup,		CCITEM_AUX_X2, CCITEM_AUX_Y2 },
 	{ ctfHEADLIGHT_BUTTON,			CtlText_Headlight,		0, 0 },
-	{ ctfREARVIEW_BTN,				CtlText_Rearview,			0, 0 },
-	{ ctfAUTOMAP_BUTTON,				CtlText_Automap,			0, 0 },
-	{ ctfPREV_INVBTN,					CtlText_PrevInv,			0, 0 },
-	{ ctfNEXT_INVBTN,					CtlText_NextInv,			0, 0 },
-	{ ctfINV_USEBTN,					CtlText_InvUse,			0, 0 },
+	{ ctfREARVIEW_BTN,				CtlText_Rearview,		0, 0 },
+	{ ctfAUTOMAP_BUTTON,			CtlText_Automap,		0, 0 },
+	{ ctfPREV_INVBTN,				CtlText_PrevInv,		0, 0 },
+	{ ctfNEXT_INVBTN,				CtlText_NextInv,		0, 0 },
+	{ ctfINV_USEBTN,				CtlText_InvUse,			0, 0 },
 	{ ctfPREV_CNTMSBTN,				CtlText_PrevCntMs,		0, 0 },
 	{ ctfNEXT_CNTMSBTN,				CtlText_NextCntMs,		0, 0 },
-	{ ctfCNTMS_USEBTN,				CtlText_CntMsUse,			0, 0 },
-	{ ctfAUDIOTAUNT1_BTN,			CtlText_AudioTaunt1,		0, 0 },
-	{ ctfAUDIOTAUNT2_BTN,			CtlText_AudioTaunt2,		0, 0 },
-	{ ctfAUDIOTAUNT3_BTN,			CtlText_AudioTaunt3,		0, 0 },
-	{ ctfAUDIOTAUNT4_BTN,			CtlText_AudioTaunt4,		0, 0 },
-	{ -1,									CtlText_ThrustGroup,		CCITEM_THRUST_X2, CCITEM_THRUST_Y2 },
-	{ ctfFORWARD_THRUSTAXIS,		CtlText_Forward,			0, 0 },
-	{ ctfFORWARD_BUTTON,				CtlText_Accelerate,		0, 0 },
-	{ ctfREVERSE_BUTTON,				CtlText_Reverse,			0, 0 },
+	{ ctfCNTMS_USEBTN,				CtlText_CntMsUse,		0, 0 },
+	{ ctfAUDIOTAUNT1_BTN,			CtlText_AudioTaunt1,	0, 0 },
+	{ ctfAUDIOTAUNT2_BTN,			CtlText_AudioTaunt2,	0, 0 },
+	{ ctfAUDIOTAUNT3_BTN,			CtlText_AudioTaunt3,	0, 0 },
+	{ ctfAUDIOTAUNT4_BTN,			CtlText_AudioTaunt4,	0, 0 },
+	{ -1,							CtlText_ThrustGroup,	CCITEM_THRUST_X2, CCITEM_THRUST_Y2 },
+	{ ctfFORWARD_THRUSTAXIS,		CtlText_Forward,		0, 0 },
+	{ ctfFORWARD_BUTTON,			CtlText_Accelerate,		0, 0 },
+	{ ctfREVERSE_BUTTON,			CtlText_Reverse,		0, 0 },
 	{ ctfAFTERBURN_BUTTON,			CtlText_Afterburn,		0, 0 },
 	{ ctfUP_THRUSTAXIS,				CtlText_SlideVert,		0, 0 },
 	{ ctfRIGHT_THRUSTAXIS,			CtlText_SlideHoriz,		0, 0 },
-	{ ctfTOGGLE_SLIDEBUTTON,		CtlText_ToggleSlide,		0, 0 },
-	{ ctfUP_BUTTON,					CtlText_SlideUp,			0, 0 },
-	{ ctfDOWN_BUTTON,					CtlText_SlideDown,		0, 0 },
-	{ ctfLEFT_BUTTON,					CtlText_SlideLeft,		0, 0 },
+	{ ctfTOGGLE_SLIDEBUTTON,		CtlText_ToggleSlide,	0, 0 },
+	{ ctfUP_BUTTON,					CtlText_SlideUp,		0, 0 },
+	{ ctfDOWN_BUTTON,				CtlText_SlideDown,		0, 0 },
+	{ ctfLEFT_BUTTON,				CtlText_SlideLeft,		0, 0 },
 	{ ctfRIGHT_BUTTON,				CtlText_SlideRight,		0, 0 },
-	{ -1,									CtlText_TurningGroup,	CCITEM_ROT_X2, CCITEM_ROT_Y2 },
-	{ ctfPITCH_DOWNAXIS,				CtlText_Pitch,				0, 0 },
-	{ ctfPITCH_UPBUTTON,				CtlText_PitchUp,			0, 0 },
+	{ -1,							CtlText_TurningGroup,	CCITEM_ROT_X2, CCITEM_ROT_Y2 },
+	{ ctfPITCH_DOWNAXIS,			CtlText_Pitch,			0, 0 },
+	{ ctfPITCH_UPBUTTON,			CtlText_PitchUp,		0, 0 },
 	{ ctfPITCH_DOWNBUTTON,			CtlText_PitchDown,		0, 0 },
-	{ ctfHEADING_RIGHTAXIS,			CtlText_Heading,			0, 0 },
-	{ ctfHEADING_LEFTBUTTON,		CtlText_TurnLeft,			0, 0 },
+	{ ctfHEADING_RIGHTAXIS,			CtlText_Heading,		0, 0 },
+	{ ctfHEADING_LEFTBUTTON,		CtlText_TurnLeft,		0, 0 },
 	{ ctfHEADING_RIGHTBUTTON,		CtlText_TurnRight,		0, 0 },
-	{ ctfBANK_RIGHTAXIS,				CtlText_Bank,				0, 0 },
+	{ ctfBANK_RIGHTAXIS,			CtlText_Bank,			0, 0 },
 	{ ctfTOGGLE_BANKBUTTON,			CtlText_ToggleBank,		0, 0 },
-	{ ctfBANK_LEFTBUTTON,			CtlText_BankLeft,			0, 0 },
+	{ ctfBANK_LEFTBUTTON,			CtlText_BankLeft,		0, 0 },
 	{ ctfBANK_RIGHTBUTTON,			CtlText_BankRight,		0, 0 }
 };
+
 #define N_JOY_CFG_FN (sizeof(Cfg_joy_elements)/sizeof(t_cfg_element))
 #define N_KEY_CFG_FN (sizeof(Cfg_key_elements)/sizeof(t_cfg_element))
 void ctl_cfg_set_and_verify_changes(short fnid, ct_type elem_type, ubyte controller, ubyte elem, sbyte slot);
@@ -296,6 +294,7 @@ void key_cfg_screen::unrealize()
 		cfg_elem++;
 	}
 }
+
 //////////////////////////////////////////////////////////////////////////////
 // JOY CONFIG
 class joy_cfg_screen: public cfg_screen
@@ -337,15 +336,18 @@ void joy_cfg_screen::process(int res)
 	
 	for (i = 0; i < N_JOY_CFG_FN; i++)
 	{
-		if (m_elem[i].GetID() != -1 && m_elem[i].GetID() == res) {
+		if (m_elem[i].GetID() != -1 && m_elem[i].GetID() == res) 
+		{
 		// we chose a slot to configure.
 			ubyte elem, controller;
 			sbyte slot;
 			ct_type elem_type;
-			if (m_elem[i].GetActiveSlot() == CFGELEM_SLOT_CLEAR) {
+			if (m_elem[i].GetActiveSlot() == CFGELEM_SLOT_CLEAR) 
+			{
 				ctl_cfg_element_options_dialog((short)(res-UID_JOYCFG_ID));
 			}
-			else if (m_elem[i].Configure(&elem_type, &controller, &elem, &slot)) {
+			else if (m_elem[i].Configure(&elem_type, &controller, &elem, &slot)) 
+			{
 				ctl_cfg_set_and_verify_changes((short)(res-UID_JOYCFG_ID), elem_type, controller, elem, slot);
 			}
 			break;
@@ -356,7 +358,8 @@ void joy_cfg_screen::process(int res)
 	case UID_RESETDEFAULTS:
 		for (i = 0; i < NUM_CONTROLLER_FUNCTIONS; i++)
 		{
-			if (Controller_needs[i].ctype[0] != ctKey) {
+			if (Controller_needs[i].ctype[0] != ctKey) 
+			{
 				ASSERT(Controller_needs[i].ctype[1] != ctKey);
 				Controller->assign_function(&Controller_needs[i]);
 			}
@@ -380,8 +383,6 @@ void joy_cfg_screen::realize()
 {
 	int i, x, y;
 	t_cfg_element *cfg_elem = &Cfg_joy_elements[0];
-#ifdef MACINTOSH
-#else
 	m_reset_btn.Create(m_menu, UID_RESETDEFAULTS, TXT_RESETTODEFAULT, KEYCFG_EXTRAS_X+m_sheet->X(),KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
 	m_controller_settings.Create(m_menu, UID_CFGSETTINGS, TXT_ADJUSTSETTINGS, KEYCFG_EXTRAS_X+m_sheet->X()+KEYCFG_EXTRAS_W, KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
 	m_revert_btn.Create(m_menu, UID_REVERT, TXT_REVERTCONTROLS, KEYCFG_EXTRAS_X+m_sheet->X()+KEYCFG_EXTRAS_W*2, KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
@@ -389,7 +390,8 @@ void joy_cfg_screen::realize()
 	m_help2_txt.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_CFGSCREENHELP, NEWUI_MONITORFONT_COLOR), 280, 40);
 	for (i = 0; i < N_JOY_CFG_FN; i++)
 	{
-		if (cfg_elem->fn_id == -1) {
+		if (cfg_elem->fn_id == -1) 
+		{
 			x = cfg_elem->x + m_sheet->X();
 			y = cfg_elem->y + m_sheet->Y();
 		}
@@ -397,7 +399,6 @@ void joy_cfg_screen::realize()
 		y += m_elem[i].H()+2;
 		cfg_elem++;
 	}
-#endif
 }
 void joy_cfg_screen::unrealize()
 {
@@ -467,18 +468,22 @@ void wpnsel_cfg_screen::process(int res)
 	int slot, i;
 	bool is_secondary = false, do_swap_ui = false, do_disable_ui = false, update_buttons = false;
 	mprintf((0, "res=%d\n", res));
-	if (m_selection_status == -1) {
-		if (res == UID_RESETDEFAULTS) {
+	if (m_selection_status == -1) 
+	{
+		if (res == UID_RESETDEFAULTS) 
+		{
 			for (i = 0; i < MAX_PRIMARY_WEAPONS; i++)
 				SetAutoSelectPrimaryWpnIdx(i, DefaultPrimarySelectList[i]);
 			for (i = 0; i < MAX_SECONDARY_WEAPONS; i++)
 				SetAutoSelectSecondaryWpnIdx(i, DefaultSecondarySelectList[i]);
 			update_buttons = true;
 		}
-		else if (res == UID_CLEAR_SLOT) {
+		else if (res == UID_CLEAR_SLOT) 
+		{
 		//	figure out id of current gadget highlighted.
 			UIGadget *gadget = m_menu->GetFocus();
-			if (gadget) {
+			if (gadget) 
+			{
 			// below code will then determine the correct information.
 				res = gadget->GetID();
 				do_disable_ui = true;
@@ -486,22 +491,26 @@ void wpnsel_cfg_screen::process(int res)
 		}
 	}
 	slot = -1;
-	if (res >= UID_PRIMARY_WPN && res < (UID_PRIMARY_WPN+MAX_PRIMARY_WEAPONS) && m_selection_status != 1) {
+	if (res >= UID_PRIMARY_WPN && res < (UID_PRIMARY_WPN+MAX_PRIMARY_WEAPONS) && m_selection_status != 1) 
+	{
 		slot = res - UID_PRIMARY_WPN;  
 		is_secondary = false;
 		if (!do_disable_ui) do_swap_ui = true;
 	}
-	else if (res >= UID_SECONDARY_WPN && res < (UID_SECONDARY_WPN+MAX_SECONDARY_WEAPONS) && m_selection_status != 0) {
+	else if (res >= UID_SECONDARY_WPN && res < (UID_SECONDARY_WPN+MAX_SECONDARY_WEAPONS) && m_selection_status != 0) 
+	{
 		slot = res - UID_SECONDARY_WPN;
 		is_secondary = true;
 		if (!do_disable_ui) do_swap_ui = true;
 	}
-	else if (res >= UID_PRIMARY_DIS && res < (UID_PRIMARY_DIS+MAX_PRIMARY_WEAPONS) && m_selection_status == -1) {
+	else if (res >= UID_PRIMARY_DIS && res < (UID_PRIMARY_DIS+MAX_PRIMARY_WEAPONS) && m_selection_status == -1) 
+	{
 		slot = res - UID_PRIMARY_DIS;  
 		is_secondary = false;
 		do_disable_ui = true;
 	}
-	else if (res >= UID_SECONDARY_DIS && res < (UID_SECONDARY_DIS+MAX_SECONDARY_WEAPONS) && m_selection_status == -1) {
+	else if (res >= UID_SECONDARY_DIS && res < (UID_SECONDARY_DIS+MAX_SECONDARY_WEAPONS) && m_selection_status == -1) 
+	{
 		slot = res - UID_SECONDARY_DIS;
 		is_secondary = true;
 		do_disable_ui = true;
@@ -509,14 +518,17 @@ void wpnsel_cfg_screen::process(int res)
 	mprintf((0, "slot=%d\n", slot));
 	
 // do different uis
-	if (do_disable_ui) {
+	if (do_disable_ui)
+	{
 		ASSERT(m_selection_status == -1 && slot != -1);
 		ushort wpnidx = is_secondary ? GetAutoSelectSecondaryWpnIdx(slot) : GetAutoSelectPrimaryWpnIdx(slot);
 		wpnidx = wpnidx ^ WPNSEL_SKIP;
-		if (is_secondary) {
+		if (is_secondary) 
+		{
 			SetAutoSelectSecondaryWpnIdx(slot, wpnidx);
 		}
-		else {
+		else 
+		{
 			SetAutoSelectPrimaryWpnIdx(slot, wpnidx);
 		}
 		update_buttons = true;
@@ -524,20 +536,25 @@ void wpnsel_cfg_screen::process(int res)
 // here we see if we are selecting a weapon to switch with another, if one is already selected, we
 // see if the user has selected another (in the same category)
 //
-	else if (do_swap_ui) {
+	else if (do_swap_ui) 
+	{
 		ushort wpnidx;
-		if (slot != -1) {
-			if (m_selection_status == -1) {
+		if (slot != -1) 
+		{
+			if (m_selection_status == -1) 
+			{
 				m_switch_slot = slot;
 				m_selection_status = is_secondary ? 1 : 0;
 			// disable proper controls here.
 				for (i = 0; i < MAX_PRIMARY_WEAPONS; i++)
 				{
-					if (m_selection_status == 1) {
+					if (m_selection_status == 1) 
+					{
 						m_primary_disables[i].Disable(); 
 						m_primary_buttons[i].Disable();
 					}
-					else {
+					else 
+					{
 						m_secondary_disables[i].Disable();
 						m_secondary_buttons[i].Disable();
 					}
@@ -553,15 +570,18 @@ void wpnsel_cfg_screen::process(int res)
 				ushort new_wpnidx = is_secondary ? GetAutoSelectSecondaryWpnIdx(m_switch_slot) : GetAutoSelectPrimaryWpnIdx(m_switch_slot);
 				
 				ASSERT(m_switch_slot != -1);
-				if (slot > m_switch_slot) {
+				if (slot > m_switch_slot) 
+				{
 					new_wpnidx = is_secondary ? GetAutoSelectSecondaryWpnIdx(m_switch_slot) : GetAutoSelectPrimaryWpnIdx(m_switch_slot);
 					while (slot_idx < slot)
 					{
-						if (is_secondary) {
+						if (is_secondary) 
+						{
 							wpnidx = GetAutoSelectSecondaryWpnIdx(slot_idx+1);
 							SetAutoSelectSecondaryWpnIdx(slot_idx, wpnidx);
 						}
-						else {
+						else 
+						{
 							wpnidx = GetAutoSelectPrimaryWpnIdx(slot_idx+1);
 							SetAutoSelectPrimaryWpnIdx(slot_idx, wpnidx);
 						}
@@ -569,14 +589,17 @@ void wpnsel_cfg_screen::process(int res)
 					}
 					update_buttons = true;
 				}
-				else if (slot < m_switch_slot) {
+				else if (slot < m_switch_slot) 
+				{
 					while (slot_idx > slot)
 					{
-						if (is_secondary) {
+						if (is_secondary) 
+						{
 							wpnidx = GetAutoSelectSecondaryWpnIdx(slot_idx-1);
 							SetAutoSelectSecondaryWpnIdx(slot_idx, wpnidx);
 						}
-						else {
+						else 
+						{
 							wpnidx = GetAutoSelectPrimaryWpnIdx(slot_idx-1);
 							SetAutoSelectPrimaryWpnIdx(slot_idx, wpnidx);
 						}
@@ -584,15 +607,18 @@ void wpnsel_cfg_screen::process(int res)
 					}
 					update_buttons = true;
 				}
-				if (is_secondary) {
+				if (is_secondary) 
+				{
 					SetAutoSelectSecondaryWpnIdx(slot, new_wpnidx);
 				}
-				else {
+				else 
+				{
 					SetAutoSelectPrimaryWpnIdx(slot, new_wpnidx);
 				}
 				m_selection_status = -1;
 				m_switch_slot = -1;
-				if (m_weapon_choose.IsCreated()) {
+				if (m_weapon_choose.IsCreated()) 
+				{
 					m_weapon_choose.Destroy();
 				}
 			}
@@ -621,24 +647,30 @@ void wpnsel_cfg_screen::realize()
 		int wpnidx;
 		char str[64];
 		wpnidx = GetAutoSelectPrimaryWpnIdx(i);
-		if (wpnidx != WPNSEL_INVALID) {
-			if (wpnidx & WPNSEL_SKIP) {
+		if (wpnidx != WPNSEL_INVALID) 
+		{
+			if (wpnidx & WPNSEL_SKIP) 
+			{
 				wpnidx &= (~WPNSEL_SKIP);
 				sprintf(str, TXT_WPNSELBTN, TXT(Static_weapon_names_msg[wpnidx]));
 			}
-			else {
+			else 
+			{
 				sprintf(str, "%s", TXT(Static_weapon_names_msg[wpnidx]));
 			}
 			m_primary_disables[i].Create(m_menu, UID_PRIMARY_DIS+i, "X", WPNSEL_PRIMARY_X, WPNSEL_PRIMARY_Y+i*12);
 			m_primary_buttons[i].Create(m_menu, UID_PRIMARY_WPN+i, str, WPNSEL_PRIMARY_X + 28, WPNSEL_PRIMARY_Y+i*12, NEWUI_BTNF_LONG);
 		}
 		wpnidx = GetAutoSelectSecondaryWpnIdx(i);
-		if (wpnidx != WPNSEL_INVALID) {
-			if (wpnidx & WPNSEL_SKIP) {
+		if (wpnidx != WPNSEL_INVALID) 
+		{
+			if (wpnidx & WPNSEL_SKIP) 
+			{
 				wpnidx &= (~WPNSEL_SKIP);
 				sprintf(str, TXT_WPNSELBTN, TXT(Static_weapon_names_msg[wpnidx]));
 			}
-			else {
+			else 
+			{
 				sprintf(str, "%s", TXT(Static_weapon_names_msg[wpnidx]));
 			}
 			m_secondary_disables[i].Create(m_menu, UID_SECONDARY_DIS+i, "X", WPNSEL_SECONDARY_X, WPNSEL_SECONDARY_Y+i*12);
@@ -654,9 +686,9 @@ void wpnsel_cfg_screen::unrealize()
 {
 	int i;
 	m_menu->ResetAcceleratorKey();
-	if (m_weapon_choose.IsCreated()) {
+	if (m_weapon_choose.IsCreated()) 
 		m_weapon_choose.Destroy();
-	}
+	
 	for (i = 0; i < MAX_PRIMARY_WEAPONS; i++)
 	{
 		m_primary_buttons[i].Destroy();
@@ -684,21 +716,24 @@ void ctl_cfg_set_and_verify_changes(short fnid, ct_type elem_type, ubyte ctrl, u
 	t_cfg_element *fn_list;
 	tCfgDataParts cfgparts;
 	int i, n_fn;
-	if (fnid == -1) {
+	if (fnid == -1) 
+	{
 		Int3();							// get samir
 		return;
 	}
 	ASSERT(slot < N_CFGELEM_SLOTS && slot >= 0);
-	if (ctrl == NULL_CONTROLLER) {
+	if (ctrl == NULL_CONTROLLER) 
 		return;
-	}
+	
 // if element is repeated anywhere in function list other than 'fnid'[slot] of elem_type, then remove that
 // binding.
-	if (elem_type == ctNone) { 
+	if (elem_type == ctNone) 
+	{ 
 		Int3(); 
 		return; 
 	}
-	else if (elem_type == ctKey) {
+	else if (elem_type == ctKey) 
+	{
 		n_fn = N_KEY_CFG_FN;
 		fn_list = Cfg_key_elements;
 	}
@@ -713,13 +748,15 @@ void ctl_cfg_set_and_verify_changes(short fnid, ct_type elem_type, ubyte ctrl, u
 		Controller->get_controller_function(fn_list[i].fn_id, ctype_fn, &ccfgdata_fn, cfgflags_fn);
 		
 		parse_config_data(&cfgparts, ctype_fn[0], ctype_fn[1], ccfgdata_fn);
-		if (elem_type == ctype_fn[0] && elem == cfgparts.bind_0 && cfgparts.ctrl_0 == ctrl) {
+		if (elem_type == ctype_fn[0] && elem == cfgparts.bind_0 && cfgparts.ctrl_0 == ctrl) 
+		{
 		// match found! clear this part out.
 			cfgparts.bind_0 = NULL_BINDING;
 			cfgparts.ctrl_0 = NULL_CONTROLLER;
 			match_found = true;
 		}
-		if (elem_type == ctype_fn[1] && elem == cfgparts.bind_1 && cfgparts.ctrl_1 == ctrl) {
+		if (elem_type == ctype_fn[1] && elem == cfgparts.bind_1 && cfgparts.ctrl_1 == ctrl) 
+		{
 		// match found! clear this part out.
 			cfgparts.bind_1 = NULL_BINDING;
 			cfgparts.ctrl_1 = NULL_CONTROLLER;
@@ -737,10 +774,12 @@ void ctl_cfg_set_and_verify_changes(short fnid, ct_type elem_type, ubyte ctrl, u
 	
 	ctype_fn[slot] = elem_type;
 	cfgflags_fn[slot] = 0;
-	if (slot == 1) {
+	if (slot == 1) 
+	{
 		cfgparts.bind_1 = elem;	cfgparts.ctrl_1 = ctrl;
 	}
-	else {
+	else 
+	{
 		cfgparts.bind_0 = elem;	cfgparts.ctrl_0 = ctrl;
 	}
 	ccfgdata_fn = unify_config_data(&cfgparts);
@@ -762,7 +801,8 @@ void ctl_cfg_element_options_dialog(short fnid)
 	int res, y;
 	char str[64];
 	
-	if (fnid == -1) {
+	if (fnid == -1) 
+	{
 		Int3();							// get samir
 		return;
 	}
@@ -797,11 +837,13 @@ void ctl_cfg_element_options_dialog(short fnid)
 // check if there's a binding, if so, then check if we should put up invert axis option.
 	clear_binding[0] = NULL;
 	inv_binding[0] = NULL;
-	if (cfgparts.ctrl_0 != NULL_CONTROLLER) {
+	if (cfgparts.ctrl_0 != NULL_CONTROLLER) 
+	{
 		sprintf(str, TXT_CFG_BIND_1, cfg_binding_text(ctype_fn[0], cfgparts.ctrl_0,cfgparts.bind_0));
 		sheet->NewGroup(str, 0, y, NEWUI_ALIGN_HORIZ);
 		clear_binding[0] = sheet->AddCheckBox(TXT_CFG_CLEAR);
-		if (ctype_fn[0] == ctAxis || ctype_fn[0] == ctMouseAxis) {
+		if (ctype_fn[0] == ctAxis || ctype_fn[0] == ctMouseAxis) 
+		{
 			sheet->AddText(TXT_CFG_INVERT);
 			inv_binding[0] = sheet->AddFirstRadioButton(TXT_NO);
 			sheet->AddRadioButton(TXT_YES);
@@ -812,11 +854,13 @@ void ctl_cfg_element_options_dialog(short fnid)
 // check if there's a binding, if so, then check if we should put up invert axis option.
 	clear_binding[1] = NULL;
 	inv_binding[1] = NULL;
-	if (cfgparts.ctrl_1 != NULL_CONTROLLER) {
+	if (cfgparts.ctrl_1 != NULL_CONTROLLER) 
+	{
 		sprintf(str, TXT_CFG_BIND_2, cfg_binding_text(ctype_fn[1], cfgparts.ctrl_1,cfgparts.bind_1));
 		sheet->NewGroup(str, 0, y, NEWUI_ALIGN_HORIZ);
 		clear_binding[1] = sheet->AddCheckBox(TXT_CFG_CLEAR);
-		if (ctype_fn[1] == ctAxis || ctype_fn[1] == ctMouseAxis) {
+		if (ctype_fn[1] == ctAxis || ctype_fn[1] == ctMouseAxis) 
+		{
 			sheet->AddText(TXT_CFG_INVERT);
 			inv_binding[1] = sheet->AddFirstRadioButton(TXT_NO);
 			sheet->AddRadioButton(TXT_YES);
@@ -828,17 +872,18 @@ void ctl_cfg_element_options_dialog(short fnid)
 	do 
 	{
 		res = wnd.DoUI();
-		if (res == NEWUIRES_FORCEQUIT) {
+		if (res == NEWUIRES_FORCEQUIT) 
 			break;
-		}
 	}
 	while (res != UID_OK && res != UID_CANCEL);
 	if (res == UID_OK) {
-		if (clear_binding[0] && (*clear_binding[0])) {
+		if (clear_binding[0] && (*clear_binding[0])) 
+		{
 			cfgparts.bind_0 = NULL_BINDING;
 			cfgparts.ctrl_0 = NULL_CONTROLLER;
 		}
-		if (clear_binding[1] && (*clear_binding[1]))  {
+		if (clear_binding[1] && (*clear_binding[1]))  
+		{
 			cfgparts.bind_1 = NULL_BINDING;
 			cfgparts.ctrl_1 = NULL_CONTROLLER;
 		}
@@ -880,17 +925,21 @@ int weapon_select_dialog(int wpn, bool is_secondary)
 		int wpnidx;
 		char str[64];
 		wpnidx = is_secondary ? GetAutoSelectSecondaryWpnIdx(i) : GetAutoSelectPrimaryWpnIdx(i);
-		if (wpnidx != WPNSEL_INVALID) {
-			if (wpnidx & WPNSEL_SKIP) {
+		if (wpnidx != WPNSEL_INVALID) 
+		{
+			if (wpnidx & WPNSEL_SKIP) 
+			{
 				wpnidx &= (~WPNSEL_SKIP);
 				sprintf(str, TXT_WPNSELBTN, TXT(Static_weapon_names_msg[wpnidx]));
 			}
-			else {
+			else 
+			{
 				sprintf(str, "%s", TXT(Static_weapon_names_msg[wpnidx]));
 			}
 			lbox->AddItem(str);
 		}
-		else {
+		else 
+		{
 			lbox->AddItem("ERR-WPN");
 		}
 	}											
@@ -1073,9 +1122,8 @@ void key_settings_dialog()
 	do
 	{
 		res = wnd.DoUI();
-		if (res == NEWUIRES_FORCEQUIT) {
+		if (res == NEWUIRES_FORCEQUIT) 
 			break;
-		}
 	}
 	while (res != UID_OK && res != UID_CANCEL);
 	if (res == UID_OK) {

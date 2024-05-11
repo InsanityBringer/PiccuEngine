@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef ARGS_H
 #define ARGS_H
 
@@ -33,5 +34,3 @@ int FindArgChar(char *which, char singleCharArg);
 const char* GetArg( int index );
 
 #endif
-
-

@@ -15,103 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/BOA.h $
- * $Revision: 34 $
- * $Date: 4/30/99 5:40p $
- * $Author: Jason $
- *
- * BOA Header
- *
- * $Log: /DescentIII/main/BOA.h $
- * 
- * 34    4/30/99 5:40p Jason
- * fixed some issues with release builds
- * 
- * 33    4/29/99 5:43p Chris
- * Added the check for bad center points
- * 
- * 32    4/26/99 11:11a Chris
- * Updated Bnode system
- * 
- * 31    4/20/99 8:55p Chris
- * Fixed problem with robots not being able to open locked doors that a
- * player has the key for.
- * 
- * 30    4/18/99 5:39a Chris
- * Vastly improved the path node system
- * 
- * 29    2/25/99 5:43p Chris
- * Massive improvement to BOA and AI (again)  
- * 
- * 28    2/24/99 12:27p Chris
- * Fixed problems with GB finding robots/room he couldn't get to.  Fixed
- * problems with forcefields(sound prop. and path finding).  Fixed
- * problems with small portals.
- * 
- * 27    2/12/99 11:22a Chris
- * Updated what BOA uses for BOA_cost_array.  It is not just the distance
- * from the center of the room to the center of the portal.  It was this +
- * the dist to the next room's center.  The reason for this change was it
- * makes it easier to compute the exact BOA_DIST for sounds.  This is
- * because the two distances are seperated (so from the start pos, we do a
- * vm_Vect dist from the start point to the portal)...  Hmmm....
- * 
- * 26    2/09/99 12:41p Chris
- * 
- * 25    2/09/99 12:40p Chris
- * More aipath stuff has been merged with the new BOA
- * 
- * 24    2/09/99 12:17p Chris
- * 
- * 23    2/09/99 9:58a Chris
- * Massive BOA update  :)  Terrain happy now.  Vis happy now.  Sound happy
- * now.
- * 
- * 22    1/11/99 2:14p Chris
- * Massive work on OSIRIS and AI
- * 
- * 21    12/11/98 1:55p Chris
- * Reduced BOA's size and changed how it works with no path situations
- * 
- * 20    12/09/98 10:41a Jason
- * fixed BOA problems with lighting
- * 
- * 19    9/16/98 12:07p Chris
- * Improved BOA AABB computation with room checksums
- * 
- * 18    8/04/98 2:32p Chris
- * Improved attach code added more fixes to the AABB partial computation
- * patch
- * 
- * 17    8/03/98 5:47p Chris
- * Improved the partial AABB computation
- * 
- * 16    7/21/98 2:14p Chris
- * Some FVI speedups - not done
- * 
- * 15    7/20/98 5:39p Jason
- * fixed MACRO bug
- * 
- * 14    7/20/98 4:45p Jason
- * added BOA vis table stuff
- * 
- * 13    7/16/98 8:29p Chris
- * Intermediate checkin
- * 
- * 12    7/16/98 8:29p Chris
- * Partial implementation of the new collide code
- * 
- * 11    5/03/98 8:36p Chris
- * Additional debug info
- * 
- * 10    4/28/98 12:01p Matt
- * Dropped MAX_PATH_PORTALS from 100 down to 40.
- * 
- * 9     4/22/98 6:38p Matt
- * Added SourceSafe header
- * 
- */
 
 #ifndef _BOA_H__
 #define _BOA_H__
@@ -242,11 +145,11 @@ class pq
 #define BOAF_TOO_SMALL_FOR_ROBOT	0x8000
 #define BOA_TOO_SMALL_FOR_ROBOT(a, b) ((BOA_Array[a][b]&BOAF_TOO_SMALL_FOR_ROBOT)!=0)
 
-typedef struct connect_data
+struct connect_data
 {
 	int roomnum;
 	int portal;
-} connect_data;
+};
 
 extern int BOA_num_mines;
 extern int BOA_num_terrain_regions;
