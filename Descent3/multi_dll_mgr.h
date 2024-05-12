@@ -15,84 +15,19 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/multi_dll_mgr.h $
-* $Revision: 19 $
-* $Date: 4/25/99 5:02p $
-* $Author: Kevin $
-*
-* Multi player DLL interface manager
-*
-* $Log: /DescentIII/main/multi_dll_mgr.h $
- * 
- * 19    4/25/99 5:02p Kevin
- * Bunches of multiplayer UI improvements
- * 
- * 18    4/08/99 3:41p Kevin
- * Added some stuff for the scoring API. Not functional yet.
- * 
- * 17    1/12/99 2:55p Jeff
- * added/finished the waiting for player's to join dialog
- * 
- * 16    12/08/98 3:28p Jeff
- * created and exported UI Checkbox wrappers
- * 
- * 15    11/19/98 5:56p Jeff
- * created Slider wrappers
- * 
- * 14    10/29/98 7:00p Jeff
- * create some new UI function wrappers
- * 
- * 13    9/15/98 12:42p Jason
- * got dedicated server actually working
- * 
- * 12    8/31/98 10:14a Kevin
- * Misc. multi-UI fixes
- * 
- * 11    8/27/98 5:03p Kevin
- * Prettied up multiplayer screens and fixed some bugs.
- * 
- * 10    8/24/98 10:55a Kevin
- * new directplay stuff
- * 
- * 9     8/07/98 12:40p Jeff
- * added some functions
- * 
- * 8     7/20/98 2:34p Kevin
- * Re-wrote the DLL wrapper, to allow for better expandability
- * 
- * 6     6/24/98 6:40p Kevin
- * Added help to main dll menu
- * 
- * 5     6/24/98 3:24p Kevin
- * Updated PXO screens with chat, etc.
- * 
- * 4     6/18/98 4:49p Kevin
- * Updated multiplayer menus
- * 
- * 3     6/01/98 10:09a Kevin
- * Added DLL connection interface and auto update DLL
- * 
- * 2     5/18/98 12:16p Kevin
- * Initial version
- * 
- * 1     5/18/98 12:07p Kevin
-*
-* $NoKeywords: $
-*/
 
 #ifndef _multi_dll_header
 #define _multi_dll_header
 
-#define MT_EVT_LOGIN			1
+#define MT_EVT_LOGIN		1
 #define MT_EVT_FIRST_FRAME	2
-#define MT_EVT_FRAME			3
+#define MT_EVT_FRAME		3
 #define MT_EVT_GAME_OVER	4
 #define MT_EVT_GET_HELP		5
 #define MT_AUTO_LOGIN		6
 #define MT_AUTO_START		7	// A dedicated server is starting this DLL
 
-typedef struct
+struct multi_api
 {
 	int *objs;
 	int *rooms;
@@ -103,7 +38,7 @@ typedef struct
 	int *ships;
 	int *fp[200];	// function pointers
 	int *vp[200];	// variable pointers
-} multi_api;
+};
 
 #define MAX_AUTO_LOGIN_STUFF_LEN	50
 extern char Auto_login_name[MAX_AUTO_LOGIN_STUFF_LEN];
@@ -115,7 +50,6 @@ void GetMultiAPI (multi_api *api);
 void FreeMultiDLL ();
 int LoadMultiDLL (char *name);
 void CallMultiDLL (int eventnum);
-
 
 void SetUITextItemText(UITextItem *uit,char *newtext,unsigned int color);
 void *NewUIWindowCreate(int x, int y, int w, int h, int flags);

@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef MULTI_SERVER_H
 
 #include "pstypes.h"
@@ -82,7 +83,5 @@ void GetNewRankings (object *killed,object *killer);
 // If rankbuf is non-null, fills in the string corresponding to that rank
 // Returns -1 if not a pxo game (ie no rankings in this game)
 int GetRankIndex (int pnum,char *rankbuf=NULL);
-
-
 
 #endif

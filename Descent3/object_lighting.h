@@ -15,24 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/object_lighting.h $
- * $Revision: 7 $
- * $Date: 3/26/99 3:25p $
- * $Author: Jeff $
- *
- * Header for object_lighting.cpp
- *
- * $Log: /DescentIII/Main/object_lighting.h $
- * 
- * 7     3/26/99 3:25p Jeff
- * option to display hud message when cloaking
- * 
- * 6     1/19/99 4:22p Matt
- * Added the ability for objects to have their own lighting info,
- * different from the default lighting for that type of object.
- * 
- */
 
 #ifndef OBJECT_LIGHTING_H
 #define OBJECT_LIGHTING_H

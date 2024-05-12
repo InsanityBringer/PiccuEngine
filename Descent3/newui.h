@@ -15,173 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/newui.h $
- * $Revision: 49 $
- * $Date: 4/27/99 8:51a $
- * $Author: Matt $
- *
- *	New UI Enhancements for D3
- *
- * $Log: /DescentIII/Main/newui.h $
- * 
- * 49    4/27/99 8:51a Matt
- * Added defines for dialog title sizes
- * 
- * 48    4/26/99 9:12p Matt
- * Made the hotspot color full bright for old newui to make up for the
- * removal of saturation.
- * 
- * 47    4/25/99 3:35a Jeff
- * added a please wait popup dialog when entering telcom
- * 
- * 46    4/24/99 11:13p Jeff
- * added flags for creating a newui window for a title bar
- * 
- * 45    4/20/99 3:32p Kevin
- * made it possible for an edit box to not have a cancel button... used it
- * for choosing team count for server
- * 
- * 44    4/16/99 3:58a Jeff
- * for linux builds include linux_fix.h to get rid of some errors for
- * stricmp
- * 
- * 43    4/15/99 5:28p Samir
- * added advanced messagebox
- * 
- * 42    3/05/99 11:38a Kevin
- * new color scheme
- * 
- * 41    3/03/99 5:14a Jeff
- * added DoWaitMessage()
- * 
- * 40    2/28/99 3:06a Jeff
- * adjust ok/cancel y offset for new ui artwork
- * 
- * 39    2/27/99 8:34p Samir
- * NewuiGameWindow inherits newuiTiledWindow.
- * 
- * 38    2/21/99 6:39p Samir
- * new edit box.
- * 
- * 37    2/16/99 12:06p Samir
- * added new ui api.
- * 
- * 36    12/09/98 4:17p Samir
- * messageboxes use new art.
- * 
- * 35    11/10/98 5:17p Jeff
- * fixed define for OK_CANCEL for new ui artwork
- * 
- * 34    10/07/98 6:27p Samir
- * added code to quit menus if mutliplayer bailed.
- * 
- * 33    10/06/98 5:34p Jeff
- * various UI changes/improvements
- * 
- * 32    9/28/98 4:35p Jeff
- * general UI changes and improvements
- * 
- * 31    9/23/98 3:08p Jeff
- * updated the colors and various other items of config and UI
- * 
- * 30    9/22/98 3:55p Samir
- * moved simple callback to NewUI system.
- * 
- * 29    9/02/98 6:50p Samir
- * added new combo box.
- * 
- * 28    9/02/98 2:54p Jeff
- * added defines for text colors to be used throughout the game...fixed up
- * buddy menu too
- * 
- * 27    8/27/98 2:52p Samir
- * changing window system to work in two modes.
- * 
- * 26    8/20/98 6:46p Samir
- * added DoEditDialog.
- * 
- * 25    8/19/98 2:18p Jeff
- * changed ddio_CleanPath
- * 
- * 24    8/14/98 7:37p Matt
- * Since PSFILENAME_LEN is now considered to be the max length of the
- * string itself (not counting the terminating null), buffers for file
- * name need to be PSFILENAME_LEN+1 bytes long.
- * 
- * 23    7/29/98 5:39p Jeff
- * added DoPathFileDialog
- * 
- * 22    6/22/98 2:34p Samir
- * added ability to use a bitmap as background for NewUIWindows.
- * 
- * 21    6/05/98 5:35p Samir
- * added Class functions to all newui classes.
- * 
- * 20    5/26/98 8:16p Samir
- * implemented UIFileDialog's ONDestroy function.
- * 
- * 19    5/25/98 8:18p Samir
- * File dialogs implemented.
- * 
- * 18    5/19/98 6:23p Samir
- * added NewUIButton
- * 
- * 17    4/29/98 12:55p Samir
- * added titile bar to NewUIWindow.
- * 
- * 16    4/13/98 7:01p Samir
- * added snazzy listbox and edit box art.
- * 
- * 15    3/24/98 10:45a Samir
- * Added GetUICallback.
- * 
- * 14    3/13/98 12:00p Jeff
- * Fixed up DoMessageBox so the text position is correct, it prints a
- * window title, and you can specify text color
- * 
- * 13    3/11/98 2:35p Samir
- * New message box implemented.
- * 
- * 12    3/10/98 7:26p Samir
- * Added new slider.
- * 
- * 11    3/10/98 12:49p Samir
- * Bitmapped dialog  supported.
- * 
- * 10    3/02/98 5:53p Samir
- * Default value for alpha of windows is set.
- * 
- * 9     2/15/98 7:07p Samir
- * Updated NewUIWindow to UIWindow's changes.
- * 
- * 8     2/13/98 6:37p Samir
- * Added DoUIFrameWithoutInput.
- * 
- * 7     2/02/98 4:31p Samir
- * Added prototype for DoUIFrame.
- * 
- * 6     1/30/98 7:04p Samir
- * Added the first NewUIWindow class.
- * 
- * 5     1/26/98 2:15p Samir
- * Message box params are char*.
- * 
- * 4     1/13/98 6:29p Samir
- * Moved Large Bitmap code from Menu.cpp to newui.cpp.
- * 
- * 3     1/08/98 12:18p Samir
- * New menu interface.
- * 
- * 2     1/05/98 10:56a Samir
- * New menu stuff.
- * 
- * 1     1/02/98 2:09p Samir
- * Initial revision
- * 
- * 
- * $NoKeywords: $
- */
 
 #ifndef NEWUI_H
 #define NEWUI_H
@@ -255,48 +88,47 @@ void GetCenteredTextPos(int width,int gap,int left_item_width,int middle_item_wi
 #define NEWUIBMP_DIALOG_CORNER2			1
 #define NEWUIBMP_DIALOG_CORNER3			2
 #define NEWUIBMP_DIALOG_CORNER4			3
-#define NEWUIBMP_DIALOG_HORIZTOP			4
+#define NEWUIBMP_DIALOG_HORIZTOP		4
 #define NEWUIBMP_DIALOG_VERTRIGHT		5
-#define NEWUIBMP_DIALOG_HORIZBOT			6
-#define NEWUIBMP_DIALOG_VERTLEFT			7
-#define NEWUIBMP_DIALOG_BACK				8
-#define NEWUIBMP_DIALOG_PANEL				9
-#define NEWUIBMP_MSGBOX_LEFT				10
-#define NEWUIBMP_MSGBOX_RIGHT				11
+#define NEWUIBMP_DIALOG_HORIZBOT		6
+#define NEWUIBMP_DIALOG_VERTLEFT		7
+#define NEWUIBMP_DIALOG_BACK			8
+#define NEWUIBMP_DIALOG_PANEL			9
+#define NEWUIBMP_MSGBOX_LEFT			10
+#define NEWUIBMP_MSGBOX_RIGHT			11
 #define NEWUIBMP_MSGBOX_CENTER			12
 #define NEWUIBMP_SLIDER_BAR				13
 #define NEWUIBMP_SLIDER_BUTTON			14
-#define NEWUIBMP_EDIT_LEFT					15
-#define NEWUIBMP_EDIT_CENTER				16
+#define NEWUIBMP_EDIT_LEFT				15
+#define NEWUIBMP_EDIT_CENTER			16
 #define NEWUIBMP_EDIT_RIGHT				17
-#define NEWUIBMP_LIST_CORNER1				18
-#define NEWUIBMP_LIST_CORNER2				19
-#define NEWUIBMP_LIST_CORNER3				20
-#define NEWUIBMP_LIST_CORNER4				21
+#define NEWUIBMP_LIST_CORNER1			18
+#define NEWUIBMP_LIST_CORNER2			19
+#define NEWUIBMP_LIST_CORNER3			20
+#define NEWUIBMP_LIST_CORNER4			21
 #define NEWUIBMP_LIST_HORIZTOP			22
 #define NEWUIBMP_LIST_VERTRIGHT			23
 #define NEWUIBMP_LIST_HORIZBOT			24
 #define NEWUIBMP_LIST_VERTLEFT			25
-#define NEWUIBMP_LIST_BACK					26
-#define NEWUIBMP_BTN_UP						27
-#define NEWUIBMP_BTN_DOWN					28
+#define NEWUIBMP_LIST_BACK				26
+#define NEWUIBMP_BTN_UP					27
+#define NEWUIBMP_BTN_DOWN				28
 #define NEWUIBMP_BTN_HILITE				29
-#define NEWUIBMP_BTN_UP_L					30
+#define NEWUIBMP_BTN_UP_L				30
 #define NEWUIBMP_BTN_DOWN_L				31
-#define NEWUIBMP_BTN_HILITE_L				32
-#define NEWUIBMP_BTN_UP_R					33
+#define NEWUIBMP_BTN_HILITE_L			32
+#define NEWUIBMP_BTN_UP_R				33
 #define NEWUIBMP_BTN_DOWN_R				34
-#define NEWUIBMP_BTN_HILITE_R				35
+#define NEWUIBMP_BTN_HILITE_R			35
 
 
 //	Large Bitmap system
-typedef struct tLargeBitmap 
+struct tLargeBitmap 
 {
 	int bmps_w;
 	int bmps_h;
 	int *bm_array;
-}
-tLargeBitmap;
+};
 
 //	alpha for all NewUIWindows.
 extern ubyte NewUIWindow_alpha;

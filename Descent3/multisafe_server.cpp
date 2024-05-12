@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include "pstypes.h"
 #include "pserror.h"
 #include "game.h"
@@ -44,8 +45,8 @@ int VerifyMSafeObject (int objnum)
 	}
 
 	return Objects[objectnum].handle;
-	
 }
+
 
 //This is a bit ugly, but I didn't want to totally change the way the msafe calls work.
 //this bool tells msafe if it's ok to process a call even though it's playing back a demo.
@@ -515,8 +516,8 @@ void MultiDoMSafeFunction (ubyte *data)
 	{
 		msafe_CallFunction (type,mstruct);
 	}
-
 }
+
 
 void MultiSendMSafeFunction (ubyte type,msafe_struct *mstruct)
 {
@@ -1206,6 +1207,3 @@ void MultiSendMSafePowerup (msafe_struct *mstruct)
 	if( (Game_mode & GM_MULTI) && (Netgame.local_role==LR_SERVER) )
 		MultiSendReliablyToAllExcept (Player_num,data,count,NETSEQ_OBJECTS,false);
 }
-
-
-

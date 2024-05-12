@@ -1,5 +1,5 @@
-/* 
-* Descent 3 
+/*
+* Descent 3
 * Copyright (C) 2024 Parallax Software
 *
 * This program is free software: you can redistribute it and/or modify
@@ -15,107 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/mission_download.cpp $
- * $Revision: 29 $
- * $Date: 10/21/01 6:34p $
- * $Author: Kevin $
- *
- *  Mission file downloading system
- *
- *
- * $Log: /DescentIII/Main/mission_download.cpp $
- * 
- * 29    10/21/01 6:34p Kevin
- * minor fix to prevent a buffer overflow (not a reported bug, just
- * something I noticed and thought was a good idea to avoid).
- * 
- * 28    8/29/01 4:04p Matt
- * Changed download directory from pxo.net to outrage.com
- * 
- * 27    4/28/00 6:48p Jeff
- * created _strlwr for linux
- * 
- * 26    4/19/00 5:18p Matt
- * From Duane for 1.4
- * ifdef-out mod download code for Mac
- * 
- * 25    3/26/00 10:29p Kevin
- * MOD Downloader for 1.4 patch.
- * 
- * 24    11/04/99 12:35a Chris
- * Added support for Merc
- * 
- * 23    10/22/99 1:36p Matt
- * Mac merge
- * 
- * 22    10/18/99 1:27p Kevin
- * Added cf_IsFileInHog
- * 
- * 21    8/23/99 5:12p Kevin
- * Proxy support
- * 
- * 20    8/15/99 8:07p Jeff
- * display interface when extracting files from a zip
- * 
- * 19    8/15/99 4:27p Kevin
- * possibly fixed mission download bug
- * 
- * 18    8/13/99 8:00p Jeff
- * handle zip files with new unzip class
- * 
- * 17    7/21/99 3:48p Kevin
- * changed left border.
- * 
- * 16    5/18/99 10:31p Kevin
- * fixed problem with joining d3.mn3 games and using the minimum install
- * level
- * 
- * 15    4/23/99 6:02p Kevin
- * fixed bug when you can't download a mission
- * 
- * 14    4/14/99 3:56a Jeff
- * fixed case mismatch in #includes
- * 
- * 13    4/07/99 9:38a Kevin
- * Fixed bug when there were no URLs in the mission file
- * 
- * 12    4/03/99 9:26p Jeff
- * changed dialogs that weren't using UID_OK and UID_CANCEL to use and
- * handle them properly
- * 
- * 11    3/23/99 8:57a Kevin
- * Fixed a bug if the user hits cancel
- * 
- * 10    3/03/99 2:32p Kevin
- * 
- * 9     3/03/99 12:33a Kevin
- * Minor OEM changes
- * 
- * 8     2/07/99 1:17a Jeff
- * peppered UI dialogs that were missing NEWUIRES_FORCEQUIT to handle it
- * 
- * 7     2/03/99 4:20p Kevin
- * Got multiplayer working with .mn3 files, and setup autodownloading
- * 
- * 6     1/29/99 5:22p Jeff
- * localization
- * 
- * 5     12/30/98 12:42p Kevin
- * Mission downloading localization
- * 
- * 4     12/30/98 12:19p Kevin
- * 
- * 3     12/30/98 12:15p Kevin
- * Auto Mission Download system
- * 
- * 2     12/28/98 2:22p Kevin
- * Initial mission downloading system
- * 
- * 1     12/28/98 11:42a Kevin
- * 
- * 
- */
 
 #include <stdio.h>
 
@@ -130,7 +29,6 @@
 #include "ddio.h"
 #include "stringtable.h"
 #include "multi_dll_mgr.h"
-//#include "inetgetfile.h"
 #include "grtext.h"
 #include "Mission.h"
 #include "mission_download.h"
@@ -141,62 +39,57 @@
 #endif
 
 int Got_url;
-msn_urls msn_URL = {"",{"","","","",""}};
+msn_urls msn_URL = { "",{"","","","",""} };
 msn_urls Net_msn_URLs;
 
 extern char Proxy_server[200];
 extern short Proxy_port;
 
-int msn_ExtractZipFile(char *zipfilename,char *mn3name);
-
+int msn_ExtractZipFile(char* zipfilename, char* mn3name);
 
 //Request a URL structure from a server containing a list of download locations
 //For the current mission being played
-msn_urls * msn_GetURL(network_address *net_addr)
+msn_urls* msn_GetURL(network_address* net_addr)
 {
-	
-	int count=0;
+	int count = 0;
 	int size;
-	int tries=0;
+	int tries = 0;
 	ubyte data[MAX_GAME_DATA_SIZE];
 	float start_time;
 	network_address from_addr;
 
-	size=START_DATA (MP_ASK_FOR_URL,data,&count);
-	END_DATA(count,data,size);
+	size = START_DATA(MP_ASK_FOR_URL, data, &count);
+	END_DATA(count, data, size);
 
-	Got_url=-1;
+	Got_url = -1;
 
-	while (tries<5 && Got_url==-1)
+	while (tries < 5 && Got_url == -1)
 	{
 		// Send the request
-		ASSERT (size>0);
-		nw_Send (net_addr,data,count,0);
+		ASSERT(size > 0);
+		nw_Send(net_addr, data, count, 0);
 		tries++;
-		
-		start_time=timer_GetTime();
-		while ((timer_GetTime()-start_time<URL_ASK_POLL_TIME) && Got_url==-1)
+
+		start_time = timer_GetTime();
+		while ((timer_GetTime() - start_time < URL_ASK_POLL_TIME) && Got_url == -1)
 		{
 			int packsize;
-			while(((packsize = nw_Receive(Multi_receive_buffer, &from_addr)) > 0) && Got_url==-1)
-			{				
-				MultiProcessBigData(Multi_receive_buffer,packsize,&from_addr);
+			while (((packsize = nw_Receive(Multi_receive_buffer, &from_addr)) > 0) && Got_url == -1)
+			{
+				MultiProcessBigData(Multi_receive_buffer, packsize, &from_addr);
 			}
 		}
 	}
-	
-	if (tries>=5 || Got_url!=1)
+
+	if (tries >= 5 || Got_url != 1)
 		return NULL;
 
 	return &msn_URL;
-
-
-
 }
 
 
 //Get the list of URLs in the msn file 
-msn_urls * msn_GetURL(char * msnfile)
+msn_urls* msn_GetURL(char* msnfile)
 {
 	//static msn_urls url;
 	//strcpy(url.msnname,msnfile);
@@ -207,11 +100,11 @@ msn_urls * msn_GetURL(char * msnfile)
 #define MSN_DWNLD_CHOICE_W	512
 
 //Present the user with a list of URLs to download from. Return the 0 based selection, or -1 if cancel is hit.
-int msn_ShowDownloadChoices(msn_urls *urls)
+int msn_ShowDownloadChoices(msn_urls* urls)
 {
-	UITextItem title_text(TXT_DOWNLOADPROMPT,UICOL_WINDOW_TITLE);
-	UITextItem title1_text(TXT_DONTHAVEMSN,UICOL_WINDOW_TITLE);
-	UITextItem header_text(TXT_DOWNLOADMSN,UICOL_TEXT_NORMAL);
+	UITextItem title_text(TXT_DOWNLOADPROMPT, UICOL_WINDOW_TITLE);
+	UITextItem title1_text(TXT_DONTHAVEMSN, UICOL_WINDOW_TITLE);
+	UITextItem header_text(TXT_DOWNLOADMSN, UICOL_TEXT_NORMAL);
 	UIHotspot ok_hot;
 	UIHotspot cancel_hot;
 	NewUIListBox choices_list;
@@ -220,60 +113,60 @@ int msn_ShowDownloadChoices(msn_urls *urls)
 
 	UIText texts[10];
 
-	int exit_menu=0;
-	int ret=0;
+	int exit_menu = 0;
+	int ret = 0;
 
-	menu_wnd.Create(10,10,MSN_DWNLD_CHOICE_W,MSN_DWNLD_CHOICE_H,UIF_PROCESS_ALL | UIF_CENTER);
-	texts[0].Create (&menu_wnd,&header_text,0,8,UIF_CENTER);
-	texts[1].Create (&menu_wnd,&title_text,0,55,UIF_CENTER);
-	texts[2].Create (&menu_wnd,&title1_text,0,35,UIF_CENTER);
-	
-	UITextItem ok_off(TXT_OK,UICOL_HOTSPOT_LO,UIALPHA_HOTSPOT_LO);
-	UITextItem ok_on(TXT_OK,UICOL_HOTSPOT_HI,UIALPHA_HOTSPOT_HI);
-	UITextItem cancel_off(TXT_CANCEL,UICOL_HOTSPOT_LO,UIALPHA_HOTSPOT_LO);
-	UITextItem cancel_on(TXT_CANCEL,UICOL_HOTSPOT_HI,UIALPHA_HOTSPOT_HI);
+	menu_wnd.Create(10, 10, MSN_DWNLD_CHOICE_W, MSN_DWNLD_CHOICE_H, UIF_PROCESS_ALL | UIF_CENTER);
+	texts[0].Create(&menu_wnd, &header_text, 0, 8, UIF_CENTER);
+	texts[1].Create(&menu_wnd, &title_text, 0, 55, UIF_CENTER);
+	texts[2].Create(&menu_wnd, &title1_text, 0, 35, UIF_CENTER);
 
-	int ok_x,cancel_x;
-	GetCenteredTextPos(menu_wnd.W(),20,ok_on.width(),cancel_on.width(),&ok_x,&cancel_x);
+	UITextItem ok_off(TXT_OK, UICOL_HOTSPOT_LO, UIALPHA_HOTSPOT_LO);
+	UITextItem ok_on(TXT_OK, UICOL_HOTSPOT_HI, UIALPHA_HOTSPOT_HI);
+	UITextItem cancel_off(TXT_CANCEL, UICOL_HOTSPOT_LO, UIALPHA_HOTSPOT_LO);
+	UITextItem cancel_on(TXT_CANCEL, UICOL_HOTSPOT_HI, UIALPHA_HOTSPOT_HI);
 
-	ok_hot.Create(&menu_wnd, UID_OK, KEY_ENTER, &ok_off, &ok_on, 
-									ok_x, MSN_DWNLD_CHOICE_H - OKCANCEL_YOFFSET, 0,0,UIF_FIT);
-	cancel_hot.Create(&menu_wnd,UID_CANCEL, KEY_ESC, &cancel_off,&cancel_on,
-									cancel_x, MSN_DWNLD_CHOICE_H - OKCANCEL_YOFFSET, 0,0,UIF_FIT);
+	int ok_x, cancel_x;
+	GetCenteredTextPos(menu_wnd.W(), 20, ok_on.width(), cancel_on.width(), &ok_x, &cancel_x);
 
-	choices_list.Create(&menu_wnd,1,0,70,480,128,UIF_CENTER|UILB_NOSORT);
+	ok_hot.Create(&menu_wnd, UID_OK, KEY_ENTER, &ok_off, &ok_on,
+		ok_x, MSN_DWNLD_CHOICE_H - OKCANCEL_YOFFSET, 0, 0, UIF_FIT);
+	cancel_hot.Create(&menu_wnd, UID_CANCEL, KEY_ESC, &cancel_off, &cancel_on,
+		cancel_x, MSN_DWNLD_CHOICE_H - OKCANCEL_YOFFSET, 0, 0, UIF_FIT);
+
+	choices_list.Create(&menu_wnd, 1, 0, 70, 480, 128, UIF_CENTER | UILB_NOSORT);
 	choices_list.SetSelectedColor(UICOL_LISTBOX_HI);
 	choices_list.SetHiliteColor(UICOL_LISTBOX_HI);
 	choices_list.RemoveAll();
-	
+
 	UITextItem urlti[MAX_MISSION_URL_COUNT];
 	//urls
 	int i;
 	int urlcount = 0;
-	for(i=0;i<MAX_MISSION_URL_COUNT;i++)
+	for (i = 0; i < MAX_MISSION_URL_COUNT; i++)
 	{
-		if(urls->URL[i][0])
+		if (urls->URL[i][0])
 		{
-			urlti[i] = UITextItem(urls->URL[i],UICOL_LISTBOX_LO);
+			urlti[i] = UITextItem(urls->URL[i], UICOL_LISTBOX_LO);
 			choices_list.AddItem(&urlti[i]);
 			urlcount++;
 		}
 	}
-	if(urlcount==0)
+	if (urlcount == 0)
 	{
 		//Message that the mission can't be downloaded
-		DoMessageBox(TXT_ERROR,TXT_FMTCANTDNLD,MSGBOX_OK);
+		DoMessageBox(TXT_ERROR, TXT_FMTCANTDNLD, MSGBOX_OK);
 		menu_wnd.Destroy();
 		return -1;
 	}
 	menu_wnd.Open();
 
-	while (!exit_menu) 
+	while (!exit_menu)
 	{
 		int res;
 
 		res = DoUI();
-		switch(res)
+		switch (res)
 		{
 		case NEWUIRES_FORCEQUIT:
 		case UID_CANCEL:
@@ -322,7 +215,7 @@ int msn_ShowDownloadChoices(msn_urls *urls)
 //Return codes:
 //0 Failed or cancelled
 //1 Success
-int msn_DownloadWithStatus(char *url,char *filename)
+int msn_DownloadWithStatus(char* url, char* filename)
 {
 	return 0;
 	/*
@@ -379,7 +272,7 @@ int msn_DownloadWithStatus(char *url,char *filename)
 	{
 		ddio_MakePath(qualfile,D3MissionsDir,filename,NULL);
 	}
-	InetGetFile *getmsnfile;	
+	InetGetFile *getmsnfile;
 	if(Proxy_server[0])
 	{
 		getmsnfile = new InetGetFile(url,qualfile,Proxy_server,Proxy_port);
@@ -388,11 +281,11 @@ int msn_DownloadWithStatus(char *url,char *filename)
 	{
 		getmsnfile = new InetGetFile(url,qualfile);
 	}
-	
+
 	UITextItem title_text(TXT_MD_DOWNLOADSTATUS,UICOL_TEXT_NORMAL);
 
 	UIHotspot cancel_hot;
-	
+
 	UITextItem download_text(fmturl,UICOL_TEXT_NORMAL);;
 	UITextItem rcvd_text(fmtrcvd,UICOL_TEXT_NORMAL);
 	UITextItem total_text(fmttotal,UICOL_TEXT_NORMAL);
@@ -416,27 +309,27 @@ int msn_DownloadWithStatus(char *url,char *filename)
 	texts[4].Create (&menu_wnd,&elaps_text,MSN_COL_1,MSN_ROW_3,0);
 	texts[5].Create (&menu_wnd,&time_r_text,MSN_COL_2,MSN_ROW_3,0);
 	texts[6].Create (&menu_wnd,&rate_text,MSN_COL_1,MSN_ROW_4,0);
-	
+
 	UITextItem cancel_off(TXT_CANCEL,UICOL_HOTSPOT_LO,UIALPHA_HOTSPOT_LO);
 	UITextItem cancel_on(TXT_CANCEL,UICOL_HOTSPOT_HI,UIALPHA_HOTSPOT_HI);
 
 	progress.Create(&menu_wnd,MSN_COL_1,MSN_ROW_5,MSN_DWNLD_STATUS_W-(MSN_BORDER_W*2),35,0);
 
 	int cancel_x = 0;
-		
+
 	cancel_hot.Create(&menu_wnd, UID_CANCEL, KEY_ESC, &cancel_off,&cancel_on,
 									cancel_x, MSN_DWNLD_STATUS_H - OKCANCEL_YOFFSET, 0,0,UIF_FIT|UIF_CENTER);
 	menu_wnd.Open();
 
 	last_refresh = timer_GetTime()-MSN_REFRESH_INTERVAL;
 
-	while (!exit_menu) 
+	while (!exit_menu)
 	{
 		int res;
-		
+
 		if((timer_GetTime()-last_refresh)>MSN_REFRESH_INTERVAL)
 		{
-			
+
 			//Update the dialog
 			//mprintf((0,"!"));
 
@@ -474,7 +367,7 @@ int msn_DownloadWithStatus(char *url,char *filename)
 			time_elapsed = timer_GetTime()-starttime;
 
 			if(total_bytes)
-			{	
+			{
 				time_remain = ((float)(total_bytes-received_bytes))/((float)(received_bytes/time_elapsed));
 			}
 			if(time_elapsed&&received_bytes)
@@ -536,88 +429,89 @@ int msn_DownloadWithStatus(char *url,char *filename)
 
 
 
-void msn_DoAskForURL(ubyte *indata,network_address *net_addr)
+void msn_DoAskForURL(ubyte* indata, network_address* net_addr)
 {
-	static msn_urls *url;
-	int count=0;
+	static msn_urls* url;
+	int count = 0;
 	int size;
 	int i;
 	ubyte data[MAX_GAME_DATA_SIZE];
-	int num_urls=0;
+	int num_urls = 0;
 
-	if(Netgame.local_role==LR_SERVER)
+	if (Netgame.local_role == LR_SERVER)
 	{
-		size=START_DATA (MP_CUR_MSN_URLS,data,&count);
+		size = START_DATA(MP_CUR_MSN_URLS, data, &count);
 
 		url = msn_GetURL(Netgame.mission);
-		if(url)
-		{			
-			for(i=0;i<MAX_MISSION_URL_COUNT;i++)
+		if (url)
+		{
+			for (i = 0; i < MAX_MISSION_URL_COUNT; i++)
 			{
-				if(url->URL[0])
+				if (url->URL[0])
 				{
 					num_urls++;
 				}
-			}			
+			}
 		}
 		//length of the msn
-		int msnlen = strlen(Netgame.mission)+1; 
-		MultiAddByte(msnlen,data,&count);
+		int msnlen = strlen(Netgame.mission) + 1;
+		MultiAddByte(msnlen, data, &count);
 		//Copy the mission name
-		memcpy(data+count,url->URL[i],msnlen);
+		memcpy(data + count, url->URL[i], msnlen);
 		count += msnlen;
 
 		//Silly copy  protection. Don't download the mn3 if 
 		//"clang.wav" is in it.
-		if(cf_IsFileInHog(Netgame.mission,"clang.wav"))
+		if (cf_IsFileInHog(Netgame.mission, "clang.wav"))
 		{
 			num_urls = 0;
 			return;
 		}
 
 		//Number of URLs
-		MultiAddByte (num_urls,data,&count);
-		for(i=0;i<num_urls;i++)	
+		MultiAddByte(num_urls, data, &count);
+		for (i = 0; i < num_urls; i++)
 		{
-			ushort urllen = strlen(url->URL[i])+1;
-			if((count+urllen)>=MAX_GAME_DATA_SIZE) {
-					// if for some reason the URLS exceed what a packet can send
-					// rather than overflow the memory buffer, just don't send out the packet.
-					// I would just fit any URLS that I can but this is safer to put in a patch.
-					return;
+			ushort urllen = strlen(url->URL[i]) + 1;
+			if ((count + urllen) >= MAX_GAME_DATA_SIZE)
+			{
+				// if for some reason the URLS exceed what a packet can send
+				// rather than overflow the memory buffer, just don't send out the packet.
+				// I would just fit any URLS that I can but this is safer to put in a patch.
+				return;
 			}
-				
+
 			//Write the lenght of the url
-			MultiAddUshort(urllen,data,&count);
+			MultiAddUshort(urllen, data, &count);
 			//Now write the url
-			memcpy(data+count,url->URL[i],urllen);
+			memcpy(data + count, url->URL[i], urllen);
 			count += urllen;
-		}			
-		END_DATA(count,data,size);
-		nw_Send (net_addr,data,count,0);
+		}
+		END_DATA(count, data, size);
+		nw_Send(net_addr, data, count, 0);
 	}
 
 }
 
-void msn_DoCurrMsnURLs(ubyte *data,network_address *net_addr)
+void msn_DoCurrMsnURLs(ubyte* data, network_address* net_addr)
 {
 	int count = 0;
-	int num_urls=0;
+	int num_urls = 0;
 	int i;
 
-	memset(&msn_URL,0,sizeof(msn_URL));
+	memset(&msn_URL, 0, sizeof(msn_URL));
 
-	SKIP_HEADER (data,&count);
+	SKIP_HEADER(data, &count);
 	//Get the mission name
-	int msnlen = MultiGetByte(data,&count);
-	memcpy(&msn_URL.msnname,data+count,msnlen);
+	int msnlen = MultiGetByte(data, &count);
+	memcpy(&msn_URL.msnname, data + count, msnlen);
 	count += msnlen;
-	num_urls = MultiGetByte(data,&count);
+	num_urls = MultiGetByte(data, &count);
 
-	for(i=0;i<num_urls;i++)
+	for (i = 0; i < num_urls; i++)
 	{
-		ushort urllen = MultiGetUshort(data,&count);
-		memcpy(msn_URL.URL[i],data+count,urllen);
+		ushort urllen = MultiGetUshort(data, &count);
+		memcpy(msn_URL.URL[i], data + count, urllen);
 		count += urllen;
 	}
 	Got_url = 1;
@@ -628,41 +522,36 @@ void msn_DoCurrMsnURLs(ubyte *data,network_address *net_addr)
 //If it does, return true
 //If it doesn't attempt to download it. On success return true
 //Otherwise return false
-int msn_CheckGetMission(network_address *net_addr,char *filename)
+int msn_CheckGetMission(network_address* net_addr, char* filename)
 {
 #ifdef OEM
 	return 1;
 #else
-	if( (strcmpi(filename,"d3_2.mn3")==0) || (strcmpi(filename,"d3.mn3")==0) )
+	if ((strcmpi(filename, "d3_2.mn3") == 0) || (strcmpi(filename, "d3.mn3") == 0))
 	{
-		char *p = GetMultiCDPath(filename);
-		return p?1:0;
+		char* p = GetMultiCDPath(filename);
+		return p ? 1 : 0;
 	}
 
-	
-	char pathname[PSFILENAME_LEN*2];
+
+	char pathname[PSFILENAME_LEN * 2];
 	ddio_MakePath(pathname, D3MissionsDir, filename, NULL);
-	if(cfexist(filename)||cfexist(pathname))
+	if (cfexist(filename) || cfexist(pathname))
 	{
 		return 1;
 	}
-#if defined (MACINTOSH)
-//	DoMessageBox(TXT_ERROR,TXT_FMTCANTDNLD,MSGBOX_OK);
-	DoMessageBox(TXT_ERROR,"The Selected mission is not in the missions folder",MSGBOX_OK);
-	return 0;
-#endif
 
-	msn_urls * murls;
-		
+	msn_urls* murls;
+
 	murls = msn_GetURL(net_addr);
-	if(murls)
+	if (murls)
 	{
 		int sel = msn_ShowDownloadChoices(murls);
-		if(sel!=-1)
+		if (sel != -1)
 		{
 			//Get the item that was selected!
-			mprintf((0,"Downloading missions file from %s\n",murls->URL[sel]));
-			if(msn_DownloadWithStatus(murls->URL[sel],filename))
+			mprintf((0, "Downloading missions file from %s\n", murls->URL[sel]));
+			if (msn_DownloadWithStatus(murls->URL[sel], filename))
 			{
 				return 1;
 			}
@@ -670,25 +559,25 @@ int msn_CheckGetMission(network_address *net_addr,char *filename)
 	}
 	else
 	{
-		DoMessageBox(TXT_ERROR,TXT_FMTCANTDNLD,MSGBOX_OK);
+		DoMessageBox(TXT_ERROR, TXT_FMTCANTDNLD, MSGBOX_OK);
 	}
 	return 0;
 #endif
 }
 
-void msn_ClipURLToWidth(int width,char *string)
+void msn_ClipURLToWidth(int width, char* string)
 {
-	if(!string)
+	if (!string)
 		return;
-	
+
 	int string_length = strlen(string);
 
 	int size = 0;
 	char save = string[0];
 	string[0] = NULL;
-	while(size<string_length)
+	while (size < string_length)
 	{
-		if((grtext_GetTextLineWidth(string))>=width)
+		if ((grtext_GetTextLineWidth(string)) >= width)
 		{
 			return;
 		}
@@ -701,7 +590,7 @@ void msn_ClipURLToWidth(int width,char *string)
 }
 
 
-char * msn_SecondsToString(int time_sec)
+char* msn_SecondsToString(int time_sec)
 {
 	static char fmttime[100];
 	char fmttemp[100] = "";
@@ -710,51 +599,49 @@ char * msn_SecondsToString(int time_sec)
 	int seconds;
 	int i;
 	fmttime[0] = NULL;
-	hours = time_sec/3600;
-	i = time_sec%3600;
-	minutes = i/60;
-	seconds = time_sec%60;
-	if(hours)
+	hours = time_sec / 3600;
+	i = time_sec % 3600;
+	minutes = i / 60;
+	seconds = time_sec % 60;
+	if (hours)
 	{
-		sprintf(fmttemp,TXT_FMTTIMEHOUR,hours);
-		strcat(fmttime," ");
-		strcat(fmttime,fmttemp);		
+		sprintf(fmttemp, TXT_FMTTIMEHOUR, hours);
+		strcat(fmttime, " ");
+		strcat(fmttime, fmttemp);
 	}
-	if(minutes)
+	if (minutes)
 	{
-		sprintf(fmttemp,TXT_FMTTIMEMIN,minutes);
-		strcat(fmttime," ");
-		strcat(fmttime,fmttemp);
+		sprintf(fmttemp, TXT_FMTTIMEMIN, minutes);
+		strcat(fmttime, " ");
+		strcat(fmttime, fmttemp);
 	}
-	if(seconds)
+	if (seconds)
 	{
-		sprintf(fmttemp,TXT_FMTTIMESEC,seconds);
-		strcat(fmttime,fmttemp);
+		sprintf(fmttemp, TXT_FMTTIMESEC, seconds);
+		strcat(fmttime, fmttemp);
 	}
 	return fmttime;
-} 
+}
 
-void _get_zipfilename(char *output,char *directory,char *zipfilename)
+void _get_zipfilename(char* output, char* directory, char* zipfilename)
 {
-	char* s = strrchr(zipfilename,'/');
-	if(s)
+	char* s = strrchr(zipfilename, '/');
+	if (s)
 		s++;
 	else
 		s = zipfilename;
 
-	ddio_MakePath(output,directory,s,NULL);
+	ddio_MakePath(output, directory, s, NULL);
 }
 
 // return 0 on failure
 // return 1 on success
-int msn_ExtractZipFile(char *zipfilename,char *mn3name)
+int msn_ExtractZipFile(char* zipfilename, char* mn3name)
 {
-#ifndef MACINTOSH
-
-	mprintf((0,"Extracting ZIP File (%s) to missions directory\n",zipfilename));
-	if(!cfexist(zipfilename))
+	mprintf((0, "Extracting ZIP File (%s) to missions directory\n", zipfilename));
+	if (!cfexist(zipfilename))
 	{
-		mprintf((0,"Zip file doesn't exist\n"));
+		mprintf((0, "Zip file doesn't exist\n"));
 		return 0;
 	}
 
@@ -762,156 +649,156 @@ int msn_ExtractZipFile(char *zipfilename,char *mn3name)
 	char output_filename[_MAX_PATH];
 	char buffer[256];
 
-	ddio_MakePath(mission_directory,LocalD3Dir,"missions",NULL);
+	ddio_MakePath(mission_directory, LocalD3Dir, "missions", NULL);
 
 	// now go through the zip file and extract all the files out that we can
 	ZIP zfile;
-	zipentry *ze;
+	zipentry* ze;
 
-	if(!zfile.OpenZip(zipfilename))
+	if (!zfile.OpenZip(zipfilename))
 	{
-		mprintf((0,"Unable to open zip file\n"));
+		mprintf((0, "Unable to open zip file\n"));
 		return 0;
 	}
 
-	NewUIGameWindow window;	
+	NewUIGameWindow window;
 	UIConsoleGadget console;
 
 	//Create all the UI Items
-	window.Create(0,0,384,288);
-	console.Create(&window,0x99,25,25,0,35,18,0);
+	window.Create(0, 0, 384, 288);
+	console.Create(&window, 0x99, 25, 25, 0, 35, 18, 0);
 	window.Open();
 
 	bool found_mn3 = false;
 	bool process_file;
 
-	while( (ze = zfile.ReadNextZipEntry()) != NULL)
+	while ((ze = zfile.ReadNextZipEntry()) != NULL)
 	{
-		if(ze->crc32==0)
+		if (ze->crc32 == 0)
 			continue;	//skip directories
 
 		Descent->defer();
 		process_file = true;
 
-		mprintf((0,"Processesing: %s\n",ze->name));
+		mprintf((0, "Processesing: %s\n", ze->name));
 
-		if(ze->compression_method==0x0000 || ze->compression_method==0x0008)
+		if (ze->compression_method == 0x0000 || ze->compression_method == 0x0008)
 		{
-			char* rfile = strrchr(ze->name,'/');
-			if(rfile)
+			char* rfile = strrchr(ze->name, '/');
+			if (rfile)
 				rfile++;
 			else
 				rfile = ze->name;
 
-			sprintf(buffer,"%s %s...",(ze->compression_method==0x0000)?"Extracting":"Inflating",rfile);
-			console.puts(GR_GREEN,buffer);
+			sprintf(buffer, "%s %s...", (ze->compression_method == 0x0000) ? "Extracting" : "Inflating", rfile);
+			console.puts(GR_GREEN, buffer);
 
 			// create the filename for this file
-			_get_zipfilename(output_filename,mission_directory,ze->name);
+			_get_zipfilename(output_filename, mission_directory, ze->name);
 
-			if(cfexist(output_filename))
+			if (cfexist(output_filename))
 			{
-				sprintf(buffer,"%s already exists. Overwrite?",output_filename);
-				if(DoMessageBox("Confirm",buffer,MSGBOX_YESNO,UICOL_WINDOW_TITLE,UICOL_TEXT_NORMAL))
+				sprintf(buffer, "%s already exists. Overwrite?", output_filename);
+				if (DoMessageBox("Confirm", buffer, MSGBOX_YESNO, UICOL_WINDOW_TITLE, UICOL_TEXT_NORMAL))
 				{
 					//delete the file
-					mprintf((0,"Deleting %s\n",zipfilename));
-					if(!ddio_DeleteFile(output_filename))
+					mprintf((0, "Deleting %s\n", zipfilename));
+					if (!ddio_DeleteFile(output_filename))
 					{
 						process_file = false;
-						console.puts(GR_GREEN,"[Unable to Write] ");
-					}else
+						console.puts(GR_GREEN, "[Unable to Write] ");
+					}
+					else
 					{
-						console.puts(GR_GREEN,"[Overwriting] ");
-					}					
-				}else
+						console.puts(GR_GREEN, "[Overwriting] ");
+					}
+				}
+				else
 				{
 					process_file = false;
-					console.puts(GR_GREEN,"[Skipped] ");
+					console.puts(GR_GREEN, "[Skipped] ");
 				}
 			}
 
 			// extract this file
-			if(process_file)
+			if (process_file)
 			{
 				//update the screen
 				DoUIFrame();
 				rend_Flip();
 
-				int ret = zfile.ExtractFile(ze,output_filename);
-				if(ret<0)
+				int ret = zfile.ExtractFile(ze, output_filename);
+				if (ret < 0)
 				{
-					if(ret==-9)
+					if (ret == -9)
 					{
-						mprintf((0," Error writing to file\n"));
-						sprintf(buffer,"\nError writing to file (Out of space?)");
-					}else
-					{
-						mprintf((0," Error %d extracting file\n",ret));
-						sprintf(buffer,"\nError %d extracting file",ret);
+						mprintf((0, " Error writing to file\n"));
+						sprintf(buffer, "\nError writing to file (Out of space?)");
 					}
-					console.puts(GR_GREEN,buffer);
-					if(cfexist(output_filename))
+					else
 					{
+						mprintf((0, " Error %d extracting file\n", ret));
+						sprintf(buffer, "\nError %d extracting file", ret);
+					}
+					console.puts(GR_GREEN, buffer);
+					if (cfexist(output_filename))
 						ddio_DeleteFile(output_filename);
-					}
-				}else
+				}
+				else
 				{
 					//check the CRC
 					unsigned int crc = cf_GetfileCRC(output_filename);
-					if(crc==ze->crc32)
+					if (crc == ze->crc32)
 					{
-						console.puts(GR_GREEN,"CRC OK");
+						console.puts(GR_GREEN, "CRC OK");
 
 						//check to see if we extracted our mn3
-						if(CompareZipFileName(ze->name,mn3name))
-						{
+						if (CompareZipFileName(ze->name, mn3name))
 							found_mn3 = true;
-						}
-					}else
+
+					}
+					else
 					{
-						console.puts(GR_GREEN,"CRC FAIL!");
+						console.puts(GR_GREEN, "CRC FAIL!");
 						ddio_DeleteFile(output_filename);
 					}
 				}
 			}
 
-		}else
+		}
+		else
 		{
-			mprintf((0,"Unsupported compression for file (%s)\n",ze->name));
-			console.puts(GR_GREEN,"Unsupported compression!!");
+			mprintf((0, "Unsupported compression for file (%s)\n", ze->name));
+			console.puts(GR_GREEN, "Unsupported compression!!");
 		}
 
-		console.puts(GR_GREEN,"\n");
+		console.puts(GR_GREEN, "\n");
 		DoUIFrame();
 		rend_Flip();
 	}
 	zfile.CloseZip();
 
-	if(DoMessageBox("Confirm","Do you want to delete the zip file? It is no longer needed.",MSGBOX_YESNO,UICOL_WINDOW_TITLE,UICOL_TEXT_NORMAL))
+	if (DoMessageBox("Confirm", "Do you want to delete the zip file? It is no longer needed.", MSGBOX_YESNO, UICOL_WINDOW_TITLE, UICOL_TEXT_NORMAL))
 	{
 		//delete the file
-		mprintf((0,"Deleting %s\n",zipfilename));
+		mprintf((0, "Deleting %s\n", zipfilename));
 		ddio_DeleteFile(zipfilename);
 	}
 
 	window.Close();
 	window.Destroy();
 
-	if(!found_mn3)
+	if (!found_mn3)
 		return 0;
 
 	return 1;
-#else
-	return 0;
-#endif
 }
 
 #ifdef __LINUX__
-char *_strlwr(char *string)
+char* _strlwr(char* string)
 {
-	char *ptr=string;
-	while(*ptr)
+	char* ptr = string;
+	while (*ptr)
 	{
 		*ptr = tolower(*ptr);
 		ptr++;
@@ -922,28 +809,28 @@ char *_strlwr(char *string)
 
 #define MOD_URL_BASEPATH	"http://www.descent3.com/mods/"			//WAS: "http://www.pxo.net/descent3/mods/"
 
-int CheckGetD3M(char *d3m)
+int CheckGetD3M(char* d3m)
 {
 #if !(defined(OEM) || defined(MACINTOSH))
 
-	char modurl[MAX_MISSION_URL_LEN+1];
-	char *lowurl;
-	char pathname[PSFILENAME_LEN*2];
-	char *fixedd3m = NULL;
+	char modurl[MAX_MISSION_URL_LEN + 1];
+	char* lowurl;
+	char pathname[PSFILENAME_LEN * 2];
+	char* fixedd3m = NULL;
 
 
 	ddio_MakePath(pathname, LocalD3Dir, "Netgames", d3m, NULL);
-	if(cfexist(d3m)||cfexist(pathname))
+	if (cfexist(d3m) || cfexist(pathname))
 	{
 		return 1;
 	}
-	
+
 	//Now we need to replace evil spaces with underscores, so the downloader will work
 	fixedd3m = mem_strdup(d3m);
-	char *p = fixedd3m;
-	while(*p)
+	char* p = fixedd3m;
+	while (*p)
 	{
-		if(*p==' ')
+		if (*p == ' ')
 		{
 			*p = '_';
 		}
@@ -951,22 +838,22 @@ int CheckGetD3M(char *d3m)
 	}
 	// This should be the url we can download from.
 	int iurlbase = FindArg("-d3mbaseurl");
-	if(!iurlbase)
+	if (!iurlbase)
 	{
-		strcpy(modurl,MOD_URL_BASEPATH);		
+		strcpy(modurl, MOD_URL_BASEPATH);
 	}
 	else
 	{
-		strcpy(modurl,GameArgs[iurlbase+1]);
+		strcpy(modurl, GameArgs[iurlbase + 1]);
 	}
-	
-	strcat(modurl,fixedd3m);
+
+	strcat(modurl, fixedd3m);
 
 	lowurl = mem_strdup(_strlwr(modurl));
-	mprintf((0,"Downloading mod file from %s\n",modurl));
+	mprintf((0, "Downloading mod file from %s\n", modurl));
 
-	
-	if(ModDownloadWithStatus(modurl,d3m))
+
+	if (ModDownloadWithStatus(modurl, d3m))
 	{
 		mem_free(fixedd3m);
 		return 1;
@@ -988,7 +875,7 @@ int CheckGetD3M(char *d3m)
 //Return codes:
 //0 Failed or cancelled
 //1 Success
-int ModDownloadWithStatus(char *url,char *filename)
+int ModDownloadWithStatus(char* url, char* filename)
 {
 	return 0;
 	/*
@@ -1047,7 +934,7 @@ int ModDownloadWithStatus(char *url,char *filename)
 		//ddio_MakePath(qualfile,D3MissionsDir,filename,NULL);
 		ddio_MakePath(qualfile, LocalD3Dir, "Netgames", filename, NULL);
 	}
-	InetGetFile *getmsnfile;	
+	InetGetFile *getmsnfile;
 	if(Proxy_server[0])
 	{
 		getmsnfile = new InetGetFile(url,qualfile,Proxy_server,Proxy_port);
@@ -1057,11 +944,11 @@ int ModDownloadWithStatus(char *url,char *filename)
 		getmsnfile = new InetGetFile(url,qualfile);
 	}
 	//InetGetFile getmsnfile(url,qualfile);
-	
+
 	UITextItem title_text(TXT_MD_DOWNLOADSTATUS,UICOL_TEXT_NORMAL);
 
 	UIHotspot cancel_hot;
-	
+
 	UITextItem download_text(fmturl,UICOL_TEXT_NORMAL);;
 	UITextItem rcvd_text(fmtrcvd,UICOL_TEXT_NORMAL);
 	UITextItem total_text(fmttotal,UICOL_TEXT_NORMAL);
@@ -1085,27 +972,27 @@ int ModDownloadWithStatus(char *url,char *filename)
 	texts[4].Create (&menu_wnd,&elaps_text,MSN_COL_1,MSN_ROW_3,0);
 	texts[5].Create (&menu_wnd,&time_r_text,MSN_COL_2,MSN_ROW_3,0);
 	texts[6].Create (&menu_wnd,&rate_text,MSN_COL_1,MSN_ROW_4,0);
-	
+
 	UITextItem cancel_off(TXT_CANCEL,UICOL_HOTSPOT_LO,UIALPHA_HOTSPOT_LO);
 	UITextItem cancel_on(TXT_CANCEL,UICOL_HOTSPOT_HI,UIALPHA_HOTSPOT_HI);
 
 	progress.Create(&menu_wnd,MSN_COL_1,MSN_ROW_5,MSN_DWNLD_STATUS_W-(MSN_BORDER_W*2),35,0);
 
 	int cancel_x = 0;
-		
+
 	cancel_hot.Create(&menu_wnd, UID_CANCEL, KEY_ESC, &cancel_off,&cancel_on,
 									cancel_x, MSN_DWNLD_STATUS_H - OKCANCEL_YOFFSET, 0,0,UIF_FIT|UIF_CENTER);
 	menu_wnd.Open();
 
 	last_refresh = timer_GetTime()-MSN_REFRESH_INTERVAL;
 
-	while (!exit_menu) 
+	while (!exit_menu)
 	{
 		int res;
-		
+
 		if((timer_GetTime()-last_refresh)>MSN_REFRESH_INTERVAL)
 		{
-			
+
 			//Update the dialog
 			//mprintf((0,"!"));
 
@@ -1143,7 +1030,7 @@ int ModDownloadWithStatus(char *url,char *filename)
 			time_elapsed = timer_GetTime()-starttime;
 
 			if(total_bytes)
-			{	
+			{
 				time_remain = ((float)(total_bytes-received_bytes))/((float)(received_bytes/time_elapsed));
 			}
 			if(time_elapsed&&received_bytes)

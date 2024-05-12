@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef MARKER_H
 #define MARKER_H
 
@@ -35,6 +36,5 @@ extern int Marker_polynum;
 extern int Marker_message;
 
 extern char MarkerMessages[MAX_PLAYERS*2][MAX_MARKER_MESSAGE_LENGTH];
-
 
 #endif

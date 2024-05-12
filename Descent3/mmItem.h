@@ -15,56 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Source: $
- * $Revision: 14 $
- * $Author: Kevin $
- * $Date: 7/28/99 4:01p $
- *
- * main menu user interface items
- *								
- * $Log: /DescentIII/main/mmItem.h $
- * 
- * 14    7/28/99 4:01p Kevin
- * Mac
- * 
- * 13    4/29/99 3:21a Samir
- * reorganized main menu music to work in config, multiplayer, whereever.
- * 
- * 12    4/15/99 2:32p Kevin
- * Added some code for the Demo
- * 
- * 11    4/15/99 1:40a Jeff
- * changes for linux compile
- * 
- * 10    4/02/99 3:03p Samir
- * opengl doesn't use main menu movie.
- * 
- * 9     3/18/99 10:13a Samir
- * new main menu interface.
- * 
- * 8     2/26/99 5:34p Samir
- * oem screen.
- * 
- * 7     10/22/98 12:46a Matt
- * Made MenuScene() public.
- * 
- * 6     10/20/98 6:24p Samir
- * moved menu down.
- * 
- * 5     10/20/98 3:52p Samir
- * tweaked main menu look.
- * 
- * 4     10/13/98 3:16p Samir
- * enhanced gadgets some more with new effects (added Credits option).
- * 
- * 3     10/12/98 4:40p Samir
- * fancy effect for hotspots in main menu.
- * 
- * 2     10/12/98 1:46p Samir
- * initial new main menu
- * 
- */
+
 #ifndef MMITEM_H
 #define MMITEM_H
 #include "newui.h"
@@ -74,10 +25,10 @@
 //#define MOVIE_MENU //[ISB]
 #endif
 #define MMITEM_ALPHA		192						// default alpha
-#define MMITEM_SAT		0							// default saturation
-#define MMITEM_FONT		MENU_FONT				// default font
-#define MMITEM_COLOR		GR_RGB(255,255,255)	// default color of main menu
-#define MMITEM_X			(Max_window_w*3/5)	// x position of menu text
+#define MMITEM_SAT			0						// default saturation
+#define MMITEM_FONT			MENU_FONT				// default font
+#define MMITEM_COLOR		GR_RGB(255,255,255)		// default color of main menu
+#define MMITEM_X			(Max_window_w*3/5)		// x position of menu text
 #define MMITEM_Y			175						// y position of menu text start
 #define N_MMENU_ITEMS		10						// modify this value to set the maximum main menu items avail.
 #define MM_STARTMENU_TYPE	1						// start menu group (used in mmInterface::AddITem)
@@ -91,15 +42,15 @@
 #define NEWGAME_MUSIC_REGION	1
 #define OPTIONS_MUSIC_REGION	2
 #define MULTI_MUSIC_REGION		3
+
 //	mmItem FX list.
-typedef enum tmmItemFX
+enum tmmItemFX
 {
 	mmItemFXNull,
 	mmItemFXNormal,									// displays item with normal alpha, color, saturation.
 	mmItemFXFadeInToBright,
 	mmItemFXFadeOutToNormal							// fade in and out to and from brighten
-}
-tmmItemFX;
+};
 
 void MenuScene();						// display menu scene
 /////////////////////////////////////////////////////////////////////
@@ -137,9 +88,10 @@ public:
 	};
 };
 #endif
+
 //////////////////////////////////////////////////////////////////////
 class mmInterface;
-// class mmItem
+
 class mmItem : public UIGadget  
 {
 	char *m_text;										// text for item
@@ -175,6 +127,7 @@ protected:
 	virtual void OnUserProcess();					// override: behavior when gadget is processed
 	virtual void OnSelect();
 };
+
 //	Main Menu Interface Object
 struct tCinematic;
 class mmInterface: public UIWindow

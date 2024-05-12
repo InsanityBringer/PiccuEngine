@@ -15,99 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/osiris_dll.h $
-* $Revision: 22 $
-* $Date: 4/14/99 3:57a $
-* $Author: Jeff $
-*
-* OSIRIS system header
-*
-* $Log: /DescentIII/main/osiris_dll.h $
- * 
- * 22    4/14/99 3:57a Jeff
- * fixed case mismatch in #includes
- * 
- * 21    3/10/99 6:21p Jeff
- * many fixes to demo system.  Fixed IGC so cameras move...fixed osiris to
- * be restored correctly, and it handles errors on restore
- * 
- * 20    3/05/99 5:25p Jeff
- * fixed saving demos in multiplayer...required adding a parameter to
- * Osiris_LoadMissionModule() to pass in the name of the d3m file (for
- * storage)
- * 
- * 19    2/28/99 8:52p Jeff
- * added functions to enable/disable creation events
- * 
- * 18    2/18/99 11:06a Jeff
- * added event masks (so you can enable/disable object/trigger/level
- * events)
- * 
- * 17    2/17/99 3:27a Jeff
- * added game checksum function to handle out-of-sync dlls
- * 
- * 16    2/10/99 3:29p Jeff
- * extracted dll manager knows the difference between game hogs and
- * mission hogs
- * 
- * 15    1/22/99 8:54p Jeff
- * added custom-default script overrides
- * 
- * 14    1/22/99 5:15p Jeff
- * added a key to toggle osiris debug messages
- * 
- * 13    1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 12    1/16/99 10:39a Jeff
- * added mission memory management to Osiris...only slightly tested.  Need
- * to solve game save/restore problem still
- * 
- * 11    1/08/99 1:50p Jeff
- * finished support on loading scripts from hogs
- * 
- * 10    1/04/99 12:23p Jeff
- * added to evt_use and support for mission module scripts
- * 
- * 9     12/31/98 7:33p Jeff
- * improved Osiris timers to have unique IDs, along with adding an
- * EVT_TIMERCANCEL and a new flag to autodestruct the timer if a given
- * object handle dies.  
- * 
- * 8     12/18/98 10:42a Jeff
- * added timer support and auto-save memory manager for new osiris.  New
- * events evt_memrestore state added also
- * 
- * 7     12/17/98 7:26p Jeff
- * added memory manager for autosaving script data
- * 
- * 6     12/17/98 5:43p Jeff
- * created timer system for osiris and save restore events
- * 
- * 5     12/17/98 12:08p Jeff
- * first checkin of new implementation of OSIRIS (old OSIRIS no longer
- * works)
- * 
- * 4     12/16/98 10:16p Jeff
- * added functions to call level and trigger events
- * 
- * 3     12/16/98 10:58a Jeff
- * checked in so Jason can use
- * 
- * 2     12/14/98 11:32a Jeff
- * started work on osiris load and bind functions
- * 
- * 1     12/13/98 9:10p Jeff
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef __OSIRIS_H_
 #define __OSIRIS_H_
@@ -337,6 +244,5 @@ void Osiris_DisableCreateEvents(void);
 //		Enables any events involved when an object is created.  This is to be used for
 //	Loading games/viewing demos, as so not to re-initialize good data. (call when done with Osiris_DisableCreateEvents())
 void Osiris_EnableCreateEvents(void);
-
 
 #endif

@@ -1,5 +1,5 @@
-/* 
-* Descent 3 
+/*
+* Descent 3
 * Copyright (C) 2024 Parallax Software
 *
 * This program is free software: you can redistribute it and/or modify
@@ -36,13 +36,13 @@
 // externed from newui.cpp
 extern int UI_frame_result;
 
-static mmInterface *MM_object = NULL;
+static mmInterface* MM_object = NULL;
 // attached window.
-mmInterface *mmItem::m_window = NULL;
+mmInterface* mmItem::m_window = NULL;
 
 
-char *MMSoundFiles[N_MM_SOUNDS] = {"MenuBeepEnter","MenuBeepSelect"};
-void PlayMenuSound(int sound_index, bool wait_till_done=false);
+char* MMSoundFiles[N_MM_SOUNDS] = { "MenuBeepEnter","MenuBeepSelect" };
+void PlayMenuSound(int sound_index, bool wait_till_done = false);
 
 /*
 $$TABLE_SOUND "MenuBeepEnter"
@@ -68,13 +68,13 @@ mmItem::~mmItem()
 
 
 //	attaches a window to all mmitems.
-void mmItem::AttachInterface(mmInterface *wnd)
+void mmItem::AttachInterface(mmInterface* wnd)
 {
 	mmItem::m_window = wnd;
 }
 
 
-void mmItem::Create(int id, int key, int x, int y, const char *text, int flags, tmmItemFX init_fx)
+void mmItem::Create(int id, int key, int x, int y, const char* text, int flags, tmmItemFX init_fx)
 {
 	m_alpha = 0;
 	m_satcount = 0;
@@ -85,7 +85,7 @@ void mmItem::Create(int id, int key, int x, int y, const char *text, int flags, 
 	m_curfx = mmItemFXNull;
 	m_process_speed = 0.0f;
 
-//	set colors
+	//	set colors
 	m_colors[0] = MMITEM_COLOR;
 	m_last_frametime = UI_TIME();
 
@@ -109,7 +109,8 @@ void mmItem::ClearEffects()
 // override: called when resized or before drawing.
 void mmItem::OnFormat()
 {
-	if (m_Flags & UIF_FIT) {
+	if (m_Flags & UIF_FIT) 
+	{
 		ui_DrawSetFont(MMITEM_FONT);
 
 		m_W = (m_text ? ui_GetTextWidth(m_text) : 0);
@@ -121,9 +122,10 @@ void mmItem::OnFormat()
 
 
 // override: behavior when gadget is destroyed.
-void mmItem::OnDestroy()						
+void mmItem::OnDestroy()
 {
-	if (m_text) {
+	if (m_text) 
+	{
 		mem_free(m_text);
 		m_text = NULL;
 	}
@@ -132,11 +134,7 @@ void mmItem::OnDestroy()
 
 void mmItem::OnSelect()
 {
-#ifdef MACINTOSH
-	PlayMenuSound(m_window->SoundHandles[MM_SELECT_SOUND], false);	//why wait?
-#else
 	PlayMenuSound(m_window->SoundHandles[MM_SELECT_SOUND], true);
-#endif
 	UIGadget::OnSelect();
 }
 
@@ -144,7 +142,8 @@ void mmItem::OnSelect()
 // override: behavior when mouse button is pressed.
 void mmItem::OnMouseBtnDown(int btn)
 {
-	if (btn == UILMSEBTN) {
+	if (btn == UILMSEBTN) 
+	{
 		LOCK_FOCUS(this);
 	}
 }
@@ -153,11 +152,12 @@ void mmItem::OnMouseBtnDown(int btn)
 // override: behavior when mouse button is released.
 void mmItem::OnMouseBtnUp(int btn)
 {
-	if (btn == UILMSEBTN) {
-		if (HasFocus()) {
-			if (PT_IN_GADGET(UIGadget::m_Wnd, this, UI_input.mx, UI_input.my)) {
+	if (btn == UILMSEBTN) 
+	{
+		if (HasFocus()) 
+		{
+			if (PT_IN_GADGET(UIGadget::m_Wnd, this, UI_input.mx, UI_input.my)) 
 				OnSelect();
-			}
 		}
 		UNLOCK_FOCUS(this);
 	}
@@ -172,42 +172,42 @@ void mmItem::OnLostFocus()
 
 
 // override: behavior when gadget gains input focus.
-void mmItem::OnGainFocus()					
+void mmItem::OnGainFocus()
 {
 	AddEffect(mmItemFXFadeInToBright);
-	PlayMenuSound(m_window->SoundHandles[MM_FOCUS_SOUND]);	
+	PlayMenuSound(m_window->SoundHandles[MM_FOCUS_SOUND]);
 }
 
 
 // override: behavior when gadget is processed
 void mmItem::OnUserProcess()
 {
-//	if (HasFocus() && !PT_IN_GADGET(m_Wnd, this, UI_input.mx, UI_input.my)) {
-//		LostFocus();
-//	}
+	//	if (HasFocus() && !PT_IN_GADGET(m_Wnd, this, UI_input.mx, UI_input.my)) {
+	//		LostFocus();
+	//	}
 }
 
 
 // override: behavior when gadget is being drawn.
-void mmItem::OnDraw()							
+void mmItem::OnDraw()
 {
-//	if not disabled, do fancy effects.
-	if (m_text) {
-	 	int i;
-
+	//	if not disabled, do fancy effects.
+	if (m_text) 
+	{
 		ui_DrawSetFont(MMITEM_FONT);
 		ui_DrawSetTextType(0);
 		ui_SetCharAlpha(255);
 		ui_DrawString(m_colors[0], 0, 0, m_text);
 		ui_DrawSetTextType(UI_TEXTTYPE_SATURATE);
 		ui_SetCharAlpha((ubyte)m_alpha);
-		for (i=0; i < m_satcount; i++)
+		for (int i = 0; i < m_satcount; i++)
 			ui_DrawString(m_colors[0], 0, 0, m_text);
 	}
 
-	if ((UI_TIME() - m_last_frametime) >= m_process_speed) {
-	// process special fx.
-		switch (m_curfx) 
+	if ((UI_TIME() - m_last_frametime) >= m_process_speed) 
+	{
+		// process special fx.
+		switch (m_curfx)
 		{
 		case mmItemFXNormal:
 			m_alpha = MMITEM_ALPHA;
@@ -218,25 +218,27 @@ void mmItem::OnDraw()
 
 		case mmItemFXFadeOutToNormal:
 			m_process_speed = 0.075f;
-			m_satcount = (m_satcount < MMITEM_SAT) ? MMITEM_SAT : (m_satcount-1);
-			if (m_satcount == MMITEM_SAT) {
+			m_satcount = (m_satcount < MMITEM_SAT) ? MMITEM_SAT : (m_satcount - 1);
+			if (m_satcount == MMITEM_SAT) 
 				m_curfx = mmItemFXNull;
-			}
+			
 			break;
 
 		case mmItemFXFadeInToBright:
 			m_process_speed = 0.075f;
-			m_satcount = (m_satcount > 2) ? 2 : (m_satcount+1);
-			if (m_satcount == 2) {
+			m_satcount = (m_satcount > 2) ? 2 : (m_satcount + 1);
+			if (m_satcount == 2) 
 				m_curfx = mmItemFXNull;
-			}
+			
 			break;
 		}
 
-	// grab new fx.
-		if (m_curfx == mmItemFXNull) {
+		// grab new fx.
+		if (m_curfx == mmItemFXNull) 
+		{
 			tmmItemFX newfx;
-			if (m_fxqueue.recv(&newfx)) {
+			if (m_fxqueue.recv(&newfx)) 
+			{
 				m_process_speed = 0.0f;
 				m_curfx = newfx;
 			}
@@ -245,7 +247,6 @@ void mmItem::OnDraw()
 		m_last_frametime = UI_TIME();
 	}
 }
-
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -257,50 +258,42 @@ bool static_menu_background = false;
 
 void mmInterface::Create()
 {
-	int i;
-
 	MM_object = this;
 
-	UIWindow::Create(0,0,Max_window_w,Max_window_h);
+	UIWindow::Create(0, 0, Max_window_w, Max_window_h);
 	mmItem::AttachInterface(this);
 
 #ifndef MOVIE_MENU
 #if defined(OEM)
-	if (!LoadLargeBitmap("oemmenu.ogf", &m_art)) {
+	if (!LoadLargeBitmap("oemmenu.ogf", &m_art)) 
 		Error("Unable to load main menu art oemmenu.ogf.");
-	}
 #elif defined(DEMO)
-		if (!LoadLargeBitmap("demomenu.ogf", &m_art)) {
+	if (!LoadLargeBitmap("demomenu.ogf", &m_art))
 		Error("Unable to load main menu art demomenu.ogf.");
-	}
 #else
-	if (!LoadLargeBitmap("mainmenu.ogf", &m_art)) {
+	if (!LoadLargeBitmap("mainmenu.ogf", &m_art))
 		Error("Unable to load main menu art mainmenu.ogf.");
-	}
 #endif
 #else
 	if (cfexist("mainmenuoverride.ogf"))
 	{
 		if (!LoadLargeBitmap("mainmenuoverride.ogf", &m_art))
-		{
 			Error("Unable to load main menu art mainmenuoverride.ogf.");
-		}
+		
 		m_movie = NULL;
 		static_menu_background = true;
 	}
 	else
 	{
 		char filename[_MAX_PATH];
-		ddio_MakePath(filename,Base_directory,"movies","mainmenu",NULL);
+		ddio_MakePath(filename, Base_directory, "movies", "mainmenu", NULL);
 		m_movie = StartMovie(filename, true);
 	}
 #endif
 
-// load sounds and music
-	for (i = 0; i < N_MM_SOUNDS; i++)
-	{
+	// load sounds and music
+	for (int i = 0; i < N_MM_SOUNDS; i++)
 		SoundHandles[i] = FindSoundName(IGNORE_TABLE(MMSoundFiles[i]));
-	}
 
 	D3MusicStart("mainmenu.omf");
 	SetMusicRegion(MM_MUSIC_REGION);
@@ -318,7 +311,7 @@ int mmInterface::DoUI()
 
 	SetUICallback(MenuScene);
 
-	while (UI_frame_result == -1) 
+	while (UI_frame_result == -1)
 	{
 		Descent->defer();
 		DoUIFrame();
@@ -333,14 +326,15 @@ int mmInterface::DoUI()
 
 
 //	add item.
-bool mmInterface::AddItem(int id, int key, const char *text, int type)
+bool mmInterface::AddItem(int id, int key, const char* text, int type)
 {
-	if (m_nmenu_items == N_MMENU_ITEMS) {
+	if (m_nmenu_items == N_MMENU_ITEMS) 
+	{
 		Int3();										// N_MMENU_ITEMS needs to be upped! (Samir)
 		return false;
 	}
 
-	m_menuitems[m_nmenu_items].Create(id, key, MMITEM_X, MMITEM_Y+(m_nmenu_items*20), text, (type==1) ? UIF_GROUP_START : (type==2) ? UIF_GROUP_END : (type==3) ? (UIF_GROUP_START+UIF_GROUP_END) : 0 );
+	m_menuitems[m_nmenu_items].Create(id, key, MMITEM_X, MMITEM_Y + (m_nmenu_items * 20), text, (type == 1) ? UIF_GROUP_START : (type == 2) ? UIF_GROUP_END : (type == 3) ? (UIF_GROUP_START + UIF_GROUP_END) : 0);
 	m_nmenu_items++;
 
 	return true;
@@ -356,18 +350,21 @@ void mmInterface::OnDestroy()
 	Sound_system.StopAllSounds();
 
 
-	if (static_menu_background) {
+	if (static_menu_background) 
+	{
 		FreeLargeBitmap(&m_art);
 	}
-	else {
-	#ifdef MOVIE_MENU
-		if (m_movie) {
+	else 
+	{
+#ifdef MOVIE_MENU
+		if (m_movie) 
+		{
 			EndMovie(m_movie);
 			m_movie = NULL;
 		}
-	#else
+#else
 		FreeLargeBitmap(&m_art);
-	#endif
+#endif
 	}
 
 	SetUICallback(DEFAULT_UICALLBACK);
@@ -399,21 +396,21 @@ void mmInterface::CopyrightText()
 	strncpy(hashbuf, GIT_HASH, sizeof(hashbuf) - 1);
 	hashbuf[sizeof(hashbuf) - 1] = '\0';
 
-	int x = Max_window_w - 164,y = Max_window_h-37;		//was -128 and -29
+	int x = Max_window_w - 164, y = Max_window_h - 37;		//was -128 and -29
 
 	// attempt to print text nicely.
 	grtext_SetFont(BRIEFING_FONT);
 	grtext_SetAlpha(192);
-	grtext_SetColor(GR_RGB(255,32,32));
-	grtext_Printf(x,y, "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor);
-	grtext_Puts(x,y+12, engstr.c_str());
+	grtext_SetColor(GR_RGB(255, 32, 32));
+	grtext_Printf(x, y, "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor);
+	grtext_Puts(x, y + 12, engstr.c_str());
 	grtext_Puts(x, y + 24, hashbuf);
 
 	grtext_SetFlags(GRTEXTFLAG_SATURATE);
 
 	for (i = 0; i < 1; i++)
 	{
-		grtext_Printf(x,y, "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor, Program_version.build);
+		grtext_Printf(x, y, "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor, Program_version.build);
 		grtext_Puts(x, y + 12, engstr.c_str());
 		grtext_Puts(x, y + 24, hashbuf);
 	}
@@ -424,14 +421,14 @@ void mmInterface::CopyrightText()
 
 void mmInterface::SetMusicRegion(int region)
 {
-	if (region == -1) {
+	if (region == -1) 
+	{
 		D3MusicStop();
 		D3MusicStart("mainmenu.omf");
 		SetMusicRegion(MM_MUSIC_REGION);
 	}
-	else {
-		D3MusicSetRegion(region ,true);
-	}
+	else
+		D3MusicSetRegion(region, true);
 }
 
 
@@ -446,15 +443,15 @@ void MenuScene()
 
 		if (static_menu_background)
 		{
-			DrawLargeBitmap (&MM_object->m_art, 0, 0, 1.0f );
+			DrawLargeBitmap(&MM_object->m_art, 0, 0, 1.0f);
 		}
 		else
 		{
-		#ifdef MOVIE_MENU
-			FrameMovie( MM_object->m_movie, -1, -1, true );
-		#else 
+#ifdef MOVIE_MENU
+			FrameMovie(MM_object->m_movie, -1, -1, true);
+#else 
 			DrawLargeBitmap(&MM_object->m_art, 0, 0, 1.0f);
-		#endif
+#endif
 		}
 
 		MM_object->CopyrightText();
@@ -468,16 +465,16 @@ void MenuScene()
 
 void PlayMenuSound(int sound_index, bool wait_till_done)
 {
- 	int sound_uid;
+	int sound_uid;
 
 	Sound_system.BeginSoundFrame(false);
 	sound_uid = Sound_system.Play2dSound(sound_index, 1.0f);
 	Sound_system.EndSoundFrame();
 
- 	if (wait_till_done)
+	if (wait_till_done)
 	{
 		float timer = timer_GetTime();
-		while (Sound_system.IsSoundPlaying(sound_uid) && ((timer+5.0f)> timer_GetTime()))
+		while (Sound_system.IsSoundPlaying(sound_uid) && ((timer + 5.0f) > timer_GetTime()))
 		{
 			Sound_system.BeginSoundFrame(false);
 			Descent->defer();

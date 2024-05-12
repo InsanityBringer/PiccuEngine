@@ -15,94 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/multi_external.h $
-* $Revision: 24 $
-* $Date: 9/01/99 4:12p $
-* $Author: Kevin $
-*
-* defines, structs, etc. that can be exported to DLLs
-*
-* $Log: /DescentIII/main/multi_external.h $
- * 
- * 24    9/01/99 4:12p Kevin
- * Byte ordering fixes for the macintosh
- * 
- * 23    7/08/99 5:45p Jason
- * added some extra netgame flags
- * 
- * 22    7/06/99 5:52p Kevin
- * PXO & multiplayer fixes for the patch
- * 
- * 21    5/23/99 3:05a Jason
- * fixed bug with player rankings not being updated correctly
- * 
- * 20    5/20/99 2:52p Jason
- * made autowaypoints work in coop
- * 
- * 19    5/10/99 10:22p Ardussi
- * changes to compile on Mac
- * 
- * 18    5/10/99 12:11a Jason
- * added little endian/big endian safeness
- * 
- * 17    5/09/99 1:34p Kevin
- * Added diffuculty level system to multiplayer
- * 
- * 16    5/07/99 2:51p Jason
- * fixed a bunch of endlevel multiplayer issues
- * 
- * 15    4/21/99 11:26a Jason
- * lowered max players
- * 
- * 14    4/21/99 11:05a Kevin
- * new ps_rand and ps_srand to replace rand & srand
- * 
- * 13    4/17/99 4:34p Jason
- * changes for robot/turret tracking
- * 
- * 12    4/15/99 3:36p Kevin
- * Added mouselook UI stuff to the multiplayer options menu
- * 
- * 11    4/14/99 3:56a Jeff
- * fixed case mismatch in #includes
- * 
- * 10    3/25/99 3:29p Jason
- * added option to randomize powerup respawn points
- * 
- * 9     3/22/99 6:22p Jeff
- * added 2 more audio taunts.  a mulitplayer event when someone plays an
- * audio taunt.  option to disable audio taunts.
- * 
- * 8     3/17/99 4:08p Kevin
- * Changed the way games appear and timeout in the game list.
- * 
- * 7     3/01/99 4:17p Jeff
- * added net flag whether buddy bot allowed
- * 
- * 6     2/19/99 5:21p Kevin
- * Fixed some connection DLLs and a Direct Sound bug with threads.
- * 
- * 5     2/03/99 4:26p Jason
- * made multiplayer coop actually work!
- * 
- * 4     2/03/99 4:20p Kevin
- * Got multiplayer working with .mn3 files, and setup autodownloading
- * 
- * 3     2/02/99 7:06p Jason
- * added ranking system
- * 
- * 2     1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef __MULTI_EXTERNAL_H_
 #define __MULTI_EXTERNAL_H_
@@ -130,9 +42,9 @@
 #define MAX_GAME_DATA_SIZE	(MAX_PACKET_SIZE-4)
 
 //Stuff for the connection DLLs
-#define MT_EVT_LOGIN					1
+#define MT_EVT_LOGIN				1
 #define MT_EVT_FIRST_FRAME			2
-#define MT_EVT_FRAME					3
+#define MT_EVT_FRAME				3
 #define MT_EVT_GAME_OVER			4
 #define MT_EVT_GET_HELP				5
 #define MT_AUTO_LOGIN				6
@@ -167,7 +79,7 @@
 #define NPF_MT_HAS_PILOT_DATA		32		// We got data from the mastertracker
 #define NPF_WROTE_RANK				64		// We told the clients about this clients rank
 
-typedef struct
+struct netplayer
 {
 	network_address addr;
 	int flags;
@@ -199,11 +111,11 @@ typedef struct
 	ushort  pilot_pic_id;
 	float percent_loss;
 	unsigned char digest[16];
-} netplayer;
+};
 
 #define MISSION_NAME_LEN	50
 
-typedef struct
+struct network_game
 {
 	network_address addr;
 	char name[NETGAME_NAME_LEN];
@@ -219,7 +131,7 @@ typedef struct
 	bool	dedicated_server;
 	ubyte difficulty;						// Game difficulty level
 	unsigned int handle;
-} network_game;
+};
 
 // netgame flags
 #define NF_TIMER			0x01		// This level will end when the timer runs out
@@ -243,7 +155,7 @@ typedef struct
 #define NF_COOP					0x40000	// This game is a cooperative game
 
 
-typedef struct
+struct netgame_info
 {
 	ushort server_version;				// This is so client and server code matches
 	char name[NETGAME_NAME_LEN];
@@ -265,7 +177,7 @@ typedef struct
 	int	max_players;
 	ubyte difficulty;						// Game difficulty level
     u_char digest[16];
-} netgame_info;
+};
 
 
 // Inline functions for extracting/packing multiplayer data

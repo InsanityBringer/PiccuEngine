@@ -15,48 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Source: $
- * $Revision: 27 $
- * $Author: Samir $
- * $Date: 4/29/99 2:18a $
- *
- * new NewUI Header
- *
- * $Log: /DescentIII/main/newui_core.h $
- * 
- * 27    4/29/99 2:18a Samir
- * updated art for options style menu.
- * 
- * 26    4/28/99 1:54a Samir
- * visual tweaks to text
- * 
- * 25    4/27/99 2:13p Matt
- * Replaced the two (new) new UI fonts with one new font from Doug. 
- * 
- * 24    4/27/99 9:24a Matt
- * Added system for drawing title bars on dialogs.
- * 
- * 23    4/26/99 7:46p Samir
- * newuiTiledWindow flags passed to create is an int now.
- * 
- * 22    4/21/99 10:58a Samir
- * added changable text.
- * 
- * 21    4/20/99 11:46a Samir
- * numerous ui 'feel' fixes.
- * 
- * 20    4/18/99 7:55p Samir
- * fixed listbox double click and added functions to load and release
- * pertinent newui graphic data.
- * 
- * 19    4/15/99 5:28p Samir
- * added advanced messagebox
- * 
- * 18    4/05/99 5:13p Samir
- * fixed combo box asthetics.
- * 
- */
 
 #ifndef NEWUI_CORE_H
 #define NEWUI_CORE_H
@@ -104,8 +62,6 @@
 #define NEWUI_ARROW_CBDOWN		0x6
 
 
-
-
 // initializes the core system for the newui
 void newuiCore_Init();
 
@@ -146,11 +102,8 @@ void DoUIFrameWithoutInput();
 int GetUIFrameResult();
 
 
-
 //////////////////////////////////////////////////////////////////////////////
-
 //	CLASS simple buttons
-
 class newuiSlider;
 class newuiCheckBox;
 class newuiRadioButton;
@@ -163,7 +116,7 @@ class newuiHotspot;
 
 #define DEFAULT_NEWUID		-5
 
-typedef enum tAlignment
+enum tAlignment
 {
 	NEWUI_ALIGN_VERT,
 	NEWUI_ALIGN_HORIZ
@@ -174,21 +127,20 @@ typedef enum tAlignment
 #define SLIDER_UNITS_FLOAT		2
 
 // used optionally for sliders.
-typedef struct tSliderSettings
+struct tSliderSettings
 {
-	union {
+	union
+	{
 		int i;
 		float f;
-	}
-	min_val;
-	union {
+	} min_val;
+	union
+	{
 		int i;
 		float f;
-	}
-	max_val;
-	int type;										// enumerated above in SLIDER_UNITS
-}
-tSliderStruct;
+	} max_val;
+	int type; // enumerated above in SLIDER_UNITS
+};
 
 
 #define NEWUI_EDIT_CANCELED_STR "\1"		// if a newuiEditbox returns this, then we cancelled. invalid string
@@ -199,7 +151,6 @@ tSliderStruct;
 #define NEWUI_BTNF_LONG			(UIF_CUSTOMF << 1)	// button will be a long version (with art)
 
 //	CLASS contains gadgets
-
 class newuiSheet
 {
 	int m_sx, m_sy;								// origin of sheet gadgets relative to parent.
@@ -762,41 +713,35 @@ private:
 
 
 // inlines and macros
-
 #define F_APPROXIMATE(_f) ((_f)+0.000001f)
 
 inline short CALC_SLIDER_POS_FLOAT(float val, const tSliderSettings *settings, short range)
 {
-	short curpos;
-	curpos = (short)F_APPROXIMATE(((val - settings->min_val.f) * range)/(settings->max_val.f-settings->min_val.f));
+	short curpos = (short)F_APPROXIMATE(((val - settings->min_val.f) * range)/(settings->max_val.f-settings->min_val.f));
 	return curpos;
 }
 
 inline short CALC_SLIDER_POS_INT(int val, const tSliderSettings *settings, short range)
 {
-	short curpos;
 	float num = (float)((val-settings->min_val.i)*range);
 	float dem = (float)((settings->max_val.i - settings->min_val.i));
-	curpos = (short)F_APPROXIMATE(num/dem);
+	short curpos = (short)F_APPROXIMATE(num/dem);
 	return curpos;
 }
 
 
 inline float CALC_SLIDER_FLOAT_VALUE(short val, float min, float max, short range)
 {
-	float retval;
-	retval = F_APPROXIMATE((max-min)*val/range) + min;
+	float retval = F_APPROXIMATE((max-min)*val/range) + min;
 	return retval;
 }
 
 
 inline int CALC_SLIDER_INT_VALUE(short val, int min, int max, short range)
 {
-	int retval;
 	float num = (float)((max-min)*val);
-	retval = (int)(F_APPROXIMATE(num/range)) + min;
+	int retval = (int)(F_APPROXIMATE(num/range)) + min;
 	return retval;
 }
-
 
 #endif

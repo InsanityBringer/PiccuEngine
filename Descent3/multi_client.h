@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef MULTI_CLIENT_H
 
 // Do client stuff for this frame
@@ -25,12 +26,11 @@ void MultiStartClient (char *scriptname);
 
 #define MAX_SAVED_MOVES	100
 
-typedef struct
+struct saved_move
 {
 	float timestamp;
 	vector thrust,rotthrust;
-		
-} saved_move;
+};
 
 extern saved_move SavedMoves[];
 extern int Current_saved_move;

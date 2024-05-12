@@ -1,5 +1,5 @@
-/* 
-* Descent 3 
+/*
+* Descent 3
 * Copyright (C) 2024 Parallax Software
 *
 * This program is free software: you can redistribute it and/or modify
@@ -15,73 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/localization.cpp $
-* $Revision: 18 $
-* $Date: 11/05/99 4:05p $
-* $Author: Jeff $
-*
-* Localization implementation
-*
-* $Log: /DescentIII/main/localization.cpp $
- * 
- * 18    11/05/99 4:05p Jeff
- * fixed bug with 'retry english' closing the file and then trying to read
- * it
- * 
- * 17    10/12/99 11:04a Jeff
- * load english string table if foreign strings are not found
- * 
- * 16    5/05/99 4:33p Jeff
- * fixed Linux filename fix when opening file for second time
- * 
- * 15    5/04/99 8:50p Jeff
- * safety precautions
- * 
- * 14    4/26/99 5:17p Jeff
- * loading string tables is filename friendly (for Linux)...filename must
- * be all lowercase
- * 
- * 13    4/14/99 2:51a Jeff
- * fixed some case mismatched #includes
- * 
- * 12    2/22/99 3:19p Jeff
- * added function to get current language
- * 
- * 11    2/11/99 11:02p Jeff
- * fixed bug with aux string table loading
- * 
- * 10    2/11/99 10:35p Jeff
- * added support for multiple languages in string table files
- * 
- * 9     1/19/99 1:26p Jeff
- * handled \r
- * 
- * 8     1/18/99 12:03p Jeff
- * return true if 0 strings are loaded from a correct string table, not
- * false
- * 
- * 7     1/13/99 4:05p Jeff
- * when loading a script dll, a string table is looked for and
- * automatically loaded and passed to the newly loaded dll on init for
- * use.
- * 
- * 6     6/26/98 4:52p Jeff
- * fixed stupid
- * 
- * 5     6/26/98 4:00p Jeff
- * added parsing of escape characters for CreateStringTable()
- * 
- * 4     6/17/98 3:28p Jeff
- * 
- * 3     6/16/98 10:37a Jeff
- * fixed bug in growstring class, parse escape chars
- * 
- * 2     6/12/98 5:55p Jeff
- * initial creation
-*
-* $NoKeywords: $
-*/
 
 #include <stdlib.h>
 #include <string.h>
@@ -95,20 +28,21 @@
 #include "mem.h"
 #include "ddio.h"
 
-typedef struct
+struct tLangTag
 {
-	char *tag;
+	char* tag;
 	int length;
-}tLangTag;
+};
 
-tLangTag Language_tags[] = {
+tLangTag Language_tags[] =
+{
 	{"!=!",-1},	//English
 	{"!G!",-1},	//German
 	{"!S!",-1},	//Spanish
 	{"!I!",-1},	//Italian
 	{"!F!",-1},	//French
 };
-int Num_languages = sizeof(Language_tags)/sizeof(tLangTag);
+int Num_languages = sizeof(Language_tags) / sizeof(tLangTag);
 
 // The following data, in the anonymous namespace, are static to this file
 namespace
@@ -116,18 +50,18 @@ namespace
 	int Localization_language = -1;
 
 	int String_table_size = 0;
-	char **String_table = NULL;
+	char** String_table = NULL;
 
 	//list of the string table files, they will be loaded in the order they are listed
-	char *String_table_list[] = {"D3.STR",NULL};
+	char* String_table_list[] = { "D3.STR",NULL };
 
-	const char *_Error_string = "!!ERROR MISSING STRING!!";
-	const char *_Empty_string = "\0";
+	const char* _Error_string = "!!ERROR MISSING STRING!!";
+	const char* _Empty_string = "\0";
 }
 
 void Localization_SetLanguage(int type)
 {
-	ASSERT(type>=0 && type<Num_languages);
+	ASSERT(type >= 0 && type < Num_languages);
 	Localization_language = type;
 }
 
@@ -148,10 +82,10 @@ int Localization_GetLanguage(void)
 #define MAX_TAG_LENGTH		3
 
 int GetTotalStringCount(void);
-int LoadStringFile(char *filename,int starting_offset);
-sbyte _parse_line_information(char *line);
-char *_parse_string_tag(char *buffer);
-char *_parse_escape_chars(char *buffer);
+int LoadStringFile(char* filename, int starting_offset);
+sbyte _parse_line_information(char* line);
+char* _parse_string_tag(char* buffer);
+char* _parse_escape_chars(char* buffer);
 
 //Call this to load up the string tables into memory
 //Returns the number of strings loaded, if this is 0, then the program MUST not continue
@@ -160,26 +94,27 @@ int LoadStringTables(void)
 	static bool called = false;
 	int old_language;
 
-	if(called){
+	if (called) 
+	{
 		//Only call this guy once
 		Int3();
 		return 0;
 	}
 	called = true;
-	
+
 	old_language = Localization_language;
-	
+
 	int string_count = GetTotalStringCount();
-	if(string_count==0)
+	if (string_count == 0)
 	{
 		// attempt to load english version of language, so there is something
-		if(Localization_language!=LANGUAGE_ENGLISH)
+		if (Localization_language != LANGUAGE_ENGLISH)
 		{
 			Localization_language = LANGUAGE_ENGLISH;
 			string_count = GetTotalStringCount();
 		}
 
-		if(string_count==0)
+		if (string_count == 0)
 		{
 			return 0;
 		}
@@ -188,27 +123,28 @@ int LoadStringTables(void)
 	String_table_size = 0;
 
 	//malloc our array of char *
-	String_table = (char **)mem_malloc(sizeof(char *)*string_count);
-	if(!String_table)
+	String_table = (char**)mem_malloc(sizeof(char*) * string_count);
+	if (!String_table)
 	{
 		Localization_language = old_language;
 		return 0;
 	}
 
-	for(int tcount=0;tcount<string_count;tcount++)
-		String_table[tcount]=NULL;
+	for (int tcount = 0; tcount < string_count; tcount++)
+		String_table[tcount] = NULL;
 
 	int runcount = 0;
 	int temp;
 	int index = 0;
-	while(String_table_list[index]){
-		temp = LoadStringFile(String_table_list[index],runcount);
-		if(temp==0)
+	while (String_table_list[index])
+	{
+		temp = LoadStringFile(String_table_list[index], runcount);
+		if (temp == 0)
 		{
 			Localization_language = old_language;
 			return 0;
 		}
-		if(runcount + temp > string_count)
+		if (runcount + temp > string_count)
 		{
 			Localization_language = old_language;
 			return 0;
@@ -217,7 +153,7 @@ int LoadStringTables(void)
 		index++;
 	}
 
-	if(runcount==0)
+	if (runcount == 0)
 	{
 		Localization_language = old_language;
 		return 0;
@@ -233,71 +169,71 @@ int LoadStringTables(void)
 //Deallocates all the memory used for the string tables
 void FreeStringTables(void)
 {
-	DestroyStringTable(String_table,String_table_size);
+	DestroyStringTable(String_table, String_table_size);
 	String_table = NULL;
 }
 
-char *GetStringFromTable(int index)
+char* GetStringFromTable(int index)
 {
-	if( (index<0) || (index>=String_table_size) )
-		return const_cast<char*>( _Error_string );
+	if ((index < 0) || (index >= String_table_size))
+		return const_cast<char*>(_Error_string);
 
-	if(!String_table[index])
-		return const_cast<char*>( _Empty_string );
-	
+	if (!String_table[index])
+		return const_cast<char*>(_Empty_string);
+
 	return String_table[index];
 }
 
-void FixFilenameCase(char *filename,char *newfile)
+void FixFilenameCase(char* filename, char* newfile)
 {
-	char path[_MAX_PATH],file[_MAX_FNAME],ext[256];
-	ddio_SplitPath(filename,path,file,ext);
+	char path[_MAX_PATH], file[_MAX_FNAME], ext[256];
+	ddio_SplitPath(filename, path, file, ext);
 
-	char *p;
+	char* p;
 
 	p = file;
-	while( *p ) { *p = tolower(*p); p++; };
+	while (*p) { *p = tolower(*p); p++; };
 	p = ext;
-	while( *p ) { *p = tolower(*p); p++; };
+	while (*p) { *p = tolower(*p); p++; };
 
-	strcat(file,ext);
+	strcat(file, ext);
 
-	if(strlen(path)>0)
-		ddio_MakePath(newfile,path,file,NULL);
+	if (strlen(path) > 0)
+		ddio_MakePath(newfile, path, file, NULL);
 	else
-		strcpy(newfile,file);
+		strcpy(newfile, file);
 }
 
 //Given a filename, pointer to a char * array and a pointer to an int,
 //it will load the string table and fill in the information
 //returns true on success
-bool CreateStringTable(char *filename,char ***table,int *size)
+bool CreateStringTable(char* filename, char*** table, int* size)
 {
 	ASSERT(filename);
-	ASSERT(Localization_language!=-1);
-	if(!filename)
+	ASSERT(Localization_language != -1);
+	if (!filename)
 	{
-		if(table)
+		if (table)
 			*table = NULL;
-		if(size)
+		if (size)
 			*size = 0;
 		return false;
 	}
-	CFILE *file;
+	CFILE* file;
 
 	char fname[_MAX_PATH];
-	FixFilenameCase(filename,fname);
-	file = cfopen(fname,"rt");
-	if(!file)
+	FixFilenameCase(filename, fname);
+	file = cfopen(fname, "rt");
+	if (!file)
 	{
-		if(table)
+		if (table)
 			*table = NULL;
-		if(size)
+		if (size)
 			*size = 0;
 		return false;
 	}
 
-	int old_language,scount;
+	int old_language, scount;
 	char tempbuffer[MAX_STRING_LENGTH];
 
 	old_language = Localization_language;
@@ -307,59 +243,59 @@ try_english:
 	//first found out how many strings total in the file	
 	scount = 0;
 
-	while(!cfeof(file)){
-		cf_ReadString(tempbuffer,MAX_LINE_LENGTH+1,file);
-		if(_parse_line_information(tempbuffer)==Localization_language)
+	while (!cfeof(file)) {
+		cf_ReadString(tempbuffer, MAX_LINE_LENGTH + 1, file);
+		if (_parse_line_information(tempbuffer) == Localization_language)
 			scount++;
 	}
 	cfclose(file);
 
-	if(scount==0)
+	if (scount == 0)
 	{
 		// no strings found, if we are searching a non-English version, then
 		// load english versions
-		if(Localization_language!=LANGUAGE_ENGLISH)
+		if (Localization_language != LANGUAGE_ENGLISH)
 		{
 			Localization_language = LANGUAGE_ENGLISH;
 			// open the file again
-			file = cfopen(fname,"rt");
+			file = cfopen(fname, "rt");
 			goto try_english;
 		}
 
 		// no strings found
 		Localization_language = old_language;
-		mprintf((0,"Localization: Warning, 0 strings found in %s\n",filename));
+		mprintf((0, "Localization: Warning, 0 strings found in %s\n", filename));
 		*table = NULL;
 		*size = 0;
 		return true;
 	}
 
 	*size = scount;
-	char **strtable;
+	char** strtable;
 
 	//malloc our array of char *
-	*table = (char **)mem_malloc(sizeof(char *)*scount);
-	if(!*table)
+	*table = (char**)mem_malloc(sizeof(char*) * scount);
+	if (!*table)
 	{
-		if(table)
+		if (table)
 			*table = NULL;
-		if(size)
+		if (size)
 			*size = 0;
 		Localization_language = old_language;
 		return false;
 	}
 
 	strtable = *table;
-	for(int tcount=0;tcount<scount;tcount++)
-		strtable[tcount]=NULL;
+	for (int tcount = 0; tcount < scount; tcount++)
+		strtable[tcount] = NULL;
 
 	//now load the strings
-	file = cfopen(fname,"rt");
-	if(!file)
+	file = cfopen(fname, "rt");
+	if (!file)
 	{
-		if(table)
+		if (table)
 			*table = NULL;
-		if(size)
+		if (size)
 			*size = 0;
 		Localization_language = old_language;
 		return false;
@@ -372,17 +308,18 @@ try_english:
 
 	int line_info;
 
-	while(!cfeof(file)){
-		cf_ReadString(tempbuffer,MAX_STRING_LENGTH,file);
-		if(scount>=198)
+	while (!cfeof(file)) {
+		cf_ReadString(tempbuffer, MAX_STRING_LENGTH, file);
+		if (scount >= 198)
 			scount = scount;
 
 		line_info = _parse_line_information(tempbuffer);
 
-		switch(line_info)
+		switch (line_info)
 		{
 		case STAG_CONTINUE:
-			if(reading_string){
+			if (reading_string)
+			{
 				//we need to add on to the working buffer
 				string += _parse_escape_chars(tempbuffer);
 			}
@@ -392,7 +329,8 @@ try_english:
 			break;
 		case STAG_COMMENT:
 			//ignore this line
-			if(reading_string){
+			if (reading_string)
+			{
 				//ok we're done with the string, finish it and put it in the string table
 				string.GetString(&strtable[scount]);
 				scount++;
@@ -401,35 +339,39 @@ try_english:
 			reading_string = false;
 			break;
 		default:
+		{
+			if (line_info >= 0 && line_info < Num_languages)
 			{
-				if(line_info>=0 && line_info<Num_languages)
+				if (reading_string)
 				{
-					if(reading_string){
-						//ok we're done with the string, finish it and put it in the string table
-						string.GetString(&strtable[scount]);
-						scount++;
-						string.Destroy();
-						reading_string = false;
-					}
-
-					//see if we should read this string
-					if(line_info == Localization_language)
-					{
-						reading_string = true;
-						//start filling in the buffer
-						string.Destroy();
-						string = _parse_escape_chars(_parse_string_tag(tempbuffer));
-					}
-
-				}else{
-					Int3();	//get Jeff
+					//ok we're done with the string, finish it and put it in the string table
+					string.GetString(&strtable[scount]);
+					scount++;
+					string.Destroy();
 					reading_string = false;
 				}
-			}break;
+
+				//see if we should read this string
+				if (line_info == Localization_language)
+				{
+					reading_string = true;
+					//start filling in the buffer
+					string.Destroy();
+					string = _parse_escape_chars(_parse_string_tag(tempbuffer));
+				}
+
+			}
+			else
+			{
+				Int3();	//get Jeff
+				reading_string = false;
+			}
+		}break;
 		}//end switch
 	}//end while
 
-	if(reading_string){
+	if (reading_string)
+	{
 		//we're at the end of the file and we're reading, so but it in the string table
 		string.GetString(&strtable[scount]);
 		scount++;
@@ -439,23 +381,25 @@ try_english:
 
 	cfclose(file);
 
-	mprintf((0,"String Table (%s) loaded with %d strings\n",filename,*size));
+	mprintf((0, "String Table (%s) loaded with %d strings\n", filename, *size));
 	Localization_language = old_language;
 
-	return (scount==(*size));
+	return (scount == (*size));
 }
 
 //Given a string table and it's count of strings, it will free up it's memory
-void DestroyStringTable(char **table,int size)
+void DestroyStringTable(char** table, int size)
 {
-	if( (size>0) && (table) ){
-		for(int i=0;i<size;i++){
-			if(table[i])
+	if ((size > 0) && (table))
+	{
+		for (int i = 0; i < size; i++)
+		{
+			if (table[i])
 				mem_free(table[i]);
 		}
 	}
 
-	if(table)
+	if (table)
 		mem_free(table);
 }
 
@@ -465,22 +409,23 @@ int GetTotalStringCount(void)
 {
 	int scount = 0;
 	int findex = 0;
-	CFILE *file;
-	char tempbuffer[MAX_LINE_LENGTH+1];
-	ASSERT(Localization_language!=-1);
+	CFILE* file;
+	char tempbuffer[MAX_LINE_LENGTH + 1];
+	ASSERT(Localization_language != -1);
 
-	while(String_table_list[findex])
+	while (String_table_list[findex])
 	{
 		//open the file up
 		char fname[_MAX_PATH];
-		FixFilenameCase(String_table_list[findex],fname);
-		file = cfopen(fname,"rt");
-		if(!file)
+		FixFilenameCase(String_table_list[findex], fname);
+		file = cfopen(fname, "rt");
+		if (!file)
 			return 0;
 
-		while(!cfeof(file)){
-			cf_ReadString(tempbuffer,MAX_LINE_LENGTH+1,file);
-			if(_parse_line_information(tempbuffer)==Localization_language)
+		while (!cfeof(file))
+		{
+			cf_ReadString(tempbuffer, MAX_LINE_LENGTH + 1, file);
+			if (_parse_line_information(tempbuffer) == Localization_language)
 				scount++;
 		}
 
@@ -491,18 +436,18 @@ int GetTotalStringCount(void)
 }
 
 //Loads a string table file, returns number of strings read if everything went ok,else 0
-int LoadStringFile(char *filename,int starting_offset)
+int LoadStringFile(char* filename, int starting_offset)
 {
 	ASSERT(filename);
-	ASSERT(Localization_language!=-1);
-	if(!filename)
+	ASSERT(Localization_language != -1);
+	if (!filename)
 		return 0;
 
-	CFILE *file;
+	CFILE* file;
 	char fname[_MAX_PATH];
-	FixFilenameCase(filename,fname);
-	file = cfopen(fname,"rt");
-	if(!file)
+	FixFilenameCase(filename, fname);
+	file = cfopen(fname, "rt");
+	if (!file)
 		return 0;
 
 	int scount = 0;
@@ -513,17 +458,19 @@ int LoadStringFile(char *filename,int starting_offset)
 	GrowString string;
 	int line_info;
 
-	while(!cfeof(file)){
-		cf_ReadString(buffer,MAX_STRING_LENGTH,file);
-		if(scount>=198)
+	while (!cfeof(file))
+	{
+		cf_ReadString(buffer, MAX_STRING_LENGTH, file);
+		if (scount >= 198)
 			scount = scount;
 
 		line_info = _parse_line_information(buffer);
 
-		switch(line_info)
+		switch (line_info)
 		{
 		case STAG_CONTINUE:
-			if(reading_string){
+			if (reading_string)
+			{
 				//we need to add on to the working buffer
 				string += _parse_escape_chars(buffer);
 			}
@@ -533,46 +480,51 @@ int LoadStringFile(char *filename,int starting_offset)
 			break;
 		case STAG_COMMENT:
 			//ignore this line
-			if(reading_string){
+			if (reading_string)
+			{
 				//ok we're done with the string, finish it and put it in the string table
-				string.GetString(&String_table[scount+starting_offset]);
+				string.GetString(&String_table[scount + starting_offset]);
 				scount++;
 				string.Destroy();
 			}
 			reading_string = false;
 			break;
 		default:
+		{
+			if (line_info >= 0 && line_info < Num_languages)
 			{
-				if(line_info>=0 && line_info<Num_languages)
+				if (reading_string)
 				{
-					if(reading_string){
-						//ok we're done with the string, finish it and put it in the string table
-						string.GetString(&String_table[scount+starting_offset]);
-						scount++;
-						string.Destroy();
-						reading_string = false;
-					}
-
-					//see if we should read this string
-					if(line_info == Localization_language)
-					{
-						reading_string = true;
-						//start filling in the buffer
-						string.Destroy();
-						string = _parse_escape_chars(_parse_string_tag(buffer));
-					}
-
-				}else{
-					Int3();	//get Jeff
+					//ok we're done with the string, finish it and put it in the string table
+					string.GetString(&String_table[scount + starting_offset]);
+					scount++;
+					string.Destroy();
 					reading_string = false;
 				}
-			}break;
+
+				//see if we should read this string
+				if (line_info == Localization_language)
+				{
+					reading_string = true;
+					//start filling in the buffer
+					string.Destroy();
+					string = _parse_escape_chars(_parse_string_tag(buffer));
+				}
+
+			}
+			else
+			{
+				Int3();	//get Jeff
+				reading_string = false;
+			}
+		}break;
 		}//end switch
 	}//end while
 
-	if(reading_string){
+	if (reading_string)
+	{
 		//we're at the end of the file and we're reading, so but it in the string table
-		string.GetString(&String_table[scount+starting_offset]);
+		string.GetString(&String_table[scount + starting_offset]);
 		scount++;
 		string.Destroy();
 		reading_string = false;
@@ -583,29 +535,31 @@ int LoadStringFile(char *filename,int starting_offset)
 }
 
 //returns STAG_* information about the line
-sbyte _parse_line_information(char *line)
+sbyte _parse_line_information(char* line)
 {
-	for(int i=0;i<Num_languages;i++){
-		if(Language_tags[i].length==-1)
+	for (int i = 0; i < Num_languages; i++)
+	{
+		if (Language_tags[i].length == -1)
 			Language_tags[i].length = strlen(Language_tags[i].tag);
 
-		if(!strncmp(line,Language_tags[i].tag,Language_tags[i].length))
+		if (!strncmp(line, Language_tags[i].tag, Language_tags[i].length))
 			return i;
 	}
 
-	if(!strncmp(line,COMMENT_TAG,strlen(COMMENT_TAG)))
+	if (!strncmp(line, COMMENT_TAG, strlen(COMMENT_TAG)))
 		return STAG_COMMENT;
-	if(strlen(line)==0)
+	if (strlen(line) == 0)
 		return STAG_EMPTY;
 	return STAG_CONTINUE;
 }
 
 //parses a string_tag out
-char *_parse_string_tag(char *buffer)
+char* _parse_string_tag(char* buffer)
 {
 	sbyte i = _parse_line_information(buffer);
-	
-	switch(i){
+
+	switch (i)
+	{
 	case STAG_CONTINUE:
 	case STAG_EMPTY:
 		return buffer;
@@ -614,7 +568,7 @@ char *_parse_string_tag(char *buffer)
 		return buffer + (strlen(COMMENT_TAG));
 		break;
 	default:
-		if(i>=0 && i<Num_languages)
+		if (i >= 0 && i < Num_languages)
 		{
 			//we have a specific language...
 			return buffer + (Language_tags[i].length);
@@ -626,25 +580,29 @@ char *_parse_string_tag(char *buffer)
 }
 
 //parses out escape chars...like /t,/n
-char *_parse_escape_chars(char *buffer)
+char* _parse_escape_chars(char* buffer)
 {
 	char tempbuffer[MAX_STRING_LENGTH];
-	int t_index,b_index;
+	int t_index, b_index;
 
 	t_index = 0;
 	b_index = 0;
 
 	//search for a /
-	while(buffer[b_index]!='\0'){
+	while (buffer[b_index] != '\0')
+	{
 		//see if we are at a backslash
-		if(buffer[b_index]!='\\'){
+		if (buffer[b_index] != '\\')
+		{
 			tempbuffer[t_index] = buffer[b_index];
 			t_index++;
 			b_index++;
-		}else{
+		}
+		else
+		{
 			//we are at a backslash, so determine what to do
 			b_index++;
-			switch(toupper(buffer[b_index]))
+			switch (toupper(buffer[b_index]))
 			{
 			case 'T':
 				tempbuffer[t_index] = '\t';
@@ -663,11 +621,13 @@ char *_parse_escape_chars(char *buffer)
 				break;
 			default:
 				//see if we have a number
-				if( (buffer[b_index]>='0') && (buffer[b_index]<='9') ){
+				if ((buffer[b_index] >= '0') && (buffer[b_index] <= '9'))
+				{
 					//we have a number, so parse the value
 					ubyte value = 0;
-					while( (buffer[b_index]>='0') && (buffer[b_index]<='9') ){
-						value = (value*10) + buffer[b_index]-'0';
+					while ((buffer[b_index] >= '0') && (buffer[b_index] <= '9'))
+					{
+						value = (value * 10) + buffer[b_index] - '0';
 						b_index++;
 					}
 					//adjust b_index
@@ -681,10 +641,9 @@ char *_parse_escape_chars(char *buffer)
 		}
 	}
 	tempbuffer[t_index] = '\0';
-	strcpy(buffer,tempbuffer);
+	strcpy(buffer, tempbuffer);
 	return buffer;
 }
-
 
 GrowString::GrowString()
 {
@@ -697,45 +656,49 @@ GrowString::~GrowString()
 	Destroy();
 }
 
-void GrowString::operator += (char *str)
+void GrowString::operator += (char* str)
 {
-	if(!str)
+	if (!str)
 		return;
-	if(root.string_data){
-		tbufferinfo *node;
-		node = (tbufferinfo *)mem_malloc(sizeof(tbufferinfo));
-		if(!node)
+	if (root.string_data)
+	{
+		tbufferinfo* node;
+		node = (tbufferinfo*)mem_malloc(sizeof(tbufferinfo));
+		if (!node)
 			return;
-		node->string_data = (char *)mem_malloc(strlen(str)+2);
-		if(!node->string_data){
+		node->string_data = (char*)mem_malloc(strlen(str) + 2);
+		if (!node->string_data)
+		{
 			mem_free(node);
 			return;
 		}
-		sprintf(node->string_data,"\n%s",str);
+		sprintf(node->string_data, "\n%s", str);
 		curr->next = node;
 		node->next = NULL;
 		curr = node;
-	}else{
-		root.string_data = (char *)mem_malloc(strlen(str)+1);
-		if(!root.string_data)
+	}
+	else
+	{
+		root.string_data = (char*)mem_malloc(strlen(str) + 1);
+		if (!root.string_data)
 			return;
-		strcpy(root.string_data,str);
+		strcpy(root.string_data, str);
 		root.next = NULL;
 	}
 }
 
 void GrowString::Destroy(void)
 {
-	if(root.string_data)
+	if (root.string_data)
 		mem_free(root.string_data);
 	root.string_data = NULL;
 
-	tbufferinfo *c,*next;
+	tbufferinfo* c, * next;
 	c = next = root.next;
-	while(c)
+	while (c)
 	{
 		next = c->next;
-		if(c->string_data)
+		if (c->string_data)
 			mem_free(c->string_data);
 		mem_free(c);
 		c = next;
@@ -745,79 +708,82 @@ void GrowString::Destroy(void)
 	curr = &root;
 }
 
-GrowString GrowString::operator + (char *str)
+GrowString GrowString::operator + (char* str)
 {
 	*this += str;
 	return *this;
 }
 
-GrowString GrowString::operator + (GrowString &gs)
+GrowString GrowString::operator + (GrowString& gs)
 {
-	char *str = NULL;
+	char* str = NULL;
 	gs.GetString(&str);
 	*this += str;
-	if(str)
+	if (str)
 		mem_free(str);
 	return *this;
 }
 
-void GrowString::operator += (GrowString &gs)
+void GrowString::operator += (GrowString& gs)
 {
-	char *str = NULL;
+	char* str = NULL;
 	gs.GetString(&str);
 	*this += str;
-	if(str)
+	if (str)
 		mem_free(str);
 }
 
-void GrowString::operator = (char *str)
+void GrowString::operator = (char* str)
 {
 	Destroy();
 	*this += str;
 }
 
-void GrowString::operator = (GrowString &gs)
+void GrowString::operator = (GrowString& gs)
 {
-	char *str = NULL;
+	char* str = NULL;
 	gs.GetString(&str);
 	*this = str;
-	if(str)
+	if (str)
 		mem_free(str);
 }
 
-void GrowString::GetString(char **str)
+void GrowString::GetString(char** str)
 {
 	*str = NULL;
 	int size = Length();
-	if(size==-1)
+	if (size == -1)
 		return;
 
-	tbufferinfo *next;
+	tbufferinfo* next;
 	next = root.next;
 
-	*str = (char *)mem_malloc(size+1);
+	*str = (char*)mem_malloc(size + 1);
 
-	strcpy(*str,root.string_data);
+	strcpy(*str, root.string_data);
 	next = root.next;
-	while(next){
-		if(next->string_data){
-			strcat(*str,next->string_data);
-		}
+	while (next)
+	{
+		if (next->string_data)
+			strcat(*str, next->string_data);
+
 		next = next->next;
 	}
 }
 
 int GrowString::Length(void)
 {
-	if(!root.string_data)
+	if (!root.string_data)
 		return -1;
 
-	tbufferinfo *next;
+	tbufferinfo* next;
 	next = root.next;
 	int size = strlen(root.string_data);
-	while(next){
-		if(next->string_data)
+	while (next)
+	{
+		if (next->string_data)
 			size += strlen(next->string_data);
+
 		next = next->next;
 	}
 	return size;

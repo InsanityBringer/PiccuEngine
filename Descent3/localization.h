@@ -15,27 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/localization.h $
-* $Revision: 4 $
-* $Date: 2/22/99 3:19p $
-* $Author: Jeff $
-*
-* Localization system header
-*
-* $Log: /DescentIII/main/localization.h $
- * 
- * 4     2/22/99 3:19p Jeff
- * added function to get current language
- * 
- * 3     2/11/99 10:35p Jeff
- * added support for multiple languages in string table files
- * 
- * 2     6/12/98 5:55p Jeff
- * initial creation
-*
-* $NoKeywords: $
-*/
 
 #ifndef __LOCALIZATION_H__
 #define __LOCALIZATION_H__
@@ -45,6 +24,7 @@
 #define LANGUAGE_SPANISH	2
 #define LANGUAGE_ITALIAN	3
 #define LANGUAGE_FRENCH		4
+
 void Localization_SetLanguage(int type);
 int Localization_GetLanguage(void);
 
@@ -68,10 +48,11 @@ void DestroyStringTable(char **table,int size);
 
 //GrowString class
 //handles a string of increasing size (using +,=,+=)
-typedef struct tbufferinfo{
+struct tbufferinfo
+{
 	char *string_data;
 	tbufferinfo *next;
-}tbufferinfo;
+};
 
 class GrowString
 {

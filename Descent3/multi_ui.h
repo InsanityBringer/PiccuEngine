@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef MULTI_UI_H
 #define MULTI_UI_H
 
@@ -26,7 +27,6 @@ int SearchMasterTrackerGameMenu ();
 int LoginMasterTrackerGameMenu ();
 int AutoConnectPXO();
 int AutoConnectLANIP();
-int AutoConnectHeat();
 void DoMultiAllowed(void);
 extern int MultiDLLGameStarting;
 void MultiDoConfigLoad(void);

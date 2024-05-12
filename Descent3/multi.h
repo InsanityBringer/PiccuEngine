@@ -15,478 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/multi.h $
- * $Revision: 172 $
- * $Date: 7/09/01 2:06p $
- * $Author: Matt $
- *
- * Header for multiplayer
- *
- * $Log: /DescentIII/Main/multi.h $
- * 
- * 172   7/09/01 2:06p Matt
- * Channged multiplayer version to 10
- * 
- * 171   5/09/00 5:11p Jeff
- * fixed struct packing bug
- * 
- * 170   4/19/00 5:35p Matt
- * Changed multiplayer version to 9
- * 
- * 169   10/25/99 5:22p Jeff
- * upped multiplayer version for merc/1.3
- * 
- * 168   10/16/99 8:45p Jeff
- * created multi functions to strip a player of his weapons and energy
- * 
- * 167   10/01/99 1:39p Kevin
- * new MULTI_VERSION for demo (macintosh)
- * 
- * 166   9/09/99 12:24p Kevin
- * Fixed a bug that was causing problems in the Mac version
- * (Game_is_master_tracker_game was defined as a ubyte in the game, but an
- * int in the dll)
- * 
- * 165   9/02/99 3:34p Jason
- * send secondary fire reliable in a C/S game
- * 
- * 164   9/01/99 6:56p Jason
- * fixed guided missiles and timeout missiles so they work in multiplayer
- * 
- * 163   9/01/99 4:12p Kevin
- * Byte ordering fixes for the macintosh
- * 
- * 162   7/26/99 2:11p Kevin
- * 1.1 patch multiplayer version change
- * 
- * 161   6/03/99 8:48a Kevin
- * fixes for new OEM version....
- * 
- * 160   5/23/99 3:04a Jason
- * fixed bug with player rankings not being updated correctly
- * 
- * 159   5/20/99 4:54p Jason
- * added heartbeats to server
- * 
- * 158   5/20/99 4:10p Jason
- * added heartbeat to multiplayer so clients wouldn't time out, also
- * various multiplayer fixes
- * 
- * 157   5/19/99 5:39p Jason
- * made level failing work in coop
- * 
- * 156   5/11/99 10:59a Kevin
- * Ship allow/dissalow works now!
- * 
- * 155   5/03/99 2:36p Jason
- * change for multiplayer games
- * 
- * 154   5/02/99 5:01p Kevin
- * changed MAX_RESPAWNS per Jason
- * 
- * 153   4/29/99 11:46p Jason
- * added ability to set the next level in a multiplayer game
- * 
- * 152   4/29/99 11:02p Jeff
- * added the ability for the server to set audio taunt delay time via
- * command line option and/or dedicated server console
- * 
- * 151   4/28/99 2:28a Jeff
- * finished (hopefully) making guidebot multiplayer friendly
- * 
- * 150   4/25/99 10:19p Matt
- * Fixed multiplayer and demo problems will killing an object from script,
- * and cleaned up the death code a bit in the process.
- * 
- * 149   4/24/99 11:58p Kevin
- * Game info list (hit I in the pxo game list)
- * 
- * 148   4/24/99 6:44p Jeff
- * added functions for theif so he can steal things other than weapons
- * 
- * 147   4/17/99 4:24p Kevin
- * Changed multiplayer version number for Demo & regular
- * 
- * 146   4/16/99 12:03a Jeff
- * removed #pragma's for Linux
- * 
- * 145   4/06/99 6:24p Jason
- * various fixes for multiplayer
- * 
- * 144   4/03/99 2:06p Kevin
- * Changed last file to audio taunt #4.
- * 
- * 143   4/02/99 6:31p Jason
- * fixed multiplayer powerup/player start bugs
- * 
- * 142   4/01/99 5:48p Kevin
- * Put in code to make it easy to add the guidebot to multiplayer (coop)
- * games
- * 
- * 141   3/17/99 4:08p Kevin
- * Changed the way games appear and timeout in the game list.
- * 
- * 140   3/11/99 6:30p Jeff
- * numerous fixes to demo system in multiplayer games (when
- * recording/playback a demo in a multiplayer game)
- * 
- * 139   3/02/99 5:50p Kevin
- * Ouch. Duplicate structures existed and were conflicting.
- * 
- * 138   2/25/99 11:01a Matt
- * Added new explosion system.
- * 
- * 137   2/25/99 10:30a Jason
- * added nonvis generic/robot system
- * 
- * 136   2/13/99 12:35a Jeff
- * fixed up packets to handle new inventory system (removed some compiler
- * warnings)
- * 
- * 135   2/12/99 3:38p Jason
- * added client-side interpolation...its not fully debugged though.
- * 
- * 134   2/09/99 6:52p Jeff
- * implemented 'typing inidcator' in multiplayer...players that are typing
- * messages have an icon on them
- * 
- * 133   2/04/99 12:26p Jason
- * added spew that was better for multiplayer
- * 
- * 132   2/03/99 12:15p Jason
- * added multiplayer vis optimizations
- * 
- * 131   1/28/99 6:17p Jason
- * added markers
- * 
- * 130   1/27/99 5:47p Jeff
- * audio taunts implemented!
- * 
- * 129   1/22/99 4:06p Jeff
- * added hud messages that can be sent to just teammates or individual
- * people
- * 
- * 128   1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 127   1/13/99 2:53p Jason
- * added CONNECT_BAIL packet type
- * 
- * 126   1/13/99 6:38a Jeff
- * fixed object.h.  There were numerous struct declarations that were the
- * same name as the instance of the struct (gcc doesn't like this).
- * Changed the struct name.  Also added some #ifdef's for linux build,
- * along with fixing case-sensitive includes
- * 
- * 125   1/08/99 2:56p Samir
- * Ripped out OSIRIS1.
- * 
- * 124   1/05/99 5:09p Jason
- * added permissable server networking (ala Quake/Unreal) to Descent3
- * 
- * 123   1/05/99 11:52a Jason
- * added more msafe functionality
- * 
- * 122   1/04/99 8:11p Jason
- * fixed packet loss tracking problem
- * 
- * 121   12/31/98 7:36p Jeff
- * correctly hash type/ids for multisafe.  Added some new inline functions
- * to add/get type/id to a packet
- * 
- * 120   12/28/98 2:22p Kevin
- * Initial mission downloading system
- * 
- * 119   12/21/98 4:04p Jason
- * first pass at multisafe powerups
- * 
- * 118   12/16/98 5:37p Jason
- * added new multisafe architecture
- * 
- * 117   12/15/98 4:20p Jason
- * added triggers and door funtions to multisafe list
- * 
- * 116   12/14/98 5:32p Jason
- * added multisafe functions
- * 
- * 115   12/14/98 10:53a Jason
- * added bright player ships option
- * 
- * 114   12/10/98 10:51a Jason
- * added autolag
- * 
- * 113   12/07/98 3:02p Jason
- * added multi_logo_state
- * 
- * 112   12/03/98 3:39p Jason
- * added peer 2 peer style damage
- * 
- * 111   12/02/98 10:30a Jason
- * added additional damage types for client-side multiplayer
- * 
- * 110   12/01/98 5:48p Jeff
- * added pilot picture id to netplayer struct
- * 
- * 109   12/01/98 12:47p Jason
- * got rid of NF_DROPMISORDERED and added NF_USE_SMOOTHING
- * 
- * 108   11/19/98 11:27a Jason
- * added Multi_accept_state for Jeff
- * 
- * 107   11/16/98 4:47p Jason
- * changes for multiplayer (weapons load sent and deleting destroyed
- * lightmapped objects)
- * 
- * 106   11/13/98 4:25p Jason
- * changes for better weapon effects
- * 
- * 105   11/11/98 12:11p Chris
- * The attach system and weapon firing (continous and spray) are now
- * network friendly
- * 
- * 104   11/10/98 4:29p Kevin
- * Added attach code for chris
- * 
- * 103   11/10/98 11:16a Jason
- * fixed some multiplayer bugs with powerups disappearing
- * 
- * 
- * 102   11/06/98 5:43p Jason
- * made pings sent not reliably
- * 
- * 101   11/03/98 6:14p Chris
- * Starting to make on/off and spray weapons accessable to robots
- * 
- * 100   10/28/98 11:51a Jason
- * fixed some multiplayer problems, plus redid coop a bit to make it
- * cleaner
- * 
- * 99    10/27/98 10:19a Jason
- * changes for new architecture
- * 
- * 98    10/23/98 1:08p Kevin
- * changed multi version
- * 
- * 97    10/19/98 7:19p Matt
- * Added system to support different types of damage to the player and
- * have these different types make different sounds.
- * 
- * 96    10/19/98 2:48p Kevin
- * Added accurate weapon thingy for Chris
- * 
- * 95    10/08/98 3:38p Jeff
- * removed time_left from Netgame
- * 
- * 94    10/07/98 1:07p Jason
- * added more safety precautions
- * 
- * 93    10/05/98 7:23p Jason
- * added protective layer onto multiplayer
- * 
- * 92    10/01/98 12:17p Kevin
- * Fixed Ping for Peer-Peer games
- * 
- * 91    10/01/98 11:29a Jason
- * changes for world states in multiplayer games
- * 
- * 90    9/30/98 5:35p Jason
- * added multiplayer menu bailing for samir
- * 
- * 89    9/15/98 12:42p Jason
- * got dedicated server actually working
- * 
- * 88    9/14/98 4:17p Jason
- * added friendly fire damage
- * 
- * 87    9/11/98 12:26p Jason
- * got energy to shield and fusion damage working in multiplayer
- * 
- * 86    9/04/98 3:45p Kevin
- * Added ping_time to Netplayers struct. It's updated in peer-peer and
- * client server
- * 
- * 85    8/13/98 6:32p Kevin
- * Initial implementation of directplay API
- * 
- * 84    8/12/98 6:36p Jeff
- * converted the send link/unlink functions to handle ghosted objects.
- * Updated MultiSendObject to handle dummy objects
- * 
- * 83    8/12/98 1:17p Jeff
- * added link/unlink object packets
- * 
- * 82    8/07/98 12:27p Kevin
- * Added network stuff for energy/shield conversion
- * 
- * 81    8/04/98 6:13p Kevin
- * fixes for sound & bmp exchange
- * 
- * 80    8/04/98 3:07p Kevin
- * sound & bmp exchange fixes for > 2 players
- * 
- * 79    8/04/98 10:26a Kevin
- * Custom sound and bmp exchange system
- * 
- * 78    8/03/98 5:56p Jason
- * got fusion cannon working correctly
- * 
- * 77    7/29/98 5:39p Kevin
- * sound/bitmap exchange
- * 
- * 76    7/29/98 12:40p Jason
- * more multiplayer testing for occlusion and packet sequencing
- * 
- * 75    7/27/98 5:31p Kevin
- * Sound/Bitmap exchange system
- * 
- * 74    7/24/98 9:37a Kevin
- * Added some new MP_ types
- * 
- * 73    7/23/98 12:38p Jason
- * more tweaks for multiplayer vis stuff
- * 
- * 72    7/22/98 3:16p Jason
- * added observer mode
- * 
- * 71    7/20/98 6:20p Kevin
- * peer-peer stuff
- * 
- * 70    7/17/98 1:22p Kevin
- * Dynamic retransmission of reliable packets and stuff
- * 
- * 69    7/16/98 12:51p Jason
- * added a way for DLLs to bail out if something is wrong
- * 
- * 68    7/14/98 5:52p Kevin
- * Packet loss measurements and auto pps adjusting
- * 
- * 67    7/13/98 11:52a Kevin
- * Added Callscriptwithparms
- * 
- * 66    7/08/98 6:01p Jeff
- * added packet to remove an item from inventory
- * 
- * 65    7/08/98 12:01p Kevin
- * weapon battery info
- * 
- * 64    7/07/98 7:33p Jeff
- * changes made for inventory use
- * 
- * 63    7/07/98 3:16p Kevin
- * Added inventory parms
- * 
- * 62    7/07/98 11:19a Kevin
- * Added inventory use message
- * 
- * 61    7/07/98 10:10a Kevin
- * Added basic turret support for coop
- * 
- * 60    7/06/98 6:46p Kevin
- * vector parameter passing in scripts
- * 
- * 59    7/06/98 5:36p Kevin
- * Variable parameter passing
- * 
- * 58    7/06/98 11:51a Jason
- * added accessor function for countermeasures
- * 
- * 57    7/02/98 12:57p Jason
- * various changes for multiplayer positional sequencing
- * 
- * 56    7/02/98 10:39a Kevin
- * More coop stuff
- * 
- * 55    7/01/98 6:30p Kevin
- * More coop
- * 
- * 54    7/01/98 12:55p Jason
- * more changes for countermeasures
- * 
- * 53    7/01/98 12:11p Jason
- * added countermeasures
- * 
- * 52    6/30/98 7:17p Kevin
- * more animation stuff
- * 
- * 51    6/30/98 5:08p Kevin
- * Animation frame stuff
- * 
- * 50    6/30/98 3:58p Chris
- * 
- * 49    6/30/98 11:39a Jason
- * added AdditionalDamage packet type for multiplayer
- * 
- * 48    6/29/98 3:08p Jason
- * added on/off weapons
- * 
- * 47    6/29/98 12:49p Jason
- * temp checkin for on/off weapons
- * 
- * 46    6/29/98 12:12p Kevin
- * Added robot damage and death packets
- * 
- * 45    6/26/98 6:53p Kevin
- * Coop mode
- * 
- * 44    6/26/98 6:20p Jason
- * changes for coop
- * 
- * 43    6/25/98 5:22p Kevin
- * Req/Send gametime to clients
- * 
- * 42    6/25/98 12:32p Jason
- * added new multiplayer functionality
- * 
- * 41    6/24/98 3:24p Kevin
- * Updated PXO screens with chat, etc.
- * 
- * 40    6/18/98 4:49p Kevin
- * Updated multiplayer menus
- * 
- * 39    5/19/98 6:27p Jason
- * put in urgent packets
- * 
- * 38    5/14/98 11:07a Kevin
- * Made gameover packet to the tracker reliable
- * 
- * 37    5/12/98 5:12p Jason
- * added dll callable level ending
- * 
- * 36    5/12/98 4:18p Jason
- * added better level sequencing for multiplayer
- * 
- * 35    5/12/98 12:33p Jason
- * got level sequencing working in multiplayer
- * 
- * 34    5/04/98 10:55a Kevin
- * Mastertracker fixes/enhancements
- * 
- * 33    4/30/98 3:50p Kevin
- * Mastertracker pilot stats
- * 
- * 32    4/28/98 2:58p Kevin
- * Added mastertracker flags 
- * 
- * 31    4/24/98 3:50p Kevin
- * Added mastertracker game tracking support
- * 
- * 30    4/20/98 12:46p Jason
- * added level checksumming for multiplayer games
- * 
- * 29    4/17/98 1:59p Jason
- * added cool object effects
- * 
- * 28    4/14/98 7:56p Matt
- * Moved MSN_NAMELEN from mission.h to descent,h, so multi.h didn't need
- * to include mission.h. 
- * 
- */
 
 #ifndef MULTI_H
 #define MULTI_H
@@ -521,9 +49,9 @@ extern bool Multi_bail_ui_menu;
 #define MULTI_PING_INTERVAL	3
 
 // Multiplayer packets
-#define MP_CONNECTION_ACCEPTED				1	// Server says we can join
-#define MP_OBJECT									2	// Object packet from the server
-#define MP_PLAYER									3	// Name packet from the server
+#define MP_CONNECTION_ACCEPTED					1	// Server says we can join
+#define MP_OBJECT								2	// Object packet from the server
+#define MP_PLAYER								3	// Name packet from the server
 #define MP_ALL_SET								4	// Client is ready to play!
 #define MP_PLAYER_POS							5	// Player position packet
 #define MP_REQUEST_PLAYERS						6	// Clients wants to know about players
@@ -545,14 +73,14 @@ extern bool Multi_bail_ui_menu;
 #define MP_JOIN_OBJECTS							22 // Server is telling us about buildings
 #define MP_PLAYER_DEAD							23 // Server says someone is dead!
 #define MP_PLAYER_RENEW							24	// A player is coming back from the dead!
-#define MP_PLAYER_ENTERED_GAME				25 // A player is entering the game
+#define MP_PLAYER_ENTERED_GAME					25 // A player is entering the game
 #define MP_DAMAGE_PLAYER						26 // A player should take damage
-#define MP_MESSAGE_FROM_SERVER				27	// A text message from the server
-#define MP_END_PLAYER_DEATH					28	// A player is done dying
+#define MP_MESSAGE_FROM_SERVER					27	// A text message from the server
+#define MP_END_PLAYER_DEATH						28	// A player is done dying
 #define MP_RENEW_PLAYER							29	// Renew a player (a new ship!)
 #define MP_GET_GAME_INFO						30	// Someone is asking about our game
-#define MP_GAME_INFO								31 // Server is telling us about its game
-//@@#define MP_EXECUTE_SCRIPT						32	// Server says to execute a script
+#define MP_GAME_INFO							31 // Server is telling us about its game
+//@@#define MP_EXECUTE_SCRIPT					32	// Server says to execute a script
 #define MP_MESSAGE_TO_SERVER					33 // A message from the client to the server
 #define MP_SPECIAL_PACKET						34 // a special data packet for scripts
 #define MP_EXECUTE_DLL							35 // Server says to execute a dll
@@ -564,22 +92,22 @@ extern bool Multi_bail_ui_menu;
 #define MP_GET_PXO_GAME_INFO					41	// Same as MP_GET_GAME_INFO but for PXO games only
 #define MP_POWERUP_REPOSITION					42	// The server is telling the client to move a powerup
 #define MP_GET_GAMETIME							43	// Client equesting the server's gametime
-#define MP_HERE_IS_GAMETIME					44 // Server's gametime response
-#define MP_ROBOT_POS								45	// Robot position and orientation
+#define MP_HERE_IS_GAMETIME						44 // Server's gametime response
+#define MP_ROBOT_POS							45	// Robot position and orientation
 #define MP_ROBOT_FIRE							46	// A robot is firing
 #define MP_ROBOT_DAMAGE							47 // Apply damage to robot
 #define MP_ROBOT_EXPLODE						48 // Blow up robot
-#define MP_ON_OFF									49 // a player is starting or stopping an on/off weapon
+#define MP_ON_OFF								49 // a player is starting or stopping an on/off weapon
 #define MP_ADDITIONAL_DAMAGE					50 // Server is telling us to add or subtract shields
 #define MP_ANIM_UPDATE							51	// Server is sending an animation update packet
-#define MP_REQUEST_COUNTERMEASURE			52	// Client is asking the server to create a countermeasure
+#define MP_REQUEST_COUNTERMEASURE				52	// Client is asking the server to create a countermeasure
 #define MP_CREATE_COUNTERMEASURE				53 // Server is telling us to create a countermeasure
-#define MP_PLAY_3D_SOUND_FROM_OBJ			54 // Server sending a 3d sound based on an obj position
-#define MP_PLAY_3D_SOUND_FROM_POS			55 // Server sending a 3d sound based on an arbitrary position
-#define MP_ROBOT_FIRE_SOUND					56 // The packet type which makes the firing sound from the robot
+#define MP_PLAY_3D_SOUND_FROM_OBJ				54 // Server sending a 3d sound based on an obj position
+#define MP_PLAY_3D_SOUND_FROM_POS				55 // Server sending a 3d sound based on an arbitrary position
+#define MP_ROBOT_FIRE_SOUND						56 // The packet type which makes the firing sound from the robot
 //@@#define MP_EXECUTE_SCRIPT_WITH_PARMS		57 // Execute Script with parameters
 #define MP_TURRET_UPDATE						58 // Update on turret info from the server
-#define MP_CLIENT_USE_INVENTORY_ITEM		59	//	Client is telling the server that he want's to use an item from his inventory
+#define MP_CLIENT_USE_INVENTORY_ITEM			59	//	Client is telling the server that he want's to use an item from his inventory
 #define MP_REMOVE_INVENTORY_ITEM				60	// Server is telling the clients to remove an item from a player's inventory
 #define MP_SERVER_SENT_COUNT					61	//	The server is telling the client how much data he has sent
 #define MP_CLIENT_SET_PPS						62	//	The client is telling the server what pps to use
@@ -589,22 +117,22 @@ extern bool Multi_bail_ui_menu;
 #define MP_VISIBLE_PLAYERS						66 // Server is telling us what players are visible
 #define MP_FILE_REQ								67	// Request a sound or bmp for a particular player slot
 #define MP_FILE_DENIED							68	// The server isn't going to send you a file you asked for (no soup for you)
-#define MP_FILE_DATA								69	// Data chunk, which is part of a file xfer
+#define MP_FILE_DATA							69	// Data chunk, which is part of a file xfer
 #define MP_FILE_ACK								70	// When you receive a chunk of data, reply with this ACK and the sender will send the next chunk
 #define MP_SERVER_ECHO_REQ						71 // Special packet the server sends to an echo server (on the mastertracker) which responds with his IP address and port. It makes sure servers behind firewalls/NAT/proxy work
 #define MP_SERVER_ECHO_RSP						72 // Response from Echo server with our real IP and port
 #define MP_FILE_CANCEL							73	// Cancel an existing file transfer (client or server/Sender or receiver)
-#define MP_INVISIBLE_PLAYER					74	// Just a packeting test
+#define MP_INVISIBLE_PLAYER						74	// Just a packeting test
 #define MP_PLAYER_CUSTOM_DATA					75	//	This player has custom data. Here are the file names
 #define MP_ABORT_JOIN_SERVER					76	// Stop trying to join a server because the level is ending or server quiting
-#define MP_ENERGY_SHIELD_CONV_ON_OFF		77	// Client wants to do an energy to shield conversion
+#define MP_ENERGY_SHIELD_CONV_ON_OFF			77	// Client wants to do an energy to shield conversion
 #define MP_GHOST_OBJECT							78	//Tells clients to ghost or unghost an object
 #define MP_PLAYER_PING							79	// Ask for a ping
 #define MP_PLAYER_PONG							80	// Response to a ping.
 #define MP_PLAYER_LAG_INFO						81	// Tell clients in a client/server game what the ping of another player is.
 #define MP_REQUEST_DAMAGE						82	// We're asking the server to damage us
 #define MP_REQUEST_SHIELDS						83 // We're asking the server to give us shields
-#define MP_REQUEST_WORLD_STATES				84	// Clients wants to know about the world state
+#define MP_REQUEST_WORLD_STATES					84	// Clients wants to know about the world state
 #define MP_DONE_WORLD_STATES					85 // Server says we're done with world states
 #define MP_WORLD_STATES							86 // Information about the world
 #define MP_ATTACH_OBJ							87	// Attach an object with the attach system
@@ -613,7 +141,7 @@ extern bool Multi_bail_ui_menu;
 #define MP_ATTACH_RAD_OBJ						90 // Attach by rad
 #define MP_TIMEOUT_WEAPON						91	// Timeout weapon
 #define MP_WEAPONS_LOAD							92	// Client is telling server about weapons load
-#define MP_REQUEST_PEER_DAMAGE				93 // Client is asking another player to damage him
+#define MP_REQUEST_PEER_DAMAGE					93 // Client is asking another player to damage him
 #define MP_MSAFE_FUNCTION						94	// Msafe function
 #define MP_MSAFE_POWERUP						95 // Multisafe powerup
 #define MP_ASK_FOR_URL							96	//Ask for a url list from the server
@@ -630,7 +158,7 @@ extern bool Multi_bail_ui_menu;
 #define MP_ADJUST_POSITION						107 // Server is telling me my new position
 #define MP_GENERIC_NONVIS						108	// Server says I can't see this generic object
 #define MP_SEND_DEMO_OBJECT_FLAGS				109	// Server is sending what join objects have the OF_CLIENTDEMOOBJECT set
-#define MP_GUIDEBOTMENU_REQUEST				110	//Client is requesting either the guidebot menu, or one of the items on the menu
+#define MP_GUIDEBOTMENU_REQUEST					110	//Client is requesting either the guidebot menu, or one of the items on the menu
 #define MP_GUIDEBOTMENU_DATA					111	//Server is sending the guidebot text to display in the menu
 #define MP_BREAK_GLASS							112 // Server is telling us to break some glass
 #define MP_THIEF_STEAL							113	// Server is telling a client that the thief stole an item from him
@@ -658,7 +186,7 @@ extern bool Multi_bail_ui_menu;
 #define PFP_NO_FIRED		0	// the player didn't fire at all this frame
 #define PFP_FIRED			1	// the player fired this frame and the info should be packed in a player pos flag
 #define PFP_FIRED_RELIABLE	2	// used for secondaries of a non-peer to peer game
-typedef struct
+struct player_fire_packet
 {
 	ubyte fired_on_this_frame;
 	ubyte wb_index;
@@ -666,10 +194,9 @@ typedef struct
 	ubyte damage_scalar;
 	ubyte reliable;
 	int dest_roomnum;
-} player_fire_packet;
+};
 
 extern netgame_info Netgame;
-
 
 extern ushort Local_object_list[];
 extern ushort Server_object_list[];
@@ -698,10 +225,10 @@ extern ushort Server_spew_list[];
 #define NETFILE_ID_LAST_FILE		NETFILE_ID_VOICE_TAUNT4
 
 // A semi-compressed orientation matrix for multiplayer games
-typedef struct 
+struct multi_orientation
 {
 	short multi_matrix[9];
-} multi_orientation;
+};
 
 inline void MultiMatrixMakeEndianFriendly(multi_orientation *mmat)
 {
@@ -724,20 +251,20 @@ extern player_fire_packet Player_fire_packet[MAX_NET_PLAYERS];
 #define MULTI_SEND_MESSAGE_GREEN_TEAM	-4
 #define MULTI_SEND_MESSAGE_YELLOW_TEAM	-5
 
-typedef struct
+struct powerup_respawn
 {
 	vector pos;
 	int objnum;
 	int roomnum;
 	ubyte used;
 	short original_id;
-} powerup_respawn;
+};
 
-typedef struct
+struct powerup_timer
 {
 	int id;
 	float respawn_time;
-} powerup_timer;
+};
 
 extern powerup_timer Powerup_timer[];
 extern powerup_respawn Powerup_respawn[];
@@ -751,7 +278,6 @@ extern int Multi_next_level;
 
 // Heartbeat flag
 extern bool Got_heartbeat;
-
 
 // This is for breakable glass
 #define MAX_BROKE_GLASS	100
@@ -796,7 +322,6 @@ extern char Tracker_id[TRACKER_ID_LEN];
 extern ushort Turrett_position_counter[MAX_OBJECTS];
 
 
-
 #define LOGIN_LEN 33
 #define REAL_NAME_LEN 66
 #define PASSWORD_LEN 17
@@ -808,7 +333,8 @@ extern ushort Turrett_position_counter[MAX_OBJECTS];
 #pragma pack(push,pxo)
 #endif
 #pragma pack(1)	//Single byte alignment!
-typedef struct vmt_descent3_struct {
+struct vmt_descent3_struct 
+{
 	char tracker_id[TRACKER_ID_LEN];
 	char pilot_name[PILOT_NAME_LEN];
 	int rank;
@@ -825,7 +351,8 @@ typedef struct vmt_descent3_struct {
 	unsigned int sliding_pct;	//Percentage of the time you were sliding
 	unsigned long checksum;			//This value needs to be equal to whatever the checksum is once the packet is decoded
 	unsigned long pad;			//just to provide room for out 4 byte encryption boundry only needed on the client side for now
-} vmt_descent3_struct;
+};
+
 #define DESCENT3_BLOCK_SIZE (sizeof(vmt_descent3_struct)-4)
 #if defined(WIN32)
 #pragma pack(pop,pxo)
