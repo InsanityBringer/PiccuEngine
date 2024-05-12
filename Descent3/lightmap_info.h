@@ -15,24 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lightmap_info.h $
- * $Revision: 25 $
- * $Date: 3/20/00 12:12p $
- * $Author: Matt $
- *
- *
- *
- * $Log: /DescentIII/Main/lightmap_info.h $
- * 
- * 25    3/20/00 12:12p Matt
- * Merge of Duane's post-1.3 changes.
- * Lower MAX_LIGHT_INFOS for Mac (Mac only)
- * 
- * 24    10/21/99 6:42p Matt
- * Mac merge
- * 
- */
 
 #ifndef LIGHTMAP_INFO_H
 #define LIGHTMAP_INFO_H
@@ -45,7 +27,7 @@
 #define BAD_LMI_INDEX	65535
 
 // What this lightmap is used for:
-#define LMI_ROOM						0
+#define LMI_ROOM					0
 #define LMI_ROOM_OBJECT				1
 #define LMI_TERRAIN					2
 #define LMI_TERRAIN_OBJECT			3
@@ -53,7 +35,7 @@
 #define LMI_EXTERNAL_ROOM			5
 #define LMI_EXTERNAL_ROOM_OBJECT	6
 
-typedef struct
+struct lightmap_info
 {
 	ubyte xspacing,yspacing;
 	ushort lm_handle;
@@ -66,17 +48,13 @@ typedef struct
 	short spec_map;
 
 	ubyte type;		// see LMI_types above
-} lightmap_info;
+};
 
 extern lightmap_info *LightmapInfo;
 extern int Num_of_lightmap_info;
 extern int Num_lightmap_infos_read;
 
-#ifdef MACINTOSH
-#define MAX_LIGHTMAP_INFOS		(60000)
-#else
 #define MAX_LIGHTMAP_INFOS		(65534)
-#endif
 
 // Sets all the lightmaps to unused
 void InitLightmapInfo(int nummaps = 0);
@@ -99,4 +77,3 @@ void ShadeLightmapInfoEdges (int type);
 void BlurLightmapInfos (int type);
 
 #endif
-

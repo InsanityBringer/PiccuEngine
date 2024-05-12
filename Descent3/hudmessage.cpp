@@ -15,313 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/hudmessage.cpp $
-* $Revision: 89 $
-* $Date: 9/22/01 7:14p $
-* $Author: Kevin $
-*
-* <file to correctly render hud messages>
-*
-* $Log: /DescentIII/Main/hudmessage.cpp $
- * 
- * 89    9/22/01 7:14p Kevin
- * Print confirmation messages when sending a private message
- * 
- * 88    4/19/00 5:31p Matt
- * From Duane for 1.4
- * Set m_limit class member variable if it had not been properly
- * initialized
- * 
- * 87    7/16/99 11:17a Samir
- * dirty rects for multi line persistent hud messages.
- * 
- * 86    7/13/99 12:22a Jeff
- * correctly externed HudInputMessage, increased size for new tokenized
- * text macros
- * 
- * 85    7/09/99 3:49p Jason
- * fixed bugs/issues for patch
- * 
- * 84    7/07/99 12:50a Jeff
- * if a hud message gets broken up while typing, the state is saved and
- * continued on the next line
- * 
- * 83    5/20/99 5:48p Matt
- * Added a HUD item flag, for use by Dallas-created items, that makes a
- * HUD item persisitent for the duration of one level, but get cleared
- * between levels.
- * 
- * 82    5/17/99 6:29p Jeff
- * only filter hud messages in multiplayer
- * 
- * 81    5/17/99 6:22p Jeff
- * added filtered HUD messages
- * 
- * 80    5/17/99 5:48p Samir
- * base scrolling off of time key is down.
- * 
- * 79    5/10/99 10:22p Ardussi
- * changes to compile on Mac
- * 
- * 78    5/08/99 12:54p Matt
- * When a HUD message is split over multiple lines, copy the color
- * information to subsequent lines.
- * 
- * 77    5/08/99 1:06a Samir
- * create dirty rect when clearing  persistent hud messages.
- * 
- * 76    5/07/99 10:48p Matt
- * Made add-HUD functions return true if the message was added, and false
- * if it wasn't (because the previous message was the same).
- * 
- * 75    5/05/99 6:36p Matt
- * Added queue system for persistent HUD messages.
- * 
- * 74    5/01/99 5:52p Samir
- * removed RenderHudMessages, and redid RenderHUDMessages so it did what
- * RenderHudMessages did, resets on screen hud messages.  The HUD message
- * console is resetted in ResetGameMessages.
- * 
- * 73    4/28/99 2:14a Samir
- * save and load Game messages in savegame.
- * 
- * 72    4/27/99 12:32p Samir
- * maybe fixed crash when resetting message lists.
- * 
- * 71    4/24/99 10:38p Samir
- * cleaned up hud text problems in 'small mode'
- * 
- * 70    4/24/99 8:43p Samir
- * when shrinking screen hud messages get rendered in black region.
- * 
- * 69    4/17/99 6:15p Samir
- * replaced gr.h with grdefs.h and fixed resulting compile bugs.
- * 
- * 68    4/14/99 12:35p Samir
- * localization issues.
- * 
- * 67    4/14/99 2:50a Jeff
- * fixed some case mismatched #includes
- * 
- * 66    4/09/99 3:04p Kevin
- * Set hud message length back to 40 -- I think I meant to change
- * something else when I changed this.
- * 
- * 65    3/10/99 2:25p Kevin
- * Save/Load and Demo file fixes
- * 
- * 64    3/05/99 3:01p Jeff
- * fixed crash when a persistant message is displayed during a IGC
- * 
- * 63    3/05/99 12:46p Matt
- * Set text flags & alpha before drawing scrolling text and input message.
- * 
- * 62    3/04/99 8:09p Samir
- * when inputting text, don't use formatted print function to output it to
- * screen. There's still a problem on the end though when printing out the
- * message.
- * 
- * 61    3/04/99 7:39p Matt
- * Added sound effects to FreeSpace-style persistent HUD messages.
- * 
- * 60    3/04/99 6:15p Matt
- * Added groovy FreeSpace briefing-style text effect to the persistent HUD
- * message.
- * 
- * 59    3/03/99 5:34p Matt
- * Added fade-out for goal complete messages
- * 
- * 58    3/02/99 11:41p Kevin
- * Fixed dedicated server
- * 
- * 57    3/02/99 3:30p Samir
- * took out ddio_KeyFlush which caused shift characters to be silenced
- * when inputting message.  This did not affect other key things as far as
- * I know.
- * 
- * 56    2/19/99 2:18p Samir
- * AddGameMessage implicitly figures out time and level of message.
- * 
- * 55    2/18/99 5:27p Matt
- * Added color parm to AddPersistentHUDMessage() and fixed the timeout.
- * 
- * 54    2/16/99 6:16p Jeff
- * pause hud messages when in cinematics
- * 
- * 53    2/16/99 3:52p Kevin
- * Hud messages wrap on 70% of the screen width instead of 100%
- * 
- * 52    2/09/99 6:52p Jeff
- * implemented 'typing inidcator' in multiplayer...players that are typing
- * messages have an icon on them
- * 
- * 51    2/04/99 7:17p Jeff
- * put in sounds for hud messages
- * 
- * 50    1/31/99 7:26p Matt
- * Renamed a bunch of functions to have HUD capitalized
- * 
- * 49    1/29/99 6:34p Samir
- * fixed booboo.
- * 
- * 48    1/29/99 6:32p Samir
- * implemented hud scrollback for hud messages.
- * 
- * 47    1/29/99 2:08p Jeff
- * localization
- * 
- * 46    1/28/99 6:17p Jason
- * added markers
- * 
- * 45    1/27/99 6:05p Samir
- * added scrollback for game messages on HUD.
- * 
- * 44    1/23/99 2:33p Kevin
- * Increased hud message length, because we clip to the real width of the
- * hud. Also fixed up the multiline code a bit
- * 
- * 43    1/22/99 4:19p Kevin		 
- * Fixed some multiline hud stuff
- * 
- * 42    1/22/99 4:06p Jeff
- * added hud messages that can be sent to just teammates or individual
- * people
- * 
- * 41    1/21/99 11:43p Kevin
- * Hud messages will now span multiple lines if needed (except for
- * blinking)
- * 
- * 40    1/08/99 2:55p Samir
- * Ripped out OSIRIS1.
- * 
- * 39    12/14/98 11:06a Jason
- * changes for 1.1
- * 
- * 38    12/10/98 4:58p Jason
- * fixed off-by-one hudmessage problem
- * 
- * 37    11/01/98 1:57a Jeff
- * converted the vsprintf calls to use the Pvsprintf, which is a safe
- * vsprintf, no buffer overflows allowed
- * 
- * 36    10/29/98 11:59a Jason
- * fixed hud message issues
- * 
- * 35    10/21/98 5:02p Jeff
- * removed player from HUD if in observer nide
- * 
- * 34    10/19/98 11:22p Samir
- * made AddPersistentMessage screen res friendly.
- * 
- * 33    10/17/98 2:46p Jason
- * automatically start new line when eol is reaching in DoInputMessage
- * 
- * 32    10/14/98 4:26p Samir
- * added persistent hud messages.
- * 
- * 31    10/13/98 8:44p Samir
- * move outgoing message prompt down.
- * 
- * 30    10/07/98 6:55p Jason
- * made message rollback work
- * 
- * 29    10/07/98 10:58a Jason
- * flushed the key buffer when pressing escape while entering hud message
- * 
- * 28    10/06/98 5:45p Kevin
- * Added new configuration for demo
- * 
- * 27    10/05/98 11:08a Jason
- * implemented player message log
- * 
- * 26    9/30/98 4:50p Jeff
- * fixed mprintf if a hud message is too long
- * 
- * 25    9/15/98 4:31p Jason
- * added more functionality for the dedicated server
- * 
- * 24    9/14/98 6:28p Jason
- * first pass at getting dedicated server working
- * 
- * 23    9/08/98 10:28a Samir
- * added function to reset hud messages.
- * 
- * 22    8/17/98 10:39a Jeff
- * fixed bug with buffer length for hud messages
- * 
- * 21    8/15/98 10:50p Matt
- * Changed comment
- * 
- * 20    8/13/98 3:10p Jeff
- * key flush when done typing a hud message
- * 
- * 19    7/28/98 3:17p Jason
- * fixed buffer overrun problem
- * 
- * 18    6/16/98 10:53a Jeff
- * 
- * 17    5/05/98 5:35p Jason
- * took off stupid drop shadow
- * 
- * 16    4/23/98 4:13a Samir
- * new hud system.
- * 
- * 15    4/06/98 2:54p Jason
- * yet more multiplayer changes
- * 
- * 14    3/23/98 7:37p Jason
- * added colored hud messages
- * 
- * 13    3/23/98 4:51p Jason
- * incremental checkin for multiplay
- * 
- * 12    3/16/98 6:41p Jason
- * added user definable messages to multiplayer
- * 
- * 11    3/16/98 3:53p Jason
- * added hud input message stuff
- * 
- * 10    2/06/98 5:45p Samir
- * Use hud font now.
- * 
- * 9     1/19/98 4:37p Jason
- * made hud message time longer
- * 
- * 8     1/12/98 7:07p Samir
- * Hud messages are in the briefing font for now.
- * 
- * 7     1/12/98 5:23p Samir
- * New hud font for messages.
- * 
- * 6     12/29/97 5:47p Samir
- * New text system and took out refs to Game_viewport.
- * 
- * 5     12/16/97 4:27p Jason
- * fixed time wrapping problem
- * 
- * 4     8/29/97 5:42p Jason
- * fixed hud rendering problems
- * 
- * 6     4/25/97 10:49a Jason
- * made timer stuff work with Gametime instead of timer_GetTime
- * 
- * 5     3/05/97 3:03p Jason
- * added blinking messages
- * 
- * 4     3/04/97 12:58p Jason
- * made hud messages scroll and fade
- * 
- * 3     3/04/97 11:58a Jason
- * checked in for Samir to debug
- * 
- * 2     2/13/97 4:12p Jason
- * added hud message test
-*
-* $NoKeywords: $
-*/
-
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -352,18 +45,18 @@
 #include "hlsoundlib.h"
 #include "args.h"
 
-#define HUD_MESSAGE_NORMAL	0
+#define HUD_MESSAGE_NORMAL		0
 #define HUD_MESSAGE_BLINKING	1
 
-#define HUD_MESSAGE_NONE	0
-#define HUD_MESSAGE_GENERAL	1
-#define HUD_MESSAGE_TEAM	2
+#define HUD_MESSAGE_NONE		0
+#define HUD_MESSAGE_GENERAL		1
+#define HUD_MESSAGE_TEAM		2
 
 
 // How long the message stays up for (in seconds)
-#define HUD_MESSAGE_TIME	5
+#define HUD_MESSAGE_TIME		5
 // How long the message scrolls for	(in seconds)
-#define HUD_SCROLL_TIME		.5
+#define HUD_SCROLL_TIME			.5
 
 char HudInputMessage[MAX_HUD_INPUT_LEN];
 int Doing_input_message=HUD_MESSAGE_NONE;
@@ -481,13 +174,12 @@ bool AddMultipleLinesToHUDMessages (char *temp_message,ddgr_color color=-1);
 bool AddMultipleLinesToHUDMessages (char *temp_message,ddgr_color color)
 {
 	char ourstr[HUD_MESSAGE_LENGTH*2];
-	char *p;
 	//char word[HUD_MESSAGE_LENGTH*2];
 	char nextword[HUD_MESSAGE_LENGTH*2];
 	static char thisline[HUD_MESSAGE_LENGTH*2] = "";
 	thisline[0] = NULL;
 	strcpy(ourstr,temp_message);
-	p = strtok(ourstr," ");
+	char* p = strtok(ourstr," ");
 	bool added = 0;
 	while(p)
 	{
@@ -508,11 +200,14 @@ bool AddMultipleLinesToHUDMessages (char *temp_message,ddgr_color color)
 				//Scan for color information in the string we just added
 				char *c=NULL,*c2;
 				c2 = strchr(thisline,'\1');
-				while (c2) {
+				while (c2) 
+				{
 					c = c2;
 					c2 = strchr(c2+4,'\1');
 				}
-				if (c) {		//found one
+				if (c) 
+				{
+					//found one
 					for (int i=0;i<4;i++)
 						thisline[i] = c[i];
 					thisline[4] = 0;
@@ -545,14 +240,10 @@ bool AddColoredHUDMessage (ddgr_color color,char *format,...)
 	va_end(args);
 
 	if(Demo_flags==DF_RECORDING)
-	{
 		DemoWriteHudMessage(color,false,temp_message);
-	}
 	
 	if(Dedicated_server)
-	{
 		return AddLineToHUDMessages (temp_message,color);
-	}
 
 	return AddMultipleLinesToHUDMessages (temp_message,color);
 }
@@ -566,12 +257,9 @@ bool AddFilteredColoredHUDMessage (ddgr_color color,char *format,...)
 	if(checked_command_line==-1)
 	{
 		if(FindArg("-playermessages")!=0)
-		{
 			checked_command_line = 1;
-		}else
-		{
+		else
 			checked_command_line = 0;
-		}
 	}
 
 	if(Game_mode&GM_MULTI && checked_command_line)
@@ -587,14 +275,10 @@ bool AddFilteredColoredHUDMessage (ddgr_color color,char *format,...)
 	va_end(args);
 
 	if(Demo_flags==DF_RECORDING)
-	{
 		DemoWriteHudMessage(color,false,temp_message);
-	}
 	
 	if(Dedicated_server)
-	{
 		return AddLineToHUDMessages (temp_message,color);
-	}
 
 	return AddMultipleLinesToHUDMessages (temp_message,color);
 }
@@ -609,12 +293,9 @@ bool AddFilteredHUDMessage (char *format, ... )
 	if(checked_command_line==-1)
 	{
 		if(FindArg("-playermessages")!=0)
-		{
 			checked_command_line = 1;
-		}else
-		{
+		else
 			checked_command_line = 0;
-		}
 	}
 
 	if(Game_mode&GM_MULTI && checked_command_line)
@@ -630,14 +311,10 @@ bool AddFilteredHUDMessage (char *format, ... )
 	va_end(args);
 
 	if(Demo_flags==DF_RECORDING)
-	{
 		DemoWriteHudMessage(0,false,temp_message);
-	}
 
 	if(Dedicated_server)
-	{
 		return AddLineToHUDMessages (temp_message);
-	}
 
 	return AddMultipleLinesToHUDMessages (temp_message);
 }
@@ -658,14 +335,10 @@ bool AddHUDMessage (char *format, ... )
 	va_end(args);
 
 	if(Demo_flags==DF_RECORDING)
-	{
 		DemoWriteHudMessage(0,false,temp_message);
-	}
 
 	if(Dedicated_server)
-	{
 		return AddLineToHUDMessages (temp_message);
-	}
 
 	return AddMultipleLinesToHUDMessages (temp_message);
 }
@@ -687,9 +360,7 @@ bool AddBlinkingHUDMessage (char *format, ... )
 	va_end(args);
 
 	if(Demo_flags==DF_RECORDING)
-	{
 		DemoWriteHudMessage(0,true,temp_message);
-	}
 
 	CorrectHudMessage(temp_message);
 
@@ -717,7 +388,6 @@ bool AddBlinkingHUDMessage (char *format, ... )
 	if (Num_hud_messages==0 && !Hud_messages_paused)
 		Hud_timer=Gametime;
 		
-
 	strcpy (HUD_messages[Num_hud_messages],temp_message);
 	HUD_message_type[Num_hud_messages]=HUD_MESSAGE_BLINKING;
 
@@ -799,7 +469,8 @@ char *GetMessageDestination(char *message,int *destination)
 	//see if there is a colon in the string, and match that up with a name
 	char *colon_pos = NULL;
 	colon_pos = strchr(message,':');
-	if(colon_pos>message){
+	if(colon_pos>message)
+	{
 		//this message might be for one person in particular
 		char buffer[256];
 		memcpy(buffer,message,(colon_pos-message));
@@ -810,29 +481,38 @@ char *GetMessageDestination(char *message,int *destination)
 		bool is_num = true;
 		while( *p ) { if(!isdigit(*p)) {is_num=false;break;} p++; }
 
-		if(is_num){
+		if(is_num)
+		{
 			to_who = atoi(buffer);
 			if(to_who<0 || to_who>=MAX_PLAYERS) to_who = MULTI_SEND_MESSAGE_ALL;
-		}else{
+		}
+		else
+		{
 			int possible_match = -1;
 			int name_len = strlen(buffer);
 			int call_len;
 
 			//it's not a number, see if it matches any of the player names
-			for(int pn=0;pn<MAX_PLAYERS;pn++){
+			for(int pn=0;pn<MAX_PLAYERS;pn++)
+			{
 				if(	NetPlayers[pn].flags & NPF_CONNECTED && 
-					NetPlayers[pn].sequence==NETSEQ_PLAYING){
-
+					NetPlayers[pn].sequence==NETSEQ_PLAYING)
+				{
 					call_len = strlen(Players[pn].callsign);
 
-					if(call_len>name_len){
+					if(call_len>name_len)
+					{
 						//try to match a partial name
-						if(!strnicmp(Players[pn].callsign,buffer,name_len)){
+						if(!strnicmp(Players[pn].callsign,buffer,name_len))
+						{
 							//possible match
 							possible_match = pn;
 						}
-					}else if(call_len==name_len){
-						if(!stricmp(Players[pn].callsign,buffer) ){
+					}
+					else if(call_len==name_len)
+					{
+						if(!stricmp(Players[pn].callsign,buffer) )
+						{
 							//match!
 							to_who = pn;
 							break;
@@ -841,15 +521,17 @@ char *GetMessageDestination(char *message,int *destination)
 				}//end if
 			}//end for
 
-			if(to_who<0 && possible_match!=-1){
+			if(to_who<0 && possible_match!=-1)
 				to_who = possible_match;
-			}
 		}
 		
-		if(to_who==MULTI_SEND_MESSAGE_ALL){
+		if(to_who==MULTI_SEND_MESSAGE_ALL)
+		{
 			//see if it is for the team
-			if(!stricmp(buffer,"team")){
-				switch(Players[Player_num].team){
+			if(!stricmp(buffer,"team"))
+			{
+				switch(Players[Player_num].team)
+				{
 				case 0:	to_who = MULTI_SEND_MESSAGE_RED_TEAM;		break;
 				case 1: to_who = MULTI_SEND_MESSAGE_BLUE_TEAM;		break;
 				case 2: to_who = MULTI_SEND_MESSAGE_GREEN_TEAM;		break;
@@ -884,18 +566,23 @@ void SendOffHUDInputMessage ()
 			char str[255];
 			sprintf (str,TXT_HUDSAY,Players[Player_num].callsign,HudInputMessage);
 			
-			switch(Doing_input_message){
+			switch(Doing_input_message)
+			{
 			case HUD_MESSAGE_GENERAL:
 				{
 					int to_who;
 
 					char *colon_pos = GetMessageDestination(HudInputMessage,&to_who);
 
-					if(to_who!=MULTI_SEND_MESSAGE_ALL){
-						if(to_who<0){
+					if(to_who!=MULTI_SEND_MESSAGE_ALL)
+					{
+						if(to_who<0)
+						{
 							//to a team
 							sprintf (str,"[%s]: %s",Players[Player_num].callsign,colon_pos);
-						}else{
+						}
+						else
+						{
 							//to a player
 							//cut out what's after the colon
 							sprintf (str,"<%s>:%s",Players[Player_num].callsign,colon_pos);
@@ -911,16 +598,16 @@ void SendOffHUDInputMessage ()
 			case HUD_MESSAGE_TEAM:
 				{
 					int team = MULTI_SEND_MESSAGE_ALL;
-					switch(Players[Player_num].team){
+					switch(Players[Player_num].team)
+					{
 					case 0:	team = MULTI_SEND_MESSAGE_RED_TEAM;	break;
 					case 1: team = MULTI_SEND_MESSAGE_BLUE_TEAM; break;
 					case 2:	team = MULTI_SEND_MESSAGE_GREEN_TEAM; break;
 					case 3: team = MULTI_SEND_MESSAGE_YELLOW_TEAM; break;
 					}
 
-					if(team!=MULTI_SEND_MESSAGE_ALL){
+					if(team!=MULTI_SEND_MESSAGE_ALL)
 						sprintf (str,"[%s]: %s",Players[Player_num].callsign,HudInputMessage);
-					}
 
 					if (Netgame.local_role==LR_SERVER)
 						MultiSendMessageFromServer (GR_RGB(0,128,255),str,team);
@@ -954,9 +641,7 @@ int BreakupHUDInputMessage (char *str)
 	}
 
 	if (last_space==-1)
-	{
 		return 0;
-	}
 
 	int leftover_len=len-last_space;
 	int leftover_size = leftover_len-1;
@@ -976,10 +661,9 @@ int BreakupHUDInputMessage (char *str)
 
 			sprintf (str,"%s:%s",to_who_text,&HudInputMessage[last_space+1]);
 			leftover_size = strlen(str);
-		}else
-		{
-			strcpy (str,&HudInputMessage[last_space+1]);
 		}
+		else
+			strcpy (str,&HudInputMessage[last_space+1]);
 	}
 	
 	HudInputMessage[last_space]=0;
@@ -1087,7 +771,9 @@ void RenderHUDInputMessage ()
 
 	if(Doing_input_message==HUD_MESSAGE_TEAM){
 		sprintf (message,TXT_HUD_TEAMSAY,HudInputMessage);
-	}else{
+	}
+	else
+	{
 		if (Marker_message)
 			sprintf (message,TXT_HUD_MARKER,HudInputMessage);
 		else
@@ -1100,13 +786,14 @@ void RenderHUDInputMessage ()
 //	RenderHUDTextNoFormatFlags(HUDTEXT_CENTERED, HUD_COLOR, HUD_ALPHA, 1, 0, y, message);
 	lw = grtext_GetTextLineWidth(message);
 	x = (Game_window_w-lw)/2;
-	if (Small_hud_flag) {
+	if (Small_hud_flag) 
+	{
 		y = Max_window_h - (int)(40*((float)Max_window_h/(float)DEFAULT_HUD_HEIGHT));
 		HUD_inmsg_dirty_rect.set(x,y,x+lw,y+grfont_GetHeight(HUD_FONT));
 	}
-	else {
+	else
 		y = (Game_window_h*3/5)+Game_window_y;
-	}
+
 	grtext_Puts(x, y, message);	
 }
 
@@ -1214,20 +901,20 @@ void RenderScrollingHUDMessages ()
 		grtext_SetAlpha(HUD_ALPHA);
 		grtext_SetFlags(0);
 
-		if (Small_hud_flag) {
+		if (Small_hud_flag) 
+		{
 			x = (Max_window_w-text_width)/2;
 			if (x < l) l = x;
 			if ((x+text_width) > r) r = x+text_width;
 			b += text_height;
 		}
-		else {
+		else
 			x = (Game_window_w-text_width)/2;
-		}
+		
 		grtext_Puts(x, y, message);
 	}
-	if (Small_hud_flag && (i>0)) {
+	if (Small_hud_flag && (i>0)) 
 		HUD_msg_dirty_rect.set(l, t,r, b);
-	}
 
 	// Now see if the topmost message is old
 
@@ -1281,21 +968,24 @@ void RenderHUDMessages ()
 	RenderScrollingHUDMessages();
 
 	// do persistent hud message system
-	if (Hud_persistent_msg_id != HUD_INVALID_ID) {
-		if (Hud_persistent_msg_timer != HUD_MSG_PERSISTENT_INFINITE) {
+	if (Hud_persistent_msg_id != HUD_INVALID_ID) 
+	{
+		if (Hud_persistent_msg_timer != HUD_MSG_PERSISTENT_INFINITE) 
+		{
 			tHUDItem *item = GetHUDItem(Hud_persistent_msg_id);
 
 			//Update time
 			Hud_persistent_msg_timer -= Frametime;
 
 			//Do fadeout
-			if (Hud_persistent_msg_flags & HPF_FADEOUT) {
-				if (Hud_persistent_msg_timer < FADEOUT_TIME) {
+			if (Hud_persistent_msg_flags & HPF_FADEOUT) 
+			{
+				if (Hud_persistent_msg_timer < FADEOUT_TIME) 
 					item->alpha = HUD_ALPHA * Hud_persistent_msg_timer / FADEOUT_TIME;
-				}
 			}
 
-			if (item && Small_hud_flag) {
+			if (item && Small_hud_flag) 
+			{
 				grtext_SetFont(HUD_FONT);
 				short l = item->x*Max_window_w/DEFAULT_HUD_WIDTH;
 				short t = item->y*Max_window_h/DEFAULT_HUD_HEIGHT;
@@ -1305,9 +995,11 @@ void RenderHUDMessages ()
 			}
 
 			//Do FreeSpace printing effect
-			if (Hud_persistent_msg_id2 != HUD_INVALID_ID) {
+			if (Hud_persistent_msg_id2 != HUD_INVALID_ID) 
+			{
 				Hud_persistent_msg_char_timer -= Frametime;
-				while (Hud_persistent_msg_char_timer < 0) {
+				while (Hud_persistent_msg_char_timer < 0) 
+				{
 					tHUDItem *item = GetHUDItem(Hud_persistent_msg_id);
 					tHUDItem *item2 = GetHUDItem(Hud_persistent_msg_id2);
 
@@ -1315,14 +1007,17 @@ void RenderHUDMessages ()
 					Hud_persistent_msg_current_len++;
 
 					//Check for more chars
-					if (! item->data.text[Hud_persistent_msg_current_len]) {
+					if (! item->data.text[Hud_persistent_msg_current_len]) 
+					{
 						FreeHUDItem(Hud_persistent_msg_id2);
 						Hud_persistent_msg_id2 = HUD_INVALID_ID;
 						Sound_system.StopSoundLooping(Hud_persistent_msg_sound_handle);
 						Hud_persistent_msg_sound_handle = SOUND_NONE_INDEX;
 						break;	//stop printing chars
 					}
-					else {	//dp next char
+					else 
+					{
+						//dp next char
 						item2->data.text[0] = item->data.text[Hud_persistent_msg_current_len];
 						item->data.text[Hud_persistent_msg_current_len] = 0;
 						item2->x = item->x + RenderHUDGetTextLineWidth(item->data.text);
@@ -1332,7 +1027,8 @@ void RenderHUDMessages ()
 			}
 
 			//If time out, clear message
-			if (Hud_persistent_msg_timer <= 0.0f) {
+			if (Hud_persistent_msg_timer <= 0.0f) 
+			{
 				void ClearPersistentHUDMessage();
 				ClearPersistentHUDMessage();
 			}
@@ -1373,14 +1069,15 @@ void ResetHUDMessages()
 	ResetHUDLevelItems();
 }
 
-typedef struct {
-	char			message[HUD_MESSAGE_LENGTH*2];
+struct phud_message
+{
+	char		message[HUD_MESSAGE_LENGTH*2];
 	ddgr_color	color;
 	int			x,y;
-	float			time;
+	float		time;
 	int			flags;
 	int			sound_index;
-} phud_message;
+};
 
 #define PHUD_QUEUE_SIZE	3
 
@@ -1415,12 +1112,10 @@ void StartPersistentHUDMessage(ddgr_color color,int x, int y, float time, int fl
 
 // set x and y if special formatting.
 	grtext_SetFont(HUD_FONT);
-	if (x == HUD_MSG_PERSISTENT_CENTER) {
+	if (x == HUD_MSG_PERSISTENT_CENTER)
 		x = Game_window_x + (Game_window_w - grtext_GetLineWidth(message))/2;
-	}
-	if (y == HUD_MSG_PERSISTENT_CENTER) {
+	if (y == HUD_MSG_PERSISTENT_CENTER)
 		y = Game_window_y + (Game_window_h - grfont_GetHeight(HUD_FONT))/2;
-	}
 
 // add custom text item
 	tHUDItem huditem;
@@ -1436,20 +1131,20 @@ void StartPersistentHUDMessage(ddgr_color color,int x, int y, float time, int fl
 	huditem.stat = STAT_MESSAGES;
 	huditem.flags = HUD_FLAG_PERSISTANT | HUD_FLAG_SMALL;	// when hud is shrunk, this will draw outside of normal view
 
-   AddHUDItem(&huditem);
+	AddHUDItem(&huditem);
 
 	Hud_persistent_msg_id = huditem.id;
 	Hud_persistent_msg_timer = time;
 	Hud_persistent_msg_flags = flags;
 
 	//Set up for FreeSpace-style effect
-	if (flags & HPF_FREESPACE_DRAW) {
-
+	if (flags & HPF_FREESPACE_DRAW) 
+	{
 		//Create additional hud item for leading character
 		huditem.alpha = 255;
 		huditem.data.text = "a";		//single-character string
 		huditem.saturation_count = 2;
-	   AddHUDItem(&huditem);
+		AddHUDItem(&huditem);
 		Hud_persistent_msg_id2 = huditem.id;
 
 		tHUDItem *item = GetHUDItem(Hud_persistent_msg_id);
@@ -1489,38 +1184,43 @@ void AddPersistentHUDMessage(ddgr_color color,int x, int y, float time, int flag
 void ClearPersistentHUDMessage()
 {
 // free persistent message currently visible
-	if (Hud_persistent_msg_id != HUD_INVALID_ID) {
+	if (Hud_persistent_msg_id != HUD_INVALID_ID) 
+	{
 		tHUDItem *item = GetHUDItem(Hud_persistent_msg_id);
-		if (item) {
-			t_dirty_rect *r = &item->dirty_rect;
+		if (item) 
+		{
+			tDirtyRect*r = &item->dirty_rect;
 			HUD_persist_dirty_rect[0].set(r->r[0].l, r->r[0].t, r->r[0].r, r->r[0].b);
 		}
 		FreeHUDItem(Hud_persistent_msg_id);
 		Hud_persistent_msg_id = HUD_INVALID_ID;
 	}
-	if (Hud_persistent_msg_id2 != HUD_INVALID_ID) {
+	if (Hud_persistent_msg_id2 != HUD_INVALID_ID) 
+	{
 		tHUDItem *item = GetHUDItem(Hud_persistent_msg_id2);
-		if (item) {
-			t_dirty_rect *r = &item->dirty_rect;
+		if (item) 
+		{
+			tDirtyRect*r = &item->dirty_rect;
 			HUD_persist_dirty_rect[1].set(r->r[0].l, r->r[0].t, r->r[0].r, r->r[0].b);
 		}
 		FreeHUDItem(Hud_persistent_msg_id2);
 		Hud_persistent_msg_id2 = HUD_INVALID_ID;
 	}
 
-	if (Hud_persistent_msg_sound_handle != SOUND_NONE_INDEX) {
+	if (Hud_persistent_msg_sound_handle != SOUND_NONE_INDEX) 
+	{
 		Sound_system.StopSoundLooping(Hud_persistent_msg_sound_handle);
 		Hud_persistent_msg_sound_handle = SOUND_NONE_INDEX;
 	}
 
 	//Check for queued message
-	if (Num_queued_PHUD_messages) {
+	if (Num_queued_PHUD_messages) 
+	{
 		phud_message *pp = &PHUD_message_queue[0];
 		StartPersistentHUDMessage(pp->color,pp->x,pp->y,pp->time,pp->flags,pp->sound_index,pp->message);
 		*pp = PHUD_message_queue[1];
 		Num_queued_PHUD_messages--;
 	}
-
 }
 
 //Clears all the persistent hud messages
@@ -1539,9 +1239,8 @@ void ResetPersistentHUDMessage()
 // opens a hud rollback console.
 void OpenHUDMessageConsole()
 {
-	if (Game_msg_con_vis) {
+	if (Game_msg_con_vis)
 		CloseGameMessageConsole();
-	}
 
 	HUD_msg_con_vis = HUD_msg_con.Open(TXT_HUDMSGPOPUP_TITLE, GAME_MSGCON_X, GAME_MSGCON_Y, GAME_MSGCON_W, GAME_MSGCON_H);
 }
@@ -1550,7 +1249,8 @@ void OpenHUDMessageConsole()
 // closes hud rollback console
 void CloseHUDMessageConsole()
 {
-	if (HUD_msg_con_vis) {
+	if (HUD_msg_con_vis) 
+	{
 		HUD_msg_con.Close();
 		HUD_msg_con_vis = false;
 	}
@@ -1629,9 +1329,9 @@ void ToggleGameMessageConsole()
 // game message console
 void OpenGameMessageConsole()
 {
-	if (HUD_msg_con_vis) {
+	if (HUD_msg_con_vis)
 		CloseHUDMessageConsole();
-	}
+	
 	Game_msg_con_vis = Game_msg_con.Open(TXT_HUD_GAMEMESSAGES, GAME_MSGCON_X, GAME_MSGCON_Y, GAME_MSGCON_W, GAME_MSGCON_H);
 }
 
@@ -1643,11 +1343,9 @@ void CloseGameMessageConsole()
 }
 
 
-
 //////////////////////////////////////////////////////////////////////////////
 
 #define MSGL_BORDER_THICKNESS		4
-
 
 tMsgList::tMsgList()
 {
@@ -1664,26 +1362,27 @@ bool tMsgList::add(const char *msg, ubyte lvl, ubyte hr, ubyte min, ubyte sec)
 	if(!m_limit)
 		m_limit = 64;
 		
-	if (m_msg == NULL) {
+	if (m_msg == NULL)
+	{
 		m_msg = (char **)mem_malloc(sizeof(char*)*m_limit);
 		m_nmsg = 0;
 	}
 	
-	if (m_nmsg == m_limit && m_nmsg > 0) {
-		int i;
+	if (m_nmsg == m_limit && m_nmsg > 0) 
+	{
 		mem_free(m_msg[0]);
-		for (i = 1; i < m_nmsg; i++)
+		for (int i = 1; i < m_nmsg; i++)
 			m_msg[i-1] = m_msg[i];
 		m_nmsg--;
 	}
 
-	if (lvl > 0) {
+	if (lvl > 0)
+	{
 		sprintf(buf, "[%d.%d.%d.%d] %s", lvl,hr,min,sec,msg);
 		m_msg[m_nmsg++] = mem_strdup(buf);
 	}
-	else {
+	else
 		m_msg[m_nmsg++] = mem_strdup(msg);
-	}
 
 	return true;
 }
@@ -1691,11 +1390,13 @@ bool tMsgList::add(const char *msg, ubyte lvl, ubyte hr, ubyte min, ubyte sec)
 
 void tMsgList::reset()
 {
-	if (m_msg) {
+	if (m_msg) 
+	{
 		while (m_nmsg)
 		{
 			m_nmsg--;
-			if (m_msg[m_nmsg]) {
+			if (m_msg[m_nmsg])
+			{
 				mem_free(m_msg[m_nmsg]);
 			}
 		}
@@ -1708,8 +1409,10 @@ void tMsgList::reset()
 
 const char *tMsgList::get(int i)
 {
-	if (m_msg) {
-		if (i < m_nmsg) {
+	if (m_msg) 
+	{
+		if (i < m_nmsg) 
+		{
 			return m_msg[i];
 		}
 	}
@@ -1749,11 +1452,13 @@ bool MsgListConsole::Open(const char *title, int x, int y, int w, int h)
 
 redo_copy:
 	m_buffer = (char *)mem_malloc(m_buflen);
-	if (m_buffer) {
+	if (m_buffer) 
+	{
 		m_buffer[0] = 0;
 		m_opened = true;
 	}
-	else {
+	else 
+	{
 		m_opened = false;
 		return false;
 	}
@@ -1765,7 +1470,8 @@ redo_copy:
 	for (i = 0; i < m_list->m_nmsg; i++)
 	{
 		const char *msg = m_list->m_msg[i];
-		if ((strlen(m_buffer)+strlen(msg)+2) >= (unsigned)(m_buflen)) {
+		if ((strlen(m_buffer)+strlen(msg)+2) >= (unsigned)(m_buflen)) 
+		{
 		// reallocate buffer
 			mem_free(m_buffer);
 			m_buflen = m_buflen * 2;
@@ -1776,7 +1482,8 @@ redo_copy:
 		bufptr += strlen(bufptr);
 
 	// append newline character if there are more messages.
-		if (i < (m_list->m_nmsg-1)) {
+		if (i < (m_list->m_nmsg-1)) 
+		{
 			*bufptr = '\n';
 			bufptr++;
 		}
@@ -1803,8 +1510,10 @@ redo_copy:
 	bufptr = m_buffer;
 	for (i = 0; i <=len; i++)
 	{
-		if (m_buffer[i] == '\n' || m_buffer[i] == 0) {
-			if (c == n_conlines) {
+		if (m_buffer[i] == '\n' || m_buffer[i] == 0) 
+		{
+			if (c == n_conlines) 
+			{
 			// scroll pointers up, store new one.
 				for (j = 1; j < n_conlines; j++)
 					m_conlines[j-1] = m_conlines[j];
@@ -1831,7 +1540,8 @@ redo_copy:
 
 void MsgListConsole::Close()
 {
-	if (m_opened) {
+	if (m_opened) 
+	{
 		if (m_conlines) mem_free(m_conlines);
 		if (m_buffer) mem_free(m_buffer);
 		m_opened = false;
@@ -1855,7 +1565,8 @@ void MsgListConsole::Draw()
 	if (!m_opened || !m_list) return;
 
 // change in buffer, do 'slow' update 
-	if (m_curmsgs != m_list->m_nmsg) {
+	if (m_curmsgs != m_list->m_nmsg) 
+	{
 		char buf[32];
 		strcpy(buf,m_title);
 		this->Close();
@@ -1903,20 +1614,16 @@ void MsgListConsole::Draw()
 	for (i = 0; i < n_conlines; i++)
 	{
 		char *sptr = NULL;
-		if (i < (n_conlines-1)) {
+		if (i < (n_conlines-1))
 			sptr = m_conlines[i+1];
-		}
-		if (sptr) {
+		if (sptr)
 			sptr[-1] = 0;
-		}
 		grtext_Puts(m_x+MSGL_BORDER_THICKNESS,y,m_conlines[i]);
-		if (sptr) {
+		if (sptr)
 			sptr[-1] = '\n';
-		}
 		y += (grfont_GetHeight(HUD_FONT) + 1);
-		if (!sptr) {
+		if (!sptr)
 			break;
-		}
 	}
 
 	grtext_Flush();
@@ -1925,38 +1632,40 @@ void MsgListConsole::Draw()
 
 void MsgListConsole::DoInput()
 {
-	if (m_opened) {
+	if (m_opened) 
+	{
 		int i, offset_count = 0; // = ddio_KeyDownCount(KEY_DOWN) - ddio_KeyDownCount(KEY_UP);
 		float key_time = ddio_KeyDownTime(KEY_DOWN) - ddio_KeyDownTime(KEY_UP);
 		char *lineptr;
 
-		if (m_numlines <= n_conlines) {
+		if (m_numlines <= n_conlines)
 			offset_count = 0;							// no need to offset if no need to scroll
-		}
 
-		if (key_time == 0.0f) {
+		if (key_time == 0.0f)
 			m_keydowntime = 0.0f;
-		}
-		else {
+		else
 			m_keydowntime += key_time;
-		}
-		if (m_keydowntime < -0.1f) {
+		if (m_keydowntime < -0.1f) 
+		{
 			offset_count = -1;
 			m_keydowntime = 0.0f;
 		}
-		else if (m_keydowntime > 0.1f) {
+		else if (m_keydowntime > 0.1f) 
+		{
 			offset_count = 1;
 			m_keydowntime = 0.0f;
 		}
 
 	//	scroll offset_count amount.
-		if (offset_count < 0) {
+		if (offset_count < 0) 
+		{
 		//	look back from m_conlines[0]
 			if ((m_bufline + offset_count - n_conlines) < 0) offset_count = -(m_bufline-n_conlines);
 
 			m_bufline = m_bufline + offset_count;
 
-			if (offset_count < 0) {
+			if (offset_count < 0)
+			{
 				mprintf((0, "bufline=%d\n", m_bufline));
 			}
 
@@ -1971,13 +1680,15 @@ void MsgListConsole::DoInput()
 				m_conlines[0] = lineptr;
 			}
 		}
-		else if (offset_count > 0) {
+		else if (offset_count > 0) 
+		{
 		// look forward from m_conlines[n_conlines-1]
 			if ((m_bufline + offset_count) > m_numlines) offset_count = m_numlines - m_bufline;
 
 	 		m_bufline = m_bufline + offset_count;
 
-			if (offset_count > 0) {
+			if (offset_count > 0) 
+			{
 				mprintf((0, "bufline=%d\n", m_bufline));
 			}
 
@@ -1990,7 +1701,8 @@ void MsgListConsole::DoInput()
 			//	go forward until we hit a newline or end of buffer (if end, then error!)
 				for (lineptr = m_conlines[n_conlines-1]; lineptr[0] != '\n'; lineptr++);
 				{
-					if (lineptr[0] == 0) {
+					if (lineptr[0] == 0) 
+					{
 						Int3();
 						offset_count = 0;
 						lineptr = m_conlines[n_conlines-1];

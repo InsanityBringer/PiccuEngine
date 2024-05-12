@@ -15,51 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/init.h $
- * $Revision: 8 $
- * $Date: 5/12/99 1:57p $
- * $Author: Jason $
- * 
- * Initialization code
- *
- * $Log: /DescentIII/main/init.h $
- * 
- * 8     5/12/99 1:57p Jason
- * fixed yet more buggy/ugly code
- * 
- * 7     4/02/99 5:08p Matt
- * Added intro movie.
- * 
- * 6     10/14/98 4:37p Matt
- * Made InitD3System() exit with error if there's a problem instead of
- * returning a status value.  Also moved some editor-specific code from
- * init.cpp to mainfrm.cpp, and cleaned up some other initialization and
- * error-handling code.
- * 
- * 5     9/25/98 2:53p Jason
- * added progress bar
- * 
- * 4     7/01/98 4:56p Samir
- * redid init code.
- * 
- * 3     3/23/98 8:03p Samir
- * A bunch of changes to allow for ALT-TAB to work.
- * 
- * 2     7/24/97 3:04p Matt
- * Added functions to load/save game variables from/to the registry
- * 
- * 1     6/23/97 9:25p Samir
- * added because source safe sucks
- * 
- * 8     6/11/97 1:07p Samir
- * The removal of gameos and replaced with oeApplication, oeDatabase
- * 
- * 7     2/04/97 2:32p Samir
- * Added separate editor initialization
- *
- * $NoKeywords: $
- */
 
 #ifndef INIT_H
 #define INIT_H
@@ -102,5 +57,3 @@ void InitMessage(char *c,float progress=-1);
 extern bool MercInstalled();
 
 #endif
-
-

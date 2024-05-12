@@ -20,11 +20,7 @@
 
 #include "object.h"
 #include "CFILE.H"
-#if defined(MACOSX)
-#include <malloc/malloc.h>
-#else
 #include <malloc.h>
-#endif
 #include "mem.h"
 #include "levelgoal_external.h"
 

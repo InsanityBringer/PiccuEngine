@@ -15,167 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/Inventory.h $
-* $Revision: 46 $
-* $Date: 4/28/99 5:22a $
-* $Author: Jeff $
-*
-* Inventory control header
-*
-* $Log: /DescentIII/main/Inventory.h $
- * 
- * 46    4/28/99 5:22a Jeff
- * added function to get list of inventory items, without having to go
- * through inventory one by one
- * 
- * 45    4/20/99 3:06p Jeff
- * fixed inventory displaying of non-usable items
- * 
- * 44    4/20/99 1:14p Samir
- * added function to determine if inventory item is usable.
- * 
- * 43    4/14/99 3:56a Jeff
- * fixed case mismatch in #includes
- * 
- * 42    3/02/99 4:41p Jeff
- * Fixed inventory save/load 
- * 
- * 41    2/25/99 8:54p Jeff
- * Inventory supports level change persistant items.  Inventory supports
- * time-out objects.  Inventory Reset changed (takes a level of reset
- * now).  Quad lasers stay across level change (single player).  Guidebot
- * bug fixed (now back in ship on level start).  Quads time out when
- * spewed.  Invulnerability and cloak powerups no longer use game
- * event/callbacks, so they can be saved in game saves (moved to
- * MakePlayerInvulnerable and MakeObjectInvisible)
- * 
- * 40    2/23/99 7:37p Jeff
- * fixed reset so it doesn't remove non-spewable items...made multiplayer
- * friendly
- * 
- * 39    2/14/99 4:29a Jeff
- * able to set custom descriptions for an item when adding it
- * 
- * 38    2/13/99 12:37a Jeff
- * new inventory system.  Supports objects that don't die when put in (by
- * objhandles).  Also changed Inventory::Reset()
- * 
- * 37    2/08/99 5:25p Jeff
- * removed all calls to MultiSendRemoveObject, incorportated into
- * SetObjectDeadFlag.  Fixes sequencing issues in multiplayer
- * 
- * 36    1/18/99 2:46p Matt
- * Combined flags & flags2 fields in object struct
- * 
- * 35    1/13/99 2:28a Chris
- * Massive AI, OSIRIS update
- * 
- * 34    1/08/99 2:55p Samir
- * Ripped out OSIRIS1.
- * 
- * 33    11/11/98 12:05p Jeff
- * made inventory.add(object *) a private function...dangerous for
- * multiplayer if called
- * 
- * 32    8/19/98 2:17p Jeff
- * added a function to get the aux type/id
- * 
- * 31    8/19/98 12:38p Jason
- * made countermeasure spewing work correctly
- * 
- * 30    8/13/98 11:56a Jeff
- * handle new flags for inventory use
- * 
- * 29    8/10/98 2:20p Jeff
- * reset takes a bool now whether to reset everything
- * 
- * 28    7/10/98 7:49p Jeff
- * fixed way of getting icon info for countermeasure
- * 
- * 27    7/08/98 6:01p Jeff
- * first chance at making multiplayer friendly
- * 
- * 26    7/06/98 7:17p Jeff
- * countermeasure support added
- * 
- * 25    7/03/98 3:10p Jeff
- * some error handling and added functions to get inventory information
- * 
- * 24    4/24/98 7:09p Jeff
- * added a flag for non-useable inventory items
- * 
- * 23    4/23/98 12:02p Jeff
- * added a limit to how many items you can put in your inventory
- * 
- * 22    4/19/98 7:32p Jeff
- * Moved inventory wrappers to DLLWrappers
- * 
- * 21    4/03/98 11:49a Jeff
- * Added another function wrapper, renamed others to fit naming convention
- * 
- * 20    3/31/98 3:55p Jeff
- * Added some inventory wrappers
- * 
- * 19    3/26/98 2:58p Jeff
- * Added a GetTypeIDCount function
- * 
- * 18    3/23/98 5:36p Jeff
- * added a parameter to Add to specify if you want it destroyed when it's
- * added
- * 
- * 17    3/20/98 2:44p Jeff
- * removed ValidatePos() from ResetPos()....ValidatePos() should be called
- * after a ResetPos() if you want to make sure you are on a selectable
- * item
- * 
- * 16    2/20/98 5:02p Jeff
- * fixed bug so you can switch to a nonselectable item while playing the
- * game
- * 
- * 15    2/20/98 4:56p Jeff
- * Changed inventory so it now supports non selectable items, plus made
- * the list into a circular list
- * 
- * 14    2/15/98 4:49p Jeff
- * Added a reset function to clear the inventory
- * 
- * 13    2/11/98 4:54p Jeff
- * Moved the inventory into the Player struct
- * 
- * 12    2/09/98 4:58p Jeff
- * Connected inventory to hud
- * 
- * 11    2/07/98 6:34p Jeff
- * 
- * 10    2/06/98 2:04p Jeff
- * inventory system much more stable now, and works with telcom
- * 
- * 9     2/05/98 7:38p Jeff
- * changed inventory system completly...now is classes...works in telcom
- * to, added use feature
- * 
- * 8     2/04/98 7:42p Jeff
- * began connecting telcom to inventory
- * 
- * 7     2/04/98 12:18p Jeff
- * 
- * 6     2/03/98 6:15p Jeff
- * 
- * 5     1/31/98 8:49p Jeff
- * Added a function to count the number of items in the inventory
- * 
- * 4     1/31/98 8:12p Jeff
- * Added more inventory functions
- * 
- * 3     1/30/98 7:02p Jeff
- * wrote basic internals inven system
- * 
- * 2     1/29/98 3:52p Jeff
- * initial creation
-*
-* $NoKeywords: $
-*/
 
 #ifndef __INVENTORY_H__
 #define __INVENTORY_H__
@@ -201,36 +40,35 @@ struct object;
 #define INVRESET_LEVELCHANGE	1
 #define INVRESET_DEATHSPEW		2
 
-typedef struct
+struct tInvenList
 {
 	bool selectable;
 	char *hud_name;
 	int amount;
-}tInvenList;
+};
 
-typedef struct tInvenInfo
+struct tInvenInfo
 {
 	int count;
 	char *description;
 	char *icon_name;
 	char *name;
 	int flags;
-	ushort iflags;					// Inventory item flags
+	ushort iflags;				// Inventory item flags
 	int type;
 	int id;	
-}tInvenInfo;
+};
 
-typedef struct inven_item
+struct inven_item
 {
-
-	int	type;				// what type of object this is... robot, weapon, hostage, powerup, fireball
+	int	type;					// what type of object this is... robot, weapon, hostage, powerup, fireball
 								// if INVF_OBJECT, this is the object handle
 	int	otype;					//countermeasure powerup type
 	int	id;						// which form of object...which powerup, robot, etc.
 								// if INVF_OBJECT, this is -1
 	int	oid;					//countermeasure powerup id
 	int	flags;					// misc flags
-	ushort	pad2;					// keep alignment
+	ushort	pad2;				// keep alignment
 
 	int count;					//how many of this type/id (not INVF_OBJECT)
 
@@ -238,10 +76,10 @@ typedef struct inven_item
 	char *icon_name;
 	char *name;
 	
-	ushort iflags;					// Inventory item flags
+	ushort iflags;				// Inventory item flags
 	
-	inven_item *next,*prev;			//pointer to next inventory item
-}inven_item;
+	inven_item *next,*prev;		//pointer to next inventory item
+};
 
 class Inventory 
 {

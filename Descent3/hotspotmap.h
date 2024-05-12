@@ -15,36 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/hotspotmap.h $
-* $Revision: 10 $
-* $Date: 4/17/99 6:15p $
-* $Author: Samir $
-*
-* Hotspot stuff for TelCom
-*
-* $Log: /DescentIII/main/hotspotmap.h $
- * 
- * 10    4/17/99 6:15p Samir
- * replaced gr.h with grdefs.h and fixed resulting compile bugs.
- * 
- * 9     3/23/98 2:18p Jeff
- * Moved structures from telcom.h to here to make less dependent
- * 
- * 8     3/23/98 9:55a Jeff
- * Made changes to remove old telcom
- * 
- * 7     3/18/98 8:00p Jeff
- * Added some functionality for text and using the monitor borders
- * correctly in the new Telcom
- * 
- * 6     3/12/98 3:56p Jeff
- * Added header comments to file
-*
-* $NoKeywords: $
-*/
-
-
 
 #ifndef __HOTSPOTMAP_H_
 #define __HOTSPOTMAP_H_
@@ -64,28 +34,28 @@
 
 
 //structure for a hotspot scanline
-typedef struct scanline
+struct scanline
 {
 	int start,end;
-}scanline;
+};
 
 //structure for 1 hotspot
-typedef struct hotspot
+struct hotspot
 {
 	int starting_y;
 	int scanlines;
 	scanline *x;
-}hotspot;
+};
 
 //structure for all hotspots
-typedef struct hotspotmap_t
+struct hotspotmap_t
 {
 	char num_of_hotspots;
 	hotspot *hs;
-}hotspotmap_t;
+};
 
 //structure for 1 window
-typedef struct window_box
+struct window_box
 {
 	int x,y;	//leftmost x, topmost y
 	int width,height;
@@ -94,14 +64,14 @@ typedef struct window_box
 	bool on_left,on_top;//used for creating window
 	char *lt,*rt,*lb,*rb;//used for holding the transparent information of the corners
 	int lt_bmp, rt_bmp, lb_bmp, rb_bmp;
-}window_box;
+};
 
 //structure for all the windows
-typedef struct windowmap_t
+struct windowmap_t
 {
 	int num_of_windows;
 	window_box *wm;
-}windowmap_t;
+};
 
 // Loads a tga or ogf file into a bitmap...returns handle to bm or -1 on error, and fills in the alphamap
 int menutga_alloc_file (char *name,char *hsmap[],int *w,int *h);
@@ -116,6 +86,5 @@ void ExportHotSpot(char *filename,hotspotmap_t *hsmap);	//Exports a hotspotmap t
 void DisplayHotSpots(hotspotmap_t *hsmap,windowmap_t *wndmap);	//Displays the hotspots of the given hotspot map to the screen (in blue)
 void FreeHotSpotMapInternals(hotspotmap_t *hsmap);	//Deletes allocated memory within a hotspotmap struct
 ushort menutga_translate_pixel (int pixel,char *alpha_value);
-
 
 #endif

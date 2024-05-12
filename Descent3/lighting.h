@@ -15,10 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * Lighting functions and variables
- *
- */
 
 #ifndef _LIGHTING_H
 #define _LIGHTING_H
@@ -38,22 +34,22 @@
 
 extern float Specular_tables[3][MAX_SPECULAR_INCREMENTS];
 
-typedef struct 
+struct dynamic_lightmap
 {
 	ushort *mem_ptr;
 	ubyte used;
-} dynamic_lightmap;
+};
 
-typedef struct
+struct dynamic_face
 {
 	ushort lmi_handle;
-} dynamic_face;
+};
 
-typedef struct
+struct dynamic_cell
 {
 	ushort cellnum;
 	ubyte r,g,b;
-} dynamic_cell;
+};
 
 // Sets up our dynamic lighting maps
 void InitDynamicLighting ();

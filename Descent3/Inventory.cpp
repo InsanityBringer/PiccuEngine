@@ -1,5 +1,5 @@
-/* 
-* Descent 3 
+/*
+* Descent 3
 * Copyright (C) 2024 Parallax Software
 *
 * This program is free software: you can redistribute it and/or modify
@@ -14,277 +14,6 @@
 *
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/*
-* $Logfile: /DescentIII/main/Inventory.cpp $
-* $Revision: 80 $
-* $Date: 5/19/99 4:23p $
-* $Author: Chris $
-*
-* Inventory control source file
-*
-* $Log: /DescentIII/main/Inventory.cpp $
- * 
- * 80    5/19/99 4:23p Chris
- * Fixed level goal problems with keys and persistant inventory items
- * 
- * 79    5/19/99 3:24p Jason
- * fixed wrong ordering of InitObjectScripts and MultiSendObject
- * 
- * 78    5/12/99 6:01p Jeff
- * sanity check.  fixed reset
- * 
- * 76    5/08/99 4:12p Chris
- * Added AI hearing noises... version 1
- * 
- * 75    4/29/99 1:28p Jeff
- * play sound when switching inven/countermeasres
- * 
- * 74    4/28/99 8:32p Jeff
- * fixed bug adding an object to the inventory, was forgetting to set
- * count
- * 
- * 73    4/28/99 5:20p Jeff
- * fixed missing return
- * 
- * 72    4/28/99 5:22a Jeff
- * added function to get list of inventory items, without having to go
- * through inventory one by one
- * 
- * 71    4/25/99 5:20p Chris
- * Made the GB work with the inventory system...  CT_AI not remapped for
- * non-vis USED inventory items.
- * 
- * 70    4/20/99 3:06p Jeff
- * fixed inventory displaying of non-usable items
- * 
- * 69    4/20/99 1:14p Samir
- * added function to determine if inventory item is usable.
- * 
- * 68    4/14/99 2:50a Jeff
- * fixed some case mismatched #includes
- * 
- * 67    3/02/99 4:41p Jeff
- * Fixed inventory save/load 
- * 
- * 66    2/25/99 8:54p Jeff
- * Inventory supports level change persistant items.  Inventory supports
- * time-out objects.  Inventory Reset changed (takes a level of reset
- * now).  Quad lasers stay across level change (single player).  Guidebot
- * bug fixed (now back in ship on level start).  Quads time out when
- * spewed.  Invulnerability and cloak powerups no longer use game
- * event/callbacks, so they can be saved in game saves (moved to
- * MakePlayerInvulnerable and MakeObjectInvisible)
- * 
- * 65    2/23/99 7:37p Jeff
- * fixed reset so it doesn't remove non-spewable items...made multiplayer
- * friendly
- * 
- * 64    2/22/99 1:20a Jeff
- * added support for inventory (simple) in dallas.  Moved end-level
- * sequence to use IGC.  Add position clipboard stuff for dallas.  Fixed
- * some inventory bug with storing object handles
- * 
- * 63    2/14/99 4:29a Jeff
- * able to set custom descriptions for an item when adding it
- * 
- * 62    2/13/99 12:37a Jeff
- * new inventory system.  Supports objects that don't die when put in (by
- * objhandles).  Also changed Inventory::Reset()
- * 
- * 61    2/08/99 5:24p Jeff
- * removed all calls to MultiSendRemoveObject, incorportated into
- * SetObjectDeadFlag.  Fixes sequencing issues in multiplayer
- * 
- * 60    1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 59    1/13/99 2:28a Chris
- * Massive AI, OSIRIS update
- * 
- * 58    1/08/99 2:55p Samir
- * Ripped out OSIRIS1.
- * 
- * 57    1/04/99 12:23p Jeff
- * added to evt_use and support for mission module scripts
- * 
- * 56    12/17/98 12:08p Jeff
- * first checkin of new implementation of OSIRIS (old OSIRIS no longer
- * works)
- * 
- * 55    10/08/98 4:23p Kevin
- * Changed code to comply with memory library usage. Always use mem_malloc
- * , mem_free and mem_strdup
- * 
- * 54    10/06/98 2:37p Jeff
- * fixed next,prev pos bugs
- * 
- * 53    10/03/98 8:05p Matt
- * Added asserts
- * 
- * 52    8/31/98 6:50p Jeff
- * made inventory and countermeasure keys customizable
- * 
- * 51    8/25/98 1:35p Jeff
- * fixed 0 byte malloc and removed mprintfs
- * 
- * 50    8/19/98 2:17p Jeff
- * added a function to get the aux type/id
- * 
- * 49    8/19/98 12:38p Jason
- * made countermeasure spewing work correctly
- * 
- * 48    8/16/98 2:00a Jeff
- * fixed ugly mprintf
- * 
- * 47    8/13/98 11:56a Jeff
- * handle new flags for inventory use
- * 
- * 46    8/12/98 10:38a Jeff
- * fixed some major bugs with reset
- * 
- * 45    8/10/98 11:18a Jeff
- * reset takes a bool now whether to reset everything
- * 
- * 44    7/23/98 6:26p Jeff
- * added checks to make sure scripts match
- * 
- * 43    7/11/98 9:14p Jeff
- * fixed an mprintf
- * 
- * 42    7/10/98 7:49p Jeff
- * fixed way of getting icon info for countermeasure
- * 
- * 41    7/09/98 7:51p Jeff
- * forgot to tell the clients to remove countermeasures on use
- * 
- * 40    7/09/98 5:44p Jeff
- * fixed bug with unique count for countermeasures
- * 
- * 39    7/08/98 6:01p Jeff
- * first chance at making multiplayer friendly
- * 
- * 38    7/06/98 7:17p Jeff
- * countermeasure support added
- * 
- * 37    7/03/98 3:10p Jeff
- * some error handling and added functions to get inventory information
- * 
- * 36    5/25/98 6:38p Matt
- * Added needed include.
- * 
- * 35    5/11/98 4:40p Chris
- * AI info is now a malloc'ed pointer
- * 
- * 34    5/08/98 1:38p Jeff
- * D3XExecScript returns true by default, not false (made change in
- * EVT_USE)
- * 
- * 33    5/08/98 1:31p Jeff
- * if EVT_USE returns true, it won't remove item from inventory on use
- * 
- * 32    4/24/98 7:09p Jeff
- * added a flag for non-useable inventory items
- * 
- * 31    4/23/98 12:02p Jeff
- * added a limit to how many items you can put in your inventory
- * 
- * 30    4/19/98 7:32p Jeff
- * Moved inventory wrappers to DLLWrappers
- * 
- * 29    4/09/98 6:43p Craig
- * 
- * 28    4/09/98 6:09p Craig
- * 
- * 27    4/09/98 6:02p Craig
- * Fixed the non-linked player getting an inventory add crash.
- * 
- * 26    4/03/98 11:49a Jeff
- * Added another function wrapper, renamed others to fit naming convention
- * 
- * 25    3/31/98 3:55p Jeff
- * Added some inventory wrappers
- * 
- * 24    3/26/98 2:58p Jeff
- * Added a GetTypeIDCount function
- * 
- * 23    3/23/98 5:36p Jeff
- * added a parameter to Add to specify if you want it destroyed when it's
- * added
- * 
- * 22    3/20/98 9:34p Jason
- * added SetObjectDeadFlag inlined function
- * 
- * 21    3/20/98 2:58p Jason
- * fixed Jeff's dumb error :P
- * 
- * 20    3/20/98 2:44p Jeff
- * removed ValidatePos() from ResetPos()....ValidatePos() should be called
- * after a ResetPos() if you want to make sure you are on a selectable
- * item
- * 
- * 19    2/20/98 5:50p Jeff
- * Changed it so that whether an inventory item was selected was placed in
- * the objinfo flags
- * 
- * 18    2/20/98 5:02p Jeff
- * fixed bug so you can switch to a nonselectable item while playing the
- * game
- * 
- * 17    2/20/98 4:56p Jeff
- * Changed inventory so it now supports non selectable items, plus made
- * the list into a circular list
- * 
- * 16    2/15/98 4:49p Jeff
- * Added a reset function to clear the inventory
- * 
- * 15    2/12/98 1:41p Jeff
- * commented out constructor/destructor mprintfs
- * 
- * 14    2/11/98 4:54p Jeff
- * Moved the inventory into the Player struct
- * 
- * 13    2/09/98 4:58p Jeff
- * Connected inventory to hud
- * 
- * 12    2/07/98 6:34p Jeff
- * 
- * 11    2/06/98 2:04p Jeff
- * inventory system much more stable now, and works with telcom
- * 
- * 10    2/05/98 7:38p Jeff
- * changed inventory system completly...now is classes...works in telcom
- * to, added use feature
- * 
- * 9     2/04/98 7:42p Jeff
- * began connecting telcom to inventory
- * 
- * 8     2/04/98 6:09p Matt
- * Changed object room number to indicate a terrain cell via a flag.  Got
- * rid of the object flag which used to indicate terrain.
- * 
- * 7     2/04/98 12:18p Jeff
- * 
- * 6     2/03/98 6:15p Jeff
- * 
- * 5     1/31/98 8:49p Jeff
- * Added a function to count the number of items in the inventory
- * 
- * 4     1/31/98 8:12p Jeff
- * Added more inventory functions
- * 
- * 3     1/30/98 7:02p Jeff
- * wrote basic internals inven system
- * 
- * 2     1/29/98 3:52p Jeff
- * initial creation
-*
-* $NoKeywords: $
 */
 
 #include "Inventory.h"
@@ -329,21 +58,21 @@ Inventory::~Inventory(void)
 //		INVRESET_ALL:			Reset _EVERYTHING_
 //		INVRESET_LEVELCHANGE:	Remove everything except those that last across levels
 //		INVRESET_DEATHSPEW:		Remove everything except those that do not spew (Default)
-void Inventory::Reset(bool in_game,int reset_stage)
+void Inventory::Reset(bool in_game, int reset_stage)
 {
-	if(reset_stage<0 || reset_stage>2)
+	if (reset_stage < 0 || reset_stage>2)
 		reset_stage = 2;
 
-	inven_item *current = root,*next,*new_root;
+	inven_item* current = root, * next, * new_root;
 
 	int item_count = count;
 	new_root = NULL;
-	object *obj;
+	object* obj;
 
 	bool remove_nonspewers = false;
 	bool remove_levelchangers = false;
 
-	switch(reset_stage)
+	switch (reset_stage)
 	{
 	case INVRESET_ALL:	//everything (mission over)
 		remove_nonspewers = true;
@@ -359,9 +88,9 @@ void Inventory::Reset(bool in_game,int reset_stage)
 		break;
 	}
 
-	bool no_spew,leave_across_level,should_spew;
+	bool no_spew, leave_across_level, should_spew;
 
-	while(item_count)
+	while (item_count)
 	{
 		no_spew = false;
 		leave_across_level = false;
@@ -369,69 +98,71 @@ void Inventory::Reset(bool in_game,int reset_stage)
 
 		next = current->next;
 
-		if(current->iflags&INVF_NOTSPEWABLE)
+		if (current->iflags & INVF_NOTSPEWABLE)
 			no_spew = true;
-		if(current->iflags&INVF_MISSIONITEM)
+		if (current->iflags & INVF_MISSIONITEM)
 			leave_across_level = true;
 
 		//determine if we should spew
-		if(leave_across_level && !remove_levelchangers && (!(current->iflags&INVF_OBJECT)) )
+		if (leave_across_level && !remove_levelchangers && (!(current->iflags & INVF_OBJECT)))
 			should_spew = false;
-		if(no_spew && !remove_nonspewers)
+		if (no_spew && !remove_nonspewers)
 			should_spew = false;
 
-		if(in_game && current->iflags&INVF_OBJECT && should_spew)
+		if (in_game && current->iflags & INVF_OBJECT && should_spew)
 		{
 			//unmark this object as being in an inventory
 			obj = ObjGet(current->type);
-			if(obj)
+			if (obj)
 			{
 				obj->flags &= ~OF_INPLAYERINVENTORY;
 			}
 		}
-			
-		if(should_spew)
+
+		if (should_spew)
 			RemoveNode(current);
 
 		item_count--;
-		current = next;		
+		current = next;
 	}
 	ValidatePos(true);
 }
 
 //adds an object to the inventory (marked by it's objhandle)
-bool Inventory::AddObject(int object_handle,int flags,char *description)
+bool Inventory::AddObject(int object_handle, int flags, char* description)
 {
 	//make sure we can fit another object
-	if(count>=MAX_UNIQUE_INVEN_ITEMS){
-		mprintf((0,"Max unique count hit on add to inventory\n"));
+	if (count >= MAX_UNIQUE_INVEN_ITEMS)
+	{
+		mprintf((0, "Max unique count hit on add to inventory\n"));
 		return false;
 	}
 
-	object *obj = ObjGet(object_handle);
-	if(!obj){
-		mprintf((0,"INVEN: Invalid object trying to be added\n"));
+	object* obj = ObjGet(object_handle);
+	if (!obj)
+	{
+		mprintf((0, "INVEN: Invalid object trying to be added\n"));
 		return false;
 	}
 
-	if(obj->flags & OF_INFORM_DESTROY_TO_LG)
+	if (obj->flags & OF_INFORM_DESTROY_TO_LG)
 	{
 		Level_goals.Inform(LIT_OBJECT, LGF_COMP_DESTROY, obj->handle);
 	}
 
 	bool in_as_dummy = false;
-	if(obj->type==OBJ_DUMMY)
+	if (obj->type == OBJ_DUMMY)
 	{
 		//type coming in is already dummy, un-dummy before adding it
 		ObjUnGhostObject(OBJNUM(obj));
 		in_as_dummy = true;
 	}
 
-	ASSERT(obj->type==OBJ_BUILDING || obj->type==OBJ_ROBOT || obj->type==OBJ_POWERUP || obj->type==OBJ_CLUTTER);
+	ASSERT(obj->type == OBJ_BUILDING || obj->type == OBJ_ROBOT || obj->type == OBJ_POWERUP || obj->type == OBJ_CLUTTER);
 
-	inven_item *current = root, *prev = root, *newnode;
-	
-	if(count==0)
+	inven_item* current = root, * prev = root, * newnode;
+
+	if (count == 0)
 	{
 		//there are no items in the list...time to add
 		root = new inven_item;
@@ -462,102 +193,109 @@ bool Inventory::AddObject(int object_handle,int flags,char *description)
 	newnode->otype = obj->type;
 	newnode->oid = obj->id;
 
-	if(Object_info[newnode->oid].description)
+	if (Object_info[newnode->oid].description)
 	{
 		newnode->description = mem_strdup(Object_info[newnode->oid].description);
 	}
 	else
 	{
-		newnode->description = (char *)mem_malloc(sizeof(char));
+		newnode->description = (char*)mem_malloc(sizeof(char));
 		newnode->description[0] = 0;
 	}
 
-	if(Object_info[newnode->oid].flags & OIF_INVEN_SELECTABLE)
+	if (Object_info[newnode->oid].flags & OIF_INVEN_SELECTABLE)
 		newnode->iflags |= INVF_SELECTABLE;
 	//if(!(Object_info[newnode->oid].flags & OIF_INVEN_NONUSEABLE))
 	//	newnode->iflags |= INVF_USEABLE;
-	if(Object_info[newnode->oid].flags & OIF_INVEN_TYPE_MISSION)
+	if (Object_info[newnode->oid].flags & OIF_INVEN_TYPE_MISSION)
 		newnode->iflags |= INVF_MISSIONITEM;
-	if(Object_info[newnode->oid].flags & OIF_INVEN_NOREMOVE)
+	if (Object_info[newnode->oid].flags & OIF_INVEN_NOREMOVE)
 		newnode->iflags |= INVF_NOREMOVEONUSE;
-	if(Object_info[newnode->oid].flags & OIF_INVEN_VISWHENUSED)
+	if (Object_info[newnode->oid].flags & OIF_INVEN_VISWHENUSED)
 		newnode->iflags |= INVF_VISWHENUSED;
-	
-	if(flags&INVAF_NOTSPEWABLE)
+
+	if (flags & INVAF_NOTSPEWABLE)
 		newnode->iflags |= INVF_NOTSPEWABLE;
-	if(flags&INVAF_TIMEOUTONSPEW)
+	if (flags & INVAF_TIMEOUTONSPEW)
 		newnode->iflags |= INVF_TIMEOUTONSPEW;
-	if(flags&INVAF_LEVELLAST)
+	if (flags & INVAF_LEVELLAST)
 		newnode->iflags |= INVF_MISSIONITEM;
 
 
 	obj->flags |= OF_INPLAYERINVENTORY;
 
-	if( in_as_dummy || (!(Game_mode&GM_MULTI)) || Netgame.local_role==LR_SERVER )
+	if (in_as_dummy || (!(Game_mode & GM_MULTI)) || Netgame.local_role == LR_SERVER)
 	{
 		ObjGhostObject(OBJNUM(obj));
 
-		if(Game_mode&GM_MULTI && Netgame.local_role==LR_SERVER)
+		if (Game_mode & GM_MULTI && Netgame.local_role == LR_SERVER)
 		{
-			MultiSendGhostObject( obj, true);
+			MultiSendGhostObject(obj, true);
 		}
 	}
 
 	newnode->icon_name = mem_strdup(Object_info[newnode->oid].icon_name);
 
-	if(description)
+	if (description)
 	{
 		newnode->name = mem_strdup(description);
-	}else
+	}
+	else
 	{
 		newnode->name = mem_strdup(Object_info[newnode->oid].name);
 	}
 
 	count++;
 
-	if(newnode->iflags & INVF_SELECTABLE)
+	if (newnode->iflags & INVF_SELECTABLE)
 		pos = newnode;
 
 	return true;
 }
 
 //adds a new type/id item to the inventory
-bool Inventory::Add(int type,int id,object *parent,int aux_type,int aux_id,int flags,char *description)
+bool Inventory::Add(int type, int id, object* parent, int aux_type, int aux_id, int flags, char* description)
 {
 	//make sure we can fit another object
-	if(count>=MAX_UNIQUE_INVEN_ITEMS){
-		mprintf((0,"Max unique count hit on add to inventory\n"));
+	if (count >= MAX_UNIQUE_INVEN_ITEMS)
+	{
+		mprintf((0, "Max unique count hit on add to inventory\n"));
 		return false;
 	}
 
-	if( (type<0) || (type==OBJ_NONE) ){
-		mprintf((0,"Invalid type on add to inventory\n"));
+	if ((type < 0) || (type == OBJ_NONE))
+	{
+		mprintf((0, "Invalid type on add to inventory\n"));
 		return false;
 	}
 
-	if(type!=OBJ_WEAPON){
-		ASSERT(type==OBJ_BUILDING || type==OBJ_ROBOT || type==OBJ_POWERUP || type==OBJ_CLUTTER);
-		return AddObjectItem(type,id,(aux_type!=-1)?aux_type:type,(aux_id!=-1)?aux_id:id,flags,description);
-	}else{
+	if (type != OBJ_WEAPON)
+	{
+		ASSERT(type == OBJ_BUILDING || type == OBJ_ROBOT || type == OBJ_POWERUP || type == OBJ_CLUTTER);
+		return AddObjectItem(type, id, (aux_type != -1) ? aux_type : type, (aux_id != -1) ? aux_id : id, flags, description);
+	}
+	else
+	{
 		//special case for countermeasures
-		return AddCounterMeasure(id,aux_type,aux_id,flags,description);
+		return AddCounterMeasure(id, aux_type, aux_id, flags, description);
 	}
 
 	return false;
 }
 
 //adds a special cased CounterMeasure into the inventory
-bool Inventory::AddCounterMeasure(int id,int aux_type,int aux_id,int flags,char *description)
+bool Inventory::AddCounterMeasure(int id, int aux_type, int aux_id, int flags, char* description)
 {
 	//make sure we can fit another object
-	if(count>=MAX_UNIQUE_INVEN_ITEMS){
-		mprintf((0,"Hit max unique in counter measure add\n"));
+	if (count >= MAX_UNIQUE_INVEN_ITEMS)
+	{
+		mprintf((0, "Hit max unique in counter measure add\n"));
 		return false;
 	}
-	
-	inven_item *current = root, *prev = root, *newnode;
-	
-	if(count==0)
+
+	inven_item* current = root, * prev = root, * newnode;
+
+	if (count == 0)
 	{
 		//there are no items in the list...time to add
 		root = new inven_item;
@@ -568,9 +306,9 @@ bool Inventory::AddCounterMeasure(int id,int aux_type,int aux_id,int flags,char 
 	}
 	else
 	{
-		newnode = FindItem(OBJ_WEAPON,id);
+		newnode = FindItem(OBJ_WEAPON, id);
 
-		if(!newnode)
+		if (!newnode)
 		{
 			//NEEDTODO: adjust so it adds in order
 
@@ -594,7 +332,7 @@ bool Inventory::AddCounterMeasure(int id,int aux_type,int aux_id,int flags,char 
 	}
 
 	//its a new item type/id, so fill in its info
-	if(newnode->count==1)
+	if (newnode->count == 1)
 	{
 		newnode->type = OBJ_WEAPON;
 		newnode->id = id;
@@ -603,14 +341,16 @@ bool Inventory::AddCounterMeasure(int id,int aux_type,int aux_id,int flags,char 
 		newnode->otype = aux_type;
 		newnode->oid = aux_id;
 
-		if( (aux_type!=-1) && (aux_id!=-1) && (Object_info[aux_id].description)){
+		if ((aux_type != -1) && (aux_id != -1) && (Object_info[aux_id].description))
+		{
 			newnode->description = mem_strdup(Object_info[aux_id].description);
 		}
-		else{
+		else
+		{
 			newnode->description = mem_strdup(Weapons[id].name);
 		}
 
-		newnode->iflags |= INVF_SELECTABLE|INVF_USEABLE|INVF_MISSIONITEM|INVF_TIMEOUTONSPEW;
+		newnode->iflags |= INVF_SELECTABLE | INVF_USEABLE | INVF_MISSIONITEM | INVF_TIMEOUTONSPEW;
 
 		if (Weapons[id].icon_handle >= 0)
 		{
@@ -621,13 +361,9 @@ bool Inventory::AddCounterMeasure(int id,int aux_type,int aux_id,int flags,char 
 			newnode->icon_name = nullptr;
 
 		if (description)
-		{
 			newnode->name = mem_strdup(description);
-		}
 		else
-		{
 			newnode->name = mem_strdup(Weapons[id].name);
-		}
 		count++;
 		//mprintf((0,"Inventory: Item #%d Added Countermeasure (%s) ID=%d\n",count,newnode->name,newnode->id));
 	}
@@ -637,15 +373,15 @@ bool Inventory::AddCounterMeasure(int id,int aux_type,int aux_id,int flags,char 
 }
 
 //adds an object to the inventory
-bool Inventory::AddObjectItem(int otype,int oid,int oauxt,int oauxi,int flags,char *description)
+bool Inventory::AddObjectItem(int otype, int oid, int oauxt, int oauxi, int flags, char* description)
 {
 	//make sure we can fit another object
-	if(count>=MAX_UNIQUE_INVEN_ITEMS)
+	if (count >= MAX_UNIQUE_INVEN_ITEMS)
 		return false;
 
-	inven_item *current = root, *prev = root, *newnode;
-	
-	if(count==0)
+	inven_item* current = root, * prev = root, * newnode;
+
+	if (count == 0)
 	{
 		//there are no items in the list...time to add
 		root = new inven_item;
@@ -656,9 +392,9 @@ bool Inventory::AddObjectItem(int otype,int oid,int oauxt,int oauxi,int flags,ch
 	}
 	else
 	{
-		newnode = FindItem(otype,oid);
+		newnode = FindItem(otype, oid);
 
-		if(!newnode)
+		if (!newnode)
 		{
 			//NEEDTODO: adjust so it adds in order
 
@@ -681,7 +417,7 @@ bool Inventory::AddObjectItem(int otype,int oid,int oauxt,int oauxi,int flags,ch
 	}
 
 	//its a new item type/id, so fill in its info
-	if(newnode->count==1)
+	if (newnode->count == 1)
 	{
 		newnode->type = otype;
 		newnode->id = oid;
@@ -690,90 +426,93 @@ bool Inventory::AddObjectItem(int otype,int oid,int oauxt,int oauxi,int flags,ch
 		newnode->otype = oauxt;
 		newnode->oid = oauxi;
 
-		if(Object_info[oid].description)
+		if (Object_info[oid].description)
 		{
-			newnode->description = (char *)mem_malloc(strlen(Object_info[oid].description)+1);
-			strcpy(newnode->description,Object_info[oid].description);
+			newnode->description = (char*)mem_malloc(strlen(Object_info[oid].description) + 1);
+			strcpy(newnode->description, Object_info[oid].description);
 		}
 		else
 		{
-			newnode->description = (char *)mem_malloc(sizeof(char));
+			newnode->description = (char*)mem_malloc(sizeof(char));
 			newnode->description[0] = 0;
 		}
 
-		if(Object_info[oid].flags & OIF_INVEN_SELECTABLE)
+		if (Object_info[oid].flags & OIF_INVEN_SELECTABLE)
 			newnode->iflags |= INVF_SELECTABLE;
 		//if(!(Object_info[oid].flags & OIF_INVEN_NONUSEABLE))
 		//	newnode->iflags |= INVF_USEABLE;
-		if(Object_info[oid].flags & OIF_INVEN_TYPE_MISSION)
+		if (Object_info[oid].flags & OIF_INVEN_TYPE_MISSION)
 			newnode->iflags |= INVF_MISSIONITEM;
-		if(Object_info[oid].flags & OIF_INVEN_NOREMOVE)
+		if (Object_info[oid].flags & OIF_INVEN_NOREMOVE)
 			newnode->iflags |= INVF_NOREMOVEONUSE;
-		if(Object_info[oid].flags & OIF_INVEN_VISWHENUSED)
+		if (Object_info[oid].flags & OIF_INVEN_VISWHENUSED)
 			newnode->iflags |= INVF_VISWHENUSED;
 
-		if(flags&INVAF_NOTSPEWABLE)
+		if (flags & INVAF_NOTSPEWABLE)
 			newnode->iflags |= INVF_NOTSPEWABLE;
-		if(flags&INVAF_TIMEOUTONSPEW)
+		if (flags & INVAF_TIMEOUTONSPEW)
 			newnode->iflags |= INVF_TIMEOUTONSPEW;
-		if(flags&INVAF_LEVELLAST)
+		if (flags & INVAF_LEVELLAST)
 			newnode->iflags |= INVAF_LEVELLAST;
 
-		newnode->icon_name = (char *)mem_malloc(strlen(Object_info[oid].icon_name)+1);
-		strcpy(newnode->icon_name,Object_info[oid].icon_name);
+		newnode->icon_name = (char*)mem_malloc(strlen(Object_info[oid].icon_name) + 1);
+		strcpy(newnode->icon_name, Object_info[oid].icon_name);
 
-		if(description)
-		{
+		if (description)
 			newnode->name = mem_strdup(description);
-		}else
-		{
+		else
 			newnode->name = mem_strdup(Object_info[oid].name);
-		}
-	
+
 		count++;
 	}
 
-	if(newnode->iflags & INVF_SELECTABLE)
+	if (newnode->iflags & INVF_SELECTABLE)
 		pos = newnode;
 
 	return true;
 }
 
 //uses an item in the inventory (returns false if the item doesn't exist)
-bool Inventory::Use(int type,int id,object *parent)
+bool Inventory::Use(int type, int id, object* parent)
 {
-	inven_item *node;
+	inven_item* node;
 
-	node = FindItem(type,id);
+	node = FindItem(type, id);
 
-	if(!node)
+	if (!node)
 		return false;
 
-	if(!(node->iflags&INVF_USEABLE))
+	if (!(node->iflags & INVF_USEABLE))
 		return false;
 
-	bool multiplayer = (bool)((Game_mode&GM_MULTI)!=0);
+	bool multiplayer = (bool)((Game_mode & GM_MULTI) != 0);
 	bool client;
 	bool server;
 	bool ret = false;
 
-	if(multiplayer){
-		if(Netgame.local_role&LR_SERVER){
+	if (multiplayer)
+	{
+		if (Netgame.local_role & LR_SERVER)
+		{
 			client = false;
 			server = true;
-		}else{
+		}
+		else
+		{
 			client = true;
 			server = false;
 		}
-	}else{
+	}
+	else {
 		client = false;
 		server = false;
 	}
 
-	if(client){
+	if (client)
+	{
 		//OK, we're a client in a multiplayer game, so send a request to the server to use this Item
-		SendRequestToServerToUse(node->type,node->id);
-	
+		SendRequestToServerToUse(node->type, node->id);
+
 		return false;
 	}
 
@@ -781,25 +520,28 @@ bool Inventory::Use(int type,int id,object *parent)
 
 
 	//get player object (needed when we recreate the object)
-	object *player;
+	object* player;
 	ASSERT(parent);
 	player = parent;
 
-	if(player==NULL)
+	if (player == NULL)
 	{
 		Int3();
 		return false;
 	}
 
 	//if type is OBJ_WEAPON then it's a countermeasure
-	if(type==OBJ_WEAPON){
-		mprintf((0,"CounterMeasures: Use\n"));
+	if (type == OBJ_WEAPON)
+	{
+		mprintf((0, "CounterMeasures: Use\n"));
 		//countermeasure
-		CreateCountermeasureFromObject(player,id);
-		Remove(node->type,node->id);
+		CreateCountermeasureFromObject(player, id);
+		Remove(node->type, node->id);
 		ret = true;
-	}else{
-		mprintf((0,"Inventory: Use\n"));
+	}
+	else
+	{
+		mprintf((0, "Inventory: Use\n"));
 		//regular
 		//recreate the object
 		int objnum;
@@ -807,23 +549,24 @@ bool Inventory::Use(int type,int id,object *parent)
 		bool remove_on_use;
 		bool vis_when_created = false;
 
-		if(node->iflags & INVF_NOREMOVEONUSE )
+		if (node->iflags & INVF_NOREMOVEONUSE)
 			remove_on_use = false;
 		else
 			remove_on_use = true;
 
-		if(node->iflags & INVF_VISWHENUSED )
+		if (node->iflags & INVF_VISWHENUSED)
 			vis_when_created = true;
 		else
 			vis_when_created = false;
 
 		roomnum = player->roomnum;
 
-		if(node->iflags&INVF_OBJECT)
+		if (node->iflags & INVF_OBJECT)
 		{
 			//don't recreate the object..it already exists
-			object *obj = ObjGet(node->type);
-			if(!obj){
+			object* obj = ObjGet(node->type);
+			if (!obj)
+			{
 				Int3();	//object no longer exists
 				return false;
 			}
@@ -831,139 +574,142 @@ bool Inventory::Use(int type,int id,object *parent)
 
 			obj->flags &= ~OF_INPLAYERINVENTORY;
 
-			if( vis_when_created )
+			if (vis_when_created)
 			{
 				ObjUnGhostObject(objnum);
-				MultiSendGhostObject( obj, false);
+				MultiSendGhostObject(obj, false);
 			}
 
-		}else
+		}
+		else
 		{
 
-			objnum = ObjCreate(node->type,node->id,roomnum,&player->pos,NULL,player->handle);
-			if(objnum==-1){
+			objnum = ObjCreate(node->type, node->id, roomnum, &player->pos, NULL, player->handle);
+			if (objnum == -1)
+			{
 				Int3();
 				return false;
 			}
 
-			if( !vis_when_created ){
-				if(Objects[objnum].control_type != CT_AI)
-				{
+			if (!vis_when_created)
+			{
+				if (Objects[objnum].control_type != CT_AI)
 					SetObjectControlType(&Objects[objnum], CT_NONE);
-				}
+
 				Objects[objnum].movement_type = MT_NONE;
 				Objects[objnum].render_type = RT_NONE;
 			}
 
 			Objects[objnum].flags = node->flags;
 
-			if(server)//if we're the server, then we need to send this object to the clients
-				MultiSendObject(&Objects[objnum],0);
+			if (server)//if we're the server, then we need to send this object to the clients
+				MultiSendObject(&Objects[objnum], 0);
 
 			InitObjectScripts(&Objects[objnum]);
-		
+
 		}
 
 		tOSIRISEventInfo ei;
 		ei.evt_use.it_handle = player->handle;
 
 		// zar: node might be invalid after CallEvent.
-		int type = node->type, id = node->id; 
-		if(Osiris_CallEvent(&Objects[objnum],EVT_USE, &ei)){
+		int type = node->type, id = node->id;
+		if (Osiris_CallEvent(&Objects[objnum], EVT_USE, &ei))
+		{
 			//if we're the server tell the clients to remove this item from their inventory
 			Remove(type, id);
 			ret = true;
-		}else{
-			if(node->iflags&INVF_OBJECT)
+		}
+		else
+		{
+			if (node->iflags & INVF_OBJECT)
 				Objects[objnum].flags |= OF_INPLAYERINVENTORY;	//mark as being in inventory
 		}
 
-		if( remove_on_use ){
+		if (remove_on_use)
+		{
 			//now we need to kill the object
-			SetObjectDeadFlag(&Objects[objnum],true);
+			SetObjectDeadFlag(&Objects[objnum], true);
 		}
 	}
 	return ret;
 }
 
 //sends a request to the server to use a particular item in the inventory
-void Inventory::SendRequestToServerToUse(int type,int id)
+void Inventory::SendRequestToServerToUse(int type, int id)
 {
 	//mprintf((0,"Sending request to server for T=%d ID=%d\n",type,id));
-	inven_item *node = FindItem(type,id);
-	if(node){
-		MultiSendClientInventoryUseItem(type,id);
-	}else{
-		mprintf((0,"Sorry couldn't find it in your inventory\n"));
-	}
+	inven_item* node = FindItem(type, id);
+	if (node)
+		MultiSendClientInventoryUseItem(type, id);
+	else
+		mprintf((0, "Sorry couldn't find it in your inventory\n"));
 }
 
 //searches the inventory for the specified type/id, sets the pos to it
-bool Inventory::FindPos(int type,int id)
+bool Inventory::FindPos(int type, int id)
 {
-	int oldt,oldi;
-	int ttype,tid;
+	int oldt, oldi;
+	int ttype, tid;
 
 	//save current pos
-	GetPosTypeID(oldt,oldi);
+	GetPosTypeID(oldt, oldi);
 
 	//try to move to the specified pos
-	GotoPos(type,id);
-	
+	GotoPos(type, id);
+
 	//see if we got there
-	GetPosTypeID(ttype,tid);
-	if( (ttype==type) && (tid==id) )
+	GetPosTypeID(ttype, tid);
+	if ((ttype == type) && (tid == id))
 		return true;
-	else{
+	else
+	{
 		//nope, so restore the old pos
-		GotoPos(oldt,oldi);
+		GotoPos(oldt, oldi);
 		return false;
 	}
 }
 
 //uses an item in the inventory (currently selected one) (returns false if the item doesn't exist)
-bool Inventory::UsePos(object *parent)
+bool Inventory::UsePos(object* parent)
 {
-	if(pos)
-	{
-		return Use(pos->type,pos->id,parent);
-	}
+	if (pos)
+		return Use(pos->type, pos->id, parent);
 	else
 		return false;
 }
 
-bool Inventory::Use(int objhandle,object *parent)
+bool Inventory::Use(int objhandle, object* parent)
 {
-	return Use(objhandle,-1,parent);
+	return Use(objhandle, -1, parent);
 }
 
 //removes an item from inventory, without using it (returns true on success, false if object didn't exist)
-bool Inventory::Remove(int type,int id)
+bool Inventory::Remove(int type, int id)
 {
-	inven_item *node;
+	inven_item* node;
 
-	node = FindItem(type,id);
+	node = FindItem(type, id);
 
-	if(!node)
+	if (!node)
 		return false;
 
-	if(node->iflags&INVF_OBJECT)
+	if (node->iflags & INVF_OBJECT)
 	{
 		//always remove
-		object *obj = ObjGet(type);
+		object* obj = ObjGet(type);
 		ASSERT(obj);
-		if(obj)
-		{
+		if (obj)
 			obj->flags &= ~OF_INPLAYERINVENTORY;
-		}
 
 		RemoveNode(node);
-	}else
+	}
+	else
 	{
 		node->count--;
-		mprintf((0,"Inventory System: Remove\n"));
+		mprintf((0, "Inventory System: Remove\n"));
 
-		if(node->count<=0)
+		if (node->count <= 0)
 			RemoveNode(node);
 	}
 
@@ -971,43 +717,43 @@ bool Inventory::Remove(int type,int id)
 }
 
 //removes a node from the list, decrementing the count
-void Inventory::RemoveNode(inven_item *node)
+void Inventory::RemoveNode(inven_item* node)
 {
-	if(!node)
+	if (!node)
 		return;
 
 	bool movepos = false;
 	count--;
-	inven_item *prev,*next;
+	inven_item* prev, * next;
 
 	prev = node->prev;
 	next = node->next;
 
-	if(node->description)
+	if (node->description)
 		mem_free(node->description);
-	if(node->icon_name)
+	if (node->icon_name)
 		mem_free(node->icon_name);
-	if(node->name)
+	if (node->name)
 		mem_free(node->name);
 
-	if(pos==node)
+	if (pos == node)
 	{
-		if(pos->next!=node)
+		if (pos->next != node)
 		{
-			movepos=true;
-			pos=pos->next;
+			movepos = true;
+			pos = pos->next;
 		}
 		else
-			pos=NULL;
+			pos = NULL;
 	}
 
 
-	if(node==root)
+	if (node == root)
 	{
-		if(root->next!=root)
+		if (root->next != root)
 		{
-			inven_item *n = root->next;
-			inven_item *p = root->prev;
+			inven_item* n = root->next;
+			inven_item* p = root->prev;
 			delete node;
 			root = n;
 			root->prev = p;
@@ -1026,24 +772,24 @@ void Inventory::RemoveNode(inven_item *node)
 		next->prev = prev;
 	}
 
-	if(movepos)
+	if (movepos)
 		ValidatePos();
 }
 
 
 //given a type and id, it returns the first matching inventory item
-inven_item *Inventory::FindItem(int type,int id)
+inven_item* Inventory::FindItem(int type, int id)
 {
-	inven_item *current = root;
+	inven_item* current = root;
 
-	if(count==0)
+	if (count == 0)
 		return NULL;	//there are no items, don't even bother
 
 	int counter = count;
 
-	while(counter)
+	while (counter)
 	{
-		if( (current->type==type) && (current->id==id) )	//we got a match
+		if ((current->type == type) && (current->id == id))	//we got a match
 		{
 			//mprintf((0,"Inventory: FindItem found Type(%d) ID(%d)\n",type,id));
 			return current;
@@ -1066,17 +812,17 @@ int Inventory::Size(void)
 }
 
 //returns true if there is an item in the inventory with the given type/id
-bool Inventory::CheckItem(int type,int id)
+bool Inventory::CheckItem(int type, int id)
 {
 	//mprintf((0,"Inventory System: CheckItem\n"));
-	if(FindItem(type,id))
+	if (FindItem(type, id))
 		return true;
 	else
 		return false;
 }
 
 //saves the inventory to the file (returns number of bytes written)
-int Inventory::SaveInventory(CFILE *file)
+int Inventory::SaveInventory(CFILE* file)
 {
 	int num_items = Size();
 
@@ -1085,27 +831,27 @@ int Inventory::SaveInventory(CFILE *file)
 	int pos_pos = 0;
 	int pos_count = 0;
 
-	cf_WriteInt(file,num_items);
-	if(num_items>0)
+	cf_WriteInt(file, num_items);
+	if (num_items > 0)
 	{
-		inven_item *curr;
+		inven_item* curr;
 		curr = root;
-		
-		while(num_items>0)
+
+		while (num_items > 0)
 		{
-			if(pos==curr)
+			if (pos == curr)
 			{
 				pos_pos = pos_count;
 			}
 
-			if(curr->id==-1)
+			if (curr->id == -1)
 			{
 				//make sure it is a valid object
-				object *obj = ObjGet(curr->type);
+				object* obj = ObjGet(curr->type);
 				ASSERT(obj);
-				if(!obj)
+				if (!obj)
 				{
-					mprintf((0,"Invalid object saving inventory\n"));
+					mprintf((0, "Invalid object saving inventory\n"));
 					curr = curr->next;
 					num_items--;
 					pos_count++;
@@ -1113,29 +859,29 @@ int Inventory::SaveInventory(CFILE *file)
 				}
 			}
 
-			cf_WriteInt(file,curr->type);
-			cf_WriteInt(file,curr->otype);
-			cf_WriteInt(file,curr->id);			
-			cf_WriteInt(file,curr->oid);
-			cf_WriteInt(file,curr->flags);
-			cf_WriteInt(file,curr->count);
+			cf_WriteInt(file, curr->type);
+			cf_WriteInt(file, curr->otype);
+			cf_WriteInt(file, curr->id);
+			cf_WriteInt(file, curr->oid);
+			cf_WriteInt(file, curr->flags);
+			cf_WriteInt(file, curr->count);
 
-			if(curr->description)
-				cf_WriteString(file,curr->description);
+			if (curr->description)
+				cf_WriteString(file, curr->description);
 			else
-				cf_WriteByte(file,0);
+				cf_WriteByte(file, 0);
 
-			if(curr->icon_name)
-				cf_WriteString(file,curr->icon_name);
+			if (curr->icon_name)
+				cf_WriteString(file, curr->icon_name);
 			else
-				cf_WriteByte(file,0);
+				cf_WriteByte(file, 0);
 
-			if(curr->name)
-				cf_WriteString(file,curr->name);
+			if (curr->name)
+				cf_WriteString(file, curr->name);
 			else
-				cf_WriteByte(file,0);
+				cf_WriteByte(file, 0);
 
-			cf_WriteInt(file,curr->iflags);
+			cf_WriteInt(file, curr->iflags);
 
 			curr = curr->next;
 			num_items--;
@@ -1143,16 +889,16 @@ int Inventory::SaveInventory(CFILE *file)
 		}
 	}
 
-	cf_WriteInt(file,pos_pos);
-	
+	cf_WriteInt(file, pos_pos);
+
 	int end_pos = cftell(file);
 
-	return (end_pos-start_pos);
+	return (end_pos - start_pos);
 }
 
 
 //restores the inventory from file (returns number of bytes read)
-int Inventory::ReadInventory(CFILE *file)
+int Inventory::ReadInventory(CFILE* file)
 {
 	int start_pos = cftell(file);
 
@@ -1161,41 +907,41 @@ int Inventory::ReadInventory(CFILE *file)
 	root = NULL;
 	char temp[512];
 
-	int t,i,otype;
-	
-	if(num_items>0)
+	int t, i, otype;
+
+	if (num_items > 0)
 	{
-		inven_item *item,*prev;
-				
-		while(num_items>0)
+		inven_item* item, * prev;
+
+		while (num_items > 0)
 		{
 			t = cf_ReadInt(file);
 			otype = cf_ReadInt(file);
 			i = cf_ReadInt(file);
 
 			//make sure the object is valid
-			if(i==-1)
+			if (i == -1)
 			{
-				object *obj = ObjGet(t);
+				object* obj = ObjGet(t);
 				ASSERT(obj);
-				if(!obj)
+				if (!obj)
 				{
-					mprintf((0,"Invalid object restoring inventory\n"));
+					mprintf((0, "Invalid object restoring inventory\n"));
 					//skip this object
 					cf_ReadInt(file);
 					cf_ReadInt(file);
 					cf_ReadInt(file);
-					cf_ReadString(temp,512,file);
-					cf_ReadString(temp,512,file);
-					cf_ReadString(temp,512,file);
+					cf_ReadString(temp, 512, file);
+					cf_ReadString(temp, 512, file);
+					cf_ReadString(temp, 512, file);
 					cf_ReadInt(file);
 					num_items--;
 					count--;
 					continue;
 				}
-			}			
+			}
 
-			if(root==NULL)
+			if (root == NULL)
 			{
 				//there are no items in the list...time to add
 				root = new inven_item;
@@ -1222,13 +968,13 @@ int Inventory::ReadInventory(CFILE *file)
 			item->flags = cf_ReadInt(file);
 			item->count = cf_ReadInt(file);
 
-			cf_ReadString(temp,512,file);
+			cf_ReadString(temp, 512, file);
 			item->description = mem_strdup(temp);
 
-			cf_ReadString(temp,512,file);
+			cf_ReadString(temp, 512, file);
 			item->icon_name = mem_strdup(temp);
 
-			cf_ReadString(temp,512,file);
+			cf_ReadString(temp, 512, file);
 			item->name = mem_strdup(temp);
 
 			item->iflags = cf_ReadInt(file);
@@ -1243,7 +989,7 @@ int Inventory::ReadInventory(CFILE *file)
 
 	int end_pos = cftell(file);
 
-	return (end_pos-start_pos);
+	return (end_pos - start_pos);
 }
 
 
@@ -1256,39 +1002,37 @@ void Inventory::ResetPos(void)
 //moves the position pointer to the next inventory item
 void Inventory::NextPos(bool skip)
 {
-	if( (pos) && (pos->next) )
-	{
+	if ((pos) && (pos->next))
 		pos = pos->next;
-	}else if(!pos){
+	else if (!pos)
 		pos = root;
-	}else
+	else
 		return;
 
-	if(!skip)
+	if (!skip)
 		ValidatePos();
 }
 
 //moves the position pointer to the previous inventory item
 void Inventory::PrevPos(bool skip)
 {
-	if((pos) && (pos->prev))
-	{
+	if ((pos) && (pos->prev))
 		pos = pos->prev;
-	}else if(!pos){
+	else if (!pos)
 		pos = root;
-	}else
+	else
 		return;
 
-	if(!skip)
+	if (!skip)
 		ValidatePos(false);
 }
 
 //returns true if the position pointer is at the begining of the inventory list
 bool Inventory::AtBeginning(void)
 {
-	if(!pos)
+	if (!pos)
 		return true;
-	if(pos==root)
+	if (pos == root)
 		return true;
 	else
 		return false;
@@ -1297,9 +1041,9 @@ bool Inventory::AtBeginning(void)
 //returns false if the position pointer is at the end of the inventory list
 bool Inventory::AtEnd(void)
 {
-	if(!pos)
+	if (!pos)
 		return true;
-	if(pos->next==root)
+	if (pos->next == root)
 		return true;
 	else
 		return false;
@@ -1308,29 +1052,29 @@ bool Inventory::AtEnd(void)
 //returns the type/id of the item at the current position
 //returns true if the pos is a real object in the game
 //returns false if the pos is just a type/id inventory item
-bool Inventory::GetPosTypeID(int &type,int &id)
+bool Inventory::GetPosTypeID(int& type, int& id)
 {
-	if(!pos)
+	if (!pos)
 	{
 		type = id = 0;
 		return false;
 	}
 
 	type = pos->type;
-	id = pos->id;	
+	id = pos->id;
 
-	if(pos->iflags&INVF_OBJECT)
+	if (pos->iflags & INVF_OBJECT)
 		return true;
-	else 
+	else
 		return false;
 }
 
 //returns the aux type/id of the item
 //returns true if the pos is a real object in the game
 //returns false if the pos is just a type/id inventory item
-bool Inventory::GetAuxPosTypeID(int &type,int &id)
+bool Inventory::GetAuxPosTypeID(int& type, int& id)
 {
-	if(!pos){
+	if (!pos) {
 		type = id = 0;
 		return false;
 	}
@@ -1339,33 +1083,33 @@ bool Inventory::GetAuxPosTypeID(int &type,int &id)
 
 	ASSERT(type != OBJ_NONE);
 
-	if(pos->iflags&INVF_OBJECT)
+	if (pos->iflags & INVF_OBJECT)
 		return true;
-	else 
+	else
 		return false;
 }
 
 //returns the description of the item at the current position 
-char *Inventory::GetPosDescription(void)
+char* Inventory::GetPosDescription(void)
 {
 	//mprintf((0,"Getting Pos Description (%s)\n",pos->description));
-	if(!pos)
+	if (!pos)
 		return NULL;
 	return pos->description;
 }
 
 //returns the name of the item at the current position
-char *Inventory::GetPosName(void)
+char* Inventory::GetPosName(void)
 {
-	if(!pos)
+	if (!pos)
 		return NULL;
 	return pos->name;
 }
 
 //returns the icon name of the item at the current position
-char *Inventory::GetPosIconName(void)
+char* Inventory::GetPosIconName(void)
 {
-	if(!pos)
+	if (!pos)
 		return NULL;
 	return pos->icon_name;
 }
@@ -1374,10 +1118,10 @@ char *Inventory::GetPosIconName(void)
 int Inventory::GetPosCount(void)
 {
 	//mprintf((0,"Getting Pos Count (%d)\n",pos->count));
-	if(!pos)
+	if (!pos)
 		return 0;
 
-	if(pos->iflags&INVF_OBJECT)
+	if (pos->iflags & INVF_OBJECT)
 		return 1;
 
 	return pos->count;
@@ -1386,20 +1130,21 @@ int Inventory::GetPosCount(void)
 //return information about the current position item
 //returns true if the pos is a real object in the game
 //returns false if the pos is just a type/id inventory item
-bool Inventory::GetPosInfo(ushort &iflags,int &flags)
+bool Inventory::GetPosInfo(ushort& iflags, int& flags)
 {
-	if(!pos){
+	if (!pos)
+	{
 		iflags = 0;
 		flags = 0;
 		return false;
 	}
 
 	iflags = pos->iflags;
-	flags = pos->flags;		
+	flags = pos->flags;
 
-	if(pos->iflags&INVF_OBJECT)
+	if (pos->iflags & INVF_OBJECT)
 		return true;
-	else 
+	else
 		return false;
 }
 
@@ -1410,49 +1155,49 @@ void Inventory::GotoPos(int newpos)
 	//mprintf((0,"Going to Pos (%d)\n",newpos));
 	ResetPos();
 	int i;
-	for(i=0;i<newpos;i++)
+	for (i = 0; i < newpos; i++)
 	{
-		if((pos) && (pos->next!=NULL))
+		if ((pos) && (pos->next != NULL))
 			pos = pos->next;
 	}
 }
 
 //moves the current item pointer to the specified type/id
-void Inventory::GotoPos(int type,int id)
+void Inventory::GotoPos(int type, int id)
 {
-	inven_item *node = FindItem(type,id);
+	inven_item* node = FindItem(type, id);
 
-	if(node)
+	if (node)
 		pos = node;
 }
 
 //returns the "index" position of the current item
 int Inventory::GetPos(void)
 {
-	int type,id;
-	int ctype,cid;
+	int type, id;
+	int ctype, cid;
 	int count = 0;
 	bool done = false;
 
-	if(!Size())
+	if (!Size())
 		return -1;
 
-	bool is_object,cis_object;
+	bool is_object, cis_object;
 
-	is_object = GetPosTypeID(type,id);
+	is_object = GetPosTypeID(type, id);
 	ResetPos();
 
 	done = AtEnd();
 
-	while(!done)
+	while (!done)
 	{
-		cis_object = GetPosTypeID(ctype,cid);
-		if( (ctype==type) && (cid==id) && (cis_object==is_object) )
+		cis_object = GetPosTypeID(ctype, cid);
+		if ((ctype == type) && (cid == id) && (cis_object == is_object))
 			return count;
 
 		count++;
 		done = AtEnd();
-		NextPos(false);				
+		NextPos(false);
 	}
 	return 0;
 }
@@ -1460,25 +1205,21 @@ int Inventory::GetPos(void)
 //moves to the next/prev item in the inventory list (forward==TRUE means forward, forward==FALSE means go backwards)
 void InventorySwitch(bool forward)
 {
-	int ctype,cid;
+	int ctype, cid;
 
-	Players[Player_num].inventory.GetPosTypeID(ctype,cid);
+	Players[Player_num].inventory.GetPosTypeID(ctype, cid);
 
-	if(ctype!=0)
+	if (ctype != 0)
 	{
-		if(forward)
-		{
+		if (forward)
 			Players[Player_num].inventory.NextPos();
-		}
 		else
-		{
 			Players[Player_num].inventory.PrevPos();
-		}
 
-		int ntype,nid;
-		Players[Player_num].inventory.GetPosTypeID(ntype,nid);
+		int ntype, nid;
+		Players[Player_num].inventory.GetPosTypeID(ntype, nid);
 
-		if(ntype!=ctype || nid!=cid)
+		if (ntype != ctype || nid != cid)
 		{
 			//AddHUDMessage(TXT_WPNSELECT, Players[Player_num].inventory.GetPosName());
 			Sound_system.Play2dSound(SOUND_CHANGE_INVENTORY);
@@ -1488,7 +1229,7 @@ void InventorySwitch(bool forward)
 			hear.hostile_level = 0.0f;
 			hear.curiosity_level = 0.3f;
 			hear.max_dist = AI_SOUND_SHORT_DIST;
-			AINotify(&Objects[Players[Player_num].objnum], AIN_HEAR_NOISE, (void *)&hear);
+			AINotify(&Objects[Players[Player_num].objnum], AIN_HEAR_NOISE, (void*)&hear);
 		}
 	}
 }
@@ -1496,25 +1237,21 @@ void InventorySwitch(bool forward)
 //moves to the next/prev item in the counter measures list (forward==TRUE means forward, forward==FALSE means go backwards)
 void CounterMeasuresSwitch(bool forward)
 {
-	int ctype,cid;
+	int ctype, cid;
 
-	Players[Player_num].counter_measures.GetPosTypeID(ctype,cid);
+	Players[Player_num].counter_measures.GetPosTypeID(ctype, cid);
 
-	if(ctype!=0)
+	if (ctype != 0)
 	{
-		if(forward)
-		{
+		if (forward)
 			Players[Player_num].counter_measures.NextPos();
-		}
 		else
-		{
 			Players[Player_num].counter_measures.PrevPos();
-		}
 
-		int ntype,nid;
-		Players[Player_num].counter_measures.GetPosTypeID(ntype,nid);
+		int ntype, nid;
+		Players[Player_num].counter_measures.GetPosTypeID(ntype, nid);
 
-		if(ntype!=ctype || nid!=cid)
+		if (ntype != ctype || nid != cid)
 		{
 			AddHUDMessage(TXT_WPNSELECT, Players[Player_num].counter_measures.GetPosName());
 			Sound_system.Play2dSound(SOUND_CHANGE_COUNTERMEASURE);
@@ -1524,7 +1261,7 @@ void CounterMeasuresSwitch(bool forward)
 			hear.hostile_level = 0.0f;
 			hear.curiosity_level = 0.3f;
 			hear.max_dist = AI_SOUND_SHORT_DIST;
-			AINotify(&Objects[Players[Player_num].objnum], AIN_HEAR_NOISE, (void *)&hear);
+			AINotify(&Objects[Players[Player_num].objnum], AIN_HEAR_NOISE, (void*)&hear);
 		}
 	}
 }
@@ -1532,26 +1269,26 @@ void CounterMeasuresSwitch(bool forward)
 //repositions the pos so its in the correct spot
 void Inventory::ValidatePos(bool forward)
 {
-	if(!pos)
+	if (!pos)
 		return;
-	if(pos->iflags & INVF_SELECTABLE)
+	if (pos->iflags & INVF_SELECTABLE)
 		return;
-	
-	inven_item *node;
-	if(forward)
+
+	inven_item* node;
+	if (forward)
 		node = pos->next;
 	else
 		node = pos->prev;
 
-	while(node!=pos)
+	while (node != pos)
 	{
-		if(node->iflags & INVF_SELECTABLE)
+		if (node->iflags & INVF_SELECTABLE)
 		{
 			pos = node;
 			return;
 		}
 
-		if(forward)
+		if (forward)
 			node = node->next;
 		else
 			node = node->prev;
@@ -1560,16 +1297,14 @@ void Inventory::ValidatePos(bool forward)
 }
 
 //returns how many of a type/id exists in the inventory
-int Inventory::GetTypeIDCount(int type,int id)
+int Inventory::GetTypeIDCount(int type, int id)
 {
-	inven_item *node = FindItem(type,id);
+	inven_item* node = FindItem(type, id);
 
-	if(!node)
+	if (!node)
 		return 0;
-	if(node->flags&INVF_OBJECT)
-	{
+	if (node->flags & INVF_OBJECT)
 		return 1;
-	}
 
 	return node->count;
 }
@@ -1577,44 +1312,44 @@ int Inventory::GetTypeIDCount(int type,int id)
 //determines whether the position is selectable
 bool Inventory::IsSelectable(void)
 {
-	if(!pos)
+	if (!pos)
 		return false;
 
-	return ((pos->iflags & INVF_SELECTABLE)!=0);
+	return ((pos->iflags & INVF_SELECTABLE) != 0);
 }
 
 //determines whether the position is selectable
 bool Inventory::IsUsable(void)
 {
-	if(!pos)
+	if (!pos)
 		return false;
 
-	return ((pos->iflags & INVF_USEABLE)!=0);
+	return ((pos->iflags & INVF_USEABLE) != 0);
 }
 
 
 //gets a detailed list of information about what is in the inventory
 //returns the number of items filled in.
-int Inventory::GetInventoryItemList(tInvenList *list,int max_amount,int *cur_sel)
+int Inventory::GetInventoryItemList(tInvenList* list, int max_amount, int* cur_sel)
 {
 	ASSERT(cur_sel);
 	*cur_sel = -1;
 
-	if(max_amount<=0)
+	if (max_amount <= 0)
 		return 0;
 
-	inven_item *current = root;
-	if(count==0)
+	inven_item* current = root;
+	if (count == 0)
 		return 0;	//there are no items, don't even bother
 
 	int counter = count;
 	int cur_count = 0;
 
-	while(counter)
+	while (counter)
 	{
-		if(cur_count<max_amount)
+		if (cur_count < max_amount)
 		{
-			if(current==pos)
+			if (current == pos)
 			{
 				//current selected
 				*cur_sel = cur_count;
@@ -1622,7 +1357,7 @@ int Inventory::GetInventoryItemList(tInvenList *list,int max_amount,int *cur_sel
 
 			list[cur_count].amount = current->count;
 			list[cur_count].hud_name = current->name;
-			list[cur_count].selectable = (current->iflags&INVF_SELECTABLE)?true:false;
+			list[cur_count].selectable = (current->iflags & INVF_SELECTABLE) ? true : false;
 			cur_count++;
 		}
 
@@ -1637,16 +1372,16 @@ int Inventory::GetInventoryItemList(tInvenList *list,int max_amount,int *cur_sel
 //use the currently selected inventory item
 bool UseInventoryItem()
 {
-	int type,id;
+	int type, id;
 
-	Players[Player_num].inventory.GetPosTypeID(type,id);
-	if( !type && !id )
+	Players[Player_num].inventory.GetPosTypeID(type, id);
+	if (!type && !id)
 		return false;
 
-	if(Players[Player_num].inventory.UsePos(&Objects[Players[Player_num].objnum])){
-		if(Game_mode&GM_MULTI && (Netgame.local_role==LR_SERVER)){
-			MultiSendInventoryRemoveItem(Player_num,type,id);
-		}
+	if (Players[Player_num].inventory.UsePos(&Objects[Players[Player_num].objnum]))
+	{
+		if (Game_mode & GM_MULTI && (Netgame.local_role == LR_SERVER))
+			MultiSendInventoryRemoveItem(Player_num, type, id);
 	}
 	return true;
 }
@@ -1654,16 +1389,16 @@ bool UseInventoryItem()
 //use the currently selected countermeasure
 bool UseCountermeasure()
 {
-	int type,id;
+	int type, id;
 
-	Players[Player_num].counter_measures.GetPosTypeID(type,id);
-	if( !type && !id )
+	Players[Player_num].counter_measures.GetPosTypeID(type, id);
+	if (!type && !id)
 		return false;
 
-	if(Players[Player_num].counter_measures.UsePos(&Objects[Players[Player_num].objnum])){
-		if(Game_mode&GM_MULTI && (Netgame.local_role==LR_SERVER)){
-			MultiSendInventoryRemoveItem(Player_num,type,id);
-		}
+	if (Players[Player_num].counter_measures.UsePos(&Objects[Players[Player_num].objnum]))
+	{
+		if (Game_mode & GM_MULTI && (Netgame.local_role == LR_SERVER))
+			MultiSendInventoryRemoveItem(Player_num, type, id);
 	}
 	return true;
 }
@@ -1671,20 +1406,22 @@ bool UseCountermeasure()
 // Checks for an object in any of the players inventorys and removes it 
 void InventoryRemoveObject(int objhandle)
 {
-	object *obj = ObjGet(objhandle);
+	object* obj = ObjGet(objhandle);
 	ASSERT(obj);
-	if(!obj)
+	if (!obj)
 		return;
 
-	if(!(obj->flags&OF_INPLAYERINVENTORY))	//not in the player's inventory
+	if (!(obj->flags & OF_INPLAYERINVENTORY))	//not in the player's inventory
 		return;
 
 	//go through all the players and look for the object
-	for(int i=0;i<MAX_PLAYERS;i++){
-		if(Players[i].inventory.CheckItem(objhandle,-1)){
+	for (int i = 0; i < MAX_PLAYERS; i++)
+	{
+		if (Players[i].inventory.CheckItem(objhandle, -1))
+		{
 			//this player has it!!
-			mprintf((0,"INVEN: Removing dead object from %d\n",i));
-			Players[i].inventory.Remove(objhandle,-1);
+			mprintf((0, "INVEN: Removing dead object from %d\n", i));
+			Players[i].inventory.Remove(objhandle, -1);
 			return;
 		}
 	}

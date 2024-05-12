@@ -264,9 +264,9 @@ inline void SetDebugBreakHandlers(void (*stop)(), void (*resume)()) {
 	#define HEAPCHECK() 
 #endif
 #else
-	#define DEBUG_BREAK()
-	#define ASSERT(x)
-	#define Int3()
-	#define HEAPCHECK()
+	#define DEBUG_BREAK() do {} while (0)
+	#define ASSERT(x) do {} while (0)
+	#define Int3() do {} while (0)
+	#define HEAPCHECK() do {} while (0)
 #endif
 #endif
