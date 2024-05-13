@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef POWERUP_H
 #define POWERUP_H
 
@@ -83,7 +84,7 @@
 #define PSI_PICKUP	0
 
 
-typedef struct
+struct powerup
 {
 	char name[PAGENAME_LEN];
 	float size;
@@ -97,9 +98,7 @@ typedef struct
 
 	// Default physics information for this powerup type
 	physics_info	phys_info;		//the physics data for this obj type.
-	
-} powerup;
-
+};
 
 extern int Num_powerups;
 extern powerup Powerups[MAX_POWERUPS];
@@ -156,5 +155,3 @@ void RemapAllPowerupObjects (int old_index,int new_index);
 int DoPowerup(object *obj);
 
 #endif
-
-

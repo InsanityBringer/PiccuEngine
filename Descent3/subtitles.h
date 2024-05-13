@@ -15,23 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/subtitles.h $
-* $Revision: 2 $
-* $Date: 8/28/98 4:20p $
-* $Author: Jeff $
-*
-* Subtitle system for cinematics
-*
-* $Log: /DescentIII/main/subtitles.h $
- * 
- * 2     8/28/98 4:20p Jeff
- * got subtitles completly working
-*
-* $NoKeywords: $
-*/
-
-
 
 #ifndef __SUBTITLES_H_
 #define __SUBTITLES_H_

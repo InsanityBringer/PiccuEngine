@@ -19,14 +19,14 @@
 #define WEATHER_H
 
 #define WEATHER_FLAGS_RAIN			1
-#define WEATHER_FLAGS_LIGHTNING	2
+#define WEATHER_FLAGS_LIGHTNING		2
 #define WEATHER_FLAGS_SNOW			4
 
 
 #define MAX_RAIN_INTENSITY			50
 #define MAX_SNOW_INTENSITY			200
 
-typedef struct
+struct weather
 {
 	int flags;							// see weather flags, above
 
@@ -43,8 +43,7 @@ typedef struct
 	int lightning_rand_value;
 
 	int snowflakes_to_create;
-
-} weather;
+};
 
 extern weather Weather;
 
@@ -67,6 +66,4 @@ void SetLightningState (int on,float interval_time,int randval);
 // Sets the state of the snow to on or off, plus sets the intensity of the snow (0 to 1)
 void SetSnowState (int on,float intensity);
 
-
 #endif
-

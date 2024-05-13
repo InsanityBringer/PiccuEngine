@@ -15,152 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/render.h $
- * $Revision: 38 $
- * $Date: 10/21/99 9:29p $
- * $Author: Jeff $
- *
- * Header for render.c
- *
- * $Log: /DescentIII/main/render.h $
- * 
- * 38    10/21/99 9:29p Jeff
- * B.A. Macintosh code merge
- * 
- * 37    8/10/99 11:19p Gwar
- * 
- * 36    4/18/99 5:42a Chris
- * Added the FQ_IGNORE_RENDER_THROUGH_PORTALS flag
- * 
- * 35    4/15/99 12:19p Jason
- * made mirrors more robust and able to have multiple mirrored faces in
- * the same room (as long as they are all on the same plane)
- * 
- * 34    3/31/99 5:15p Matt
- * Added checkboxes on the room tab to control rendering of faces based on
- * shell flag.
- * 
- * 33    2/17/99 1:05p Jason
- * revamped object/face/terrain selection code
- * 
- * 32    2/09/99 12:10p Jason
- * rewriting indoor engine
- * 
- * 31    10/16/98 1:54p Kevin
- * Changes for Demo Beta 4
- * 
- * 30    10/12/98 3:01p Jeff
- * added vsync_enable global
- * 
- * 29    10/08/98 3:11p Matt
- * Constant for all outline modes didn't include sky bit.
- * 
- * 28    10/04/98 2:35p Matt
- * Added debug options to limit rendering
- * 
- * 27    10/03/98 11:21p Matt
- * Added system to seperately control outline mode for mine, terrain, sky,
- * & objects
- * 
- * 26    9/24/98 12:57p Jason
- * more state limited optimizations
- * 
- * 25    9/22/98 3:55p Samir
- * ifdef out stuff for non-debug version.
- * 
- * 24    8/27/98 5:19p Jason
- * added first rev of reflected surfaces
- * 
- * 23    8/19/98 2:19p Jeff
- * moved detail globals to a struct
- * 
- * 22    8/18/98 11:38a Jason
- * fixed polymodel fog lighting
- * 
- * 21    8/13/98 6:56p Jason
- * made objects foggable correctly
- * 
- * 20    6/19/98 6:42p Jason
- * made specular mapping a config detail item
- * 
- * 19    5/25/98 3:46p Jason
- * added better light glows
- * 
- * 18    5/19/98 12:27p Jason
- * cleaned up some 3d stuff
- * 
- * 17    4/30/98 6:46p Jason
- * more framerate testing
- * 
- * 16    4/30/98 3:40p Jason
- * framerate optimizations
- * 
- * 15    2/03/98 11:43p Matt
- * Added defaults for RenderMine() parameters
- * 
- * 14    1/12/98 3:34p Jason
- * sped up indoor rendering by clipping faces against portals
- * 
- * 13    1/06/98 1:28p Matt
- * Cleaned up interfaces to rendering routines, deleted unused code, etc.
- * 
- * 12    1/02/98 6:40p Matt
- * User renderer library (instead of viewport) functions to draw lines and
- * to set and read pixels.  Also made FindRoomFace() work without
- * Render_viewport.
- * 
- * 11    12/29/97 5:44p Samir
- * Took out references to grViewport and old 2d library.
- * 
- * 10    12/01/97 4:20p Jason
- * shadow and lighting changes
- * 
- * 9     11/04/97 6:25p Matt
- * Added code to render all external rooms for editing purposes
- * 
- * 8     9/16/97 5:50p Matt
- * Changed conditional for debug code
- * 
- * 7     9/16/97 4:09p Jason
- * implemented software zbuffer
- * 
- * 6     9/11/97 3:14p Matt
- * Added code to render floating triggers in the editor
- * 
- * 5     9/04/97 5:23p Matt
- * 
- * 4     9/04/97 12:12p Jason
- * added lightmap visibility
- * 
- * 3     7/23/97 6:36p Matt
- * Changed Outline_mode & Lighting_on to be type bool
- * 
- * 12    6/12/97 1:19p Matt
- * Added version of rotate_list that takes list of int point numbers
- * 
- * 11    5/27/97 3:30p Matt
- * Added editor button to toggle lighting
- * 
- * 10    5/08/97 7:46p Matt
- * Added called_from_terrain parm for RenderMine()
- * 
- * 9     5/07/97 1:30p Jason
- * more changes for terrain/mine integration
- * 
- * 8     5/05/97 4:47p Jason
- * made terrain and mine rendering work without explicit calls to
- * g3_Startframe in their main function calls
- * This allows us to integrate mine/terrain engines nicely
- * 
- * 7     4/29/97 5:15p Jason
- * added mirrored textures...I don't know if we'll keep them in though
- * 
- * 6     2/26/97 6:00p Matt
- * Renamed 3d lib structs for D3 naming convention
- *
- * $NoKeywords: $
- */
+
 #ifndef RENDER_H
 #define RENDER_H
 
@@ -169,7 +24,7 @@
 //Variables for debug/test
 #if (defined(_DEBUG) || defined(NEWEDITOR))
 
-#define SRF_NO_SHELL			1	//don't render the shell
+#define SRF_NO_SHELL		1	//don't render the shell
 #define SRF_NO_NON_SHELL	2	//don't render the non-shell
 
 extern int Render_portals;
@@ -197,9 +52,9 @@ extern int Mine_depth;
 
 //Constants for outline mode
 #define OM_ON			1
-#define OM_MINE		2
-#define OM_TERRAIN	4
-#define OM_OBJECTS	8
+#define OM_MINE			2
+#define OM_TERRAIN		4
+#define OM_OBJECTS		8
 #define OM_SKY			16
 #define OM_ALL			(OM_MINE + OM_TERRAIN + OM_OBJECTS + OM_SKY)
 
@@ -216,13 +71,12 @@ extern vector Room_fog_plane,Room_fog_portal_vert;
 
 struct face;
 
-typedef struct
+struct fog_portal_data
 {
 	short roomnum;
 	float close_dist;
 	face *close_face;
-} fog_portal_data;
-
+};
 
 extern fog_portal_data Fog_portal_data[];
 
@@ -235,11 +89,11 @@ void SetFogZoneEnd (float z);
 struct room;
 
 // For sorting our textures in state limited environments
-typedef struct
+struct state_limited_element
 {
 	int  facenum;
 	int sort_key;
-} state_limited_element;
+};
 
 #define MAX_STATE_ELEMENTS 8000
 extern state_limited_element State_elements[MAX_STATE_ELEMENTS];

@@ -15,62 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/player_external_struct.h $
-* $Revision: 13 $
-* $Date: 5/20/99 2:48a $
-* $Author: Matt $
-*
-* Contains the structs needed for player definition (for DLL export)
-*
-* $Log: /DescentIII/main/player_external_struct.h $
- * 
- * 13    5/20/99 2:48a Matt
- * Auto-waypoints now stored & used per player.  Manual waypoints will all
- * players, once Jason makes it work.
- * 
- * 12    5/10/99 12:23a Chris
- * Fixed another hearing/seeing case.  :)  Buddy bot now is in the player
- * ship at respawn
- * 
- * 11    5/03/99 2:36p Jason
- * added start index
- * 
- * 10    4/23/99 1:56a Matt
- * Added system for counting kills of friendly objects
- * 
- * 9     4/06/99 6:02p Matt
- * Added score system
- * 
- * 8     4/05/99 3:34p Matt
- * Cleaned up player start flags
- * 
- * 7     3/23/99 12:33p Kevin
- * More post level results improvements
- * 
- * 6     2/16/99 3:48p Jason
- * added marker updates to multiplayer server stream
- * 
- * 5     2/06/99 10:03p Matt
- * Added keys system
- * 
- * 4     2/02/99 7:06p Jason
- * added ranking system
- * 
- * 3     1/28/99 6:17p Jason
- * added markers
- * 
- * 2     1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef _PLAYER_EXTERNAL_STRUCT_H_
 #define _PLAYER_EXTERNAL_STRUCT_H_
@@ -94,15 +38,16 @@ class Inventory;
 
 //Info on player weapon firing.  
 //There is one of these each for the primary & secondary weapons
-typedef struct {
+struct player_weapon
+{
 	int	index;					//the index of the current primary or secondary weapon
 	float firing_time; 			//how long the current weapon has been firing
 	int	sound_handle;			//the handle for the sound the firing weapon is making
-} player_weapon;
+};
 
 //The structure for a player.  Most of this data will be for multiplayer
-typedef struct {
-
+struct player
+{
 	// positional data for player starts
 	int start_index;
 	vector	start_pos;							//where the player starts
@@ -239,9 +184,6 @@ typedef struct {
 
 	short		num_deaths_level;					// Number of kills this level
 	short		num_deaths_total;					// Number of kills total
-
-
-} player;
-
+};
 
 #endif

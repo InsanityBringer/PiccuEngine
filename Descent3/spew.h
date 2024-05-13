@@ -15,62 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/spew.h $
-* $Revision: 14 $
-* $Date: 5/02/99 2:52a $
-* $Author: Jeff $
-*
-* header file for spew system
-*
-* $Log: /DescentIII/main/spew.h $
- * 
- * 14    5/02/99 2:52a Jeff
- * fixed spewers for turrets/rotaters
- * 
- * 13    4/29/99 7:50p Jason
- * fixed spew errors
- * 
- * 12    10/18/98 9:04p Jeff
- * sped up spew by saving values?
- * 
- * 11    8/19/98 5:36p Samir
- * moved some stuff from source to header file.
- * 
- * 10    8/19/98 1:44p Samir
- * added array of spew extern
- * 
- * 9     2/04/98 6:09p Matt
- * Changed object room number to indicate a terrain cell via a flag.  Got
- * rid of the object flag which used to indicate terrain.
- * 
- * 8     2/02/98 5:40p Luke
- * 
- * 7     2/02/98 3:10p Jeff
- * new handle system, makes more reliable
- * 
- * 6     1/28/98 6:29p Jeff
- * Added the "RISCy" layer between predef statements and the game
- * 
- * 5     1/26/98 11:01a Jeff
- * changed spew struct to use object handles
- * 
- * 4     1/23/98 7:00p Jeff
- * checked object before using it bug fixed
- * 
- * 3     1/23/98 5:18p Jeff
- * Added in new timer and 3/5 of the random flags
- * 
- * 2     1/23/98 3:03p Jeff
- * Added mass into spew structure
- * 
- * 1     1/23/98 12:07p Jeff
- * 
- * 2     1/23/98 11:50a Jeff
- * Creation of Spew system
-*
-* $NoKeywords: $
-*/
 
 #ifndef __SPEW_H_
 #define __SPEW_H_
@@ -90,7 +34,7 @@ typedef struct point_info
 	vector origin;			//origin of the viseffect (needed if it's NOT gunpoint based)
 	vector normal;			//normal of the point
 	int room_num;			//room number of point of origin 
-}pointinfo;
+} pointinfo;
 
 typedef struct spew_t
 {
@@ -121,16 +65,15 @@ typedef struct spew_t
 	float start_time;		//time viseffect started
 
 	vector gp_normal,gun_point;	//vectors saved to keep from recalculating
-}spewinfo;
-
+} spewinfo;
 
 #define	SPEW_RAND_WIGGLE		1
-#define	SPEW_RAND_SPEED		2
+#define	SPEW_RAND_SPEED			2
 #define	SPEW_RAND_SIZE			4
-#define	SPEW_RAND_SLIDE		8
-#define	SPEW_RAND_LIFETIME	16
+#define	SPEW_RAND_SLIDE			8
+#define	SPEW_RAND_LIFETIME		16
 
-#define	MAX_SPEW_EFFECTS	50	//maximum viseffects to be handled by at once
+#define	MAX_SPEW_EFFECTS		50	//maximum viseffects to be handled by at once
 
 // spew array
 extern spewinfo SpewEffects[];

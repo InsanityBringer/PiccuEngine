@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef PROCEDRUALS_H
 #define PROCEDURALS_H
 
@@ -26,27 +27,27 @@
 
 
 // Fire procedurals
-#define PROC_NONE							0
-#define PROC_LINE_LIGHTNING			1
+#define PROC_NONE						0
+#define PROC_LINE_LIGHTNING				1
 #define PROC_SPHERE_LIGHTNING			2
 #define PROC_STRAIGHT					3
 #define PROC_RISING_EMBER				4
 #define PROC_RANDOM_EMBERS				5
 #define PROC_SPINNERS					6
-#define PROC_ROAMERS						7
+#define PROC_ROAMERS					7
 #define PROC_FOUNTAIN					8
-#define PROC_CONE							9
+#define PROC_CONE						9
 #define PROC_FALL_RIGHT					10
 #define PROC_FALL_LEFT					11
 
 #define PROC_WATER_NONE					0
-#define PROC_WATER_HEIGHT_BLOB		1
+#define PROC_WATER_HEIGHT_BLOB			1
 #define PROC_WATER_SINE_BLOB			2
 #define PROC_WATER_RAINDROPS			3
 #define PROC_WATER_BLOBDROPS			4
 
 
-typedef struct
+struct dynamic_proc_element
 {
 	ubyte type;
 	fix dx,dy;
@@ -59,7 +60,7 @@ typedef struct
 	fix x1,y1;
 	
 	short prev,next;
-} dynamic_proc_element;
+};
 
 extern dynamic_proc_element DynamicProcElements[];
 extern char *ProcNames[],*WaterProcNames[];
@@ -81,10 +82,8 @@ void ProcElementLink(int index,int texnum);
 // Unlinks a proc_element from a texture
 void ProcElementUnlink(int index,int texnum);
 
-
 // Clears all the procedurals elements attached to this texture
 void ClearAllProceduralsFromTexture (int texnum);
-
 
 // Does a procedural for this texture
 void EvaluateProcedural (int texnum);
@@ -99,5 +98,3 @@ int ProcElementFree (int index);
 void GeneratePaletteForProcedural (ubyte *r,ubyte *g,ubyte *b,ushort *pal);
 
 #endif
-
-

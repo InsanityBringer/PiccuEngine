@@ -15,77 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/TelComEfxStructs.h $
-* $Revision: 19 $
-* $Date: 4/20/99 12:46p $
-* $Author: Jeff $
-*
-* Structures used for TelCom effects
-*
-* $Log: /DescentIII/main/TelComEfxStructs.h $
- * 
- * 19    4/20/99 12:46p Jeff
- * telcom main menu, mouse over button sets focus.  if you go into telcom
- * main menu, when you leave a system it will return you to main menu.
- * 
- * 18    4/17/99 6:15p Samir
- * replaced gr.h with grdefs.h and fixed resulting compile bugs.
- * 
- * 17    2/17/99 6:56p Jeff
- * added jump button type.  Added no early render flag for bitmaps.  Fixed
- * color bug for type text
- * 
- * 16    2/03/99 12:14a Jeff
- * updated single player ship selection to full functional...needs effects
- * added in.  Had to add flag to buttons for gain focus to register as a
- * click
- * 
- * 15    1/04/99 12:33p Jeff
- * added support for mission flag parsing
- * 
- * 14    10/12/98 8:32p Jeff
- * changed the way focus is handled
- * 
- * 13    9/17/98 2:29p Jeff
- * added focus filenames to button effect
- * 
- * 12    9/03/98 2:20p Jeff
- * creation of dialogs in Brief editor
- * 
- * 11    8/27/98 2:51p Jeff
- * New TelCom finally checked in
- * 
- * 10    5/19/98 3:40p Jeff
- * poly models functional
- * 
- * 9     5/18/98 2:29p Jeff
- * added new type of on screen button, a glow type (if mouse is over it,
- * it will do the glow)
- * 
- * 8     5/05/98 6:50p Jeff
- * Telcom doesn't use rend_DrawLFBitmap anymore...more speed!
- * 
- * 7     5/04/98 1:35p Jeff
- * Changes made for mouse handling
- * 
- * 6     5/04/98 11:01a Jeff
- * added scroll parameter to text
- * 
- * 5     5/01/98 2:17p Jeff
- * Added sound effect support
- * 
- * 4     4/28/98 6:58p Jeff
- * Added new poly model effect driver
- * 
- * 3     4/26/98 7:21p Jeff
- * added stretch bitmap effect define
- * 
- * 2     4/26/98 2:54a Jeff
- * Initial Creation
-*
-* $NoKeywords: $
-*/
 
 #ifndef __TELCOMEFXSTRUCTS_H_
 #define __TELCOMEFXSTRUCTS_H_
@@ -97,10 +26,10 @@
 // tc_text
 //  - Contains information on the text coordinates of an effect
 //===================
-typedef struct
+struct tc_text
 {
 	int left,right,top,bottom;
-} tc_text;
+};
 
 //TCTEXTDESC caps flags
 #define TCTD_FONT			0x0001
@@ -147,13 +76,13 @@ typedef struct
 #define TC_SND_STATIC	0
 
 //text flags
-#define TC_TEXTF_L2R	0	//scroll left 2 right
-#define TC_TEXTF_R2L	1   //scroll right 2 left
-#define TC_TEXTF_T2B	2   //scroll top 2 bottom
-#define TC_TEXTF_B2T	3   //scroll bottom 2 top
-#define TC_TEXTF_IN		4   //fade in
-#define TC_TEXTF_OUT	5   //fade out
-#define TC_TEXTF_PINGPONG 6 //fade in then out
+#define TC_TEXTF_L2R		0	//scroll left 2 right
+#define TC_TEXTF_R2L		1   //scroll right 2 left
+#define TC_TEXTF_T2B		2   //scroll top 2 bottom
+#define TC_TEXTF_B2T		3   //scroll bottom 2 top
+#define TC_TEXTF_IN			4   //fade in
+#define TC_TEXTF_OUT		5   //fade out
+#define TC_TEXTF_PINGPONG	6	//fade in then out
 //bmp flags
 #define TC_BMPF_IN			0	//blur/scanline/invert in
 #define TC_BMPF_OUT			1	//blur/scanline/invert out
@@ -190,6 +119,7 @@ typedef struct
 	//mission flag mask
 	uint mission_mask_set,mission_mask_unset;
 }TCTEXTDESC, *LPTCTEXTDESC;
+
 typedef struct
 {
 	//type
@@ -211,6 +141,7 @@ typedef struct
 	//mission flag mask
 	uint mission_mask_set,mission_mask_unset;
 }TCBMPDESC, *LPTCBMPDESC;
+
 typedef struct
 {
 	//fill in with whats valid
@@ -230,6 +161,7 @@ typedef struct
 	//mission flag mask
 	uint mission_mask_set,mission_mask_unset;
 }TCMOVIEDESC,*LPTCMOVIEDESC;
+
 typedef struct
 {
 	//whats defined for the struct
@@ -245,6 +177,7 @@ typedef struct
 	//mission flag mask
 	uint mission_mask_set,mission_mask_unset;
 }TCBKGDESC,*LPTCBKGDESC;
+
 typedef struct
 {
 	//whats defined for the struct
@@ -266,6 +199,7 @@ typedef struct
 	//mission flag mask
 	uint mission_mask_set,mission_mask_unset;
 }TCPOLYDESC,*LPTCPOLYDESC;
+
 typedef struct
 {
 	//whats defined for the struct
@@ -281,6 +215,7 @@ typedef struct
 	//mission flag mask
 	uint mission_mask_set,mission_mask_unset;
 }TCSNDDESC,*LPTCSNDDESC;
+
 typedef struct
 {
 	char	filename[MAX_FILELEN];
@@ -300,6 +235,7 @@ typedef struct
 	bool	tab_stop;	
 	uint mission_mask_set,mission_mask_unset;	//mission flag mask
 }TCBUTTONDESC,*LPTCBUTTONDESC;
+
 
 //==================
 // tc_button

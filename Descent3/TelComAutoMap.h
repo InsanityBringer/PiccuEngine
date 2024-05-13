@@ -15,30 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/TelComAutoMap.h $
-* $Revision: 5 $
-* $Date: 4/14/99 3:57a $
-* $Author: Jeff $
-*
-* TelCom Automap
-*
-* $Log: /DescentIII/main/TelComAutoMap.h $
- * 
- * 5     4/14/99 3:57a Jeff
- * fixed case mismatch in #includes
- * 
- * 4     12/14/98 11:57a Jason
- * changes for visibile automap
- * 
- * 3     8/27/98 2:51p Jeff
- * New TelCom finally checked in
- * 
- * 2     5/18/98 2:23p Jeff
- * Automap displays stand-in art right now
-*
-* $NoKeywords: $
-*/
 
 #ifndef __TCAUTOMAP_H_
 #define __TCAUTOMAP_H_

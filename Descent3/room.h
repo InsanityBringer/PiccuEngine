@@ -15,349 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/room.h $
- * $Revision: 104 $
- * $Date: 5/05/99 5:03a $
- * $Author: Gwar $
- *
- * Room structures & functions
- *
- * $Log: /DescentIII/main/room.h $
- * 
- * 104   5/05/99 5:03a Gwar
- * renamed ned_GameTextures array to GameTextures in new editor to make
- * game code happy; 3D texture view still does not display textures
- * 
- * 103   4/30/99 12:56p Kevin
- * Lowered values for MAX_SOUNDS, MAX_ROOMS, MAX_TEXTURES and MAX_OBJIDS.
- * Talk to me before changing any of these again.
- * 
- * 102   4/21/99 5:33a Gwar
- * added a NEWEDITOR #define
- * 
- * 101   3/24/99 3:27p Matt
- * Increased the max number of room changes from 20 to 100.
- * 
- * 100   2/09/99 9:59a Chris
- * Massive BOA update  :)  Terrain happy now.  Vis happy now.  Sound happy
- * now.
- * 
- * 99    1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 98    1/21/99 11:34a Matt
- * Got rid of portal triggers.  Since we don't have multi-face portals, a
- * face trigger works fine for a portal.  Also fixed a few editor/trigger
- * bugs.
- * 
- * 97    1/21/99 11:20a Jason
- * added a two new flags: strobe and flicker
- * 
- * 96    1/20/99 6:11p Matt
- * Fixed a couple bugs in the room wind/fog change system, and make the
- * values change from current -> new instead of start -> end.
- * 
- * 95    1/19/99 11:25a Jason
- * added room (fog and wind) changing functions
- * 
- * 94    1/15/99 3:14p Jason
- * added combinable portals
- * 
- * 93    1/11/99 11:17a Jason
- * made fog not have that stupid telltale z problem
- * 
- * 92    1/08/99 5:37p Samir
- * reverb values per room.
- * 
- * 91    12/22/98 2:03p Matt
- * Added room names, and made rooms not compress so that room numbers are
- * suitable for persistant uses.
- * 
- * 90    11/30/98 3:59p Jason
- * changed dynamic lighting to be better
- * 
- * 89    11/02/98 6:15p Chris
- * Room AABBs get saved with the level and the sort_face and dec_sort_face
- * list s have been removed
- * 
- * 88    10/06/98 6:08p Jason
- * added RF_TRIANGULATE so that special rooms (with non-planar UVS) can be
- * drawn correctly
- * 
- * 87    10/01/98 10:33a Jason
- * added room_change_flags
- * 
- * 86    9/22/98 6:58p Samir
- * Render_floating_triggers is _DEBUG code, so make it so.
- * 
- * 85    9/22/98 3:55p Samir
- * ifdef out stuff for non-debug version.
- * 
- * 84    9/08/98 12:05p Jason
- * moved doorway.h out of room.h
- * 
- * 83    9/01/98 12:04p Matt
- * Ripped out multi-face portal code
- * 
- * 82    8/28/98 4:44p Jason
- * optimized mirror rendering
- * 
- * 81    8/27/98 5:19p Jason
- * added first rev of reflected surfaces
- * 
- * 80    8/19/98 2:17p Jeff
- * made a function to change the texture on a face
- * 
- * 79    8/17/98 6:40p Matt
- * Added ambient sound system
- * 
- * 78    7/21/98 2:14p Chris
- * Some FVI speedups - not done
- * 
- * 77    7/17/98 9:56a Chris
- * Intermediate checkin
- * 
- * 76    7/16/98 8:29p Chris
- * Partial implementation of the new collide code
- * 
- * 75    7/16/98 12:06p Jason
- * added special flags to room structure
- * 
- * 74    6/08/98 12:28p Matt
- * Removed unused face flag, and changed some commenting.
- * 
- * 73    6/05/98 5:22p Jason
- * added volumetric fog
- * 
- * 72    6/02/98 6:03p Jason
- * added specular lightmaps
- * 
- * 71    5/26/98 5:56p Jason
- * only render coronas which are flagged
- * 
- * 70    5/25/98 3:46p Jason
- * added better light glows
- * 
- * 69    5/22/98 3:26p Jason
- * added better memory management for specular lighting
- * 
- * 68    5/22/98 12:34p Matt
- * Added scorch mark/bullet hole system.
- * 
- * 67    5/15/98 5:41p Jason
- * implemented volume lighting system
- * 
- * 66    5/06/98 12:55p Jason
- * did some vis effect optimizations
- * 
- * 65    4/30/98 5:50p Jason
- * more framerate optimizations
- * 
- * 64    4/30/98 12:37p Jason
- * added FF_FACING for non-backfaces
- * 
- * 63    4/22/98 12:38p Chris
- * Added path points to portals and rooms.  Improved BOA auto-making
- * process.
- * 
- * 62    4/02/98 12:24p Jason
- * trimmed some fat from our structures
- * 
- * 61    3/18/98 4:31p Chris
- * Speed up fvi and fixed some bugs
- * 
- * 60    3/16/98 6:41p Jason
- * added goal room stuff
- * 
- * 59    3/16/98 5:50p Chris
- * Added sorted face lists for fvi
- * 
- * 58    3/13/98 12:05p Matt
- * Changed the way we determine whether to render past a closed door to
- * fix a render bug when the viewer is in a door room.
- * Moved FaceIsRenderabl(), GetFaceAlpha(), and RenderPastPortal() from
- * room.h to render.cpp.
- * 
- * 57    3/06/98 3:23p Jason
- * added lighting from satellites to indoor rooms
- * 
- * 56    2/23/98 6:50p Jason
- * changes to help facilitate fast lighting with shadow volumes
- * 
- * 
- * 55    2/18/98 1:21p Jason
- * upped max lightmap count
- * 
- * 54    2/11/98 7:01p Chris
- * Started to add wind
- * 
- * 53    2/11/98 11:48a Matt
- * Fixed alignment in room struct.
- * 
- * 52    2/10/98 7:45p Matt
- * Added (probably temporary) flags for goals
- * 
- * 51    2/10/98 3:49p Jason
- * added pulsing walls
- * 
- * 50    2/10/98 1:12p Jason
- * added forcefields and saturating walls
- * 
- * 49    2/04/98 8:25p Jason
- * added light multiplier for faces
- * 
- * 48    2/02/98 7:07p Matt
- * Added support for doors that can be seen through even when closed
- * 
- * 47    2/02/98 5:13p Matt
- * Added more generic function to compute a surface normal for a face
- * 
- * 46    1/20/98 12:10p Jason
- * implemented vis effect system
- * 
- * 45    1/15/98 7:34p Matt
- * Revamped error checking when computing face normals
- * 
- * 44    1/15/98 3:47p Jason
- * sped up room rendering on the terrain
- * 
- * 43    1/12/98 3:34p Jason
- * sped up indoor rendering by clipping faces against portals
- * 
- * 42    11/24/97 1:30a Jason
- * first attempt at adding shadows
- * 
- * 41    11/14/97 9:02p Mark
- * Increased the number of rooms from 100 to 500 (Matt on Mark's machine)
- * 
- * 40    11/14/97 6:39p Jason
- * added ability to do lighting on a single room
- * 
- * 39    10/13/97 5:08p Matt
- * Moved ComputeRoomBoundingSphere() & CreateRoomObjects() from editor to
- * main
- * 
- * 
- * 38    10/10/97 11:38a Jason
- * put in better volumetric support
- * 
- * 37    10/08/97 2:28p Jason
- * got external rooms working with terrain lighting
- * 
- * 36    10/01/97 7:51p Matt
- * Added code for external rooms
- * 
- * 35    9/19/97 8:09p Jason
- * optimizations for dynamic lighting
- * 
- * 34    9/19/97 2:52p Jason
- * changes to fix lightmap seam problem
- * 
- * 33    9/17/97 6:14p Jason
- * did some optimizations due to running vtune
- * 
- * 32    9/16/97 4:27p Matt
- * Got rid of static_light & changed fields in the room struct
- * 
- * 31    9/16/97 1:07a Matt
- * Fixed rendering past open doors
- * 
- * 30    9/15/97 5:33p Jason
- * made portals check for doors
- * 
- * 29    9/12/97 5:38p Jason
- * got doors working
- * 
- * 28    9/12/97 2:35p Matt
- * Changed face flags to a word, and added destroyed flag
- * 
- * 27    9/11/97 3:13p Matt
- * Several more-or-less small changes, mostly with portal triggers
- * 
- * 26    9/10/97 5:13p Matt
- * Changed some flags & added a few functions
- * 
- * 25    9/09/97 12:21p Matt
- * Added new flags, deleted old ones, renamed others
- * Added new functions
- * Cleaned up structs, fixing alignment
- * 
- * 24    9/06/97 10:53p Matt
- * Added portal and face flags
- * 
- * 23    9/04/97 11:23a Jason
- * sped up dynamic light computation a bit
- * 
- * 22    9/02/97 5:17p Jason
- * changes for dynamic lighting
- * 
- * 21    9/02/97 12:55p Jason
- * classify faces as alphaed or not
- * 
- * 20    8/28/97 12:31p Jason
- * added hi-res lightmaps for radiosity
- * 
- * 19    8/19/97 1:13p Jason
- * added GetAreaForFace function
- * 
- * 18    8/13/97 11:53a Jason
- * moved ClearAllRoomLightmaps into room.cpp where it belongs
- * 
- * 17    8/12/97 3:51p Jason
- * tweaked lightmaps with radiosity
- * 
- * 16    8/12/97 1:13p Chris
- * Added AABBs.
- * 
- * 15    8/12/97 1:10a Jason
- * added code to support radiosity lighting
- * 
- * 14    8/11/97 3:55p Chris
- * Added a function to compute the rough center of a portal
- * 
- * 13    8/04/97 5:35p Chris
- * 
- * 12    8/01/97 4:38p Chris
- * 
- * 11    7/18/97 5:36p Jason
- * save changed paletted rooms on exit
- * 
- * 10    7/17/97 11:50a Jason
- * Upped max_Verts_per_face to 64
- * 
- * 9     7/16/97 1:50p Sean
- * from JASON: upped max face limit to 3000
- * 
- * 8     6/30/97 1:30p Jason
- * added netherspace stuff
- * 
- * 7     6/27/97 4:15p Jason
- * added more room functions
- * 
- * 6     6/27/97 3:04p Jason
- * added cool room stuff
- * 
- * 5     6/26/97 2:37p Jason
- * added combine_faces function and texturing to rooms
- * 
- * 4     6/25/97 5:29p Jason
- * added/modified code to display a room
- * 
- * 3     6/24/97 1:51p Jason
- * 
- * 2     6/18/97 12:40p Jason
- * added include files
- * 
- * 1     6/18/97 12:39p Jason
- *
- * $NoKeywords: $
- */
 
 #ifndef _ROOM_H
 #define _ROOM_H
@@ -386,7 +43,7 @@
 
 // Room change stuff
 #define	MAX_ROOM_CHANGES	100
-typedef struct 
+struct room_changes
 {
 	int roomnum;
 	bool fog;
@@ -395,19 +52,17 @@ typedef struct
 	float start_time;
 	float total_time;
 	ubyte used;
-} room_changes;
+};
 
 //
 // Globals
 //
-
 extern	room	 	Rooms[];					//global sparse array of rooms
 extern	int		Highest_room_index;	//index of highest-numbered room
 
 //
 // Macros
 //
-
 //Handy macro to convert a room ptr to a room number
 #define ROOMNUM(r) (r-Rooms)
 
@@ -417,7 +72,6 @@ extern	int		Highest_room_index;	//index of highest-numbered room
 //
 // Functions
 //
-
 // Zeroes out the rooms array
 void InitRooms ();
 
@@ -532,7 +186,8 @@ inline int GetFacePhysicsFlags(const room *rp,const face *fp)
 		return ret;
 
 	//Deal with faces that are part of a portal
-	if (fp->portal_num != -1) {
+	if (fp->portal_num != -1)
+	{
 		portal *pp = &rp->portals[fp->portal_num];
 
 		//Mark as portal
@@ -558,7 +213,6 @@ inline int GetFacePhysicsFlags(const room *rp,const face *fp)
 
 	//We're done
 	return ret;
-
 }
 
 //Computes a bounding sphere for the current room

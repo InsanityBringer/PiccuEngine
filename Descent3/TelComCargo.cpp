@@ -57,13 +57,15 @@
 #define LID_COUNTERMEASURES		4
 #define LID_INVENTORY			5
 
-typedef struct{
+typedef struct tLineInfo
+{
 	ubyte type;
 	char *name;
 	int id;
-}tLineInfo;
+};
 
-tLineInfo StatusLines[] = {
+tLineInfo StatusLines[] = 
+{
 	{LIT_TITLE,"Ship Status",		LID_NONE},
 	{LIT_VALUE,"Shields",			LID_SHIELDS},
 	{LIT_VALUE,"Energy",			LID_ENERGY},
@@ -87,7 +89,6 @@ bool TCCPlayerHasWeapon (int weapon_index)
 		return true;
 	return false;
 }
-
 
 int TCCargoCreateLine(int id,int y,char *title,int type)
 {
@@ -200,11 +201,11 @@ void TCCargoRenderCallback(void)
 	grtext_SetAlpha(255);
 	grtext_SetColor(GR_WHITE);
 
-	for( int i = 0; i < NUM_LINES; i++ ){
+	for( int i = 0; i < NUM_LINES; i++ )
+	{
 		id = StatusLines[i].id;
 
 		y = TCCargoCreateLine(id,y,StatusLines[i].name,StatusLines[i].type);
-
 	}
 
 	grtext_Flush();
@@ -273,7 +274,8 @@ bool TelComCargo(tTelComInfo *tcs)
 
 	TelcomRenderSetCallback(TCCargoRenderCallback);
 
-	while(!done){
+	while(!done)
+	{
 		Sound_system.BeginSoundFrame(Telcom_called_from_game);
 
 		if(tcs->state!=TCS_POWERON || tcs->current_status!=TS_CARGO){

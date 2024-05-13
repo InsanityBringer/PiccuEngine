@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef SPECIAL_FACE_H
 #define SPECIAL_FACE_H
 
@@ -23,26 +24,21 @@
 #include "vecmat.h"
 
 #define BAD_SPECIAL_FACE_INDEX	-1
-#ifdef MACINTOSH
-#define MAX_SPECIAL_FACES	5000
-#else
 #define MAX_SPECIAL_FACES	13000		//made large enough for Josh's Mercenary level 3
-#endif
 
 // What this special face is used for:
 #define SFT_SPECULAR				1
 
-typedef struct
+struct specular_instance
 {
 	vector bright_center;
 	ushort bright_color;
-} specular_instance;
-
+};
 
 #define SFF_SPEC_OBJECT	1	
 #define SFF_SPEC_SMOOTH	2
 
-typedef struct
+struct special_face
 {
 	ubyte type;		// See types (above)
 	ubyte num;		// Number of instances
@@ -53,7 +49,7 @@ typedef struct
 	
 	vector *vertnorms;
 
-} special_face;
+};
 
 extern special_face SpecialFaces[];
 extern int Num_of_special_faces;
@@ -66,6 +62,5 @@ int AllocSpecialFace (int type,int num,bool vertnorms=false,int num_vertnorms=0)
 
 // Given a handle, frees the special face
 void FreeSpecialFace (int handle);
-
 
 #endif

@@ -29,7 +29,7 @@
 
 #define TERRAIN_WIDTH			256				// How many cells across
 #define TERRAIN_DEPTH			256				// How many cells down
-#define TERRAIN_SIZE				16.0				// The size of each segment, must be a power of 2
+#define TERRAIN_SIZE			16.0			// The size of each segment, must be a power of 2
 #define TERRAIN_TEX_WIDTH		32
 #define TERRAIN_TEX_DEPTH		32
 
@@ -47,21 +47,21 @@
 #define DEFAULT_VISIBLE_TERRAIN_DISTANCE	80.0*TERRAIN_SIZE
 
 // Sky defines
-#define MAX_STARS								600	// how many stars in our sky
+#define MAX_STARS							600		// how many stars in our sky
 #define MAX_SATELLITES						5		// max satellites in our sky
 #define MAX_HORIZON_PIECES					16		// how many segments of the horizon 
-															// there are around our sphere
+													// there are around our sphere
 
 // Sky flags
-#define TF_STARS	1									// whether or not our terrain is starred
+#define TF_STARS		1							// whether or not our terrain is starred
 #define TF_SATELLITES	2							// Draw satellites or no?
-#define TF_FOG				4							// Draw fog?
+#define TF_FOG			4							// Draw fog?
 #define TF_ROTATE_STARS	8
 #define TF_ROTATE_SKY	16
 
 // Satellite flags
-#define TSF_HALO			1							// Draw halo?
-#define TSF_ATMOSPHERE	2							// Draw atmosphere
+#define TSF_HALO			1						// Draw halo?
+#define TSF_ATMOSPHERE		2						// Draw atmosphere
 
 // occlusion stuff
 #define OCCLUSION_SIZE		16
@@ -73,47 +73,46 @@
 #define TF_DYNAMIC					1
 #define TF_SPECIAL_WATER			4				// Water 
 #define TF_SPECIAL_MINE				8				// This segment has a mine attached to it
-#define TF_INVISIBLE					16				// This segment is invisible
+#define TF_INVISIBLE				16				// This segment is invisible
 #define TFM_REGION_MASK		      (32+64+128)
 // NOTE: 32 64 and 128 are reserved for AI stuff  (terrain region partitioning)
 
 // Terrain cells are on a fixed grid so they have no x and z positions.  If you want the x and z
 // positions you must calculate them yourself: gridx*TERRAIN_SIZE and gridz*TERRAIN_SIZE
 
-typedef struct
-{
-	float y;						// Y position of the lower left corner of the terrain cell
+struct terrain_segment
+{ 
+	float y;					// Y position of the lower left corner of the terrain cell
 	float mody;					// The modified y position of this cell - used for LOD
 		
 	ubyte  l,r,g,b;
 	
 	short objects;				// Index of the first object in this cell
-	short texseg_index;		// index into the tex_segment array
+	short texseg_index;			// index into the tex_segment array
 
 	ubyte flags;				// various flags
 	ubyte lm_quad;				// which lightmap quad this index belongs to
 	ubyte ypos;					// this is so we don't have to constantly convert
-									// floats to ints when traversing the terrain
-									// it's the integer version of pos.y
+								// floats to ints when traversing the terrain
+								// it's the integer version of pos.y
 	ubyte pad;					// for alignment
-} terrain_segment;
+};
 
-typedef struct
+struct terrain_tex_segment
 {
 	ubyte rotation;
 	short tex_index;
-} terrain_tex_segment;
+};
 
 // Data for LOD shutoff code
-typedef struct
+struct lodoff
 {
 	int cellnum;
 	float save_delta[MAX_TERRAIN_LOD];
-} lodoff;
-
+};
 
 // Data for the sky spherical map
-typedef struct
+struct terrain_sky
 {
 	int textured;		// 1=use textures, 0=use gouraud shaded polygon
 
@@ -153,25 +152,25 @@ typedef struct
 
 	int star_color[MAX_STARS];
 	int flags;
-} terrain_sky;
+};
 
-typedef struct 
+struct link_tile
 {
 	int mine_seg;
 	int mine_side;
 	int portal_num;
 	int terrain_seg;
 	
-}	link_tile;
+};
 
-typedef struct
+struct terrain_mine_list
 {
 	int terrain_seg;
 	ubyte num_segs;
 	short mine_segs[50];
-} terrain_mine_list;
+};
 
-typedef struct
+struct terrain_render_info
 {
 	float z;
 	ushort right_edge,left_edge,top_edge,bottom_edge;  // for fixing tjoint problems
@@ -179,13 +178,13 @@ typedef struct
 	ushort segment;	// what segment to render
 	ubyte lod;			// what level of detail: 0=16x16, 1=8x8, 2=4x4, 3=2x2, 4=just this segment (1x1)
 	ubyte pad;			
-} terrain_render_info;
+};
 
-typedef struct 
+struct terrain_normals
 {
 	vector normal1;		// Upper left triangle
 	vector normal2;		// Lower right triangle
-} terrain_normals;
+};
 
 extern ubyte Terrain_dynamic_table[];
 extern terrain_normals *TerrainNormals[MAX_TERRAIN_LOD];
@@ -247,8 +246,6 @@ extern int Camera_direction,Sort_direction;
 	extern ubyte TerrainSelected[];
 	extern int Num_terrain_selected;
 #endif
-
-
 
 extern ushort *Terrain_rotate_list;	// which points have been sub/rotated this frame
 extern g3Point *World_point_buffer;	// Rotated points

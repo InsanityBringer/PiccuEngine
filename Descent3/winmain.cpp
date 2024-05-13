@@ -117,14 +117,14 @@ static int m_resource_language = 0;
 #define VENDOR_NEXGEN	5
 #define VENDOR_UNKNOWN	6
 
-typedef struct
+struct cpuinfo
 {
 	unsigned char family,model,mask;
 	int CPUid_level;
 	int vendor;
 	unsigned int capability;
 	char vendor_id[16];	
-}cpuinfo;
+};
 
 
 int no_debug_dialog=0;
@@ -257,9 +257,11 @@ oeD3Win32Database::oeD3Win32Database():
 	lstrcpy(path, m_Basepath);
 	lstrcat(path, "\\editor");
 	res = lookup_record(path);
-	if (!res) {
+	if (!res)
+	{
 		res = create_record(path);
-		if (!res) {
+		if (!res)
+		{
 			Error("Failed to create registry key for %s.", PRODUCT_NAME);
 		}
 	}
@@ -287,49 +289,7 @@ oeD3Win32Database::oeD3Win32Database():
 
 bool Win32JoystickCalibrate()
 {
-// sorry.
-	PROCESS_INFORMATION pi;
-	STARTUPINFO si;
-	BOOL flag;
-	//DWORD dwval;
-
-	memset(&si, 0, sizeof(si));
-	si.cb = sizeof(si);
-	si.dwFlags = STARTF_USESHOWWINDOW;
-	si.wShowWindow = SW_SHOW;
-
-	flag = CreateProcess(
-			NULL,
-			"rundll32.exe shell32.dll,Control_RunDLL joy.cpl",
-			NULL, NULL,
-			FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL,
-			&si, &pi);			
-	if (!flag) {
-		return false;
-	}
-	else {
-		tWin32AppInfo appinfo;
-		HWND hWnd;
-
-		Descent->get_info(&appinfo);
-		hWnd = (HWND)appinfo.hwnd;
-
-		WaitForInputIdle(pi.hProcess, INFINITE);
-		ShowWindow(hWnd, SW_MINIMIZE);
-		Descent->delay(0.5f);
-
-		while (WaitForSingleObject(pi.hProcess, 0) != WAIT_OBJECT_0) 
-		{
-			extern void D3DeferHandler(bool is_active);
-			D3DeferHandler(false);
-		}
-
-		CloseHandle(pi.hThread);
-		CloseHandle(pi.hProcess);
-		ShowWindow(hWnd, SW_MAXIMIZE);
-		Descent->delay(0.5f);
-	}
-
+	//[ISB] I just don't want to bother with this calibrate your joystick yourself
 	return true;
 }
 
@@ -359,7 +319,8 @@ void WinMainInitEditor(unsigned hwnd, unsigned hinst)
 
 void D3End()
 {
-	if (Descent) {
+	if (Descent)
+	{
 		delete Descent;
 	}
 }
@@ -371,13 +332,13 @@ void D3End()
 #define LANGUAGE_ITALIAN	3
 #define LANGUAGE_FRENCH		4
 
-
 inline void MessageBoxStr(int id)
 {
   	const char *txt = "Unknown string";
 
 	id--;
-	if (id >= 0 && id <= 8) {
+	if (id >= 0 && id <= 8)
+	{
 		switch (m_resource_language)
 		{
 		case LANGUAGE_FRENCH:
@@ -408,8 +369,8 @@ bool SupportsCPUID ()
 {
 	bool enabled=true;
 
-	__try{
-		
+	__try
+	{
 		_asm{
 			pushad
 			__emit 0x0f  //CPUID
@@ -458,13 +419,16 @@ bool Win32SystemCheck(HINSTANCE hInst)
 
 	os = oeWin32Application::version(&major, &minor, &build);
 	
-	if (os == WinNT) {
-		if (major < 4) {
+	if (os == WinNT)
+	{
+		if (major < 4)
+		{
 			MessageBoxStr(ID_TXT_WINNT);
 			return false;
 		}
 	}
-	else if (os != Win9x) {
+	else if (os != Win9x)
+	{
 		MessageBoxStr(ID_TXT_WIN32);
 		return false;
 	}
@@ -479,26 +443,32 @@ bool Win32SystemCheck(HINSTANCE hInst)
 	int version_num=0;
 
 	lResult = RegOpenKeyEx(	HKEY_LOCAL_MACHINE, "Software\\Microsoft\\DirectX", NULL, KEY_QUERY_VALUE,	&hKey);
-	if (lResult == ERROR_SUCCESS) {
+	if (lResult == ERROR_SUCCESS)
+	{
 		char version[32];
 		DWORD dwType, dwLen=32;
 		lResult = RegQueryValueEx(hKey, "Version", NULL, &dwType, (ubyte *) version, &dwLen	);
-		if (lResult == ERROR_SUCCESS) {
+		if (lResult == ERROR_SUCCESS)
+		{
 			version_num = atoi(strstr(version, ".") + 1);
-		} else {
+		} else
+		{
 			int val;
 			DWORD dwType, dwLen = 4;
 
 			lResult = RegQueryValueEx(	hKey,	"InstalledVersion", NULL, &dwType, (ubyte *) &val,	&dwLen);
-			if (lResult == ERROR_SUCCESS) {
+			if (lResult == ERROR_SUCCESS)
+			{
 				version_num = val;
 			}
 		}
 		RegCloseKey(hKey);
 	}
-	else {
+	else
+	{
 	// if we don't have DSETUP.DLL and we are under Win95, then we're in trouble.
-		if (os == Win9x) {
+		if (os == Win9x)
+		{
 			MessageBoxStr(ID_TXT_DXVER);
 			MessageBoxStr(ID_TXT_DX95);
 			goto end_win32_check;
@@ -506,9 +476,12 @@ bool Win32SystemCheck(HINSTANCE hInst)
 	}
 
 // we should be either under NT 4 or greater, or 95
-	if (version_num < 3) {
-		if (os == WinNT) {
-			if (major==4) {
+	if (version_num < 3)
+	{
+		if (os == WinNT)
+		{
+			if (major==4)
+			{
 				MessageBoxStr(ID_TXT_DXNT4);
 			}
 			else {
@@ -516,7 +489,8 @@ bool Win32SystemCheck(HINSTANCE hInst)
 			}
 			goto end_win32_check;
 		}
-		else {
+		else
+		{
 		// Win95
 			MessageBoxStr(ID_TXT_DX95);
 			goto end_win32_check;
@@ -634,7 +608,6 @@ void getcpudata(cpuinfo *info)
 //	---------------------------------------------------------------------------
 
 
-
 // See below for real WinMain
 
 int PASCAL HandledWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine, int nCmdShow)
@@ -663,7 +636,6 @@ int PASCAL HandledWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine,
 		MessageBox(NULL,"Error: -dedicated command line required",PRODUCT_NAME " Error",MB_OK);
 		return 0;
 	}
-	
 #endif
 
 	if (Dedicated_server)
@@ -693,12 +665,10 @@ int PASCAL HandledWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine,
 	w32_mouseman_hack = false;
 	joy_chpro_hack = false;
 
-	if (FindArg("-mouseman")) {
+	if (FindArg("-mouseman"))
 		w32_mouseman_hack = true;
-	}
-	if (FindArg("-chpro")) {
+	if (FindArg("-chpro"))
 		joy_chpro_hack = true;
-	}
 
 // determine preinit language for resource strings
 	int language = 0;
@@ -721,7 +691,6 @@ int PASCAL HandledWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine,
 //This is the winmain that tests for exceptions..
 int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine, int nCmdShow)
 {
-
 	int result =-1;
 	
 	__try
@@ -735,10 +704,4 @@ int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine, int nC
 	return result;
 }
 
-
-
 #endif
-
-
-
-

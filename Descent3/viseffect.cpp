@@ -67,37 +67,23 @@ void ShutdownVisEffects()
 void InitVisEffects()
 {
 	static ushort old_max_vis = 0;
-#ifdef MACINTOSH
-	if (Render_state.cur_texture_quality == 0) {
-		max_vis_effects = 1024;
-	}
-	else if (Render_state.cur_texture_quality == 1) {
-		max_vis_effects = 2048;
-	}
-	else if (Render_state.cur_texture_quality == 2) {
-		max_vis_effects = 4096;
-	}
-	else {
-		mprintf((2, "InitVisEffects: what the is this size\n"));
-		return;
-	}
-#else
 	max_vis_effects = MAX_VIS_EFFECTS;		//always peg to max on PC
-#endif
 
 	if (old_max_vis == max_vis_effects)
 		return;
 
-	if (VisEffects != NULL) {
+	if (VisEffects != NULL)
+	{
 		VisEffects = (vis_effect*)mem_realloc(VisEffects, sizeof(vis_effect) * max_vis_effects);
 		VisDeadList = (ushort*)mem_realloc(VisDeadList, sizeof(ushort) * max_vis_effects);
 		Vis_free_list = (short*)mem_realloc(Vis_free_list, sizeof(short) * max_vis_effects);
 	}
-	else if (VisEffects == NULL) {
+	else if (VisEffects == NULL)
+	{
 		VisEffects = (vis_effect*)mem_malloc(sizeof(vis_effect) * max_vis_effects);
 		VisDeadList = (ushort*)mem_malloc(sizeof(ushort) * max_vis_effects);
 		Vis_free_list = (short*)mem_malloc(sizeof(short) * max_vis_effects);
-	}
+}
 	for (int i = 0; i < max_vis_effects; i++)
 	{
 		VisEffects[i].type = VIS_NONE;
@@ -126,7 +112,8 @@ int VisEffectAllocate()
 	int n = Vis_free_list[Num_vis_effects++];
 	ASSERT(VisEffects[n].type == VIS_NONE);	// Get Jason
 
-	if (n > Highest_vis_effect_index) {
+	if (n > Highest_vis_effect_index)
+	{
 		Highest_vis_effect_index = n;
 	}
 
@@ -2080,7 +2067,3 @@ void AttachRandomNapalmEffectsToObject(object* obj)
 		}
 	}
 }
-
-
-
-

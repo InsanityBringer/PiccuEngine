@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef POSTRENDER_H
 #define POSTRENDER_H
 
@@ -24,8 +25,7 @@
 #define PRT_VISEFFECT			1
 #define PRT_WALL				2
 
-
-typedef struct 
+struct postrender_struct
 {
 	ubyte type;		// See types above
 	union
@@ -37,7 +37,7 @@ typedef struct
 	
 	short roomnum;
 	float z;
-} postrender_struct;
+};
 
 extern int Num_postrenders;
 extern postrender_struct Postrender_list[];
@@ -48,6 +48,5 @@ void ResetPostrenderList ();
 void PostRender(int);
 
 void DrawPostrenderFace (int roomnum,int facenum,bool change_z=true);
-
 
 #endif

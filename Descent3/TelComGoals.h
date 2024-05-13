@@ -15,24 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/TelComGoals.h $
-* $Revision: 2 $
-* $Date: 4/14/99 3:57a $
-* $Author: Jeff $
-*
-* TelCom Goal Status screen
-*
-* $Log: /DescentIII/main/TelComGoals.h $
- * 
- * 2     4/14/99 3:57a Jeff
- * fixed case mismatch in #includes
- * 
- * 1     2/20/99 4:31p Jeff
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef __TCGOALS_H_
 #define __TCGOALS_H_

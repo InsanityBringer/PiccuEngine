@@ -15,84 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/scorch.cpp $
- * $Revision: 20 $
- * $Date: 5/13/99 3:42p $
- * $Author: Ardussi $
- *
- * System for drawing scorch marks on walls
- *
- * $Log: /DescentIII/Main/scorch.cpp $
- * 
- * 20    5/13/99 3:42p Ardussi
- * changes for compiling on the Mac
- * 
- * 19    4/30/99 12:10p Matt
- * Don't add a scorch if it will overlap an edge of a face.
- * 
- * 18    4/21/99 11:05a Kevin
- * new ps_rand and ps_srand to replace rand & srand
- * 
- * 17    4/16/99 11:31p Jeff
- * added max() for Linux
- * 
- * 16    1/26/99 5:06p Jason
- * no scorch marks on procedurals
- * 
- * 15    1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 14    12/10/98 12:27p Jason
- * added cooler specular mapping for objects
- * 
- * 13    12/03/98 12:26p Jason
- * fixed some scorch slowdowns with direct3d
- * 
- * 12    6/24/98 10:19p Matt
- * When too many scorches per face, don't add new ones, rather than not
- * drawing old ones.
- * 
- * 11    5/26/98 6:15p Matt
- * Cleaned up and finished scorch mark limiting code.
- * 
- * 10    5/26/98 3:59p Jason
- * added LIGHTMAP_BLEND_CONSTANT alpha type
- * 
- * 9     5/26/98 2:38p Matt
- * Added code (not really done yet) to fade out far-away marks, and to
- * limit the number of marks drawn.
- * 
- * 8     5/25/98 8:36p Matt
- * Added code to set different sizes for different weapon scorch marks.
- * Also, don't leave scorch marks on lights.
- * 
- * 7     5/22/98 5:58p Matt
- * Bail (for now) if try to make a scorch mark on the ground.
- * 
- * 6     5/22/98 5:20p Matt
- * Added randomized rotations for scorces
- * 
- * 5     5/22/98 4:32p Jason
- * fixed stupid z buffer write mask bug
- * 
- * 4     5/22/98 3:57p Jason
- * fixed a zbuffer problem with scorches
- * 
- * 3     5/22/98 1:16p Matt
- * Fixed stupid bug
- * 
- * 2     5/22/98 12:34p Matt
- * Added scorch mark/bullet hole system.
- * 
- * 1     5/21/98 11:32p Matt
- * 
- */
 
 #include <stdlib.h>
 
@@ -105,19 +27,17 @@
 #include "object_external_struct.h" //for ROOMNUM_OUTSIDE macro
 #include "psrand.h"
 
-#ifdef __LINUX__
-#define max(a,b) ((a>b)?a:b)	//where is linux max()??
-#endif
 
 //Structure for storing scorch marks
-typedef struct {
-	int		roomface;		//room number & face number combined into an int
-	vector	pos;				//the position of the center of the scorch mark
+struct scorch
+{
+	int			roomface;		//room number & face number combined into an int
+	vector		pos;			//the position of the center of the scorch mark
 	ubyte		handle_index;	//which mark?
 	sbyte		rx,ry,rz;		//right vector
 	sbyte		ux,uy,uz;		//up vector
-	ubyte		size;				//floating-point size times 16
-} scorch;
+	ubyte		size;			//floating-point size times 16
+};
 
 //How many scorch marks
 #define MAX_SCORCHES		500
@@ -157,8 +77,8 @@ void DeleteScorch(int index)
 	//mprintf((0,"Deleting scorch %d\n",index));
 
 	//Look through all the scorches to see if there are other scorches on the same face
-	for (i=Scorch_start,sp=&Scorches[Scorch_start];;) {
-
+	for (i=Scorch_start,sp=&Scorches[Scorch_start];;)
+	{
 		if ((sp->roomface == roomface) && (i != index))		//Found another scorch
 			return;
 
@@ -167,7 +87,8 @@ void DeleteScorch(int index)
 			break;
 
 		//Increment & wrap
-		if (++i == MAX_SCORCHES) {
+		if (++i == MAX_SCORCHES)
+		{
 			i = 0;
 			sp = Scorches;
 		}
@@ -204,11 +125,14 @@ void AddScorch(int roomnum,int facenum,vector *pos,int texture_handle,float size
 	int count = 0;
 	int i;
 	scorch *sp;
-	for (i=Scorch_start,sp=&Scorches[Scorch_start];;) {
+	for (i=Scorch_start,sp=&Scorches[Scorch_start];;)
+	{
 		float size = (float) sp->size / 16.0;
 
 		//Increment count, and stop drawing if hit limit
-		if (sp->roomface == roomface) {			//Found one!
+		if (sp->roomface == roomface)
+		{
+			//Found one!
 			count += __max((int) size,1);	//count large marks more
 			if (count >= MAX_VIS_COUNT)
 				return;
@@ -219,7 +143,8 @@ void AddScorch(int roomnum,int facenum,vector *pos,int texture_handle,float size
 			break;
 
 		//Increment & wrap
-		if (++i == MAX_SCORCHES) {
+		if (++i == MAX_SCORCHES)
+		{
 			i = 0;
 			sp = Scorches;
 		}
@@ -229,7 +154,8 @@ void AddScorch(int roomnum,int facenum,vector *pos,int texture_handle,float size
 
 	//Check for scorch going off the edge of the face, and bail if does
 	vector *v0,*v1=&rp->verts[fp->face_verts[fp->num_verts-1]];
-	for (int v=0;v<fp->num_verts;v++) {
+	for (int v=0;v<fp->num_verts;v++)
+	{
 		vector edgevec,checkvec,checkp;
 		float dot,dist;
 
@@ -249,7 +175,8 @@ void AddScorch(int roomnum,int facenum,vector *pos,int texture_handle,float size
 	int new_end = Scorch_end+1;
 	if (new_end == MAX_SCORCHES)
 		new_end = 0;
-	if (new_end == Scorch_start) {
+	if (new_end == Scorch_start)
+	{
 		DeleteScorch(Scorch_start);
 		Scorch_start++;
 		if (Scorch_start == MAX_SCORCHES)
@@ -274,7 +201,9 @@ void AddScorch(int roomnum,int facenum,vector *pos,int texture_handle,float size
 	for (handle_index=0;handle_index<Num_scorch_textures;handle_index++)
 		if (Scorch_texture_handles[handle_index] == texture_handle)
 			break;
-	if (handle_index == Num_scorch_textures) {		//didn't find one, so add
+	if (handle_index == Num_scorch_textures)
+	{
+		//didn't find one, so add
 		ASSERT(Num_scorch_textures < MAX_SCORCH_TEXTURES);
 		Scorch_texture_handles[handle_index] = texture_handle;
 		Num_scorch_textures++;
@@ -299,7 +228,8 @@ void AddScorch(int roomnum,int facenum,vector *pos,int texture_handle,float size
 }
 
 //The UVs for the blob bitmap
-struct {
+struct
+{
 	float u,v;
 } scorch_uvs[4] = { {0.0,0.0}, {1.0,0.0}, {1.0,1.0}, {0.0,1.0} };
 
@@ -336,9 +266,11 @@ void DrawScorches(int roomnum,int facenum)
 	ASSERT(Scorch_end != -1);
 
 	//Loop through all the scorches, and draw the ones for this face
-	for (i=Scorch_start,sp=&Scorches[Scorch_start];;) {
-
-		if (sp->roomface == roomface) {		//Found one!
+	for (i=Scorch_start,sp=&Scorches[Scorch_start];;)
+	{
+		if (sp->roomface == roomface)
+		{
+			//Found one!
 			vector right,up;
 			vector corners[4];
 			g3Point points[4];
@@ -390,7 +322,8 @@ skip_draw:;
 			break;
 
 		//Increment & wrap
-		if (++i == MAX_SCORCHES) {
+		if (++i == MAX_SCORCHES)
+		{
 			i = 0;
 			sp = Scorches;
 		}

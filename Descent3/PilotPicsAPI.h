@@ -15,22 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/PilotPicsAPI.h $
-* $Revision: 2 $
-* $Date: 11/23/98 6:30p $
-* $Author: Jeff $
-*
-* API header file for Pilot Pictures
-*
-* $Log: /DescentIII/Main/PilotPicsAPI.h $
- * 
- * 2     11/23/98 6:30p Jeff
- * initial creation
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef _PILOTPICS_H__
 #define _PILOTPICS_H__
@@ -102,6 +86,5 @@ bool PPic_GetPilot(ushort pilot_id,char *pilot_name,int buffersize);
 //	Returns BAD_BITMAP_HANDLE if it couldn't open the bitmap.
 // ----------------------------------------------------------
 int PPic_GetBitmapHandle(ushort pilot_id);
-
 
 #endif

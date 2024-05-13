@@ -15,179 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/weapon.h $
- * $Revision: 87 $
- * $Date: 4/12/99 12:49p $
- * $Author: Jeff $
- *
- * Header for weapon.cpp & weaponfire.cpp
- *
- * $Log: /DescentIII/main/weapon.h $
- * 
- * 87    4/12/99 12:49p Jeff
- * added recoil_force to weapon's page
- * 
- * 86    4/05/99 4:39p Jason
- * added groovy new smoke trails
- * 
- * 85    3/31/99 10:27a Samir
- * code to reset auto select states when ship is initializiaed and code to
- * save and load these states from disk.
- * 
- * 84    3/05/99 12:19p Matt
- * Delete now-unused function AddWeaponAmmoToPlayer()
- * 
- * 83    3/03/99 5:09p Samir
- * AddWeaponAmmoToPlayer added.
- * 
- * 82    3/02/99 7:22p Chris
- * Add the 'fire at target' check box for weapon batteries
- * 
- * 81    2/22/99 2:05p Jason
- * added different damages for players and generics
- * 
- * 80    2/08/99 5:29p Jason
- * added more weapon options
- * 
- * 79    1/25/99 7:43a Chris
- * Added the GUID (Goal Unique Id) and added the ability for weapon
- * batteries to always fire exactly forward.
- * 
- * 78    1/11/99 2:14p Chris
- * Massive work on OSIRIS and AI
- * 
- * 77    11/13/98 12:30p Jason
- * changes for weapons
- * 
- * 76    10/22/98 2:41p Samir
- * fixed autoselection for good.
- * 
- * 75    10/21/98 11:52p Samir
- * print different message if autoselecting a recently acquired weapon.
- * 
- * 74    10/15/98 6:46p Chris
- * Added custom size for weapons
- * 
- * 73    10/07/98 9:36p Samir
- * added a function to switch a player's weapon to another in the given
- * weapon class.
- * 
- * 72    10/01/98 6:56p Jason
- * turned off energy weapon hit effects if the object getting hit is the
- * viewer - this helps cut down on the general clutter in heavy combat
- * 
- * 71    9/30/98 4:31p Samir
- * added functions to handle weapon select list.
- * 
- * 70    9/28/98 10:43a Chris
- * Fixed a bug with HAS_FLAG
- * 
- * 69    9/10/98 5:56p Chris
- * Added more shit to the matcen code   :)
- * 
- * 68    9/08/98 5:35p Jason
- * added WF_NO_ROTATE flag to weapons
- * 
- * 67    9/01/98 4:41p Matt
- * Removed obsolete fields in the weapon structure
- * 
- * 66    8/31/98 1:35p Keneta
- * Made some use count unsigned shorts
- * 
- * 65    8/31/98 11:15a Keneta
- * Upp'ed max weapons
- * 
- * 64    8/19/98 2:48p Jason
- * fixed some weapon firing and weapon exploding bugs
- * 
- * 63    8/06/98 1:00p Chris
- * Added new homing flags
- * 
- * 62    8/03/98 1:09p Jason
- * added some more weapons flags
- * 
- * 61    7/31/98 5:23p Jason
- * added ship armor scalars
- * 
- * 60    7/30/98 6:03p Jason
- * (Jeff) checked in so we can compile...missing 2 WF_* flags
- * 
- * 59    7/30/98 11:09a Jason
- * added weapons that freeze and deform terrain
- * 
- * 58    7/06/98 11:52a Jason
- * added countermeasure prototype
- * 
- * 57    7/01/98 12:12p Jason
- * added countermeasures
- * 
- * 56    6/22/98 6:26p Jason
- * added gravity field effect for weapons
- * 
- * 55    6/19/98 12:04p Jason
- * 
- * 54    6/16/98 10:54a Jeff
- * 
- * 53    5/26/98 5:06p Samir
- * changed name of weapon indices and added function to get weapon's icon
- * image.
- * 
- * 52    5/25/98 8:36p Matt
- * Added code to set different sizes for different weapon scorch marks.
- * Also, don't leave scorch marks on lights.
- * 
- * 51    5/25/98 8:17p Matt
- * Moved MAX_PLAYER_WEAPONS fromw weapon.h to player.h, so that the latter
- * doesn't need to include the former, drastically speeding build times
- * when weapon.h is changed.
- * 
- * 50    5/25/98 6:39p Jason
- * got icons working for weapons
- * 
- * 49    5/22/98 12:34p Matt
- * Added scorch mark/bullet hole system.
- * 
- * 48    5/19/98 4:42a Chris
- * Added shockwave's -- enjoy.  :)
- * 
- * 47    5/07/98 2:40p Chris
- * Added death_dot and bounce sound for weapons
- * 
- * 46    4/24/98 8:02a Samir
- * added a short weapon name array.
- * 
- * 45    4/19/98 5:00p Jason
- * added cool napalm effect, plus made object effects dynamically
- * allocated
- * 
- * 44    4/17/98 1:59p Jason
- * added cool object effects
- * 
- * 43    4/15/98 12:22p Jason
- * lots of miscellaneous stuff pertaining to lighting and vis effects
- * 
- * 42    4/10/98 2:16p Jason
- * fixed guided missile problems
- * 
- * 41    4/10/98 12:39p Jason
- * added expanding explosion bitmaps
- * 
- * 40    4/09/98 12:05p Chris
- * Added parenting for all object types.  :)
- * 
- * 39    4/07/98 3:31p Jason
- * got particle effects working with weapons
- * 
- * 38    4/06/98 4:53p Jason
- * got pageable polymodels working correctly with editor
- * 
- * 37    2/17/98 11:32p Matt
- * Fixed player wepon fire problem when down_count != 0 && down_time == 0
- * Add function to clear out player firing activity for when die or switch
- * weapons
- * 
- */
 
 #ifndef WEAPON_H
 #define WEAPON_H
@@ -216,54 +43,54 @@
 // Weapon flags
 #define WF_HUD_ANIMATED		(1<<0)
 #define WF_IMAGE_BITMAP		(1<<1)	// whether or not the firing image is a bitmap or model
-#define WF_SMOKE				(1<<2)	// Weapon drops smoke as it moves
+#define WF_SMOKE			(1<<2)	// Weapon drops smoke as it moves
 #define WF_MATTER_WEAPON	(1<<3)	// This a matter weapon, as opposed to an energy weapon
 #define WF_ELECTRICAL		(1<<4)	// This weapons fires as an electrical storm
 #define WF_IMAGE_VCLIP		(1<<5)	// This weapon fire image is a vclip
-#define WF_SPRAY				(1<<6)	// This weapon is a spray, like a flamethrower
+#define WF_SPRAY			(1<<6)	// This weapon is a spray, like a flamethrower
 #define WF_STREAMER			(1<<7)	// This weapon has a streamer effect attached
-#define WF_INVISIBLE			(1<<8)	// This weapon is invisible
+#define WF_INVISIBLE		(1<<8)	// This weapon is invisible
 #define WF_RING				(1<<9)	// This weapon is drawn ring style
 #define WF_SATURATE			(1<<10)	// Saturate this bitmap weapon
 #define WF_BLAST_RING		(1<<11)	// Creates a blast ring upon explosion
 #define WF_PLANAR_BLAST		(1<<12)	// Blast bitmap takes on the walls plane
-#define WF_PLANAR				(1<<13)	// This weapon doesn't always face you
+#define WF_PLANAR			(1<<13)	// This weapon doesn't always face you
 #define WF_ENABLE_CAMERA	(1<<14)	// This weapon can be used for missile camera
 #define WF_SPAWNS_IMPACT	(1<<15)	// This weapon spawns others on impact
 #define WF_SPAWNS_TIMEOUT	(1<<16)	// This weapon spawns others when it times out
-#define WF_EXPAND				(1<<17)	// This weapon expands when exploding
-#define WF_MUZZLE				(1<<18)	// This weapon produces a muzzle flash when fired
-#define WF_MICROWAVE			(1<<19)	// This weapon makes a microwave effect on the victim
-#define WF_NAPALM				(1<<20)	// This weapon does a napalm effect to objects it touches
+#define WF_EXPAND			(1<<17)	// This weapon expands when exploding
+#define WF_MUZZLE			(1<<18)	// This weapon produces a muzzle flash when fired
+#define WF_MICROWAVE		(1<<19)	// This weapon makes a microwave effect on the victim
+#define WF_NAPALM			(1<<20)	// This weapon does a napalm effect to objects it touches
 #define WF_REVERSE_SMOKE	(1<<21)	// The smoke trail gets smaller as it ages
 #define WF_GRAVITY_FIELD	(1<<22)	// This weapon has a gravity field 
 #define WF_COUNTERMEASURE	(1<<23)	// This weapon is a countermeasure
 #define WF_SPAWNS_ROBOT		(1<<24)	// This weapon spawns a robot upon death
-#define WF_FREEZE				(1<<25)	// This weapon slows a ship/object down
-#define WF_TIMEOUT_WALL			(1<<26)	// This weapon times out like a wall hit
+#define WF_FREEZE			(1<<25)	// This weapon slows a ship/object down
+#define WF_TIMEOUT_WALL		(1<<26)	// This weapon times out like a wall hit
 #define WF_PLANAR_SMOKE		(1<<27)	// This weapon has a planar smoke trail instead of a blob
 #define WF_SILENT_HOMING	(1<<28)	// This weapon does not give a homing lock sound
 #define WF_HOMING_SPLIT		(1<<29)	// This weapon homes when it splits
-#define WF_NO_ROTATE			(1<<30)	// This weapon does not rotate as a bitmap
+#define WF_NO_ROTATE		(1<<30)	// This weapon does not rotate as a bitmap
 #define WF_CUSTOM_SIZE		(1<<31)  // This weapon uses a custom size
 
 #define MAX_LASER_LEVEL			4
 #define MAX_SUPER_LASER_LEVEL	6
 
-#define	PRIMARY_INDEX				0
+#define	PRIMARY_INDEX			0
 #define	SECONDARY_INDEX			10
 
 // These defines must correspond to the Static_weapons_names array
 
 #define MAX_WEAPON_SOUNDS		7
-#define WSI_FIRE					0 // chrishack -- removed!  Change const when we add a new slot
-										  // grep for occurances of WSI_FIRE and fix (or remove) old code
+#define WSI_FIRE				0 // chrishack -- removed!  Change const when we add a new slot
+								  // grep for occurances of WSI_FIRE and fix (or remove) old code
 #define WSI_IMPACT_WALL			1
 #define WSI_FLYING				2
 #define WSI_IMPACT_ROBOT		3
 #define WSI_BOUNCE				4
 
-typedef struct
+struct weapon
 {
 	char name[PAGENAME_LEN];
 	float player_damage;				// how much damage a full impact causes a player
@@ -314,13 +141,12 @@ typedef struct
 	light_info	lighting_info;
 	physics_info phys_info;
 	
-} weapon;
+};
 
-typedef struct
+struct fusion_effect
 {
 	float total_time;
-
-} fusion_effect;
+};
 
 extern float Primary_ramp_time,Secondary_ramp_time;
 

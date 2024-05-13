@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef ROBOTFIRESTRUCT_H_
 #define ROBOTFIRESTRUCT_H_
 
@@ -30,7 +31,7 @@
 #define MAX_WBS_PER_OBJ	    21 
 
 // Attach to the polymodel
-typedef struct poly_wb_info
+struct poly_wb_info
 {
 	// Static Data  (Add to robot generic page)
 	unsigned short num_gps;
@@ -39,15 +40,12 @@ typedef struct poly_wb_info
 	// Turrets are listed from most important (greatest mobility) to least important
 	ubyte num_turrets;
 	unsigned short turret_index[MAX_WB_TURRETS];
-
-} poly_wb_info;
-
-
+};
 
 //Next free WBF is 32
 
 // Attach to a object type
-typedef struct otype_wb_info
+struct otype_wb_info
 {
 	unsigned short gp_weapon_index[MAX_WB_GUNPOINTS];
 	unsigned short fm_fire_sound_index[MAX_WB_FIRING_MASKS];
@@ -76,14 +74,14 @@ typedef struct otype_wb_info
 	ushort	flags;
 
 	float energy_usage,ammo_usage;
-} otype_wb_info;
+};
 
 #define WB_MOVE_STILL  0
 #define WB_MOVE_RIGHT  1
 #define WB_MOVE_LEFT   2
 
 // Goes with an individual robot's instance
-typedef struct dynamic_wb_info
+struct dynamic_wb_info
 {
 	// Dynamic Data
 	float last_fire_time;
@@ -102,6 +100,6 @@ typedef struct dynamic_wb_info
 
 	int flags;
 
-} dynamic_wb_info;
+};
 
 #endif

@@ -15,74 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/pilot_class.h $
-* $Revision: 17 $
-* $Date: 3/20/00 12:07p $
-* $Author: Matt $
-*
-* Pilot class and access functions
-*
-* $Log: /DescentIII/main/pilot_class.h $
- * 
- * 17    3/20/00 12:07p Matt
- * Merge of Duane's post-1.3 changes.
- * Changed difficulty level to be a global variable instead of a function
- * call
- * 
- * 16    10/21/99 9:28p Jeff
- * B.A. Macintosh code merge
- * 
- * 15    7/20/99 1:18p Samir
- * save state of rearviews between game through the pilot file.
- * 
- * 14    5/02/99 12:56a Jeff
- * save ship permissions at highest level achieved and use that on restore
- * to a level previously played
- * 
- * 13    4/30/99 1:29p Samir
- * added save for key ramping
- * 
- * 12    4/27/99 1:56p Jeff
- * audio taunts stuff in pilot menu, added stringtables
- * 
- * 11    4/25/99 2:33a Jeff
- * fixed bug trying to read pilot files that are too new
- * 
- * 10    4/20/99 7:29p Jeff
- * added guidebot name
- * 
- * 9     4/15/99 2:55p Samir
- * added UI for mouselook.
- * 
- * 8     4/14/99 3:57a Jeff
- * fixed case mismatch in #includes
- * 
- * 7     4/05/99 5:13p Samir
- * added game toggles.
- * 
- * 6     4/03/99 2:19a Jeff
- * added profanity filter stuff
- * 
- * 5     3/22/99 6:22p Jeff
- * added 2 more audio taunts.  a mulitplayer event when someone plays an
- * audio taunt.  option to disable audio taunts.
- * 
- * 4     3/15/99 9:24p Gwar
- * 
- * 3     2/18/99 5:56p Jeff
- * added weapon select data
- * 
- * 2     2/15/99 7:50p Jeff
- * new pilot file class and read/write system checked in...should be more
- * robust than old
- * 
- * 1     2/15/99 3:18a Jeff
- * initial creation
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef __PILOT_CLASS_H_
 #define __PILOT_CLASS_H_
@@ -150,7 +82,7 @@ IIIIIIIII N       N P      OOOO  R   R    T    A    A NN   NN    T
 #define PLTR_UNKNOWN_FATAL	5	//an uknown exception occurred
 #define PLTR_TOO_NEW		6	//pilot file too new
 
-typedef struct
+struct tMissionData
 {
 	ubyte highest_level;			// highlest level completed in the mission
 	int ship_permissions;			// Ship permissions at highest level achieved
@@ -158,16 +90,16 @@ typedef struct
 	char mission_name[MSN_NAMELEN];	// name of the mission (from the mission file)
 	int num_restores;				// number of game loads for this mission
 	int num_saves;					// number of game saves for this mission
-} tMissionData;
+};
 
 
-typedef struct
+struct cntrldata
 {
 	int id;
 	ct_type type[2];
 	ct_config_data value;
 	ubyte flags[2];
-} cntrldata;
+};
 
 class pilot
 {
@@ -318,7 +250,5 @@ public:
 	
 	ubyte ingame_difficulty;	//DAJ for optimization
 };
-
-
 
 #endif

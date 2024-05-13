@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef ROBOT_H
 #define ROBOT_H
 
@@ -77,8 +78,4 @@ void RemapRobots ();
 // and changes the old index to the new index
 void RemapAllRobotObjects (int old_index,int new_index);
 
-
-
 #endif
-
-

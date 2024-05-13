@@ -15,6 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #ifndef VCLIP_H
 
 #define VCLIP_H
@@ -95,17 +96,3 @@ void PageInVClip (int vcnum);
 void FreeVClipResidency (int vcnum);
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-	
-
-

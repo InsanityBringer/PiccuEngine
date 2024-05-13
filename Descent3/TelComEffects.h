@@ -15,104 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/TelComEffects.h $
-* $Revision: 27 $
-* $Date: 4/20/99 12:46p $
-* $Author: Jeff $
-*
-* TelCom Effect class defines
-*
-* $Log: /DescentIII/main/TelComEffects.h $
- * 
- * 27    4/20/99 12:46p Jeff
- * telcom main menu, mouse over button sets focus.  if you go into telcom
- * main menu, when you leave a system it will return you to main menu.
- * 
- * 26    4/17/99 6:15p Samir
- * replaced gr.h with grdefs.h and fixed resulting compile bugs.
- * 
- * 25    4/14/99 3:57a Jeff
- * fixed case mismatch in #includes
- * 
- * 24    4/02/99 8:32p Jeff
- * added system event queue.  Arrow keys work in main menu and ship
- * selection
- * 
- * 23    2/17/99 6:55p Jeff
- * added jump button type.  Added no early render flag for bitmaps.  Fixed
- * color bug for type text
- * 
- * 22    2/03/99 12:14a Jeff
- * updated single player ship selection to full functional...needs effects
- * added in.  Had to add flag to buttons for gain focus to register as a
- * click
- * 
- * 21    2/01/99 4:52p Jeff
- * screenshots work in telcom
- * 
- * 20    10/12/98 8:32p Jeff
- * changed the way focus is handled
- * 
- * 19    9/17/98 2:29p Jeff
- * added focus filenames to button effect
- * 
- * 18    8/27/98 2:51p Jeff
- * New TelCom finally checked in
- * 
- * 17    7/11/98 9:17p Jeff
- * moved wordwrap functions out so they can be used externally
- * 
- * 16    6/17/98 4:15p Jeff
- * adjusted scroll button positions
- * 
- * 15    5/19/98 3:40p Jeff
- * poly models functional
- * 
- * 14    5/15/98 5:16p Jeff
- * use regular draw chunk bitmap
- * 
- * 13    5/11/98 6:21p Jeff
- * fixed setting glitch offsets
- * 
- * 12    5/07/98 3:31p Jeff
- * various optimizations, removed Copy and similar functions
- * 
- * 11    5/05/98 6:50p Jeff
- * Telcom doesn't use rend_DrawLFBitmap anymore...more speed!
- * 
- * 10    5/04/98 5:29p Jeff
- * Added sounds to TelCom events
- * 
- * 9     5/04/98 1:35p Jeff
- * Changes made for mouse handling
- * 
- * 8     5/04/98 11:01a Jeff
- * added scroll parameter to text
- * 
- * 7     5/03/98 7:57p Jeff
- * Got scrolling textboxes working
- * 
- * 6     5/01/98 2:17p Jeff
- * Added sound effect support
- * 
- * 5     4/29/98 4:36p Jeff
- * added auto word wrap
- * 
- * 4     4/28/98 6:58p Jeff
- * Added new poly model effect driver
- * 
- * 3     4/26/98 7:20p Jeff
- * Added the rest of the effect drivers except for scrolling text.  Added
- * invert bitmaps and stretch bitmaps
- * 
- * 2     4/26/98 2:54a Jeff
- * Initial Creation
- * 
- * 1     4/25/98 4:23p Jeff
-*
-* $NoKeywords: $
-*/
 
 #ifndef __TELCOM_EFFECTS_H_
 #define __TELCOM_EFFECTS_H_
@@ -131,8 +33,8 @@
 ***************************************************************************************
 */
 
-#define MAX_TCEFFECTS		256
-#define MAX_EFFECT_EVENTS	5
+#define MAX_TCEFFECTS			256
+#define MAX_EFFECT_EVENTS		5
 #define INVALID_EFFECT_HANDLE	0xFFFFFFFF
 
 //Effect types
@@ -189,44 +91,50 @@
 #define CLICKTYPE_DOWN		2
 
 
-typedef struct{
+struct tTextInfo
+{
 	float last_letter;			//Last letter printed
 	int sound_index;			//handle to sound for action
 	int font_index;				//Font index
 	int line_index;				//index of first text line (scrolling purposes)
 	bool scroll_u,scroll_d;		//if the scrollup down buttons are appearing
 	bool scroll;				//set to true if it should be allowed to scroll
-}tTextInfo;
+};
 
-typedef struct{
+struct tBitmapInfo
+{
 	int temp_bmhandle;			//handle of temporary bitmap
 	float stage;					//stage that bitmap effect is in
 	int *bitmaps;				//array of bitmaps (for scale effect)
 	int bm_count;				//how many bitmaps (for scale effect)
 	int bm_handle;				//handle to the bitmap
 	chunked_bitmap chunk_bmp;	//the chunk bitmap
-}tBitmapInfo;
+};
 
-typedef struct{
+struct tPolyInfo
+{
 	vector m_Rot;				//current rotation
 	vector m_Pos;				//current position
 	vector m_Ori;				//current orientation
 	matrix m_mOrient;			//orientation
 	int handle;					//handle to polymodel
-}tPolyInfo;
+};
 
-typedef struct{
+struct tMovieInfo
+{
 	tCinematic *handle;			//handle to the movie
 	char *filename;				//filename of the movie
 	float fps;					//fps
-}tMovieInfo;
+};
 
-typedef struct{
+struct tSoundInfo
+{
 	bool started;				//has the sound started?
 	int handle;					//handle of the sound
-}tSoundInfo;
+};
 
-typedef struct{	
+struct tButtonInfo
+{	
 	bool	flash_state;		//Is the button glowing?
 	ubyte	click_type;			//CLICKTYPE_DOWN or CLICKTYPE_CLICK (what the button responds to)
 	ubyte	button_type;
@@ -244,9 +152,9 @@ typedef struct{
 	chunked_bitmap chunkfocus_bmp;
 	chunked_bitmap flash_chunk;
 	chunked_bitmap flashfocus_chunk;
-}tButtonInfo;
+};
 
-typedef struct
+struct tceffect
 {
 	ubyte type;					//Type of effect
 	ubyte monitor;				//Which monitor it belongs to
@@ -269,7 +177,8 @@ typedef struct
 	float age;					//current age of effect
 	float start_time;			//how long until the effect starts
 
-	union{
+	union
+	{
 		tTextInfo textinfo;
 		tBitmapInfo bmpinfo;
 		tPolyInfo polyinfo;
@@ -281,8 +190,7 @@ typedef struct
 	tTCEvent event_queue[MAX_EFFECT_EVENTS];	//event queue for an effect
 
 	int prev,next;				//Links to previous and next effect
-}tceffect;
-
+};
 
 extern int glitch_dx,glitch_dy;
 

@@ -15,37 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/viseffect_external.h $
-* $Revision: 6 $
-* $Date: 3/21/00 9:58a $
-* $Author: Matt $
-*
-* <insert description of file here>
-*
-* $Log: /DescentIII/main/viseffect_external.h $
- * 
- * 6     3/21/00 9:58a Matt
- * Changed to Mac-only the code that sets a variable number of vis effects
- * based on texture quality.
- * 
- * 5     3/20/00 2:27p Matt
- * Merge of Duane's post-1.3 changes.
- * Moved max_vis_effects (the variable, not the constant) from viseffect.h
- * to viseffect_external.h.
- * 
- * 4     10/21/99 9:30p Jeff
- * B.A. Macintosh code merge
- * 
- * 3     5/02/99 1:37a Jason
- * added moving object lighting viseffects
- * 
- * 2     4/30/99 7:37p Jeff
- * created viseffect_external.h
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef __VISEFFECT_EXTERNAL_H_
 #define __VISEFFECT_EXTERNAL_H_
@@ -55,11 +24,7 @@
 #include "pserror.h"
 #include "vecmat.h"
 
-#ifdef MACINTOSH
-#define MAX_VIS_EFFECTS	4096 //DAJ utb 5000
-#else
 #define MAX_VIS_EFFECTS	5000
-#endif
 
 // types
 #define VIS_NONE			0
@@ -80,7 +45,7 @@ extern ushort max_vis_effects;
 
 struct object;
 
-typedef struct
+struct vis_attach_info
 {
 	int obj_handle;
 	int dest_objhandle;
@@ -90,17 +55,16 @@ typedef struct
 	ushort end_vertnum;
 
 	ubyte subnum,subnum2;	
-} vis_attach_info;
+};
 
-typedef struct
+struct axis_billboard_info
 {
 	ubyte width;
 	ubyte height;
 	ubyte texture;			
-} axis_billboard_info;
+};
 
-
-typedef struct
+struct vis_effect
 {
 	vector pos;
 	vector end_pos;	
@@ -129,6 +93,6 @@ typedef struct
 
 	ubyte movement_type;
 	ubyte type,id;
-} vis_effect;
+};
 
 #endif

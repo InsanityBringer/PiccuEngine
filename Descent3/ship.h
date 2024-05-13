@@ -15,99 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/ship.h $
- * $Revision: 26 $
- * $Date: 8/29/01 4:27p $
- * $Author: Matt $
- *
- * Header for player ship page
- *
- * $Log: /DescentIII/main/ship.h $
- * 
- * 26    8/29/01 4:27p Matt
- * Increased MAX_SHIPS from 10 to 30
- * 
- * 25    2/04/00 9:52a Matt
- * Increased MAX_SHIPS from 5 to 10
- * 
- * 24    5/13/99 12:29p Jeff
- * made AllowedShips an extern
- * 
- * 23    5/12/99 1:58p Jason
- * fixed yet more buggy/ugly code
- * 
- * 22    4/16/99 6:00p Kevin
- * Bunches of Demo stuff
- * 
- * 21    4/11/99 3:04p Matt
- * Reduced the max number of player ships from 30 to 5.
- * Re-wrote the static ship name code to be more space efficient.
- * Took default ship name (the one used to find the ship)  out of string
- * table.
- * 
- * 20    11/03/98 6:16p Chris
- * Starting to make on/off and spray weapons accessable to robots
- * 
- * 19    10/13/98 12:56p Matt
- * Finished (hopefully) with the ammo system.  Added support for napalm
- * fuel.
- * 
- * 18    10/12/98 3:02p Jeff
- * moved DEFAULT_SHIP #define into ship.h
- * 
- * 17    10/02/98 1:47p Jason
- * added lod player ships
- * 
- * 16    9/10/98 11:53a Jason
- * added hud config filename to ship page
- * 
- * 15    8/07/98 2:43p Jeff
- * flags gets cleared and initialized correctly
- * 
- * 14    8/06/98 10:59a Jason
- * added zoom weapons
- * 
- * 13    7/31/98 5:23p Jason
- * added ship armor scalars
- * 
- * 12    6/29/98 3:08p Jason
- * added on/off weapons
- * 
- * 11    6/16/98 10:54a Jeff
- * 
- * 10    6/01/98 10:37a Matt
- * Added system to spew powerups when the player dies.  Still needs Jason
- * to deal with  mng_FindSpecificGenericPage().
- * 
- * 9     5/25/98 8:17p Matt
- * Moved MAX_PLAYER_WEAPONS fromw weapon.h to player.h, so that the latter
- * doesn't need to include the former, drastically speeding build times
- * when weapon.h is changed.
- * 
- * 8     3/19/98 1:02p Samir
- * Added field for cockpit filename.
- * 
- * 7     2/17/98 8:19p Matt
- * Added looping & release sounds for player weapons
- * 
- * 6     11/12/97 1:13p Jason
- * added weapons that can ramp up
- * 
- * 5     11/04/97 6:18p Chris
- * Added support so that the player ship uses the robot's firing dialog.  
- * 
- * 4     10/21/97 11:57a Jason
- * added ability to set dying model for player ship
- * 
- * 3     9/03/97 4:37p Mark
- * upped max_ship count
- * 
- * 2     7/24/97 5:26p Matt
- * Added SourceSafe header
- *
- * $NoKeywords: $
- */
 
 #ifndef SHIP_H
 #define SHIP_H
@@ -128,7 +35,7 @@
 
 // Ship fire flags
 #define SFF_FUSION	1		// fires like fusion
-#define SFF_ZOOM		4		// Zooms in
+#define SFF_ZOOM	4		// Zooms in
 #define SFF_TENTHS	8		// Ammo displays in tenths
 
 // Default ship IDs
@@ -141,7 +48,7 @@
 // Ship flags
 #define SF_DEFAULT_ALLOW	1	//Allowed by default
 
-typedef struct
+struct ship
 {
 	char name[PAGENAME_LEN];
 	float size;
@@ -171,8 +78,7 @@ typedef struct
 
 	int flags;
 	ubyte used;
-} ship;
-
+};
 
 extern int Num_ships;
 extern ship Ships[MAX_SHIPS];
@@ -213,8 +119,4 @@ void RemapShips ();
 // and changes the old index to the new index
 void RemapAllShipObjects (int old_index,int new_index);
 
-
-
 #endif
-
-
