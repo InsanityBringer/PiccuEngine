@@ -56,7 +56,7 @@ struct roomUVL
 };
 
 //an n-sided polygon used as part of a room or portal
-typedef struct face
+struct face
 {
 	ushort	flags;					// flags for this face (see above)
 	ubyte	num_verts;				// how many vertices in this face

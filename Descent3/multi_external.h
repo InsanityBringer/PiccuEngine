@@ -29,6 +29,7 @@
 #include "networking.h"
 #include "descent.h"	//for MSN_NAMELEN
 #include "byteswap.h"
+#include "pserror.h"
 
 #define NETGAME_NAME_LEN	32
 #define NETGAME_SCRIPT_LEN	32
@@ -233,11 +234,20 @@ inline void MultiAddFloat (float element,ubyte *data,int *count)
 
 inline void MultiAddString (char *str,ubyte *data,int *count)
 {
-	ubyte len=strlen(str)+1;
-			
-	MultiAddByte (len,data,count);
-	memcpy (&data[*count],str,len);
-	*count+=len;
+	size_t reallen = strlen(str) + 1;
+
+	if (reallen < 256)
+	{
+		ubyte len = (ubyte)reallen;
+
+		MultiAddByte(len, data, count);
+		memcpy(&data[*count], str, len);
+		*count += len;
+	}
+	else
+	{
+		Error("MultiAddString: Tried to send string that is too long (%u chars)!", reallen);
+	}
 }
 
 
