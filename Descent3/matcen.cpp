@@ -794,12 +794,18 @@ void matcen::SaveData(CFILE* fp)
 	// Convert these to names
 	for (i = 0; i < MAX_MATCEN_SOUNDS; i++)
 	{
-		len = strlen(Sounds[m_sounds[i]].name) + 1; // Accounts for NULL charactor
+		//[ISB] DAJ -1FIX wasn't comprehensive enough..
+		//If the handle of a sound is -1 (happens in level 4), write known error string. 
+		char* strptr; 
+		if (m_sounds[i] == -1)
+			strptr = "PICCU INVALID HANDLE";
+		else
+			strptr = Sounds[m_sounds[i]].name;
+		
+		len = strlen(strptr) + 1; // Accounts for NULL charactor
 		cf_WriteShort(fp, len);
 		for (j = 0; j < len; j++)
-		{
-			cf_WriteByte(fp, Sounds[m_sounds[i]].name[j]);
-		}
+			cf_WriteByte(fp, strptr[i]);
 	}
 
 	cf_WriteFloat(fp, m_speed_multi);
@@ -833,27 +839,24 @@ extern short texture_xlate[];
 void matcen::LoadData(CFILE* fp)
 {
 	int i, j;
-	int len;
-
-	short max_spawn_pnts;
-	short max_prod_types;
-	short max_matcen_sounds;
 
 	int version = cf_ReadInt(fp);
 
-	max_spawn_pnts = cf_ReadShort(fp);
-	ASSERT(max_spawn_pnts <= MAX_SPAWN_PNTS);
-	max_prod_types = cf_ReadShort(fp);
-	ASSERT(max_prod_types <= MAX_PROD_TYPES);
-	max_matcen_sounds = cf_ReadShort(fp);
-	ASSERT(max_matcen_sounds <= MAX_MATCEN_SOUNDS);
+	ushort max_spawn_pnts = cf_ReadShort(fp);
+	if (max_spawn_pnts > MAX_SPAWN_PNTS)
+		Error("matcen::LoadData: Too many spawn points! Got %d, max is %d", max_spawn_pnts, MAX_SPAWN_PNTS);
+	ushort max_prod_types = cf_ReadShort(fp);
+	if (max_prod_types > MAX_PROD_TYPES)
+		Error("matcen::LoadData: Too many prod types! Got %d, max is %d", max_prod_types, MAX_PROD_TYPES);
+	ushort max_matcen_sounds = cf_ReadShort(fp);
+	if (max_matcen_sounds > MAX_MATCEN_SOUNDS)
+		Error("matcen::LoadData: Too many matcen sounds! Got %d, max is %d", max_matcen_sounds, MAX_MATCEN_SOUNDS);
 
-	len = cf_ReadShort(fp);
-	ASSERT(len <= MAX_MATCEN_NAME_LEN);
+	uint len = cf_ReadShort(fp);
+	if (len > sizeof(m_name))
+		Error("matcen::LoadData: Loaded matcen name is too long! Got %u, length is %u", len, sizeof(m_name));
 	for (i = 0; i < len; i++)
-	{
 		m_name[i] = cf_ReadByte(fp);
-	}
 
 	m_num_prod_types = cf_ReadByte(fp);
 	m_control_type = cf_ReadByte(fp);
@@ -892,12 +895,11 @@ void matcen::LoadData(CFILE* fp)
 	for (i = 0; i < max_prod_types; i++)
 	{
 		len = cf_ReadShort(fp);
+		if (len >= sizeof(temp_name))
+			Error("matcen::LoadData: Bad prod type string length!");
+		
 		for (j = 0; j < len; j++)
-		{
-			{
-				temp_name[j] = cf_ReadByte(fp);
-			}
-		}
+			temp_name[j] = cf_ReadByte(fp);
 
 		m_prod_type[i] = FindObjectIDName(temp_name);
 
@@ -911,11 +913,11 @@ void matcen::LoadData(CFILE* fp)
 	{
 		m_num_alive = cf_ReadShort(fp);
 		m_alive_list = (int*)mem_malloc(sizeof(int) * m_max_alive_children);
+		if (!m_alive_list)
+			Error("matcen::LoadData: Failed to allocate %d alive children handles!", m_max_alive_children);
 
 		for (i = 0; i < m_num_alive; i++)
-		{
 			m_alive_list[i] = cf_ReadInt(fp);
-		}
 	}
 	else
 	{
@@ -932,10 +934,10 @@ void matcen::LoadData(CFILE* fp)
 		char sound_name[256];
 
 		len = cf_ReadShort(fp);
+		if (len >= sizeof(sound_name))
+			Error("matcen::LoadData: Bad matcen sound name length!");
 		for (j = 0; j < len; j++)
-		{
 			sound_name[j] = cf_ReadByte(fp);
-		}
 
 		m_sounds[i] = FindSoundName(sound_name);
 	}
@@ -960,9 +962,7 @@ void matcen::LoadData(CFILE* fp)
 	m_last_prod_objref = cf_ReadInt(fp);
 
 	for (i = 0; i < max_prod_types; i++)
-	{
 		m_num_prod_type[i] = cf_ReadInt(fp);
-	}
 
 	if (version >= 3)
 		m_sound_active_handle = cf_ReadInt(fp);
