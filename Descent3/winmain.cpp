@@ -686,8 +686,6 @@ int PASCAL HandledWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine,
 	return 1;
 }
 
-
-
 //This is the winmain that tests for exceptions..
 int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR szCmdLine, int nCmdShow)
 {
