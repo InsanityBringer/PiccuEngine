@@ -653,6 +653,23 @@ float opengl_GetAlphaMultiplier(void)
 	}
 }
 
+
+void opengl_SetAlwaysAlpha(bool state)
+{
+	if (state && OpenGL_blending_on)
+	{
+		glDisable(GL_BLEND);
+		glDisable(GL_ALPHA_TEST);
+		OpenGL_blending_on = false;
+	}
+	else if (!state)
+	{
+		glEnable(GL_BLEND);
+		glEnable(GL_ALPHA_TEST);
+		OpenGL_blending_on = true;
+	}
+}
+
 void rend_SetAlphaType(sbyte atype)
 {
 	if (atype == OpenGL_state.cur_alpha_type)
@@ -665,74 +682,100 @@ void rend_SetAlphaType(sbyte atype)
 	}
 	OpenGL_sets_this_frame[6]++;
 
-	if (atype == AT_ALWAYS)
-	{
-		if (OpenGL_blending_on)
-		{
-			glDisable(GL_BLEND);
-			glDisable(GL_ALPHA_TEST);
-			OpenGL_blending_on = false;
-		}
-	}
-	else
-	{
-		if (!OpenGL_blending_on)
-		{
-			glEnable(GL_BLEND);
-			glEnable(GL_ALPHA_TEST);
-			OpenGL_blending_on = true;
-		}
-	}
-
-	if (OpenGL_state.cur_alpha_type == AT_SPECULAR)
-	{
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
-	}
+	OpenGL_blending_on = true;
+	opengl_SetAlwaysAlpha(true);
+	glBlendFunc(GL_ONE, GL_ZERO);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 
 	switch (atype)
 	{
 	case AT_ALWAYS:
 		rend_SetAlphaValue(255);
+		opengl_SetAlwaysAlpha(true);
 		glBlendFunc(GL_ONE, GL_ZERO);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_CONSTANT:
+		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_TEXTURE:
 		rend_SetAlphaValue(255);
+		opengl_SetAlwaysAlpha(true);
 		glBlendFunc(GL_ONE, GL_ZERO);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
 		break;
 	case AT_CONSTANT_TEXTURE:
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		break;
-	case AT_VERTEX:
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		break;
 	case AT_CONSTANT_TEXTURE_VERTEX:
-	case AT_CONSTANT_VERTEX:
+		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_TEXTURE_VERTEX:
+		opengl_SetAlwaysAlpha(false);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
+		//I'm not sure why this works? The terminal switches in level 1 use a alpha texture and it works fine in D3D. 
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PRIMARY_COLOR);
+		break;
+	case AT_CONSTANT_VERTEX:
+		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		break;
+	case AT_VERTEX:
+		opengl_SetAlwaysAlpha(false);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_LIGHTMAP_BLEND:
+		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_DST_COLOR, GL_ZERO);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_SATURATE_TEXTURE:
 	case AT_LIGHTMAP_BLEND_SATURATE:
+		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_SATURATE_VERTEX:
+		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_SATURATE_CONSTANT_VERTEX:
+		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_SATURATE_TEXTURE_VERTEX:
+		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_SPECULAR:
+		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		//hack
 		glEnable(GL_TEXTURE_2D);
