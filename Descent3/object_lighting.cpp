@@ -188,7 +188,7 @@ void DoObjectLight(object* obj)
 					ApplyLightingToRooms(&hit_info.hit_pnt, hit_info.hit_room, FAST_HEADLIGHT_SIZE, negative_light * 1.0, negative_light * 1.0, negative_light * 1.0);
 					// Do stupid easter egg trick
 					face* fp = &Rooms[hit_info.hit_room].faces[hit_info.hit_face[0]];
-					if (Gametime > EASTER_EGG_TIMER && GameTextures[fp->tmap].flags & (TF_PROCEDURAL | TF_WATER_PROCEDURAL))
+					if (Gametime > EASTER_EGG_TIMER && hit_info.hit_type[0] == HIT_WALL && GameTextures[fp->tmap].flags & (TF_PROCEDURAL | TF_WATER_PROCEDURAL))
 					{
 						EasterEgg = 1;
 					}
