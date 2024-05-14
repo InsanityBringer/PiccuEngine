@@ -661,6 +661,9 @@ struct sound_menu
 
 	short old_fxquantity;
 
+	bool* doppler;
+	bool* reverbs;
+
 	// sets the menu up.
 	newuiSheet* setup(newuiMenu* menu)
 	{
@@ -682,31 +685,31 @@ struct sound_menu
 		musicvolume = sheet->AddSlider(TXT_SNDMUSVOL, 10, (short)(D3MusicGetVolume() * 10), &slider_set);
 
 		// sound fx quality radio list.
-		if (GetFunctionMode() != GAME_MODE && GetFunctionMode() != EDITOR_GAME_MODE) {
+		if (GetFunctionMode() != GAME_MODE && GetFunctionMode() != EDITOR_GAME_MODE) 
+		{
 			sheet->NewGroup(TXT_SNDQUALITY, 0, 95);
-#ifdef MACINTOSH
-			fxquality = sheet->AddFirstRadioButton(TXT_LOW);
-			sheet->AddRadioButton(TXT_CFG_MEDIUM);
-			sheet->AddRadioButton(TXT_CFG_HIGH);
-			*fxquality = Sound_system.GetSoundQuality();
-#else
+
 			fxquality = sheet->AddFirstRadioButton(TXT_SNDNORMAL);
 			sheet->AddRadioButton(TXT_SNDHIGH);
 			*fxquality = Sound_system.GetSoundQuality() == SQT_HIGH ? 1 : 0;
-#endif
+
 			slider_set.min_val.i = MIN_SOUNDS_MIXED;
 			slider_set.max_val.i = MAX_SOUNDS_MIXED;
 			slider_set.type = SLIDER_UNITS_INT;
 			fxquantity = sheet->AddSlider(TXT_SNDCFG_SFXQUANTITY, (slider_set.max_val.i - slider_set.min_val.i),
 				Sound_system.GetLLSoundQuantity() - MIN_SOUNDS_MIXED, &slider_set);
 			old_fxquantity = (Sound_system.GetLLSoundQuantity() - MIN_SOUNDS_MIXED);
-
 		}
 		else
 		{
 			fxquality = NULL;
 			fxquantity = NULL;
 		}
+
+		sheet->NewGroup("Effects", 0, 176);
+		doppler = sheet->AddLongCheckBox("Doppler", Sound_doppler);
+		reverbs = sheet->AddLongCheckBox("Reverbs", Sound_reverb);
+
 		return sheet;
 	};
 
@@ -728,6 +731,13 @@ struct sound_menu
 		if (fxquality)
 		{
 			Sound_system.SetSoundQuality((*fxquality == 1) ? SQT_HIGH : SQT_NORMAL);
+		}
+
+		if (doppler && reverbs)
+		{
+			Sound_doppler = *doppler;
+			Sound_reverb = *reverbs;
+			Sound_system.UpdateEnvironmentToggles();
 		}
 	};
 

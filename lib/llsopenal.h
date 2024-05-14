@@ -69,6 +69,7 @@ class llsOpenAL : public llsSystem
 
 	bool Initalized;
 	bool LoopPointsSupported, EffectsSupported;
+	bool ReverbEnabled, DopplerEnabled;
 	char Quality;
 
 	int NumSoundChannels;
@@ -83,7 +84,7 @@ class llsOpenAL : public llsSystem
 	ALuint AuxEffectSlot, EffectSlot;
 
 	const EAX2Reverb* LastReverb;
-
+	t3dEnvironmentToggles EnvToggles;
 
 	//Movie stuff
 	int MovieSampleRate;
@@ -124,12 +125,17 @@ public:
 
 		AuxEffectSlot = EffectSlot = 0;
 		LastReverb = nullptr;
+		ReverbEnabled = false;
+		DopplerEnabled = false;
 
 		MovieSampleRate = 0;
 		MovieSourceName = 0;
 		MovieBufferName = 0;
 		MovieSoundFormat = 0;
 		MovieStarted = false;
+
+		EnvToggles = {};
+		GetEnvironmentToggles(&EnvToggles);
 	}
 
 	~llsOpenAL() override

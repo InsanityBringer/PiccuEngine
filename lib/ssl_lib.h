@@ -218,24 +218,24 @@ typedef struct sound_info
 // structure to get and set environment values
 #define ENV3DVALF_DOPPLER		1
 #define ENV3DVALF_GEOMETRY		2
+#define ENV3dVALF_REVERBS		4
 
-typedef struct t3dEnvironmentValues
+struct t3dEnvironmentValues
 {
 	int flags;								// use flags above
 
 	float doppler_scalar;				// values from 0.0f to ???? (1.0f = normal)
-}
-t3dEnvironmentValues;
+};
 
-typedef struct t3dEnvironmentToggles
+struct t3dEnvironmentToggles
 {
 	int flags;								// use flags above
 	int supported;							// returns flag values to inform caller of supported features (doppler, ie.)
 
 	bool doppler;							// state of doppler effects
+	bool reverb;							// state of reverb effects
 	bool geometry;							// support hardware geometry
-}
-t3dEnvironmentToggles;
+};
 
 typedef int (*llsMovieCallback)(void* userptr, void* sampledata, int numbytes);
 
@@ -364,13 +364,10 @@ public:
 //	HIGH LEVEL SYSTEM - Samir
 
 #ifndef NEWEDITOR 
-	#ifdef MACINTOSH
-		#define MAX_SOUNDS			750
-		#define MAX_SOUND_FILES		750
-	#else
-		#define MAX_SOUNDS			1000
-		#define MAX_SOUND_FILES		1000
-	#endif
+
+	#define MAX_SOUNDS			1000
+	#define MAX_SOUND_FILES		1000
+	
 	extern sound_info Sounds[MAX_SOUNDS];
 	extern sound_file_info SoundFiles[MAX_SOUND_FILES];
 #else
