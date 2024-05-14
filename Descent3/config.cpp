@@ -534,8 +534,8 @@ struct video_menu
 		sheet->AddText("");
 		sheet->AddLongButton(TXT_AUTO_GAMMA, IDV_AUTOGAMMA);
 
-		sheet->NewGroup("Antialiasing", 200, 0);
-		int iTemp = 0;
+		sheet->NewGroup("Antialiasing", 184, 0);
+		int iTemp = Render_preferred_state.antialised ? 1 : 0;
 		antialiasing = sheet->AddFirstRadioButton(TXT_OFF);
 		sheet->AddRadioButton(TXT_ON);
 		*antialiasing = iTemp;

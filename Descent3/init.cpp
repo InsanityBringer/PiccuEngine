@@ -360,6 +360,7 @@ void SaveGameSettings()
 
 	sprintf(tempbuffer,"%f",Detail_settings.Terrain_render_distance/((float)TERRAIN_SIZE));
 	Database->write("RS_terraindist",tempbuffer,strlen(tempbuffer)+1);
+	Database->write("RS_antialiased", Render_preferred_state.antialised);
 
 	Database->write("Dynamic_Lighting",Detail_settings.Dynamic_lighting);
 
@@ -553,6 +554,7 @@ void LoadGameSettings()
 	Database->read_int("RS_color_model",&Render_state.cur_color_model);
 	Database->read_int("RS_light",&Render_state.cur_light_state);
 	Database->read_int("RS_texture_quality",&Render_state.cur_texture_quality);
+	Database->read("RS_antialiased", &Render_preferred_state.antialised);
 	// force feedback stuff
 	Database->read("EnableJoystickFF",&D3Use_force_feedback);
 	Database->read("ForceFeedbackAutoCenter",&D3Force_auto_center);
