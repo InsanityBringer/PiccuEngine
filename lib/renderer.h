@@ -191,12 +191,15 @@ struct renderer_preferred_state
 {
 	ubyte mipping;
 	ubyte filtering;
-	float gamma;
+	bool antialised;
 	ubyte bit_depth;
+
+	float gamma;
 	int width, height;
+	int window_width, window_height; //Size of the game window, may != width/height. 
+
 	ubyte vsync_on;
 	bool fullscreen; //Informs the window system that fullscreen should be used. 
-	int window_width, window_height; //Size of the game window, may != width/height. 
 };
 
 struct renderer_lfb

@@ -500,13 +500,13 @@ struct video_menu
 	short* fov;
 	char* buffer;
 	bool* fullscreen;
+	int* antialiasing;
 
 	int window_width, window_height;
 
 	// sets the menu up.
 	newuiSheet* setup(newuiMenu* menu)
 	{
-		int iTemp;
 		sheet = menu->AddOption(IDV_VCONFIG, TXT_OPTVIDEO, NEWUIMENU_MEDIUM);
 
 		sheet->NewGroup(TXT_RESOLUTION, 0, 0);
@@ -534,6 +534,12 @@ struct video_menu
 		sheet->AddText("");
 		sheet->AddLongButton(TXT_AUTO_GAMMA, IDV_AUTOGAMMA);
 
+		sheet->NewGroup("Antialiasing", 200, 0);
+		int iTemp = 0;
+		antialiasing = sheet->AddFirstRadioButton(TXT_OFF);
+		sheet->AddRadioButton(TXT_ON);
+		*antialiasing = iTemp;
+
 		return sheet;
 	};
 
@@ -546,6 +552,8 @@ struct video_menu
 			Render_preferred_state.mipping = (*mipmapping) ? 1 : 0;
 		if (vsync)
 			Render_preferred_state.vsync_on = (*vsync) ? 1 : 0;
+		if (antialiasing)
+			Render_preferred_state.antialised = !!*antialiasing;
 
 		//Hopefully this doesn't do anything cursed..
 		rend_SetPreferredState(&Render_preferred_state);

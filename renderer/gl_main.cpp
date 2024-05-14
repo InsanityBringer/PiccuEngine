@@ -195,7 +195,7 @@ int rend_SetPreferredState(renderer_preferred_state* pref_state)
 
 		if (pref_state->width != OpenGL_state.screen_width || pref_state->height != OpenGL_state.screen_height
 			|| pref_state->window_width != OpenGL_state.view_width || pref_state->window_height != OpenGL_state.view_height
-			|| pref_state->fullscreen != old_state.fullscreen)
+			|| pref_state->fullscreen != old_state.fullscreen || pref_state->antialised != old_state.antialised)
 		{
 			opengl_UpdateWindow();
 			opengl_SetViewport();
@@ -1024,7 +1024,7 @@ void opengl_UpdateFramebuffer(void)
 {
 	for (int i = 0; i < NUM_FBOS; i++)
 	{
-		framebuffers[i].Update(OpenGL_state.screen_width, OpenGL_state.screen_height);
+		framebuffers[i].Update(OpenGL_state.screen_width, OpenGL_state.screen_height, OpenGL_preferred_state.antialised);
 	}
 
 	framebuffer_current_draw = 0;

@@ -110,12 +110,17 @@ void opengl_DrawFlatPolygon3D(g3Point** p, int nv);
 //gl_framebuffer.cpp
 class Framebuffer
 {
-	GLuint		m_name;
-	GLuint		m_colorname, m_depthname;
+	GLuint		m_name, m_subname;
+	GLuint		m_colorname, m_subcolorname, m_depthname;
 	uint32_t	m_width, m_height;
+	bool		m_msaa;
+
+	//Used when multisampling is enabled. Blits the multisample framebuffer to the non-multisample sub framebuffer
+	//Leaves the sub framebuffer bound for reading to finish the blit. 
+	void SubColorBlit();
 public:
 	Framebuffer();
-	void Update(int width, int height);
+	void Update(int width, int height, bool msaa);
 	void Destroy();
 	//Blits to the target framebuffer using glBlitFramebuffer.
 	//Will set current read framebuffer to m_name.

@@ -55,16 +55,33 @@ void GL_DestroyFramebufferVAO(void)
 Framebuffer::Framebuffer()
 {
 	m_width = m_height = 0;
-	m_name = m_colorname = m_depthname = 0;
+	m_name = m_subname = m_colorname = m_subcolorname = m_depthname = 0;
+	m_msaa = false;
 }
 
-void Framebuffer::Update(int width, int height)
+constexpr int SAMPLE_COUNT = 8;
+
+void Framebuffer::Update(int width, int height, bool msaa)
 {
-	if (width == m_width && height == m_height)
+	if (width == m_width && height == m_height && msaa == m_msaa)
 		return;
 
 	m_width = width;
 	m_height = height;
+	m_msaa = msaa;
+
+
+	//The solution to all problems with changing framebuffer status is to delete everything and start over. 
+	if (!msaa && m_subname != 0)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		Destroy();
+	}
+	else if (msaa && m_name != 0 && m_subname == 0)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		Destroy();
+	}
 
 	glActiveTextureARB(GL_TEXTURE0_ARB);
 	if (m_name == 0)
@@ -74,17 +91,53 @@ void Framebuffer::Update(int width, int height)
 		glGenFramebuffers(1, &m_name);
 	}
 
-	GLenum textureType = GL_TEXTURE_2D; //future MSAA support?
+	GLenum textureType = msaa ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
 
-	glBindTexture(GL_TEXTURE_2D, m_colorname);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	if (msaa)
+	{
+		//Create the sub framebuffer now if it hasn't already been.
+		//When multisampling is used, the sub framebuffer is a non-multisampled framebuffer for the main framebuffer to resolve to.
+		if (m_subname == 0)
+		{
+			glGenTextures(1, &m_subcolorname);
+			glGenFramebuffers(1, &m_subname);
+		}
 
-	glBindTexture(GL_TEXTURE_2D, m_depthname);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_colorname);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, SAMPLE_COUNT, GL_RGBA8, OpenGL_state.screen_width, OpenGL_state.screen_height, GL_FALSE);
+		
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_depthname);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, SAMPLE_COUNT, GL_DEPTH_COMPONENT32F, OpenGL_state.screen_width, OpenGL_state.screen_height, GL_FALSE);
+
+		glBindTexture(GL_TEXTURE_2D, m_subcolorname);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		//Do attachment for the sub framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, m_subname);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_subcolorname, 0);
+
+		GLenum fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (fbstatus != GL_FRAMEBUFFER_COMPLETE)
+		{
+			Error("Framebuffer::Update: Sub framebuffer object is incomplete!");
+		}
+
+		glEnable(GL_MULTISAMPLE);
+	}
+	else
+	{
+		glBindTexture(GL_TEXTURE_2D, m_colorname);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glBindTexture(GL_TEXTURE_2D, m_depthname);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	}
 
 	OpenGL_last_bound[0] = -1;
 	OpenGL_last_bound[1] = -1;
@@ -107,11 +160,39 @@ void Framebuffer::Destroy()
 	glDeleteTextures(1, &m_depthname);
 	glDeleteFramebuffers(1, &m_name);
 	m_name = m_colorname = m_depthname = 0;
+
+	glDeleteFramebuffers(1, &m_subname);
+	glDeleteTextures(1, &m_subcolorname);
+	m_subname = m_subcolorname = 0;
+}
+
+void Framebuffer::SubColorBlit()
+{
+	if (!m_msaa)
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_name);
+	}
+	else
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_name);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_subname);
+		glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, 
+			m_width, m_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		GLenum err = glGetError();
+		if (err != GL_NO_ERROR)
+		{
+			mprintf((0, "Error resolving multisampling: %d\n", err));
+		}
+
+		//Leave the sub color buffer bound for reading by BlitToRaw. 
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_subname);
+	}
 }
 
 void Framebuffer::BlitToRaw(GLuint target, unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 {
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_name);
+	SubColorBlit();
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target);
 
 	GLenum err = glGetError();
@@ -129,6 +210,14 @@ void Framebuffer::BlitToRaw(GLuint target, unsigned int x, unsigned int y, unsig
 
 void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 {
+	SubColorBlit();
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+	{
+		mprintf((0, "Error leaving sub color blit: %d\n", err));
+	}
+
 	glBindVertexArray(fbVAOName);
 	GLint oldviewport[4];
 	glGetIntegerv(GL_VIEWPORT, oldviewport);
@@ -136,13 +225,23 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+	{
+		mprintf((0, "Error binding framebuffers: %d\n", err));
+	}
+
+
 	Last_texel_unit_set = 0;
 	glClientActiveTextureARB(GL_TEXTURE0_ARB);
 	glActiveTextureARB(GL_TEXTURE0_ARB);
-	OpenGL_last_bound[0] = m_colorname;
+
+	GLuint sourcename = m_msaa ? m_subcolorname : m_colorname;
+	OpenGL_last_bound[0] = sourcename;
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, m_colorname);
-	GLenum err = glGetError();
+	glBindTexture(GL_TEXTURE_2D, sourcename);
+	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
 		mprintf((0, "Error unbinding draw framebuffer: %d\n", err));
