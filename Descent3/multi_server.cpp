@@ -2522,7 +2522,7 @@ void MultiResetSettings()
 	strcpy(Netgame.mission, "fury.mn3");
 	strcpy(Netgame.name, "Generic D3 Game");
 
-	Netgame.packets_per_second = 10;
+	Netgame.packets_per_second = 30;
 	Netgame.respawn_time = 60;
 	Netgame.flags = NF_RANDOMIZE_RESPAWN;
 	Netgame.max_players = 8;
