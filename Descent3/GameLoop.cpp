@@ -2546,7 +2546,7 @@ void GameFrame(void)
 
 		//[ISB] Flip right before timing.
 		//This seems to be a huge step in reducing stuttering, I'm not actually sure why..
-		if (!Skip_render_game_frame)
+		if (!Skip_render_game_frame && !Dedicated_server)
 		{
 			if (Game_interface_mode == GAME_INTERFACE && !Menu_interface_mode)
 				rend_Flip();
