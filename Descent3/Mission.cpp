@@ -70,8 +70,7 @@ bool InitMissionScript();
 void DoEndMission();
 void DoMissionMovie(char* movie);
 void FreeMission();
-// used in load level callback
-void LoadLevelCB(const char* chunk, int curlen, int filelen);
+
 //	MN3 based mission functions.
 // loads the msn file from the mn3 file specified, specifies the hog and table file.
 bool mn3_Open(const char* mn3file);
@@ -435,7 +434,7 @@ bool LoadMission(const char* mssn)
 						if (Net_msn_URLs.URL[a][0] == '\0')
 						{
 							strncpy(Net_msn_URLs.URL[a], operand, MAX_MISSION_URL_LEN - 1);
-							Net_msn_URLs.URL[a][MAX_MISSION_URL_LEN] = '\0';
+							Net_msn_URLs.URL[a][MAX_MISSION_URL_LEN-1] = '\0';
 							mprintf((0, "Found a Mission URL: %s\n", operand));
 							break;
 						}
