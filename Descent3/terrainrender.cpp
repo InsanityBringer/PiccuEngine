@@ -170,22 +170,23 @@ void MeshTerrainCell(int x, int z)
 {
 	MeshBuilder& mesh = TerrainMeshes[z * OCCLUSION_SIZE + x];
 	mesh.Destroy();
-	std::vector<SortableCell> sortcells;
-	sortcells.reserve(OCCLUSION_SIZE * OCCLUSION_SIZE);
+	std::vector<SortableCell> sortcells(OCCLUSION_SIZE * OCCLUSION_SIZE);
+	//sortcells.reserve(OCCLUSION_SIZE * OCCLUSION_SIZE);
 
 	//Gather all the cells for this region
 	int xstart = x * OCCLUSION_SIZE; int xend = xstart + OCCLUSION_SIZE;
 	int zstart = z * OCCLUSION_SIZE; int zend = zstart + OCCLUSION_SIZE;
+	int offset = 0;
 	for (int xcell = xstart; xcell < xend; xcell++)
 	{
 		for (int zcell = zstart; zcell < zend; zcell++)
 		{
-			SortableCell cell;
+			SortableCell& cell = sortcells[offset];
 			cell.x = xcell;
 			cell.z = zcell;
 			cell.texturehandle = Terrain_tex_seg[Terrain_seg[zcell * TERRAIN_WIDTH + xcell].texseg_index].tex_index;
 			cell.lmhandle = Terrain_seg[zcell * TERRAIN_WIDTH + xcell].lm_quad;
-			sortcells.push_back(cell);
+			offset++;
 		}
 	}
 
