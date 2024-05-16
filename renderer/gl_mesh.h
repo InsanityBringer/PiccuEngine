@@ -80,4 +80,9 @@ public:
 
 	//Draws the mesh with the currently bound shader.
 	void Draw() const;
+
+	int NumVertices() const
+	{
+		return m_vertices.size();
+	}
 };

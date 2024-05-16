@@ -16,6 +16,9 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
+#include <vector>
+
 #ifdef NEWEDITOR
 #include "neweditor\globals.h"
 void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain, bool render_all, bool outline, bool flat, prim* prim);
@@ -52,6 +55,7 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain, b
 #include "Macros.h"
 #include "psrand.h"
 #include "player.h"
+#include "../renderer/gl_mesh.h"
 
 #define TERRAIN_PERSPECTIVE_TEXTURE_DEPTH 1*TERRAIN_SIZE
 #define LOD_ROW_SIZE	(MAX_LOD_SIZE+1)
@@ -62,7 +66,6 @@ void DrawTerrainLightmapsHardware(int index, int upper_left, int lower_right);
 void DrawSky(vector* veye, matrix* vorient);
 
 function_mode View_mode;
-int ManageFramerate = 0;
 int MinAllowableFramerate = 15;
 ubyte Fast_terrain = 1;
 float Far_fog_border;
@@ -91,6 +94,166 @@ float Clip_scale_left, Clip_scale_top, Clip_scale_right, Clip_scale_bot;
 #ifdef NEWEDITOR
 bool Rendering_main_view = true;
 #endif
+
+//Terrain meshes
+//Terrain is meshed at the same size as the occlusion cells, for easier rendering. 
+MeshBuilder TerrainMeshes[OCCLUSION_SIZE * OCCLUSION_SIZE];
+
+struct SortableCell
+{
+	int x, z;
+	short texturehandle;
+	short lmhandle;
+
+	friend bool operator<(const SortableCell& l, const SortableCell& r)
+	{
+		uint lh = l.texturehandle | l.lmhandle << 16;
+		uint rh = r.texturehandle | r.lmhandle << 16;
+
+		return lh < rh;
+	}
+};
+
+void GenerateVertex(RendVertex& vert, int x, int y, int z, terrain_segment& basecell, bool altnormal)
+{
+	vert.position.x = x * TERRAIN_SIZE;
+	vert.position.y = y;
+	vert.position.z = z * TERRAIN_SIZE;
+
+	//Normals always from LOD 0. 
+	if (altnormal)
+		vert.normal = TerrainNormals[MAX_TERRAIN_LOD - 1][x * TERRAIN_WIDTH + z].normal2;
+	else
+		vert.normal = TerrainNormals[MAX_TERRAIN_LOD - 1][x * TERRAIN_WIDTH + z].normal1;
+	vert.r = vert.g = vert.b = vert.a = 255;
+
+	//Figure out the rotation of the UVs
+	int texmode = Terrain_tex_seg[basecell.texseg_index].rotation & 3;
+	switch (texmode)
+	{
+	case 0:
+		vert.u1 = x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH);
+		vert.v1 = y * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH);
+		break;
+	case 1:
+		vert.u1 = 1.f - (y * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
+		vert.v1 = x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH);
+		break;
+	case 2:
+		vert.u1 = 1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
+		vert.v1 = 1.f - (y * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
+		break;
+	case 3:
+		vert.u1 = y * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH);
+		vert.v1 = 1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
+		break;
+	}
+
+	//TODO: Probably should just use a single 256x256 lightmap page. 
+	vert.u2 = x / 2.f;
+	vert.v2 = y / 2.f;
+}
+
+//Blarg. The terrain is 256x256 cells, but there's only 256x256 vertices. Why.
+//This will look up height and ensure it never falls out of bounds
+static float GetYClamped(unsigned int x, unsigned int z)
+{
+	if (z * TERRAIN_WIDTH + x > (TERRAIN_WIDTH * TERRAIN_DEPTH))
+		return 255.f;
+
+	return Terrain_seg[z * TERRAIN_WIDTH + x].y;
+}
+
+//Meshes a OCCLUSION_SIZE * OCCLUSION_SIZE sized terrain cell. 
+//x and z are specified in terms of these cells, not absolute. 
+void MeshTerrainCell(int x, int z)
+{
+	MeshBuilder& mesh = TerrainMeshes[z * OCCLUSION_SIZE + x];
+	mesh.Destroy();
+	std::vector<SortableCell> sortcells;
+	sortcells.reserve(OCCLUSION_SIZE * OCCLUSION_SIZE);
+
+	//Gather all the cells for this region
+	int xstart = x * OCCLUSION_SIZE; int xend = xstart + OCCLUSION_SIZE;
+	int zstart = z * OCCLUSION_SIZE; int zend = zstart + OCCLUSION_SIZE;
+	for (int xcell = xstart; xcell < xend; xcell++)
+	{
+		for (int zcell = zstart; zcell < zend; zcell++)
+		{
+			SortableCell cell;
+			cell.x = xcell;
+			cell.z = zcell;
+			cell.texturehandle = Terrain_tex_seg[Terrain_seg[zcell * TERRAIN_WIDTH + xcell].texseg_index].tex_index;
+			cell.lmhandle = Terrain_seg[zcell * TERRAIN_WIDTH + xcell].lm_quad;
+			sortcells.push_back(cell);
+		}
+	}
+
+	//Sort all the cells by their texture index
+	std::sort(sortcells.begin(), sortcells.end());
+
+	int lasttexhandle = -1;
+	//Iterate over every cell. When a new texture is encountered, start a pass for it.
+	for (SortableCell& cell : sortcells)
+	{
+		//Don't mesh the strip of terrain at cell 255 on either edge. 
+		//I don't know why they chose to do this and not have 257 vertices but
+		if (cell.z == (TERRAIN_WIDTH - 1) || cell.x == (TERRAIN_WIDTH - 1))
+			continue;
+
+		//I really appreciate the decision to make the terrain 256x256 quads but only store 256x256 vertices. 
+		int tl = cell.z * TERRAIN_WIDTH + cell.x;
+
+		ASSERT(tl < TERRAIN_WIDTH * TERRAIN_DEPTH); //This assert should never trip
+		terrain_segment& seg = Terrain_seg[cell.z * TERRAIN_WIDTH + cell.x];
+
+		//hole in the terrain?
+		if (seg.flags & TF_INVISIBLE)
+			continue;
+
+		if (cell.texturehandle != lasttexhandle)
+		{
+			//assumption: LMs cover 128x128 cells so there won't ever be more than one LM handle at the moment.
+			mesh.StartBatchTwoTex(cell.texturehandle, cell.lmhandle);
+			lasttexhandle = cell.texturehandle;
+		}
+
+		//In theory I wouldn't need to have unique rend verts, but the rotation can cause different UVs
+		RendVertex verts[4] = {};
+
+		//Generate tl
+		GenerateVertex(verts[0], cell.x, seg.y, cell.z, seg, false);
+		//Generate tr
+		GenerateVertex(verts[1], cell.x + 1, GetYClamped(cell.x + 1, cell.z), cell.z, seg, true); //Provoking vertex for 
+		//Generate bl
+		GenerateVertex(verts[2], cell.x + 1, GetYClamped(cell.x, cell.z + 1), cell.z + 1, seg, false);
+		//Generate br
+		GenerateVertex(verts[3], cell.x , GetYClamped(cell.x + 1, cell.z + 1), cell.z + 1, seg, false);
+		
+		//Generate indicies
+		int firstvert = mesh.NumVertices();
+		short indicies[6] = { firstvert + 0, firstvert + 3, firstvert + 1, firstvert + 1, firstvert + 3, firstvert + 2 };
+
+		//And add both
+		mesh.SetIndicies(6, indicies);
+		mesh.SetVertices(4, verts);
+	}
+
+	//All vertices are created, so finalize the mesh.
+	mesh.Build();
+}
+
+void MeshTerrain()
+{
+	//Generate meshes for every 16x16 occlusion cell.
+	for (int x = 0; x < OCCLUSION_SIZE; x++)
+	{
+		for (int z = 0; z < OCCLUSION_SIZE; z++)
+		{
+			MeshTerrainCell(x, z);
+		}
+	}
+}
 
 void InitTerrainRenderSpeedups()
 {
@@ -633,13 +796,9 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 		// If the portal takes up more than 50% the screen space then we don't check against it
 		float threshold = (render_width * render_height) * 0.5f;
 		if (w * h > threshold)
-		{
 			Check_terrain_portal = 0;
-		}
 		else
-		{
 			Check_terrain_portal = 1;
-		}
 	}
 
 	if (top < 0)
@@ -655,37 +814,13 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 	Clip_scale_top = top;
 	Clip_scale_bot = bot;
 	if (!Terrain_sky.textured)
-	{
 		rend_FillRect(Terrain_sky.sky_color, left, top, right + 1, bot + 1);
-	}
 
 	rend_SetFlatColor(Terrain_sky.sky_color);
 	View_mode = GetFunctionMode();
 
 	// Set this so we don't do reentrant rendering between terrain/mine
 	Terrain_from_mine = from_mine;
-
-#ifndef NEWEDITOR
-	// See if we're supposed change the fog plane distance based on our framerate
-	if (View_mode != EDITOR_MODE && ManageFramerate)
-	{
-		float fps = GetFPS();
-		if (fps < MinAllowableFramerate)
-		{
-			if (Detail_settings.Terrain_render_distance > TERRAIN_SIZE)
-			{
-				Detail_settings.Terrain_render_distance -= (float)(TERRAIN_SIZE / 4);
-			}
-		}
-		else if (fps > MinAllowableFramerate + 1)
-		{
-			if (Detail_settings.Terrain_render_distance < 60 * TERRAIN_SIZE)
-			{
-				Detail_settings.Terrain_render_distance += (float)(TERRAIN_SIZE / 4);
-			}
-		}
-	}
-#endif
 
 #ifndef NEWEDITOR
 	const float kTerrainRenderDistance = Detail_settings.Terrain_render_distance;
@@ -1075,10 +1210,10 @@ void DrawTexturedSky(void)
 			{
 				TSearch_seg = t;
 				TSearch_found_type = TSEARCH_FOUND_SKY_DOME;
-			}
 		}
-#endif
 	}
+#endif
+}
 
 	// Draw bottom part
 	for (int i = 1; i < 4; i++)
@@ -1134,7 +1269,7 @@ void DrawTexturedSky(void)
 				{
 					TSearch_seg = t;
 					TSearch_found_type = TSEARCH_FOUND_SKY_DOME;
-				}
+			}
 			}
 #endif
 		}
@@ -1646,7 +1781,7 @@ __inline void DrawTerrainOutline(int tcell, int nverts, g3Point** pointlist)
 		for (i = 0; i < nverts - 1; i++)
 			g3_DrawLine(GR_RGB(255, 255, 255), tpnt_list[i], tpnt_list[i + 1]);
 		g3_DrawLine(GR_RGB(255, 255, 255), tpnt_list[i], tpnt_list[0]);
-	}
+}
 	else
 #endif
 	{
@@ -2136,9 +2271,9 @@ void DisplayTerrainList(int cellcount, bool from_automap)
 				t = Terrain_list[i].segment;
 				if (TerrainSelected[t] && Terrain_rotate_list[t] == TS_FrameCount)
 					TerrainDrawCurrentVert(t);
-			}
 		}
 	}
+}
 #endif
 
 	// Draw lightmaps if this is state limited
@@ -2890,15 +3025,15 @@ draw_lower_right:
 		{
 			TSearch_seg = n;
 			TSearch_found_type = TSEARCH_FOUND_TERRAIN;
+			}
 		}
-	}
 #endif
 #if (!defined(RELEASE) || defined(NEWEDITOR))
 	if (OUTLINE_ON(OM_TERRAIN))
 		DrawTerrainOutline(n, points_this_triangle, slist);
 #endif
 	return 0;
-}
+	}
 
 // Draws the 2 triangles of the Terrainlist[index] (hardware)
 void DrawTerrainLightmapsHardware(int index, int upper_left, int lower_right)
