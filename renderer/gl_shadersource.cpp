@@ -70,3 +70,17 @@ const char* testVertexSrc =
 "}\n"
 "";
 
+const char* testFragmentSrc = 
+"#version 330 core\n"
+"\n"
+"uniform sampler2D colortexture;\n"
+"\n"
+"in vec2 outuv;\n"
+"\n"
+"out vec4 color;\n"
+"\n"
+"void main()\n"
+"{\n"
+"	color = texture(colortexture, outuv);\n"
+"}\n"
+"";

@@ -327,6 +327,9 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 	opengl_SetUploadBufferSize(256, 256);
 	opengl_SetDefaults();
 
+	//Initialize the common buffer that will be shared across shaders. 
+	opengl_InitCommonBuffer();
+
 	//g3_ForceTransformRefresh();
 
 	CHECK_ERROR(4);

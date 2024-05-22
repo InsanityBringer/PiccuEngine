@@ -19,6 +19,28 @@
 #include "gl_shader.h"
 #include "pserror.h"
 
+GLuint commonbuffername;
+
+void opengl_InitCommonBuffer(void)
+{
+	glGenBuffers(1, &commonbuffername);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, commonbuffername);
+	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock), nullptr, GL_DYNAMIC_READ);
+
+	//Ensure this is always ready for usage later. 
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, commonbuffername);
+}
+
+void rend_UpdateCommon(float* projection, float* modelview)
+{
+	CommonBlock newblock;
+	memcpy(newblock.projection, projection, sizeof(newblock.projection));
+	memcpy(newblock.modelview, modelview, sizeof(newblock.modelview));
+
+	glBindBuffer(GL_COPY_WRITE_BUFFER, commonbuffername);
+	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(CommonBlock), &newblock);
+}
+
 static GLuint CompileShader(GLenum type, const char* src)
 {
 	GLuint name = glCreateShader(type);
@@ -38,6 +60,35 @@ static GLuint CompileShader(GLenum type, const char* src)
 	}
 
 	return name;
+}
+
+void ShaderProgram::CreateCommonBindings()
+{
+	Use();
+
+	//Find colortexture
+	GLint index = glGetUniformLocation(m_name, "colortexture");
+	if (index != -1)
+		glUniform1i(index, 0); //Set to GL_TEXTURE0
+
+	//Find lightmaptexture
+	index = glGetUniformLocation(m_name, "lightmaptexture");
+	if (index != -1)
+		glUniform1i(index, 1); //Set to GL_TEXTURE1
+
+	//Find CommonBlock
+	GLuint uboindex = glGetUniformBlockIndex(m_name, "CommonBlock");
+	if (uboindex != GL_INVALID_INDEX)
+	{
+		//Bind to GL_UNIFORM_BUFFER 0. Do I actually need to do this
+		glUniformBlockBinding(m_name, uboindex, 0);
+	}
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+
+	glUseProgram(0);
 }
 
 void ShaderProgram::AttachSource(const char* vertexsource, const char* fragsource)
@@ -63,6 +114,8 @@ void ShaderProgram::AttachSource(const char* vertexsource, const char* fragsourc
 
 	glDeleteShader(vertexprog);
 	glDeleteShader(fragmentprog);
+
+	CreateCommonBindings();
 }
 
 GLint ShaderProgram::FindUniform(const char* uniform)

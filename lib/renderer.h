@@ -420,6 +420,8 @@ void rend_CopyBitmapToFramebuffer (int bm_handle,int x,int y);
 // Gets a renderer ready for a framebuffer copy, or stops a framebuffer copy
 void rend_SetFrameBufferCopyState (bool state);
 
+void rend_UpdateCommon(float* projection, float* modelview);
+
 #if defined(DD_ACCESS_RING) 
 #if defined(WIN32)
 // returns the direct draw object 

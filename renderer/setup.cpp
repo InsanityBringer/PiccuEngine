@@ -68,25 +68,28 @@ void g3_GetProjectionMatrix( float zoom, float *projMat )
 	int viewportWidth, viewportHeight;
 	rend_GetProjectionParameters( &viewportWidth, &viewportHeight );
 
-	// compute aspect ratio for this ViewPort
-	float screenAspect = rend_GetAspectRatio();
-	if( sAspect != 0.0f )
-	{
-		//check for user override
-		screenAspect = screenAspect * 4.0f / 3.0f / sAspect;
-	}
-	//float s = screenAspect * ((float)viewportWidth) / ((float)viewportHeight);
-	float s = 4.f / 3;
+	float s = ((float)Window_width / Window_height);
 
 	// setup the matrix
 	memset( projMat, 0, sizeof(float) * 16 );
 
 	// calculate 1/tan(fov)
+	//Convert zoom into vertical FOV for my convenience, since I'm locking the Y FOV when the screen gets wider. 
+	zoom *= 3.f / 4.f;
+
 	float oOT = 1.0f / zoom;
 
 	// fill in the matrix
-	projMat[0]  = oOT;
-	projMat[5] = oOT * s;
+	if (s <= 1.0f)
+	{
+		projMat[0] = oOT;
+		projMat[5] = oOT * s;
+	}
+	else
+	{
+		projMat[0] = oOT / s;
+		projMat[5] = oOT;
+	}
 	projMat[10] =  1.0f;
 	projMat[11] =  1.0f;
 	projMat[14] = -1.0f;
@@ -101,6 +104,9 @@ void g3_StartFrame(vector *view_pos,matrix *view_matrix,float zoom)
 	g3_GetModelViewMatrix( view_pos, view_matrix, (float*)gTransformModelView );
 	g3_UpdateFullTransform();
 
+	//[ISB] Update the common uniform block for all 3D shaders. 
+	rend_UpdateCommon((float*)gTransformProjection, (float*)gTransformModelView);
+
 	// get window size
 	rend_GetProjectionParameters( &Window_width, &Window_height );
 
@@ -108,13 +114,6 @@ void g3_StartFrame(vector *view_pos,matrix *view_matrix,float zoom)
 	Window_w2 = ((float)Window_width)  * 0.5f;
 	Window_h2 = ((float)Window_height) * 0.5f;
 
-	//Compute aspect ratio for this window
-	float screen_aspect = rend_GetAspectRatio();
-	if( sAspect != 0.0f )
-	{
-		//check for user override
-		screen_aspect = screen_aspect * 4.0f / 3.0f / sAspect;
-	}
 	//float s = screen_aspect * (float) Window_height / (float) Window_width;
 	//[ISB] Just use the aspect of the window, the screen aspect is not important since pixels are all square
 	float s = ((float)Window_width / Window_height);// / (4.f / 3.f);

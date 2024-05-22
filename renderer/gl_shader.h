@@ -18,9 +18,21 @@
 #pragma once
 #include <glad/gl.h>
 
+struct CommonBlock
+{
+	float projection[16];
+	float modelview[16];
+};
+
+void opengl_InitCommonBuffer(void);
+
 class ShaderProgram
 {
 	GLuint m_name;
+	//CreateCommonBindings will find common uniforms and set their default bindings.
+	//This includes the common block, which must be named "common",
+	//and sampler2Ds named "colortexture", "lightmaptexture", and others later.
+	void CreateCommonBindings();
 public:
 	ShaderProgram()
 	{
