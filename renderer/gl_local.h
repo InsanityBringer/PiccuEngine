@@ -24,6 +24,7 @@
 #endif
 #include <algorithm>
 #include <glad/gl.h>
+#include "wglext.h"
 #define DD_ACCESS_RING //need direct access to some stuff
 #include "application.h"
 #include "3d.h"
@@ -39,7 +40,7 @@
 #define CHECK_ERROR(n) //need to decide what it does. 
 
 #ifdef WIN32
-typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int interval);
+//typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int interval);
 extern PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
 
 extern HWND hOpenGLWnd;

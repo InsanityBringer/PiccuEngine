@@ -27,6 +27,7 @@ renderer_preferred_state OpenGL_preferred_state = { 0,1,1.0 };
 rendering_state OpenGL_state;
 
 PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
+PFNWGLCREATECONTEXTATTRIBSARBPROC dwglCreateContextAttribsARB;
 
 #if defined(WIN32)
 //	Moved from DDGR library
@@ -125,9 +126,180 @@ static GLADapiproc opengl_GLADLoad(const char* name)
 	return (GLADapiproc)ptr;
 }
 
+//Hack to allow loading wgl extensions.
+//Credit to GZDoom for this bit of code
+HWND InitDummy()
+{
+	HMODULE g_hInst = GetModuleHandle(NULL);
+	HWND dummy;
+	//Create a rect structure for the size/position of the window
+	RECT windowRect;
+	windowRect.left = 0;
+	windowRect.right = 64;
+	windowRect.top = 0;
+	windowRect.bottom = 64;
+
+	//Window class structure
+	WNDCLASS wc;
+
+	//Fill in window class struct
+	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+	wc.lpfnWndProc = (WNDPROC)DefWindowProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = g_hInst;
+	wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hbrBackground = NULL;
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName = TEXT("PiccuOpenGLDummyWindow");
+
+	//Register window class
+	if (!RegisterClass(&wc))
+	{
+		return 0;
+	}
+
+	//Set window style & extended style
+	DWORD style, exStyle;
+	exStyle = WS_EX_CLIENTEDGE;
+	style = WS_SYSMENU | WS_BORDER | WS_CAPTION;// | WS_VISIBLE;
+
+	//Adjust the window size so that client area is the size requested
+	AdjustWindowRectEx(&windowRect, style, false, exStyle);
+
+	//Create Window
+	if (!(dummy = CreateWindowEx(exStyle,
+		TEXT("PiccuOpenGLDummyWindow"),
+		TEXT("PiccuEngine"),
+		WS_CLIPSIBLINGS | WS_CLIPCHILDREN | style,
+		0, 0,
+		windowRect.right - windowRect.left,
+		windowRect.bottom - windowRect.top,
+		NULL, NULL,
+		g_hInst,
+		NULL)))
+	{
+		UnregisterClassW(L"PiccuOpenGLDummyWindow", g_hInst);
+		return 0;
+	}
+	ShowWindow(dummy, SW_HIDE);
+
+	return dummy;
+}
+
+void ShutdownDummy(HWND dummy)
+{
+	DestroyWindow(dummy);
+	UnregisterClass(TEXT("PiccuOpenGLDummyWindow"), GetModuleHandle(NULL));
+}
+
+bool GL_GetExtensionProcs()
+{
+	HWND DummyHWND = InitDummy();
+	HDC DummyDC = GetDC(DummyHWND);
+
+	// Finds an acceptable pixel format to render to
+	PIXELFORMATDESCRIPTOR pfd, pfd_copy;
+	int pf;
+	bool ret = false;
+
+	memset(&pfd, 0, sizeof(pfd));
+	pfd.nSize = sizeof(pfd);
+	pfd.nVersion = 1;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | PFD_GENERIC_ACCELERATED;
+	pfd.iPixelType = PFD_TYPE_RGBA;
+
+	// Find the user's "best match" PFD 
+	pf = ChoosePixelFormat(DummyDC, &pfd);
+	if (pf == 0)
+	{
+		Int3();
+		//FreeLibrary(opengl_dll_handle);
+		goto die;
+	}
+
+	mprintf((0, "Choose pixel format successful!\n"));
+
+	// Try and set the new PFD
+	if (SetPixelFormat(DummyDC, pf, &pfd) == FALSE)
+	{
+		DWORD ret = GetLastError();
+		Int3();
+		//FreeLibrary(opengl_dll_handle);
+		goto die;
+	}
+
+	mprintf((0, "SetPixelFormat successful!\n"));
+
+	// Get a copy of the newly set PFD
+	if (DescribePixelFormat(DummyDC, pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd_copy) == 0)
+	{
+		Int3();
+		//FreeLibrary(opengl_dll_handle);
+		goto die;
+	}
+
+	// Check the returned PFD to see if it is hardware accelerated
+	if ((pfd_copy.dwFlags & PFD_GENERIC_ACCELERATED) == 0 && (pfd_copy.dwFlags & PFD_GENERIC_FORMAT) != 0)
+	{
+		Int3();
+		//FreeLibrary(opengl_dll_handle);
+		goto die;
+	}
+
+	// Create an OpenGL context, and make it the current context
+	HGLRC DummyResourceContext = wglCreateContext(DummyDC);
+	if (DummyResourceContext == nullptr)
+	{
+		DWORD ret = GetLastError();
+		//FreeLibrary(opengl_dll_handle);
+		Int3();
+		goto die;
+	}
+
+	ASSERT(DummyResourceContext != nullptr);
+	mprintf((0, "Making context current\n"));
+	if (!wglMakeCurrent(DummyDC, DummyResourceContext))
+	{
+		Int3();
+		goto die;
+	}
+
+	dwglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)opengl_GLADLoad("wglCreateContextAttribsARB");
+	if (!dwglCreateContextAttribsARB)
+	{
+		Int3();
+		goto die;
+	}
+
+	ret = true;
+
+die:
+	if (DummyResourceContext)
+	{
+		//OpenGL on Windows is lovely.
+		//Delete this context so I can make a new one with wglCreateContextAttribsARB
+		wglMakeCurrent(nullptr, nullptr);
+		wglDeleteContext(DummyResourceContext);
+		ReleaseDC(DummyHWND, DummyDC);
+	}
+
+	if (DummyHWND)
+		ShutdownDummy(DummyHWND);
+
+	return ret;
+}
+
 // Check for OpenGL support, 
 int opengl_Setup(HDC glhdc)
 {
+	if (!GL_GetExtensionProcs())
+	{
+		mprintf((0, "Dummy GL context failed!\n"));
+		return 0;
+	}
+
 	// Finds an acceptable pixel format to render to
 	PIXELFORMATDESCRIPTOR pfd, pfd_copy;
 	int pf;
@@ -176,9 +348,19 @@ int opengl_Setup(HDC glhdc)
 		return NULL;
 	}
 
+	GLint attribs[] =
+	{
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+		0
+	};
+
 	// Create an OpenGL context, and make it the current context
-	ResourceContext = wglCreateContext((HDC)glhdc);
-	if (ResourceContext == NULL) {
+	//ResourceContext = wglCreateContext((HDC)glhdc);
+	ResourceContext = dwglCreateContextAttribsARB((HDC)glhdc, nullptr, attribs);
+	if (ResourceContext == NULL) 
+	{
 		DWORD ret = GetLastError();
 		//FreeLibrary(opengl_dll_handle);
 		Int3();
@@ -189,6 +371,13 @@ int opengl_Setup(HDC glhdc)
 	mprintf((0, "Making context current\n"));
 	if (!wglMakeCurrent((HDC)glhdc, ResourceContext))
 		Int3();
+
+	dwglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)opengl_GLADLoad("wglCreateContextAttribsARB");
+	if (!dwglCreateContextAttribsARB)
+	{
+		Error("Cannot load wglCreateContextAttribsARB!");
+		return 0;
+	}
 
 	if (!Already_loaded)
 	{
