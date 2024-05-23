@@ -29,7 +29,18 @@ void g3_GetModelViewMatrix( const vector *viewPos, const matrix *viewMatrix, flo
 {
 	matrix localOrient = (*viewMatrix);
 	vector localPos    = -(*viewPos);
-	mvMat[0]  = localOrient.rvec.x;
+	mvMat[0] = localOrient.rvec.x;
+	mvMat[4] = localOrient.uvec.x;
+	mvMat[8] = localOrient.fvec.x;
+	mvMat[3] = 0.0f;
+	mvMat[1] = localOrient.rvec.y;
+	mvMat[5] = localOrient.uvec.y;
+	mvMat[9] = localOrient.fvec.y;
+	mvMat[7] = 0.0f;
+	mvMat[2] = localOrient.rvec.z;
+	mvMat[6] = localOrient.uvec.z;
+	mvMat[10] = localOrient.fvec.z;
+	/*mvMat[0]  = localOrient.rvec.x;
 	mvMat[1]  = localOrient.uvec.x;
 	mvMat[2]  = localOrient.fvec.x;
 	mvMat[3]  = 0.0f;
@@ -39,7 +50,7 @@ void g3_GetModelViewMatrix( const vector *viewPos, const matrix *viewMatrix, flo
 	mvMat[7]  = 0.0f;
 	mvMat[8]  = localOrient.rvec.z;
 	mvMat[9]  = localOrient.uvec.z;
-	mvMat[10] = localOrient.fvec.z;
+	mvMat[10] = localOrient.fvec.z;*/
 	mvMat[11] = 0.0f;
 	mvMat[12] = localPos * localOrient.rvec;
 	mvMat[13] = localPos * localOrient.uvec;

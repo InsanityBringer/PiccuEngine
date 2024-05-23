@@ -422,6 +422,13 @@ void rend_SetFrameBufferCopyState (bool state);
 
 void rend_UpdateCommon(float* projection, float* modelview);
 
+//These are temporary, used to test shader code.
+//Use the test shader.
+void rend_UseShaderTest(void);
+
+//Revert to non-shader rendering
+void rend_EndShaderTest(void);
+
 #if defined(DD_ACCESS_RING) 
 #if defined(WIN32)
 // returns the direct draw object 

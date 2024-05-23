@@ -41,6 +41,8 @@ int framebuffer_current_draw;
 unsigned int framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h;
 
 ShaderProgram blitshader;
+//Temp shader to test the shader systems. 
+ShaderProgram testshader;
 GLint blitshader_gamma = -1;
 
 // Init our renderer
@@ -74,6 +76,11 @@ int rend_Init(renderer_type state, oeApplication* app, renderer_preferred_state*
 	blitshader_gamma = blitshader.FindUniform("gamma");
 	if (blitshader_gamma == -1)
 		Error("rend_Init: Failed to find gamma uniform!");
+
+	//Simple shader for testing, before everything is made to use shaders. 
+	extern const char* testVertexSrc;
+	extern const char* testFragmentSrc;
+	testshader.AttachSource(testVertexSrc, testFragmentSrc);
 
 	//[ISB] moved here.. stupid. 
 	opengl_SetGammaValue(OpenGL_preferred_state.gamma);
@@ -1043,4 +1050,15 @@ void opengl_CloseFramebuffer(void)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	GL_DestroyFramebufferVAO();
+}
+
+//shader test
+void rend_UseShaderTest(void)
+{
+	testshader.Use();
+}
+
+void rend_EndShaderTest(void)
+{
+	glUseProgram(0);
 }

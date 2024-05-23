@@ -29,6 +29,10 @@ void opengl_InitCommonBuffer(void)
 
 	//Ensure this is always ready for usage later. 
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, commonbuffername);
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
 }
 
 void rend_UpdateCommon(float* projection, float* modelview)
@@ -39,6 +43,10 @@ void rend_UpdateCommon(float* projection, float* modelview)
 
 	glBindBuffer(GL_COPY_WRITE_BUFFER, commonbuffername);
 	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(CommonBlock), &newblock);
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
 }
 
 static GLuint CompileShader(GLenum type, const char* src)

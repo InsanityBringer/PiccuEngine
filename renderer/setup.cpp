@@ -79,6 +79,12 @@ void g3_GetProjectionMatrix( float zoom, float *projMat )
 
 	float oOT = 1.0f / zoom;
 
+	float znear = 0.1f;
+	float zfar = 1000.0f;
+
+	float C = -((zfar + znear) / (zfar - znear));
+	float D = -((2 * zfar * znear) / (zfar - znear));
+
 	// fill in the matrix
 	if (s <= 1.0f)
 	{
@@ -90,9 +96,12 @@ void g3_GetProjectionMatrix( float zoom, float *projMat )
 		projMat[0] = oOT / s;
 		projMat[5] = oOT;
 	}
-	projMat[10] =  1.0f;
+	projMat[10] = C;
+	projMat[11] = -1;
+	projMat[14] = D;
+	/*projMat[10] =  1.0f;
 	projMat[11] =  1.0f;
-	projMat[14] = -1.0f;
+	projMat[14] = -1.0f;*/
 }
 
 //start the frame

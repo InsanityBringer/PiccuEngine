@@ -869,11 +869,24 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 		rend_SetZValues(0, 5000);
 	}
 
+	//mesh test
+	rend_UseShaderTest();
+	rend_SetColorModel(CM_RGB);
+	rend_SetTextureType(TT_LINEAR);
+	rend_SetAlphaType(ATF_CONSTANT + ATF_TEXTURE);
+	rend_SetLighting(LS_NONE);
+	for (MeshBuilder& mesh : TerrainMeshes)
+	{
+		mesh.Draw();
+	}
+
+	rend_EndShaderTest();
+
 	// And display!
-	if (nt > 0)
+	/*if (nt > 0)
 	{
 		DisplayTerrainList(nt);
-	}
+	}*/
 
 	// Draw rooms
 	RenderTerrainRooms();

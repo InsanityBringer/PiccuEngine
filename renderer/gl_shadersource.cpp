@@ -51,11 +51,11 @@ const char* blitFragmentSrc =
 const char* testVertexSrc = 
 "#version 330 core\n"
 "\n"
-"uniform CommonBlock\n"
+"layout(std140) uniform CommonBlock\n"
 "{\n"
 "	mat4 projection;\n"
 "	mat4 modelview;\n"
-"} common;\n"
+"} commons;\n"
 "\n"
 "layout(location = 0) in vec3 position;\n"
 "layout(location = 1) in float x1;\n"
@@ -65,7 +65,7 @@ const char* testVertexSrc =
 "\n"
 "void main()\n"
 "{\n"
-"	gl_Position = common.projection * common.modelview * vec4(position, 1.0);\n"
+"	gl_Position = commons.projection * commons.modelview * vec4(position, 1.0);\n"
 "	outuv = uv;\n"
 "}\n"
 "";
