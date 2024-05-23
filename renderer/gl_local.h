@@ -106,6 +106,8 @@ void rend_SetMipState(sbyte mipstate);
 void opengl_DrawMultitexturePolygon3D(int handle, g3Point** p, int nv, int map_type);
 void opengl_SetMultitextureBlendMode(bool state);
 void opengl_DrawFlatPolygon3D(g3Point** p, int nv);
+//Call to ensure that the draw VAO is always ready to go when changing VAOs.
+void GL_UseDrawVAO(void);
 
 //gl_framebuffer.cpp
 class Framebuffer
@@ -138,3 +140,5 @@ public:
 //temporary
 void GL_InitFramebufferVAO(void);
 void GL_DestroyFramebufferVAO(void);
+
+void GL_UpdateLegacyBlock(float* projection, float* modelview);

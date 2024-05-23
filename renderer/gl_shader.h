@@ -32,7 +32,7 @@ class ShaderProgram
 	//CreateCommonBindings will find common uniforms and set their default bindings.
 	//This includes the common block, which must be named "common",
 	//and sampler2Ds named "colortexture", "lightmaptexture", and others later.
-	void CreateCommonBindings();
+	void CreateCommonBindings(int bindindex);
 public:
 	ShaderProgram()
 	{
@@ -40,6 +40,11 @@ public:
 	}
 
 	void AttachSource(const char* vertexsource, const char* fragsource);
+	//Attaches strings with some preprocessor statements. 
+	//Defines USE_TEXTURING if textured is true.
+	//Defines USE_LIGHTMAP if lightmapped is true.
+	//Defines USE_SPECULAR if speculared is true. 
+	void AttachSourcePreprocess(const char* vertexsource, const char* fragsource, bool textured, bool lightmapped, bool speculared);
 	GLint FindUniform(const char* uniform);
 	void Destroy();
 

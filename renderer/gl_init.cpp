@@ -52,16 +52,16 @@ void opengl_SetDefaults()
 	OpenGL_state.cur_alpha_type = AT_TEXTURE;
 
 	// Enable some states
-	glAlphaFunc(GL_GREATER, 0);
-	glEnable(GL_ALPHA_TEST);
+	//glAlphaFunc(GL_GREATER, 0);
+	//glEnable(GL_ALPHA_TEST);
 	glEnable(GL_BLEND);
-	glEnable(GL_DITHER);
+	//glEnable(GL_DITHER);
 	OpenGL_blending_on = true;
 
 #ifndef RELEASE
 	if (Fast_test_render)
 	{
-		glDisable(GL_DITHER);
+		//glDisable(GL_DITHER);
 	}
 #endif
 
@@ -85,24 +85,24 @@ void opengl_SetDefaults()
 	glEnable(GL_SCISSOR_TEST);
 	glScissor(0, 0, OpenGL_state.screen_width, OpenGL_state.screen_height);
 	glDisable(GL_SCISSOR_TEST);
-	glDepthRange(0.0f, 1.0f);
+	//glDepthRange(0.0f, 1.0f);
 
 	if (UseMultitexture)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + 1);
-		glClientActiveTextureARB(GL_TEXTURE0_ARB + 1);
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-		glHint(GL_FOG_HINT, GL_NICEST);
+		glActiveTexture(GL_TEXTURE0 + 1);
+		//glClientActiveTextureARB(GL_TEXTURE0 + 1);
+		//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+		//glHint(GL_FOG_HINT, GL_NICEST);
 
-		glClientActiveTextureARB(GL_TEXTURE0_ARB + 0);
+		//glClientActiveTextureARB(GL_TEXTURE0 + 0);
 
-		glDisable(GL_TEXTURE_2D);
-		glAlphaFunc(GL_GREATER, 0);
-		glEnable(GL_ALPHA_TEST);
+		//glDisable(GL_TEXTURE_2D);
+		//glAlphaFunc(GL_GREATER, 0);
+		//glEnable(GL_ALPHA_TEST);
 		glEnable(GL_BLEND);
-		glEnable(GL_DITHER);
+		//glEnable(GL_DITHER);
 		glBlendFunc(GL_DST_COLOR, GL_ZERO);
-		glActiveTextureARB(GL_TEXTURE0_ARB + 0);
+		glActiveTexture(GL_TEXTURE0 + 0);
 	}
 }
 
@@ -294,28 +294,15 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 	// Get some info
 	opengl_GetInformation();
 
-	// Default passthrough viewport. 
-	opengl_SetViewport();
-
 	// Update framebuffer
 	opengl_UpdateFramebuffer();
 
 	mprintf((0, "Setting up multitexture...\n"));
 
-	// Determine if Multitexture is supported
-	bool supportsMultiTexture = opengl_CheckExtension("GL_ARB_multitexture");
-
-	if (FindArg("-NoMultitexture"))
-		supportsMultiTexture = false;
-
-	if (supportsMultiTexture)
-		UseMultitexture = true;
-	else
-		// No multitexture at all
-		UseMultitexture = false;
-
-	// Do we have packed pixel formats?
-	OpenGL_packed_pixels = opengl_CheckExtension("GL_EXT_packed_pixels");
+	//In this shader world, multitexture is always supported.
+	UseMultitexture = true;
+	//TODO: Need to use standard statement
+	OpenGL_packed_pixels = false;
 
 	opengl_InitCache();
 
@@ -329,6 +316,9 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 
 	//Initialize the common buffer that will be shared across shaders. 
 	opengl_InitCommonBuffer();
+
+	// Default passthrough viewport. 
+	opengl_SetViewport();
 
 	//g3_ForceTransformRefresh();
 

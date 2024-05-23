@@ -162,16 +162,38 @@ void opengl_SetViewport()
 	//[ISB] the hardware t&l code is AWFUL and the software t&l code won't compile. 
 	// Reverting it back to only ever using passthrough. 
 	// Projection
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho((GLfloat)0.0f, (GLfloat)(OpenGL_preferred_state.width), (GLfloat)(OpenGL_preferred_state.height), (GLfloat)0.0f, 0.0f, 1.0f);
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
+	//glOrtho((GLfloat)0.0f, (GLfloat)(OpenGL_preferred_state.width), (GLfloat)(OpenGL_preferred_state.height), (GLfloat)0.0f, 0.0f, 1.0f);
 
+	float left = 0;
+	float right = OpenGL_preferred_state.width;
+	float bottom = OpenGL_preferred_state.height;
+	float top = 0;
+	float znear = 0;
+	float zfar = 1;
+
+	float modelview[16] = 
+	{ 1, 0, 0, 0,
+		0, 1, 0, 0, 
+		0, 0, 1, 0, 
+		0, 0, 0, 1 };
+
+	float projection[16] =
+	{
+		2 / (right - left), 0, 0, 0,
+		0, 2 / (top - bottom), 0, 0,
+		0, 0, -2 / (zfar - znear), 0,
+		-((right + left) / (right - left)), -((top + bottom) / (top - bottom)), -((zfar + znear) / (zfar - znear)), 1
+	};
+
+	GL_UpdateLegacyBlock(projection, modelview);
 	// Viewport
 	glViewport(0, 0, OpenGL_preferred_state.width, OpenGL_preferred_state.height);
 
 	// ModelView
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
 }
 
 // Sets some global preferences for the renderer
@@ -402,7 +424,7 @@ void rend_SetLighting(light_state state)
 		return;	// No redundant state setting
 	if (UseMultitexture && Last_texel_unit_set != 0)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + 0);
+		glActiveTexture(GL_TEXTURE0 + 0);
 		Last_texel_unit_set = 0;
 	}
 
@@ -411,16 +433,16 @@ void rend_SetLighting(light_state state)
 	switch (state)
 	{
 	case LS_NONE:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_NONE;
 		break;
 	case LS_FLAT_GOURAUD:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_FLAT_GOURAUD;
 		break;
 	case LS_GOURAUD:
 	case LS_PHONG:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_GOURAUD;
 		break;
 	default:
@@ -459,7 +481,7 @@ void rend_SetTextureType(texture_type state)
 		return;	// No redundant state setting
 	if (UseMultitexture && Last_texel_unit_set != 0)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + 0);
+		glActiveTexture(GL_TEXTURE0 + 0);
 		Last_texel_unit_set = 0;
 	}
 	OpenGL_sets_this_frame[3]++;
@@ -593,7 +615,7 @@ void rend_SetLightingState(light_state state)
 
 	if (UseMultitexture && Last_texel_unit_set != 0)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + 0);
+		glActiveTexture(GL_TEXTURE0 + 0);
 		Last_texel_unit_set = 0;
 	}
 
@@ -602,16 +624,16 @@ void rend_SetLightingState(light_state state)
 	switch (state)
 	{
 	case LS_NONE:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_NONE;
 		break;
 	case LS_FLAT_GOURAUD:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_FLAT_GOURAUD;
 		break;
 	case LS_GOURAUD:
 	case LS_PHONG:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_GOURAUD;
 		break;
 	default:
@@ -683,7 +705,7 @@ void rend_SetAlphaType(sbyte atype)
 		return;		// don't set it redundantly
 	if (UseMultitexture && Last_texel_unit_set != 0)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + 0);
+		glActiveTexture(GL_TEXTURE0 + 0);
 		Last_texel_unit_set = 0;
 
 	}
@@ -692,8 +714,8 @@ void rend_SetAlphaType(sbyte atype)
 	OpenGL_blending_on = true;
 	opengl_SetAlwaysAlpha(true);
 	glBlendFunc(GL_ONE, GL_ZERO);
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+	//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	//glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 
 	switch (atype)
 	{
@@ -701,100 +723,100 @@ void rend_SetAlphaType(sbyte atype)
 		rend_SetAlphaValue(255);
 		opengl_SetAlwaysAlpha(true);
 		glBlendFunc(GL_ONE, GL_ZERO);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);*/
 		break;
 	case AT_CONSTANT:
 		opengl_SetAlwaysAlpha(false);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		/*glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);*/
 		break;
 	case AT_TEXTURE:
 		rend_SetAlphaValue(255);
 		opengl_SetAlwaysAlpha(true);
 		glBlendFunc(GL_ONE, GL_ZERO);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
 		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);*/
 		break;
 	case AT_CONSTANT_TEXTURE:
 	case AT_CONSTANT_TEXTURE_VERTEX:
 	case AT_TEXTURE_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
 
 		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);*/
 		//glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 		//glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PRIMARY_COLOR);
 		break;
 	case AT_CONSTANT_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);*/
 		break;
 	case AT_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);*/
 		break;
 	case AT_LIGHTMAP_BLEND:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_DST_COLOR, GL_ZERO);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);*/
 		break;
 	case AT_SATURATE_TEXTURE:
 	case AT_LIGHTMAP_BLEND_SATURATE:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);*/
 		break;
 	case AT_SATURATE_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);*/
 		break;
 	case AT_SATURATE_CONSTANT_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);*/
 		break;
 	case AT_SATURATE_TEXTURE_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);*/
 		break;
 	case AT_SPECULAR:
 		opengl_SetAlwaysAlpha(false);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		//hack
-		glEnable(GL_TEXTURE_2D);
+		//glEnable(GL_TEXTURE_2D);
 		OpenGL_state.cur_texture_quality = 2;
 		OpenGL_state.cur_texture_type = TT_PERSPECTIVE;
 
 		glGetError();
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		/*glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PRIMARY_COLOR);
 		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);*/
 		if (glGetError() != GL_NO_ERROR)
 			Int3();
 

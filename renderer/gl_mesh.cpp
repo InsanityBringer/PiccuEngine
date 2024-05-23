@@ -93,6 +93,8 @@ void MeshBuilder::Build()
 	if (m_handle)
 		Destroy();
 
+	UpdateLastBatch();
+
 	glGenVertexArrays(1, &m_handle);
 	glBindVertexArray(m_handle);
 
@@ -137,8 +139,9 @@ void MeshBuilder::Build()
 	m_vertices.clear();
 	m_indicies.clear();
 
+	GL_UseDrawVAO();
 	//TODO: Once everything is using GL 3.3 systems this shouldn't be done anymore
-	glBindVertexArray(0);
+	//glBindVertexArray(0);
 }
 
 void MeshBuilder::Destroy()
@@ -191,5 +194,5 @@ void MeshBuilder::Draw() const
 			glDrawArrays(GL_TRIANGLES, batch.vertexoffset, batch.vertexcount);
 	}
 
-	glBindVertexArray(0);
+	GL_UseDrawVAO();
 }

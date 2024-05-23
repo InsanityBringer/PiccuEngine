@@ -16,10 +16,12 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <string.h>
+#include <string>
 #include "gl_shader.h"
 #include "pserror.h"
 
 GLuint commonbuffername;
+GLuint legacycommonbuffername;
 
 void opengl_InitCommonBuffer(void)
 {
@@ -28,7 +30,12 @@ void opengl_InitCommonBuffer(void)
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock), nullptr, GL_DYNAMIC_READ);
 
 	//Ensure this is always ready for usage later. 
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, commonbuffername);
+
+	//The legacy common buffer uses the ortho matrix as a passthrough.
+	glGenBuffers(1, &legacycommonbuffername);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, legacycommonbuffername);
+	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock), nullptr, GL_DYNAMIC_READ);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 1, legacycommonbuffername);
 
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -49,11 +56,24 @@ void rend_UpdateCommon(float* projection, float* modelview)
 		Int3();
 }
 
-static GLuint CompileShader(GLenum type, const char* src)
+void GL_UpdateLegacyBlock(float* projection, float* modelview)
+{
+	CommonBlock newblock;
+	memcpy(newblock.projection, projection, sizeof(newblock.projection));
+	memcpy(newblock.modelview, modelview, sizeof(newblock.modelview));
+
+	glBindBuffer(GL_COPY_WRITE_BUFFER, legacycommonbuffername);
+	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(CommonBlock), &newblock);
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+}
+
+static GLuint CompileShader(GLenum type, int numstrs, const char** src, GLint* lengths)
 {
 	GLuint name = glCreateShader(type);
-	GLint length = strlen(src);
-	glShaderSource(name, 1, &src, &length);
+	glShaderSource(name, numstrs, src, lengths);
 	glCompileShader(name);
 	GLint status;
 	glGetShaderiv(name, GL_COMPILE_STATUS, &status);
@@ -64,13 +84,14 @@ static GLuint CompileShader(GLenum type, const char* src)
 		char* buf = new char[length];
 		glGetShaderInfoLog(name, length, &length, buf);
 
+		mprintf((1, "%s\n", buf));
 		Error("CompileShader: Failed to compile shader! This error message needs more context..\n%s", buf);
 	}
 
 	return name;
 }
 
-void ShaderProgram::CreateCommonBindings()
+void ShaderProgram::CreateCommonBindings(int bindindex)
 {
 	Use();
 
@@ -88,8 +109,8 @@ void ShaderProgram::CreateCommonBindings()
 	GLuint uboindex = glGetUniformBlockIndex(m_name, "CommonBlock");
 	if (uboindex != GL_INVALID_INDEX)
 	{
-		//Bind to GL_UNIFORM_BUFFER 0. Do I actually need to do this
-		glUniformBlockBinding(m_name, uboindex, 0);
+		//Bind to GL_UNIFORM_BUFFER bindindex. This is so that "legacy" shaders can have the passthrough matricies. 
+		glUniformBlockBinding(m_name, uboindex, bindindex);
 	}
 
 	GLenum err = glGetError();
@@ -101,8 +122,10 @@ void ShaderProgram::CreateCommonBindings()
 
 void ShaderProgram::AttachSource(const char* vertexsource, const char* fragsource)
 {
-	GLuint vertexprog = CompileShader(GL_VERTEX_SHADER, vertexsource);
-	GLuint fragmentprog = CompileShader(GL_FRAGMENT_SHADER, fragsource);
+	GLint vertexsourcelen = strlen(vertexsource);
+	GLint fragsourcelen = strlen(fragsource);
+	GLuint vertexprog = CompileShader(GL_VERTEX_SHADER, 1, &vertexsource, &vertexsourcelen);
+	GLuint fragmentprog = CompileShader(GL_FRAGMENT_SHADER, 1, &fragsource, &fragsourcelen);
 
 	m_name = glCreateProgram();
 	glAttachShader(m_name, vertexprog);
@@ -123,7 +146,57 @@ void ShaderProgram::AttachSource(const char* vertexsource, const char* fragsourc
 	glDeleteShader(vertexprog);
 	glDeleteShader(fragmentprog);
 
-	CreateCommonBindings();
+	CreateCommonBindings(0);
+}
+
+void ShaderProgram::AttachSourcePreprocess(const char* vertexsource, const char* fragsource, bool textured, bool lightmapped, bool speculared)
+{
+	const char* vertexstrs[3];
+	GLint vertexlens[3];
+	const char* fragstrs[3];
+	GLint fraglens[3];
+
+	vertexstrs[0] = fragstrs[0] = "#version 330 core\n";
+	vertexlens[0] = fraglens[0] = strlen(vertexstrs[0]);
+
+	std::string preprocessorstr;
+	if (textured)
+		preprocessorstr.append("#define USE_TEXTURING\n");
+	if (lightmapped)
+		preprocessorstr.append("#define USE_LIGHTMAP\n");
+	if (speculared)
+		preprocessorstr.append("#define USE_SPECULAR\n");
+
+	vertexstrs[1] = fragstrs[1] = preprocessorstr.c_str();
+	vertexlens[1] = fraglens[1] = preprocessorstr.size();
+
+	vertexstrs[2] = vertexsource; vertexlens[2] = strlen(vertexsource);
+	fragstrs[2] = fragsource; fraglens[2] = strlen(fragsource);
+
+	GLuint vertexprog = CompileShader(GL_VERTEX_SHADER, 3, vertexstrs, vertexlens);
+	GLuint fragmentprog = CompileShader(GL_FRAGMENT_SHADER, 3, fragstrs, fraglens);
+
+	m_name = glCreateProgram();
+	glAttachShader(m_name, vertexprog);
+	glAttachShader(m_name, fragmentprog);
+	glLinkProgram(m_name);
+	GLint status;
+	glGetProgramiv(m_name, GL_LINK_STATUS, &status);
+	if (status == GL_FALSE)
+	{
+		GLint length;
+		glGetProgramiv(m_name, GL_INFO_LOG_LENGTH, &length);
+		char* buf = new char[length];
+		glGetProgramInfoLog(m_name, length, &length, buf);
+
+		Error("ShaderProgram::AttachSource: Failed to link program! This error message needs more context..\n%s", buf);
+	}
+
+	glDeleteShader(vertexprog);
+	glDeleteShader(fragmentprog);
+
+	//Always use the legacy block with these preprocessed shaders, for now.
+	CreateCommonBindings(1);
 }
 
 GLint ShaderProgram::FindUniform(const char* uniform)

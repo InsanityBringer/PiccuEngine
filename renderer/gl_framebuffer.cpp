@@ -42,7 +42,8 @@ void GL_InitFramebufferVAO(void)
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)(sizeof(float) * 2));
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	GL_UseDrawVAO();
+	//glBindVertexArray(0);
 }
 
 void GL_DestroyFramebufferVAO(void)
@@ -83,7 +84,7 @@ void Framebuffer::Update(int width, int height, bool msaa)
 		Destroy();
 	}
 
-	glActiveTextureARB(GL_TEXTURE0_ARB);
+	glActiveTexture(GL_TEXTURE0);
 	if (m_name == 0)
 	{
 		glGenTextures(1, &m_colorname);
@@ -234,8 +235,8 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 
 
 	Last_texel_unit_set = 0;
-	glClientActiveTextureARB(GL_TEXTURE0_ARB);
-	glActiveTextureARB(GL_TEXTURE0_ARB);
+	//glClientActiveTextureARB(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE0);
 
 	GLuint sourcename = m_msaa ? m_subcolorname : m_colorname;
 	OpenGL_last_bound[0] = sourcename;
@@ -252,6 +253,7 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
-	glBindVertexArray(0);
+	//glBindVertexArray(0);
+	GL_UseDrawVAO();
 	glViewport(oldviewport[0], oldviewport[1], oldviewport[2], oldviewport[3]);
 }
