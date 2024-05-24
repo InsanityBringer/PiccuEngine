@@ -81,8 +81,8 @@ void opengl_SetDefaults()
 
 	opengl_SetDrawDefaults();
 
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glHint(GL_FOG_HINT, GL_NICEST);
+	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	//glHint(GL_FOG_HINT, GL_NICEST);
 	glEnable(GL_SCISSOR_TEST);
 	glScissor(0, 0, OpenGL_state.screen_width, OpenGL_state.screen_height);
 	glDisable(GL_SCISSOR_TEST);

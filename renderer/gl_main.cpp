@@ -395,11 +395,12 @@ void rend_SetFogState(sbyte state)
 	OpenGL_state.cur_fog_state = state;
 	if (state == 1)
 	{
-		glEnable(GL_FOG);
+		//TODO
+		//glEnable(GL_FOG);
 	}
 	else
 	{
-		glDisable(GL_FOG);
+		//glDisable(GL_FOG);
 	}
 }
 
@@ -413,9 +414,9 @@ void rend_SetFogBorders(float nearz, float farz)
 	OpenGL_state.cur_fog_start = fogStart;
 	OpenGL_state.cur_fog_end = fogEnd;
 
-	glFogi(GL_FOG_MODE, GL_LINEAR);
-	glFogf(GL_FOG_START, fogStart);
-	glFogf(GL_FOG_END, fogEnd);
+	//glFogi(GL_FOG_MODE, GL_LINEAR);
+	//glFogf(GL_FOG_START, fogStart);
+	//glFogf(GL_FOG_END, fogEnd);
 }
 
 void rend_SetLighting(light_state state)
@@ -604,7 +605,8 @@ void rend_SetFogColor(ddgr_color color)
 	fc[1] /= 255.0f;
 	fc[2] /= 255.0f;
 
-	glFogfv(GL_FOG_COLOR, fc);
+	//TODO:
+	//glFogfv(GL_FOG_COLOR, fc);
 }
 
 // Sets the lighting state of opengl
@@ -688,13 +690,13 @@ void opengl_SetAlwaysAlpha(bool state)
 	if (state && OpenGL_blending_on)
 	{
 		glDisable(GL_BLEND);
-		glDisable(GL_ALPHA_TEST);
+		//glDisable(GL_ALPHA_TEST);
 		OpenGL_blending_on = false;
 	}
 	else if (!state)
 	{
 		glEnable(GL_BLEND);
-		glEnable(GL_ALPHA_TEST);
+		//glEnable(GL_ALPHA_TEST);
 		OpenGL_blending_on = true;
 	}
 }

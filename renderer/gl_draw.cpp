@@ -314,7 +314,7 @@ void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 
 	// And draw!
 	int offset = GL_CopyVertices(nv);
-	glDrawArrays(GL_POLYGON, offset, nv);
+	glDrawArrays(GL_TRIANGLE_FAN, offset, nv);
 	OpenGL_polys_drawn++;
 	OpenGL_verts_processed += nv;
 
@@ -721,7 +721,8 @@ void opengl_SetMultitextureBlendMode(bool state)
 // as a texture
 void opengl_DrawMultitexturePolygon3D(int handle, g3Point** p, int nv, int map_type)
 {
-	g3Point* pnt;
+
+	/*g3Point* pnt;
 	int i, fr, fg, fb;
 	float alpha;
 	vector* vertp;
@@ -824,12 +825,13 @@ void opengl_DrawMultitexturePolygon3D(int handle, g3Point** p, int nv, int map_t
 	OpenGL_polys_drawn++;
 	OpenGL_verts_processed += nv;
 
-	CHECK_ERROR(10)
+	CHECK_ERROR(10)*/
 }
 
 void opengl_DrawFlatPolygon3D(g3Point** p, int nv)
 {
-	float fr, fg, fb;
+	Int3();
+	/*float fr, fg, fb;
 	int i;
 
 	if (UseMultitexture)
@@ -884,7 +886,7 @@ void opengl_DrawFlatPolygon3D(g3Point** p, int nv)
 	glEnd();
 	CHECK_ERROR(11)
 		OpenGL_polys_drawn++;
-	OpenGL_verts_processed += nv;
+	OpenGL_verts_processed += nv;*/
 }
 
 // Draws a line using the states of the renderer
