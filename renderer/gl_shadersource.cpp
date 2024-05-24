@@ -59,7 +59,7 @@ const char* testVertexSrc =
 "\n"
 "layout(location = 0) in vec3 position;\n"
 "layout(location = 1) in float x1;\n"
-"layout(location = 2) in vec2 uv;\n"
+"layout(location = 4) in vec2 uv;\n"
 "\n"
 "out vec2 outuv;\n"
 "\n"

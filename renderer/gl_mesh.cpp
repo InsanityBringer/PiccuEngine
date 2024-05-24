@@ -131,7 +131,7 @@ void MeshBuilder::Build()
 	if (!m_indicies.empty())
 	{
 		glGenBuffers(1, &m_indexhandle);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_verthandle);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexhandle);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(short) * m_indicies.size(), m_indicies.data(), GL_STATIC_DRAW);
 	}
 

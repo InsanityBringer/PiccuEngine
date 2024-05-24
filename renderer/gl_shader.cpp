@@ -28,6 +28,11 @@ void opengl_InitCommonBuffer(void)
 	glGenBuffers(1, &commonbuffername);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, commonbuffername);
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock), nullptr, GL_DYNAMIC_READ);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, commonbuffername);
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
 
 	//Ensure this is always ready for usage later. 
 
@@ -37,7 +42,7 @@ void opengl_InitCommonBuffer(void)
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock), nullptr, GL_DYNAMIC_READ);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 1, legacycommonbuffername);
 
-	GLenum err = glGetError();
+	err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
 }

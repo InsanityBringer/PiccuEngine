@@ -215,7 +215,7 @@ void MeshTerrainCell(int x, int z)
 		if (cell.texturehandle != lasttexhandle)
 		{
 			//assumption: LMs cover 128x128 cells so there won't ever be more than one LM handle at the moment.
-			mesh.StartBatchTwoTex(cell.texturehandle, cell.lmhandle);
+			mesh.StartBatchTwoTex(GetTextureBitmap(cell.texturehandle, 0), cell.lmhandle);
 			lasttexhandle = cell.texturehandle;
 		}
 
@@ -227,9 +227,9 @@ void MeshTerrainCell(int x, int z)
 		//Generate tr
 		GenerateVertex(verts[1], cell.x + 1, GetYClamped(cell.x + 1, cell.z), cell.z, seg, true); //Provoking vertex for 
 		//Generate bl
-		GenerateVertex(verts[2], cell.x + 1, GetYClamped(cell.x, cell.z + 1), cell.z + 1, seg, false);
+		GenerateVertex(verts[2], cell.x + 1, GetYClamped(cell.x + 1, cell.z + 1), cell.z + 1, seg, false);
 		//Generate br
-		GenerateVertex(verts[3], cell.x , GetYClamped(cell.x + 1, cell.z + 1), cell.z + 1, seg, false);
+		GenerateVertex(verts[3], cell.x , GetYClamped(cell.x, cell.z + 1), cell.z + 1, seg, false);
 		
 		//Generate indicies
 		int firstvert = mesh.NumVertices();

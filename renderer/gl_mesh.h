@@ -48,7 +48,7 @@ class MeshBuilder
 
 	std::vector<MeshBatch> m_interactions;
 	std::vector<RendVertex> m_vertices;
-	std::vector<int> m_indicies;
+	std::vector<ushort> m_indicies;
 
 	//Updates the counts of the last batch if relevant. 
 	void UpdateLastBatch();
