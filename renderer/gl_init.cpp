@@ -409,7 +409,6 @@ void opengl_GetInformation()
 	mprintf((0, "OpenGL Vendor: %s\n", glGetString(GL_VENDOR)));
 	mprintf((0, "OpenGL Renderer: %s\n", glGetString(GL_RENDERER)));
 	mprintf((0, "OpenGL Version: %s\n", glGetString(GL_VERSION)));
-	mprintf((0, "OpenGL Extensions: %s\n", glGetString(GL_EXTENSIONS)));
 }
 
 void APIENTRY GL_LogDebugMsg(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* user)
@@ -468,6 +467,16 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 		return 0;
 	}
 
+#if defined(GL_DEBUG) && !defined(NDEBUG)
+	OpenGL_debugging_enabled = opengl_CheckExtension("GL_KHR_debug");
+	if (OpenGL_debugging_enabled)
+	{
+		glDebugMessageCallback(GL_LogDebugMsg, nullptr);
+	}
+#else
+	OpenGL_debugging_enabled = false;
+#endif
+
 #elif defined(__LINUX__)
 	/***********************************************************
 	*               LINUX OPENGL
@@ -493,6 +502,9 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 	// Get some info
 	opengl_GetInformation();
 
+	//Initialize the common buffer that will be shared across shaders. 
+	opengl_InitCommonBuffer();
+
 	// Update framebuffer
 	opengl_UpdateFramebuffer();
 
@@ -502,15 +514,6 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 	UseMultitexture = true;
 	//TODO: Need to use standard statement
 	OpenGL_packed_pixels = false;
-#if defined(GL_DEBUG) && !defined(NDEBUG)
-	OpenGL_debugging_enabled = opengl_CheckExtension("GL_KHR_debug");
-	if (OpenGL_debugging_enabled)
-	{
-		glDebugMessageCallback(GL_LogDebugMsg, nullptr);
-	}
-#else
-	OpenGL_debugging_enabled = false;
-#endif
 
 	opengl_InitCache();
 
@@ -521,9 +524,6 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 
 	opengl_SetUploadBufferSize(256, 256);
 	opengl_SetDefaults();
-
-	//Initialize the common buffer that will be shared across shaders. 
-	opengl_InitCommonBuffer();
 
 	// Default passthrough viewport. 
 	opengl_SetViewport();
