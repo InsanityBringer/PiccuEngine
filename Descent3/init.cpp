@@ -1278,7 +1278,8 @@ void InitD3Systems1(bool editor)
 #if defined (RELEASE) || defined (MACINTOSH)
 	SetDebugBreakHandlers(NULL, NULL);
 #else
-	SetDebugBreakHandlers(D3DebugStopHandler, D3DebugResumeHandler);
+	SetDebugBreakHandlers(nullptr, nullptr); //[ISB] these debug handlers really aren't needed in currentyear, I feel. 
+	//SetDebugBreakHandlers(D3DebugStopHandler, D3DebugResumeHandler);
 #endif
 
 	Init_in_editor = editor;
