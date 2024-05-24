@@ -245,7 +245,7 @@ void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 	color_array* colorp = &GL_colors[0];
 
 	// Specify our coordinates
-	for (i = 0; i < nv; i++, vertp++, texp++, colorp++)
+	for (i = 0; i < nv; i++, vertp++, texp++, colorp++, texp2++)
 	{
 		pnt = p[i];
 
