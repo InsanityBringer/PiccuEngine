@@ -79,6 +79,8 @@ int GL_CopyVertices(int numvertices)
 	glBufferSubData(GL_ARRAY_BUFFER, drawbufferoffsets[2] + startoffset * sizeof(tex_array), numvertices * sizeof(tex_array), GL_tex_coords);
 	glBufferSubData(GL_ARRAY_BUFFER, drawbufferoffsets[3] + startoffset * sizeof(tex_array), numvertices * sizeof(tex_array), GL_tex_coords2);
 
+	nextcommittedvertex += numvertices;
+
 	return startoffset;
 }
 
@@ -101,7 +103,8 @@ void opengl_SetDrawDefaults(void)
 	//Init draw buffers
 	glGenBuffers(1, &drawbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
-	glBufferData(GL_ARRAY_BUFFER, NUM_VERTS_PER_BUFFER * (sizeof(vector) + sizeof(color_array) + sizeof(tex_array) * 2), nullptr, GL_DYNAMIC_DRAW);
+	size_t buffersize = NUM_VERTS_PER_BUFFER * (sizeof(vector) + sizeof(color_array) + sizeof(tex_array) * 2);
+	glBufferData(GL_ARRAY_BUFFER, buffersize, nullptr, GL_DYNAMIC_DRAW);
 
 	//Init VAO and vertex state
 	glGenVertexArrays(1, &drawvao);
@@ -117,21 +120,21 @@ void opengl_SetDrawDefaults(void)
 
 	//attrib 1: color
 	drawbufferoffsets[1] = offset;
-	glBufferData(GL_ARRAY_BUFFER, NUM_VERTS_PER_BUFFER * sizeof(color_array), nullptr, GL_DYNAMIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, NUM_VERTS_PER_BUFFER * sizeof(color_array), nullptr, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (const void*)offset);
 	offset += sizeof(color_array) * NUM_VERTS_PER_BUFFER;
 
 	//attrib 2: uv
 	drawbufferoffsets[2] = offset;
-	glBufferData(GL_ARRAY_BUFFER, NUM_VERTS_PER_BUFFER * sizeof(tex_array), nullptr, GL_DYNAMIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, NUM_VERTS_PER_BUFFER * sizeof(tex_array), nullptr, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, (const void*)offset);
 	offset += sizeof(tex_array) * NUM_VERTS_PER_BUFFER;
 
 	//attrib 3: uv 2
 	drawbufferoffsets[3] = offset;
-	glBufferData(GL_ARRAY_BUFFER, NUM_VERTS_PER_BUFFER * sizeof(tex_array), nullptr, GL_DYNAMIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, NUM_VERTS_PER_BUFFER * sizeof(tex_array), nullptr, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(3);
 	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 0, (const void*)offset);
 	offset += sizeof(tex_array) * NUM_VERTS_PER_BUFFER;
@@ -151,6 +154,8 @@ void opengl_SetDrawDefaults(void)
 		glTexCoordPointer(4, GL_FLOAT, 0, GL_tex_coords2);
 		glClientActiveTextureARB(GL_TEXTURE0 + 0);
 	}*/
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void GL_SelectDrawShader()

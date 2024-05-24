@@ -356,17 +356,13 @@ void rend_EndFrame(void)
 // returns true if the passed in extension name is supported
 bool opengl_CheckExtension(char* extName)
 {
-	char* p = (char*)glGetString(GL_EXTENSIONS);
-	int extNameLen = strlen(extName);
-	char* end = p + strlen(p);
-
-	while (p < end)
+	GLint extcount;
+	glGetIntegerv(GL_NUM_EXTENSIONS, &extcount);
+	for (int i = 0; i < extcount; i++)
 	{
-		int n = strcspn(p, " ");
-		if ((extNameLen == n) && (strncmp(extName, p, n) == 0))
+		const GLubyte* extname = glGetStringi(GL_EXTENSIONS, i);
+		if (!stricmp((const char*)extname, extName))
 			return true;
-
-		p += (n + 1);
 	}
 
 	return false;

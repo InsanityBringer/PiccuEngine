@@ -39,6 +39,8 @@
 
 #define CHECK_ERROR(n) //need to decide what it does. 
 
+#define GL_DEBUG
+
 #ifdef WIN32
 //typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int interval);
 extern PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
@@ -49,6 +51,7 @@ extern HDC hOpenGLDC;
 
 //gl_init.cpp
 extern bool OpenGL_packed_pixels;
+extern bool OpenGL_debugging_enabled;
 int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state);
 void opengl_Close();
 

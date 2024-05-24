@@ -29,6 +29,8 @@ rendering_state OpenGL_state;
 PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
 PFNWGLCREATECONTEXTATTRIBSARBPROC dwglCreateContextAttribsARB;
 
+bool OpenGL_debugging_enabled;
+
 #if defined(WIN32)
 //	Moved from DDGR library
 HWND hOpenGLWnd = NULL;
@@ -194,7 +196,7 @@ void ShutdownDummy(HWND dummy)
 	UnregisterClass(TEXT("PiccuOpenGLDummyWindow"), GetModuleHandle(NULL));
 }
 
-bool GL_GetExtensionProcs()
+bool GL_GetWGLExtensionProcs()
 {
 	HWND DummyHWND = InitDummy();
 	HDC DummyDC = GetDC(DummyHWND);
@@ -294,7 +296,7 @@ die:
 // Check for OpenGL support, 
 int opengl_Setup(HDC glhdc)
 {
-	if (!GL_GetExtensionProcs())
+	if (!GL_GetWGLExtensionProcs())
 	{
 		mprintf((0, "Dummy GL context failed!\n"));
 		return 0;
@@ -353,6 +355,9 @@ int opengl_Setup(HDC glhdc)
 		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
 		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
 		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+#if defined(GL_DEBUG) && !defined(NDEBUG)
+		WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
+		#endif
 		0
 	};
 
@@ -405,6 +410,11 @@ void opengl_GetInformation()
 	mprintf((0, "OpenGL Renderer: %s\n", glGetString(GL_RENDERER)));
 	mprintf((0, "OpenGL Version: %s\n", glGetString(GL_VERSION)));
 	mprintf((0, "OpenGL Extensions: %s\n", glGetString(GL_EXTENSIONS)));
+}
+
+void APIENTRY GL_LogDebugMsg(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* user)
+{
+	mprintf((0, "OpenGL debug msg %d: %s\n", id, msg));
 }
 
 // Sets up our OpenGL rendering context
@@ -492,6 +502,15 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 	UseMultitexture = true;
 	//TODO: Need to use standard statement
 	OpenGL_packed_pixels = false;
+#if defined(GL_DEBUG) && !defined(NDEBUG)
+	OpenGL_debugging_enabled = opengl_CheckExtension("GL_KHR_debug");
+	if (OpenGL_debugging_enabled)
+	{
+		glDebugMessageCallback(GL_LogDebugMsg, nullptr);
+	}
+#else
+	OpenGL_debugging_enabled = false;
+#endif
 
 	opengl_InitCache();
 
