@@ -102,6 +102,8 @@ void MeshBuilder::Build()
 	glBindBuffer(GL_ARRAY_BUFFER, m_verthandle);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(RendVertex) * m_vertices.size(), m_vertices.data(), GL_STATIC_DRAW);
 
+	size_t debug = offsetof(RendVertex, u1);
+
 	//Create the standard vertex attributes
 	//Position
 	glEnableVertexAttribArray(0);
@@ -117,11 +119,11 @@ void MeshBuilder::Build()
 
 	//Lightmap page
 	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 1, GL_INT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, lmpage));
+	glVertexAttribIPointer(3, 1, GL_INT, sizeof(RendVertex), (void*)offsetof(RendVertex, lmpage));
 
 	//Base UV
 	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u1));
+	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)debug);
 
 	//Overlay UV
 	glEnableVertexAttribArray(5);
@@ -189,9 +191,15 @@ void MeshBuilder::Draw() const
 		//Eventually third overlay type for bump mapping?
 
 		if (m_indexhandle)
-			glDrawElements(GL_TRIANGLES, batch.indexcount, GL_UNSIGNED_SHORT, (const void*)batch.indexoffset);
+			glDrawElements(GL_TRIANGLES, batch.indexcount, GL_UNSIGNED_SHORT, (const void*)(batch.indexoffset * sizeof(ushort)));
 		else
 			glDrawArrays(GL_TRIANGLES, batch.vertexoffset, batch.vertexcount);
+
+#ifndef NDEBUG
+		GLenum err = glGetError();
+		if (err != GL_NO_ERROR)
+			Int3();
+#endif
 	}
 
 	GL_UseDrawVAO();

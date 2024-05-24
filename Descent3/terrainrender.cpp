@@ -133,18 +133,18 @@ void GenerateVertex(RendVertex& vert, int x, int y, int z, terrain_segment& base
 	{
 	case 0:
 		vert.u1 = x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH);
-		vert.v1 = y * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH);
+		vert.v1 = z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH);
 		break;
 	case 1:
-		vert.u1 = 1.f - (y * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
+		vert.u1 = 1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
 		vert.v1 = x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH);
 		break;
 	case 2:
 		vert.u1 = 1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
-		vert.v1 = 1.f - (y * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
+		vert.v1 = 1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
 		break;
 	case 3:
-		vert.u1 = y * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH);
+		vert.u1 = z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH);
 		vert.v1 = 1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
 		break;
 	}
