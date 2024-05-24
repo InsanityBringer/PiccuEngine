@@ -206,7 +206,7 @@ void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 	int x_add = OpenGL_state.clip_x1;
 	int y_add = OpenGL_state.clip_y1;
 
-	if (OpenGL_state.cur_light_state == LS_FLAT_GOURAUD)
+	if (OpenGL_state.cur_light_state == LS_FLAT_GOURAUD || OpenGL_state.cur_texture_type == 0)
 	{
 		fr = GR_COLOR_RED(OpenGL_state.cur_color) / 255.0;
 		fg = GR_COLOR_GREEN(OpenGL_state.cur_color) / 255.0;
@@ -285,10 +285,20 @@ void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 		}
 		else
 		{
-			colorp->r = 1;
-			colorp->g = 1;
-			colorp->b = 1;
-			colorp->a = alpha;
+			if (OpenGL_state.cur_texture_type != 0)
+			{
+				colorp->r = 1;
+				colorp->g = 1;
+				colorp->b = 1;
+				colorp->a = alpha;
+			}
+			else
+			{
+				colorp->r = fr;
+				colorp->g = fg;
+				colorp->b = fb;
+				colorp->a = alpha;
+			}
 		}
 
 		if (OpenGL_state.cur_texture_type != 0)
