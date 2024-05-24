@@ -486,14 +486,12 @@ void rend_SetTextureType(texture_type state)
 	switch (state)
 	{
 	case TT_FLAT:
-		glDisable(GL_TEXTURE_2D);
 		OpenGL_state.cur_texture_quality = 0;
 		break;
 	case TT_LINEAR:
 	case TT_LINEAR_SPECIAL:
 	case TT_PERSPECTIVE:
 	case TT_PERSPECTIVE_SPECIAL:
-		glEnable(GL_TEXTURE_2D);
 		OpenGL_state.cur_texture_quality = 2;
 		break;
 	default:
