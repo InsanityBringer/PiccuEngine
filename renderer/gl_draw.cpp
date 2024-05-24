@@ -50,7 +50,7 @@ int Bumpmap_ready = 0;
 ubyte Overlay_type = OT_NONE;
 float Z_bias = 0.0f;
 
-bool OpenGL_blending_on;
+bool OpenGL_blending_on = true;
 
 static GLuint drawbuffer;
 static size_t drawbufferoffsets[NUM_LEGACY_VERTEX_ATTRIBS];

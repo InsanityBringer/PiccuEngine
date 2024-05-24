@@ -138,7 +138,7 @@ const char* genericFragBody =
 "void main()\n"
 "{\n"
 "	#if defined(USE_SPECULAR)\n"
-"		color = vec4(outcolor.rgb, texture(colortexture, outuv.xy / outuv.w).a);\n"
+"		color = vec4(outcolor.rgb, texture(colortexture, outuv.xy / outuv.w).a * outcolor.a);\n"
 "	#elif defined(USE_TEXTURING) && defined(USE_LIGHTMAP)\n"
 "		color = texture(colortexture, outuv.xy / outuv.w) * texture(lightmaptexture, outuv2.xy / outuv2.w) * outcolor;\n"
 "	#elif defined(USE_TEXTURING)\n"

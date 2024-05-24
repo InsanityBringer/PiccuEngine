@@ -165,6 +165,10 @@ void MeshBuilder::Destroy()
 		glDeleteVertexArrays(1, &m_handle);
 		m_handle = 0;
 	}
+
+	m_vertices.clear();
+	m_indicies.clear();
+	m_interactions.clear();
 }
 
 void MeshBuilder::Draw() const
