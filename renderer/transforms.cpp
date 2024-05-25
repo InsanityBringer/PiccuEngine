@@ -24,6 +24,32 @@
 // Whether or not to use T&L transforms or the pass-thru ones
 static int sUseTransformPassthru = -1;
 
+void Mat4Multiply(float* res, float* right)
+{
+	float left[16];
+	memcpy(left, res, sizeof(left));
+
+	res[0] = left[0] * right[0] + left[4] * right[1] + left[8] * right[2] + left[12] * right[3]; //i1 j1
+	res[1] = left[1] * right[0] + left[5] * right[1] + left[9] * right[2] + left[13] * right[3]; //i2 j1
+	res[2] = left[2] * right[0] + left[6] * right[1] + left[10] * right[2] + left[14] * right[3]; //i3 j1
+	res[3] = left[3] * right[0] + left[7] * right[1] + left[11] * right[2] + left[15] * right[3]; //14 j1
+
+	res[4] = left[0] * right[4] + left[4] * right[5] + left[8] * right[6] + left[12] * right[7]; //i1 j2
+	res[5] = left[1] * right[4] + left[5] * right[5] + left[9] * right[6] + left[13] * right[7]; //i2 j2
+	res[6] = left[2] * right[4] + left[6] * right[5] + left[10] * right[6] + left[14] * right[7]; //i3 j2
+	res[7] = left[3] * right[4] + left[7] * right[5] + left[11] * right[6] + left[15] * right[7]; //i4 j2
+
+	res[8] = left[0] * right[8] + left[4] * right[9] + left[8] * right[10] + left[12] * right[11]; //i1 j3
+	res[9] = left[1] * right[8] + left[5] * right[9] + left[9] * right[10] + left[13] * right[11]; //i2 j3
+	res[10] = left[2] * right[8] + left[6] * right[9] + left[10] * right[10] + left[14] * right[11]; //i3 j3
+	res[11] = left[3] * right[8] + left[7] * right[9] + left[11] * right[10] + left[15] * right[11]; //i4 j3
+
+	res[12] = left[0] * right[12] + left[4] * right[13] + left[8] * right[14] + left[12] * right[15]; //i1 j4
+	res[13] = left[1] * right[12] + left[5] * right[13] + left[9] * right[14] + left[13] * right[15]; //i2 j4
+	res[14] = left[2] * right[12] + left[6] * right[13] + left[10] * right[14] + left[14] * right[15]; //i3 j4
+	res[15] = left[3] * right[12] + left[7] * right[13] + left[11] * right[14] + left[15] * right[15]; //i4 j4
+}
+
 extern float Z_bias;
 void g3_GetModelViewMatrix( const vector *viewPos, const matrix *viewMatrix, float *mvMat )
 {
