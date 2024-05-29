@@ -716,6 +716,7 @@ void rend_SetAlphaType(sbyte atype)
 		break;
 	case AT_CONSTANT:
 		opengl_SetAlwaysAlpha(false);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		break;
 	case AT_TEXTURE:
 		rend_SetAlphaValue(255);
@@ -759,14 +760,11 @@ void rend_SetAlphaType(sbyte atype)
 		break;
 	case AT_SPECULAR:
 		opengl_SetAlwaysAlpha(false);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
 		//hack
-		//glEnable(GL_TEXTURE_2D);
 		OpenGL_state.cur_texture_quality = 2;
 		OpenGL_state.cur_texture_type = TT_PERSPECTIVE;
-
-		if (glGetError() != GL_NO_ERROR)
-			Int3();
 
 		break;
 	default:
