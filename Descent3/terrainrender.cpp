@@ -209,8 +209,8 @@ void MeshTerrainCell(int x, int z)
 		terrain_segment& seg = Terrain_seg[cell.z * TERRAIN_WIDTH + cell.x];
 
 		//hole in the terrain?
-		//if (seg.flags & TF_INVISIBLE)
-		//	continue;
+		if (seg.flags & TF_INVISIBLE)
+			continue;
 
 		if (cell.texturehandle != lasttexhandle)
 		{
