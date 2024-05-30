@@ -128,26 +128,30 @@ void GenerateVertex(RendVertex& vert, int x, int y, int z, terrain_segment& base
 	vert.r = vert.g = vert.b = vert.a = 255;
 
 	//Figure out the rotation of the UVs
-	int texmode = Terrain_tex_seg[basecell.texseg_index].rotation & 3;
+	int rotation = Terrain_tex_seg[basecell.texseg_index].rotation;
+	int texmode = rotation & 3;
+	int tile = rotation >> 4;
 	switch (texmode)
 	{
 	case 0:
-		vert.u1 = x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH);
-		vert.v1 = z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH);
+		vert.u1 = tile * (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
+		vert.v1 = tile * (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
 		break;
 	case 1:
-		vert.u1 = 1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
-		vert.v1 = x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH);
+		vert.u1 = tile * (1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH)));
+		vert.v1 = tile * (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
 		break;
 	case 2:
-		vert.u1 = 1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
-		vert.v1 = 1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
+		vert.u1 = tile * (1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH)));
+		vert.v1 = tile * (1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH)));
 		break;
 	case 3:
-		vert.u1 = z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH);
-		vert.v1 = 1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
+		vert.u1 = tile * (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
+		vert.v1 = tile * (1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH)));
 		break;
 	}
+
+	vert.u1 = 1.f - vert.u1;
 
 	//TODO: Probably should just use a single 256x256 lightmap page. 
 	vert.u2 = x / 2.f;
@@ -853,7 +857,7 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 	//// Set up our z wall
 	rend_SetZBufferState(1);
 	rend_SetZBufferWriteMask(1);
-	g3_SetFarClipZ(VisibleTerrainZ);
+   	g3_SetFarClipZ(VisibleTerrainZ);
 
 #ifndef NEWEDITOR
 	if ((Terrain_sky.flags & TF_FOG) && (UseHardware || (!UseHardware && Lighting_on)))

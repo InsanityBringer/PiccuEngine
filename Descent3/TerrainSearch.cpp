@@ -148,12 +148,6 @@ void GetPreRotatedPoint(g3Point* dest, int x, int z, int yvalue)
 	dest->p3_vec = TS_PreRows[z];
 	dest->p3_vec += TS_RVectorAdd * x;
 	dest->p3_vec += *GetDYVector(yvalue);
-
-	// also store the unrotated point
-	dest->p3_flags |= PF_ORIGPOINT;
-	dest->p3_vecPreRot.x = TERRAIN_SIZE * x;
-	dest->p3_vecPreRot.y = TERRAIN_HEIGHT_INCREMENT * yvalue;
-	dest->p3_vecPreRot.z = TERRAIN_SIZE * z;
 }
 
 // Gets a pre-rotated point that does not fall exactly on one of our 255 height values
@@ -170,12 +164,6 @@ void GetSpecialRotatedPoint(g3Point* dest, int x, int z, float yvalue)
 	dest->p3_vec = TS_PreRows[z];
 	dest->p3_vec += TS_RVectorAdd * x;
 	dest->p3_vec += dyp;
-
-	// also store the unrotated point
-	dest->p3_flags |= PF_ORIGPOINT;
-	dest->p3_vecPreRot.x = TERRAIN_SIZE * x;
-	dest->p3_vecPreRot.y = yvalue;
-	dest->p3_vecPreRot.z = TERRAIN_SIZE * z;
 }
 
 void Terrain_start_frame(vector* eye, matrix* view_orient)
@@ -264,7 +252,7 @@ __inline void CheckCellOccupancy(int x, int y, int* ccount, ubyte lod)
 	{
 		mprintf((0, "Trying to render too many cells!  Cell limit=%d\n", MAX_CELLS_TO_RENDER));
 #ifndef NEWEDITOR
-		Detail_settings.Terrain_render_distance = 80.0 * TERRAIN_SIZE;
+		//Detail_settings.Terrain_render_distance = 80.0 * TERRAIN_SIZE;
 #endif
 		return;
 	}
