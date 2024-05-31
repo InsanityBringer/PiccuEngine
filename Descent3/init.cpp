@@ -91,6 +91,7 @@
 #include "debuggraph.h"
 #include "rocknride.h"
 #include "vibeinterface.h"
+#include "gamespy.h"
 
 
 //Uncomment this to allow all languages
@@ -1410,6 +1411,8 @@ bool CheckCdForValidity(int cd);
 		ServerTimeout = atoi(GameArgs[timeoutarg+1]);
 		LastPacketReceived = timer_GetTime();
 	}
+
+	gspy_Init();
 
 // Sound initialization
 	int soundres = Sound_system.InitSoundLib(Descent, Sound_mixer, Sound_quality, false);

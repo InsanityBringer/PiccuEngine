@@ -50,6 +50,8 @@ SET (MAIN_SOURCES
 		Descent3/gamepath.h
 		Descent3/gamesave.h
 		Descent3/gamesequence.h
+		Descent3/gamespy.h
+		Descent3/gamespyutils.h
 		Descent3/gametexture.h
 		Descent3/gauges.h
 		Descent3/help.h
@@ -184,6 +186,8 @@ SET (MAIN_SOURCES
 		Descent3/gamepath.cpp
 		Descent3/gamesave.cpp
 		Descent3/gamesequence.cpp
+		Descent3/gamespy.cpp
+		Descent3/gamespyutils.cpp
 		Descent3/gametexture.cpp
 		Descent3/gauges.cpp
 		Descent3/help.cpp
