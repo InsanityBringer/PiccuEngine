@@ -74,6 +74,7 @@
 #include "osiris_share.h"
 #include "cockpit.h"
 #include "hud.h"
+#include "gamespy.h"
 
 
 #include <string.h>
@@ -2040,7 +2041,7 @@ void MultiLeaveGame ()
 	SetFunctionMode(MENU_MODE); 
 	if(Netgame.local_role==LR_SERVER)
 	{
-//		gspy_EndGame();
+		gspy_EndGame();
 	}
 	
 	
