@@ -2564,10 +2564,13 @@ void GameFrame(void)
 			{
 				unsigned int sleeptime = (Min_allowed_frametime - (current_timer - last_timer)) * 1000;
 				//mprintf((0,"Sleeping for %d ms\n",sleeptime));
-				//[ISB] It's more CPU muscle, but at high refresh rates just consume the CPU to be precise.
-				//Stuttering was reported without this. 
-				if (sleeptime > 10)
+				if (Dedicated_server)
+				{
+					Sleep(sleeptime);
+				}
+				else if (sleeptime > 2)
 					Sleep(sleeptime - 2);
+				
 			}
 			while (timer_GetTime64() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
 		}
