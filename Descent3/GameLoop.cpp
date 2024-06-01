@@ -93,6 +93,7 @@
 #include "gamefont.h"
 #include "renderobject.h"
 #include "vibeinterface.h"
+#include "gamespy.h"
 
 #ifdef EDITOR
 #include "editor\d3edit.h"
@@ -2518,7 +2519,7 @@ void GameFrame(void)
 	RTP_tENDTIME(multiframe_time, curr_time);
 
 	//Do Gamespy stuff
-//	gspy_DoFrame();
+	gspy_DoFrame();
 
 	// Do our fourth quaterframe of IntelliVIBE
 	VIBE_DoQuaterFrame(false);

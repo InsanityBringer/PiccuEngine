@@ -60,6 +60,7 @@
 #include "polymodel.h"
 #include "init.h"
 #include "../md5/md5.h"
+#include "gamespy.h"
 
 void MultiProcessShipChecksum(MD5* md5, int ship_index);
 
@@ -202,7 +203,7 @@ void MultiStartServer(int playing, char* scriptname, int dedicated_server_num_te
 	dp_StartGame(Netgame.name);
 #endif
 
-	//gspy_StartGame(Netgame.name);
+	gspy_StartGame(Netgame.name);
 	//We use this to identify clients....
 	ps_srand(timer_GetTime());
 	Secret_net_id = ps_rand() * ps_rand();
