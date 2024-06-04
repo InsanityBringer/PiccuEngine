@@ -154,8 +154,8 @@ void GenerateVertex(RendVertex& vert, int x, int y, int z, terrain_segment& base
 	vert.u1 = 1.f - vert.u1;
 
 	//TODO: Probably should just use a single 256x256 lightmap page. 
-	vert.u2 = x / 2.f;
-	vert.v2 = y / 2.f;
+	vert.u2 = (x % 128) / 128.f;
+	vert.v2 = 1.f - ((z % 128) / 128.f);
 }
 
 //Blarg. The terrain is 256x256 cells, but there's only 256x256 vertices. Why.
@@ -189,7 +189,7 @@ void MeshTerrainCell(int x, int z)
 			cell.x = xcell;
 			cell.z = zcell;
 			cell.texturehandle = Terrain_tex_seg[Terrain_seg[zcell * TERRAIN_WIDTH + xcell].texseg_index].tex_index;
-			cell.lmhandle = Terrain_seg[zcell * TERRAIN_WIDTH + xcell].lm_quad;
+			cell.lmhandle = TerrainLightmaps[Terrain_seg[zcell * TERRAIN_WIDTH + xcell].lm_quad];
 			offset++;
 		}
 	}
