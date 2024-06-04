@@ -93,6 +93,7 @@
 #include "gamefont.h"
 #include "renderobject.h"
 #include "vibeinterface.h"
+#include "gamespy.h"
 
 #ifdef EDITOR
 #include "editor\d3edit.h"
@@ -2518,7 +2519,7 @@ void GameFrame(void)
 	RTP_tENDTIME(multiframe_time, curr_time);
 
 	//Do Gamespy stuff
-//	gspy_DoFrame();
+	gspy_DoFrame();
 
 	// Do our fourth quaterframe of IntelliVIBE
 	VIBE_DoQuaterFrame(false);
@@ -2564,10 +2565,13 @@ void GameFrame(void)
 			{
 				unsigned int sleeptime = (Min_allowed_frametime - (current_timer - last_timer)) * 1000;
 				//mprintf((0,"Sleeping for %d ms\n",sleeptime));
-				//[ISB] It's more CPU muscle, but at high refresh rates just consume the CPU to be precise.
-				//Stuttering was reported without this. 
-				if (sleeptime > 10)
+				if (Dedicated_server)
+				{
+					Sleep(sleeptime);
+				}
+				else if (sleeptime > 2)
 					Sleep(sleeptime - 2);
+				
 			}
 			while (timer_GetTime64() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
 		}
