@@ -80,7 +80,7 @@ void g3_GetProjectionMatrix( float zoom, float *projMat )
 	float oOT = 1.0f / zoom;
 
 	float znear = 1.0f / zoom;
-	float zfar = 1678.66272f / zoom; //debug
+	float zfar = 10000.f / zoom; //debug
 
 	float C = -((zfar + znear) / (zfar - znear));
 	float D = -((2 * zfar * znear) / (zfar - znear));

@@ -203,9 +203,6 @@ void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 
 	GL_SelectDrawShader();
 
-	int x_add = OpenGL_state.clip_x1;
-	int y_add = OpenGL_state.clip_y1;
-
 	if (OpenGL_state.cur_light_state == LS_FLAT_GOURAUD || OpenGL_state.cur_texture_type == 0)
 	{
 		fr = GR_COLOR_RED(OpenGL_state.cur_color) / 255.0;
@@ -320,8 +317,8 @@ void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 		}
 
 		// Finally, specify a vertex
-		vertp->x = pnt->p3_sx + x_add;
-		vertp->y = pnt->p3_sy + y_add;
+		vertp->x = pnt->p3_sx;
+		vertp->y = pnt->p3_sy;
 
 		float z = std::max(0.f, std::min(1.0f, 1.0f - (1.0f / (pnt->p3_z + Z_bias))));
 		vertp->z = -z;
@@ -800,8 +797,6 @@ void opengl_DrawFlatPolygon3D(g3Point** p, int nv)
 // Draws a line using the states of the renderer
 void rend_DrawSpecialLine(g3Point* p0, g3Point* p1)
 {
-	int x_add = OpenGL_state.clip_x1;
-	int y_add = OpenGL_state.clip_y1;
 	float fr, fg, fb, alpha;
 	int i;
 

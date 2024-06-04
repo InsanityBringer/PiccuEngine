@@ -45,6 +45,13 @@ ShaderProgram blitshader;
 ShaderProgram testshader;
 GLint blitshader_gamma = -1;
 
+static float mat4_identity[16] =
+{ 1, 0, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 1 };
+
+
 // Init our renderer
 int rend_Init(renderer_type state, oeApplication* app, renderer_preferred_state* pref_state)
 {
@@ -101,6 +108,22 @@ void rend_Close(void)
 	opengl_Close();
 
 	Renderer_initted = false;
+}
+
+void GL_Ortho(float* mat, float left, float right, float bottom, float top, float znear, float zfar)
+{
+	memset(mat, 0, sizeof(float[16]));
+	mat[0] = 2 / (right - left);
+	mat[5] = 2 / (top - bottom);
+	mat[10] = -2 / (zfar - znear);
+	mat[12] = -((right + left) / (right - left));
+	mat[13] = -((top + bottom) / (top - bottom));
+	mat[14] = -((zfar + znear) / (zfar - znear));
+	mat[15] = 1;
+	/*		2 / (right - left), 0, 0, 0,
+		0, 2 / (top - bottom), 0, 0,
+		0, 0, -2 / (zfar - znear), 0,
+		-((right + left) / (right - left)), -((top + bottom) / (top - bottom)), -((zfar + znear) / (zfar - znear)), 1*/
 }
 
 void opengl_UpdateWindow()
@@ -173,21 +196,10 @@ void opengl_SetViewport()
 	float znear = 0;
 	float zfar = 1;
 
-	float modelview[16] = 
-	{ 1, 0, 0, 0,
-		0, 1, 0, 0, 
-		0, 0, 1, 0, 
-		0, 0, 0, 1 };
+	float projection[16];
+	GL_Ortho(projection, left, right, bottom, top, znear, zfar);
 
-	float projection[16] =
-	{
-		2 / (right - left), 0, 0, 0,
-		0, 2 / (top - bottom), 0, 0,
-		0, 0, -2 / (zfar - znear), 0,
-		-((right + left) / (right - left)), -((top + bottom) / (top - bottom)), -((zfar + znear) / (zfar - znear)), 1
-	};
-
-	GL_UpdateLegacyBlock(projection, modelview);
+	GL_UpdateLegacyBlock(projection, mat4_identity);
 	// Viewport
 	glViewport(0, 0, OpenGL_preferred_state.width, OpenGL_preferred_state.height);
 
@@ -261,10 +273,20 @@ void rend_StartFrame(int x1, int y1, int x2, int y2, int clear_flags)
 	{
 		glClear(GL_DEPTH_BUFFER_BIT);
 	}
+
 	OpenGL_state.clip_x1 = x1;
 	OpenGL_state.clip_y1 = y1;
 	OpenGL_state.clip_x2 = x2;
 	OpenGL_state.clip_y2 = y2;
+
+	//[ISB] Use the viewport to constrain the clipping window so that the new hardware code 
+	//can work with the legacy code.
+	float projection[16];
+	GL_Ortho(projection, 0, x2 - x1, y2 - y1, 0, 0, 1);
+
+	GL_UpdateLegacyBlock(projection, mat4_identity);
+
+	glViewport(x1, OpenGL_state.screen_height - y2, x2 - x1, y2 - y1);
 }
 
 static int OpenGL_last_frame_polys_drawn = 0;
