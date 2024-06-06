@@ -33,10 +33,15 @@ struct tex_array
 	float s, t, r, w;
 };
 
-vector GL_verts[100];
-color_array GL_colors[100];
-tex_array GL_tex_coords[100];
-tex_array GL_tex_coords2[100];
+struct gl_vertex
+{
+	vector vert;
+	color_array color;
+	tex_array tex_coord;
+	tex_array tex_coord2;
+};
+
+gl_vertex GL_vertices[100];
 
 float OpenGL_Alpha_factor = 1.0f;
 float Alpha_multiplier = 1.0f;
@@ -53,7 +58,6 @@ float Z_bias = 0.0f;
 bool OpenGL_blending_on = true;
 
 static GLuint drawbuffer;
-static size_t drawbufferoffsets[NUM_LEGACY_VERTEX_ATTRIBS];
 //The next committed vertex is where to start writing vertex data to the buffer
 static GLuint nextcommittedvertex; 
 static ShaderProgram drawshaders[4];
@@ -74,10 +78,7 @@ int GL_CopyVertices(int numvertices)
 
 	int startoffset = nextcommittedvertex;
 
-	glBufferSubData(GL_ARRAY_BUFFER, drawbufferoffsets[0] + startoffset * sizeof(vector), numvertices * sizeof(vector), GL_verts);
-	glBufferSubData(GL_ARRAY_BUFFER, drawbufferoffsets[1] + startoffset * sizeof(color_array), numvertices * sizeof(color_array), GL_colors);
-	glBufferSubData(GL_ARRAY_BUFFER, drawbufferoffsets[2] + startoffset * sizeof(tex_array), numvertices * sizeof(tex_array), GL_tex_coords);
-	glBufferSubData(GL_ARRAY_BUFFER, drawbufferoffsets[3] + startoffset * sizeof(tex_array), numvertices * sizeof(tex_array), GL_tex_coords2);
+	glBufferSubData(GL_ARRAY_BUFFER, startoffset * sizeof(gl_vertex), numvertices * sizeof(gl_vertex), GL_vertices);
 
 	nextcommittedvertex += numvertices;
 
@@ -103,7 +104,7 @@ void opengl_SetDrawDefaults(void)
 	//Init draw buffers
 	glGenBuffers(1, &drawbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
-	size_t buffersize = NUM_VERTS_PER_BUFFER * (sizeof(vector) + sizeof(color_array) + sizeof(tex_array) * 2);
+	size_t buffersize = NUM_VERTS_PER_BUFFER * sizeof(gl_vertex);
 	glBufferData(GL_ARRAY_BUFFER, buffersize, nullptr, GL_DYNAMIC_DRAW);
 
 	//Init VAO and vertex state
@@ -113,47 +114,25 @@ void opengl_SetDrawDefaults(void)
 	size_t offset = 0;
 
 	//attrib 0: position
-	drawbufferoffsets[0] = offset;
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	offset += sizeof(vector) * NUM_VERTS_PER_BUFFER;
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), 0);
 
 	//attrib 1: color
-	drawbufferoffsets[1] = offset;
 	//glBufferData(GL_ARRAY_BUFFER, NUM_VERTS_PER_BUFFER * sizeof(color_array), nullptr, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (const void*)offset);
-	offset += sizeof(color_array) * NUM_VERTS_PER_BUFFER;
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, color));
 
 	//attrib 2: uv
-	drawbufferoffsets[2] = offset;
 	//glBufferData(GL_ARRAY_BUFFER, NUM_VERTS_PER_BUFFER * sizeof(tex_array), nullptr, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, (const void*)offset);
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, tex_coord));
 	offset += sizeof(tex_array) * NUM_VERTS_PER_BUFFER;
 
 	//attrib 3: uv 2
-	drawbufferoffsets[3] = offset;
 	//glBufferData(GL_ARRAY_BUFFER, NUM_VERTS_PER_BUFFER * sizeof(tex_array), nullptr, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 0, (const void*)offset);
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, tex_coord2));
 	offset += sizeof(tex_array) * NUM_VERTS_PER_BUFFER;
-
-	/*glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glVertexPointer(3, GL_FLOAT, 0, GL_verts);
-	glColorPointer(4, GL_FLOAT, 0, GL_colors);
-	glTexCoordPointer(4, GL_FLOAT, 0, GL_tex_coords);
-
-	if (UseMultitexture)
-	{
-		glClientActiveTextureARB(GL_TEXTURE0 + 1);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(4, GL_FLOAT, 0, GL_tex_coords2);
-		glClientActiveTextureARB(GL_TEXTURE0 + 0);
-	}*/
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -236,13 +215,10 @@ void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 
 	float alpha = Alpha_multiplier * OpenGL_Alpha_factor;
 
-	vector* vertp = &GL_verts[0];
-	tex_array* texp = &GL_tex_coords[0];
-	tex_array* texp2 = &GL_tex_coords2[0];
-	color_array* colorp = &GL_colors[0];
+	gl_vertex* vertp = GL_vertices;
 
 	// Specify our coordinates
-	for (i = 0; i < nv; i++, vertp++, texp++, colorp++, texp2++)
+	for (i = 0; i < nv; i++, vertp++)
 	{
 		pnt = p[i];
 
@@ -256,27 +232,27 @@ void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 		{
 			if (OpenGL_state.cur_light_state == LS_FLAT_GOURAUD)
 			{
-				colorp->r = fr;
-				colorp->g = fg;
-				colorp->b = fb;
-				colorp->a = alpha;
+				vertp->color.r = fr;
+				vertp->color.g = fg;
+				vertp->color.b = fb;
+				vertp->color.a = alpha;
 			}
 			else
 			{
 				// Do lighting based on intesity (MONO) or colored (RGB)
 				if (OpenGL_state.cur_color_model == CM_MONO)
 				{
-					colorp->r = pnt->p3_l;
-					colorp->g = pnt->p3_l;
-					colorp->b = pnt->p3_l;
-					colorp->a = alpha;
+					vertp->color.r = pnt->p3_l;
+					vertp->color.g = pnt->p3_l;
+					vertp->color.b = pnt->p3_l;
+					vertp->color.a = alpha;
 				}
 				else
 				{
-					colorp->r = pnt->p3_r;
-					colorp->g = pnt->p3_g;
-					colorp->b = pnt->p3_b;
-					colorp->a = alpha;
+					vertp->color.r = pnt->p3_r;
+					vertp->color.g = pnt->p3_g;
+					vertp->color.b = pnt->p3_b;
+					vertp->color.a = alpha;
 				}
 			}
 		}
@@ -284,17 +260,17 @@ void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 		{
 			if (OpenGL_state.cur_texture_type != 0)
 			{
-				colorp->r = 1;
-				colorp->g = 1;
-				colorp->b = 1;
-				colorp->a = alpha;
+				vertp->color.r = 1;
+				vertp->color.g = 1;
+				vertp->color.b = 1;
+				vertp->color.a = alpha;
 			}
 			else
 			{
-				colorp->r = fr;
-				colorp->g = fg;
-				colorp->b = fb;
-				colorp->a = alpha;
+				vertp->color.r = fr;
+				vertp->color.g = fg;
+				vertp->color.b = fb;
+				vertp->color.a = alpha;
 			}
 		}
 
@@ -302,26 +278,26 @@ void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 		{
 			// Texture this polygon!
 			float texw = 1.0 / (pnt->p3_z + Z_bias);
-			texp->s = pnt->p3_u * texw;
-			texp->t = pnt->p3_v * texw;
-			texp->r = 0;
-			texp->w = texw;
+			vertp->tex_coord.s = pnt->p3_u * texw;
+			vertp->tex_coord.t = pnt->p3_v * texw;
+			vertp->tex_coord.r = 0;
+			vertp->tex_coord.w = texw;
 
 			if (Overlay_type != OT_NONE)
 			{
-				texp2->s = pnt->p3_u2 * xscalar * texw;
-				texp2->t = pnt->p3_v2 * yscalar * texw;
-				texp2->r = 0;
-				texp2->w = texw;
+				vertp->tex_coord2.s = pnt->p3_u2 * xscalar * texw;
+				vertp->tex_coord2.t = pnt->p3_v2 * yscalar * texw;
+				vertp->tex_coord2.r = 0;
+				vertp->tex_coord2.w = texw;
 			}
 		}
 
 		// Finally, specify a vertex
-		vertp->x = pnt->p3_sx;
-		vertp->y = pnt->p3_sy;
+		vertp->vert.x = pnt->p3_sx;
+		vertp->vert.y = pnt->p3_sy;
 
 		float z = std::max(0.f, std::min(1.0f, 1.0f - (1.0f / (pnt->p3_z + Z_bias))));
-		vertp->z = -z;
+		vertp->vert.z = -z;
 	}
 
 	// And draw!
@@ -498,14 +474,14 @@ void rend_SetPixel(ddgr_color color, int x, int y)
 
 	GL_SelectDrawShader();
 
-	GL_colors[0].r = r;
-	GL_colors[0].g = g;
-	GL_colors[0].b = b;
-	GL_colors[0].a = 1.0f;
+	GL_vertices[0].color.r = r;
+	GL_vertices[0].color.g = g;
+	GL_vertices[0].color.b = b;
+	GL_vertices[0].color.a = 1.0f;
 
-	GL_verts[0].x = x;
-	GL_verts[0].y = y;
-	GL_verts[0].z = 0;
+	GL_vertices[0].vert.x = x;
+	GL_vertices[0].vert.y = y;
+	GL_vertices[0].vert.z = 0;
 
 	//please do not call this function if you can avoid it.
 	int offset = GL_CopyVertices(1);
@@ -586,19 +562,19 @@ void rend_DrawLine(int x1, int y1, int x2, int y2)
 
 	GL_SelectDrawShader();
 
-	GL_colors[0].r = r;
-	GL_colors[0].g = g;
-	GL_colors[0].b = b;
-	GL_colors[0].a = 1.0f;
-	GL_colors[1] = GL_colors[0];
+	GL_vertices[0].color.r = r;
+	GL_vertices[0].color.g = g;
+	GL_vertices[0].color.b = b;
+	GL_vertices[0].color.a = 1.0f;
+	GL_vertices[1].color = GL_vertices[0].color;
 
 	//hack to avoid line clipping but this isn't working correctly yet, causes one corner to vanish. 
-	GL_verts[0].x = x1 + 1.f;
-	GL_verts[0].y = y1 + 1.f;
-	GL_verts[0].z = 0;
-	GL_verts[1].x = x2 + 1.f;
-	GL_verts[1].y = y2 + 1.f;
-	GL_verts[1].z = 0;
+	GL_vertices[0].vert.x = x1 + 1.f;
+	GL_vertices[0].vert.y = y1 + 1.f;
+	GL_vertices[0].vert.z = 0;
+	GL_vertices[1].vert.x = x2 + 1.f;
+	GL_vertices[1].vert.y = y2 + 1.f;
+	GL_vertices[1].vert.z = 0;
 
 	int offset = GL_CopyVertices(2);
 	glDrawArrays(GL_LINES, offset, 2);
@@ -676,12 +652,13 @@ void rend_DrawSpecialLine(g3Point* p0, g3Point* p1)
 
 	alpha = Alpha_multiplier * OpenGL_Alpha_factor;
 
-	vector* vertp = &GL_verts[0];
-	color_array* colorp = &GL_colors[0];
+	gl_vertex* vertp = GL_vertices;
 
 	// And draw!
-	for (i = 0; i < 2; i++, vertp++, colorp++)
+	for (i = 0; i < 2; i++, vertp++)
 	{
+		color_array* colorp = &vertp->color;
+
 		g3Point* pnt = p0;
 
 		if (i == 1)
@@ -718,7 +695,7 @@ void rend_DrawSpecialLine(g3Point* p0, g3Point* p1)
 		// Finally, specify a vertex
 		float z = std::max(0., std::min(1.0, 1.0 - (1.0 / (pnt->p3_z + Z_bias))));
 
-		vertp->x = pnt->p3_sx; vertp->y = pnt->p3_sy; vertp->z = -z;
+		vertp->vert.x = pnt->p3_sx; vertp->vert.y = pnt->p3_sy; vertp->vert.z = -z;
 		//glVertex3f(pnt->p3_sx + x_add, pnt->p3_sy + y_add, -z);
 	}
 
