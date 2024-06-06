@@ -492,15 +492,30 @@ void rend_FillRect(ddgr_color color, int x1, int y1, int x2, int y2)
 // Sets a pixel on the display
 void rend_SetPixel(ddgr_color color, int x, int y)
 {
-	/*int r = (color >> 16 & 0xFF);
-	int g = (color >> 8 & 0xFF);
-	int b = (color & 0xFF);
+	float r = (color >> 16 & 0xFF) / 255.f;
+	float g = (color >> 8 & 0xFF) / 255.f;
+	float b = (color & 0xFF) / 255.f;
 
-	glColor3ub(r, g, b);
+	GL_SelectDrawShader();
+
+	GL_colors[0].r = r;
+	GL_colors[0].g = g;
+	GL_colors[0].b = b;
+	GL_colors[0].a = 1.0f;
+
+	GL_verts[0].x = x;
+	GL_verts[0].y = y;
+	GL_verts[0].z = 0;
+
+	//please do not call this function if you can avoid it.
+	int offset = GL_CopyVertices(1);
+	glDrawArrays(GL_POINTS, offset, 1);
+
+	/*glColor3ub(r, g, b);
 
 	glBegin(GL_POINTS);
 	glVertex2i(x, y);
-	glEnd();*/ //
+	glEnd();*/
 }
 
 // Sets a pixel on the display
@@ -557,9 +572,9 @@ void rend_DrawLine(int x1, int y1, int x2, int y2)
 	texture_type ttype;
 	int color = OpenGL_state.cur_color;
 
-	int r = GR_COLOR_RED(color);
-	int g = GR_COLOR_GREEN(color);
-	int b = GR_COLOR_BLUE(color);
+	float r = GR_COLOR_RED(color) / 255.f;
+	float g = GR_COLOR_GREEN(color) / 255.f;
+	float b = GR_COLOR_BLUE(color) / 255.f;
 
 	atype = OpenGL_state.cur_alpha_type;
 	ltype = OpenGL_state.cur_light_state;
@@ -569,13 +584,24 @@ void rend_DrawLine(int x1, int y1, int x2, int y2)
 	rend_SetLighting(LS_NONE);
 	rend_SetTextureType(TT_FLAT);
 
+	GL_SelectDrawShader();
 
-	/*glBegin(GL_LINES);
-	glColor4ub(r, g, b, 255);
-	glVertex2i(x1 + OpenGL_state.clip_x1, y1 + OpenGL_state.clip_y1);
-	glColor4ub(r, g, b, 255);
-	glVertex2i(x2 + OpenGL_state.clip_x1, y2 + OpenGL_state.clip_y1);
-	glEnd();*/
+	GL_colors[0].r = r;
+	GL_colors[0].g = g;
+	GL_colors[0].b = b;
+	GL_colors[0].a = 1.0f;
+	GL_colors[1] = GL_colors[0];
+
+	//hack to avoid line clipping but this isn't working correctly yet, causes one corner to vanish. 
+	GL_verts[0].x = x1 + 1.f;
+	GL_verts[0].y = y1 + 1.f;
+	GL_verts[0].z = 0;
+	GL_verts[1].x = x2 + 1.f;
+	GL_verts[1].y = y2 + 1.f;
+	GL_verts[1].z = 0;
+
+	int offset = GL_CopyVertices(2);
+	glDrawArrays(GL_LINES, offset, 2);
 
 	rend_SetAlphaType(atype);
 	rend_SetLighting(ltype);
@@ -626,172 +652,12 @@ void opengl_SetMultitextureBlendMode(bool state)
 // as a texture
 void opengl_DrawMultitexturePolygon3D(int handle, g3Point** p, int nv, int map_type)
 {
-
-	/*g3Point* pnt;
-	int i, fr, fg, fb;
-	float alpha;
-	vector* vertp;
-	color_array* colorp;
-	tex_array* texp, * texp2;
-
-	float one_over_square_res = 1.0 / GameLightmaps[Overlay_map].square_res;
-	float xscalar = (float)GameLightmaps[Overlay_map].width * one_over_square_res;
-	float yscalar = (float)GameLightmaps[Overlay_map].height * one_over_square_res;
-
-	ASSERT(nv < 100);
-
-	int x_add = OpenGL_state.clip_x1;
-	int y_add = OpenGL_state.clip_y1;
-
-	if (OpenGL_state.cur_light_state == LS_NONE)
-	{
-		fr = GR_COLOR_RED(OpenGL_state.cur_color);
-		fg = GR_COLOR_GREEN(OpenGL_state.cur_color);
-		fb = GR_COLOR_BLUE(OpenGL_state.cur_color);
-	}
-
-	alpha = Alpha_multiplier * OpenGL_Alpha_factor;
-
-	vertp = &GL_verts[0];
-	texp = &GL_tex_coords[0];
-	texp2 = &GL_tex_coords2[0];
-	colorp = &GL_colors[0];
-
-	// Specify our coordinates
-	for (i = 0; i < nv; i++, vertp++, texp++, colorp++, texp2++)
-	{
-		pnt = p[i];
-
-		if (OpenGL_state.cur_alpha_type & ATF_VERTEX)
-			alpha = pnt->p3_a * Alpha_multiplier * OpenGL_Alpha_factor;
-
-		// If we have a lighting model, apply the correct lighting!
-		if (OpenGL_state.cur_light_state != LS_NONE)
-		{
-			// Do lighting based on intesity (MONO) or colored (RGB)
-			if (OpenGL_state.cur_color_model == CM_MONO)
-			{
-				colorp->r = pnt->p3_l;
-				colorp->g = pnt->p3_l;
-				colorp->b = pnt->p3_l;
-				colorp->a = alpha;
-			}
-			else
-			{
-				colorp->r = pnt->p3_r;
-				colorp->g = pnt->p3_g;
-				colorp->b = pnt->p3_b;
-				colorp->a = alpha;
-			}
-		}
-		else
-		{
-			colorp->r = 1;
-			colorp->g = 1;
-			colorp->b = 1;
-			colorp->a = alpha;
-		}
-
-
-		// Texture this polygon!
-		float texw = 1.0 / (pnt->p3_z + Z_bias);
-		texp->s = pnt->p3_u * texw;
-		texp->t = pnt->p3_v * texw;
-		texp->r = 0;
-		texp->w = texw;
-
-		texp2->s = pnt->p3_u2 * xscalar * texw;
-		texp2->t = pnt->p3_v2 * yscalar * texw;
-		texp2->r = 0;
-		texp2->w = texw;
-
-		// Finally, specify a vertex
-
-		vertp->x = pnt->p3_sx + x_add;
-		vertp->y = pnt->p3_sy + y_add;
-		float z = std::max(0.f, std::min(1.0f, 1.0f - (1.0f / (pnt->p3_z + Z_bias))));
-		vertp->z = -z;
-	}
-
-	// make sure our bitmap is ready to be drawn
-	opengl_MakeBitmapCurrent(handle, map_type, 0);
-	opengl_MakeWrapTypeCurrent(handle, map_type, 0);
-	opengl_MakeFilterTypeCurrent(handle, map_type, 0);
-
-	// make sure our bitmap is ready to be drawn
-	opengl_MakeBitmapCurrent(Overlay_map, MAP_TYPE_LIGHTMAP, 1);
-	opengl_MakeWrapTypeCurrent(Overlay_map, MAP_TYPE_LIGHTMAP, 1);
-	opengl_MakeFilterTypeCurrent(Overlay_map, MAP_TYPE_LIGHTMAP, 1);
-
-	opengl_SetMultitextureBlendMode(true);
-
-	// And draw!
-	glDrawArrays(GL_POLYGON, 0, nv);
-	OpenGL_polys_drawn++;
-	OpenGL_verts_processed += nv;
-
-	CHECK_ERROR(10)*/
+	Int3();
 }
 
 void opengl_DrawFlatPolygon3D(g3Point** p, int nv)
 {
 	Int3();
-	/*float fr, fg, fb;
-	int i;
-
-	if (UseMultitexture)
-	{
-		opengl_SetMultitextureBlendMode(false);
-	}
-
-	float alpha = Alpha_multiplier * OpenGL_Alpha_factor;
-
-	fr = GR_COLOR_RED(OpenGL_state.cur_color);
-	fg = GR_COLOR_GREEN(OpenGL_state.cur_color);
-	fb = GR_COLOR_BLUE(OpenGL_state.cur_color);
-	fr /= 255.0;
-	fg /= 255.0;
-	fb /= 255.0;
-
-	int x_add = OpenGL_state.clip_x1;
-	int y_add = OpenGL_state.clip_y1;
-
-	// And draw!
-	glBegin(GL_POLYGON);
-	for (i = 0; i < nv; i++)
-	{
-		g3Point* pnt = p[i];
-
-		if (OpenGL_state.cur_alpha_type & ATF_VERTEX)
-			alpha = pnt->p3_a * Alpha_multiplier * OpenGL_Alpha_factor;
-
-		// If we have a lighting model, apply the correct lighting!
-		if (OpenGL_state.cur_light_state != LS_NONE)
-		{
-			// Do lighting based on intesity (MONO) or colored (RGB)
-			if (OpenGL_state.cur_color_model == CM_MONO)
-				glColor4f(pnt->p3_l, pnt->p3_l, pnt->p3_l, alpha);
-			else
-			{
-				glColor4f(pnt->p3_r, pnt->p3_g, pnt->p3_b, alpha);
-			}
-
-		}
-		else
-		{
-			glColor4f(fr, fg, fb, alpha);
-		}
-
-
-		// Finally, specify a vertex
-		float z = std::max(0.f, std::min(1.0f, 1.0f - (1.0f / (pnt->p3_z + Z_bias))));
-		glVertex3f(pnt->p3_sx + x_add, pnt->p3_sy + y_add, -z);
-	}
-
-	glEnd();
-	CHECK_ERROR(11)
-		OpenGL_polys_drawn++;
-	OpenGL_verts_processed += nv;*/
 }
 
 // Draws a line using the states of the renderer
@@ -810,9 +676,11 @@ void rend_DrawSpecialLine(g3Point* p0, g3Point* p1)
 
 	alpha = Alpha_multiplier * OpenGL_Alpha_factor;
 
+	vector* vertp = &GL_verts[0];
+	color_array* colorp = &GL_colors[0];
+
 	// And draw!
-	/*glBegin(GL_LINES);
-	for (i = 0; i < 2; i++)
+	for (i = 0; i < 2; i++, vertp++, colorp++)
 	{
 		g3Point* pnt = p0;
 
@@ -827,30 +695,36 @@ void rend_DrawSpecialLine(g3Point* p0, g3Point* p1)
 		{
 			if (OpenGL_state.cur_light_state == LS_FLAT_GOURAUD)
 			{
-				glColor4f(fr, fg, fb, alpha);
+				colorp->r = fr; colorp->g = fg, colorp->b = fb; colorp->a = alpha;
 			}
 			else
 			{
 				// Do lighting based on intesity (MONO) or colored (RGB)
 				if (OpenGL_state.cur_color_model == CM_MONO)
-					glColor4f(pnt->p3_l, pnt->p3_l, pnt->p3_l, alpha);
+				{
+					colorp->r = pnt->p3_uvl.l; colorp->g = pnt->p3_uvl.l; colorp->b = pnt->p3_uvl.l; colorp->a = alpha;
+				}
 				else
 				{
-					glColor4f(pnt->p3_r, pnt->p3_g, pnt->p3_b, alpha);
+					colorp->r = pnt->p3_uvl.r; colorp->g = pnt->p3_uvl.g; colorp->b = pnt->p3_uvl.r; colorp->a = alpha;
 				}
 			}
 		}
 		else
 		{
-			glColor4f(fr, fg, fb, alpha);
+			colorp->r = fr; colorp->g = fg, colorp->b = fb; colorp->a = alpha;
 		}
 
 		// Finally, specify a vertex
 		float z = std::max(0., std::min(1.0, 1.0 - (1.0 / (pnt->p3_z + Z_bias))));
-		glVertex3f(pnt->p3_sx + x_add, pnt->p3_sy + y_add, -z);
+
+		vertp->x = pnt->p3_sx; vertp->y = pnt->p3_sy; vertp->z = -z;
+		//glVertex3f(pnt->p3_sx + x_add, pnt->p3_sy + y_add, -z);
 	}
 
-	glEnd();*/
+	GL_SelectDrawShader();
+	int offset = GL_CopyVertices(2);
+	glDrawArrays(GL_LINES, offset, 2);
 }
 
 // Gets a pointer to a linear frame buffer
