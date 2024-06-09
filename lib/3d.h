@@ -28,6 +28,12 @@ extern int g3d_interp_outline;		//if on, polygon models outlined in white
 
 extern vector Matrix_scale;		//how the matrix is currently scaled
 
+//[ISB] Plane structure used for frustum culling.
+struct g3Plane
+{
+	float a, b, c, d;
+};
+
 //Structure for storing u,v,light values.  This structure doesn't have a
 //prefix because it was defined somewhere else before it was moved here
 struct g3UVL

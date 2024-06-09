@@ -30,6 +30,7 @@ struct RendVertex
 	int lmpage;
 	float u1, v1;
 	float u2, v2;
+	float uslide, vslide; //only slide uv1 for the moment
 };
 
 //A batch of 0-2 texture handles.
@@ -45,6 +46,7 @@ class MeshBuilder
 {
 	unsigned int m_handle; 
 	unsigned int m_verthandle, m_indexhandle;
+	bool m_initialized;
 
 	std::vector<MeshBatch> m_interactions;
 	std::vector<RendVertex> m_vertices;
@@ -77,6 +79,9 @@ public:
 	void Build();
 
 	void Destroy();
+
+	//For dynamic meshes
+	void Reset();
 
 	//Draws the mesh with the currently bound shader.
 	void Draw() const;

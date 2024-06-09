@@ -22,6 +22,7 @@
 MeshBuilder::MeshBuilder()
 {
 	m_handle = m_verthandle = m_indexhandle = 0;
+	m_initialized = false;
 }
 
 void MeshBuilder::UpdateLastBatch()
@@ -95,44 +96,55 @@ void MeshBuilder::Build()
 
 	UpdateLastBatch();
 
-	glGenVertexArrays(1, &m_handle);
+	if (m_handle == 0)
+		glGenVertexArrays(1, &m_handle);
+
 	glBindVertexArray(m_handle);
 
-	glGenBuffers(1, &m_verthandle);
+	if (m_verthandle == 0)
+		glGenBuffers(1, &m_verthandle);
+
 	glBindBuffer(GL_ARRAY_BUFFER, m_verthandle);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(RendVertex) * m_vertices.size(), m_vertices.data(), GL_STATIC_DRAW);
 
-	size_t debug = offsetof(RendVertex, u1);
+	if (!m_initialized)
+	{
+		//Create the standard vertex attributes
+		//Position
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, position));
 
-	//Create the standard vertex attributes
-	//Position
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, position));
+		//Color
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 4, GL_BYTE, GL_TRUE, sizeof(RendVertex), (void*)offsetof(RendVertex, r));
 
-	//Color
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_BYTE, GL_TRUE, sizeof(RendVertex), (void*)offsetof(RendVertex, r));
+		//Normal
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, normal));
 
-	//Normal
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, normal));
+		//Lightmap page
+		glEnableVertexAttribArray(3);
+		glVertexAttribIPointer(3, 1, GL_INT, sizeof(RendVertex), (void*)offsetof(RendVertex, lmpage));
 
-	//Lightmap page
-	glEnableVertexAttribArray(3);
-	glVertexAttribIPointer(3, 1, GL_INT, sizeof(RendVertex), (void*)offsetof(RendVertex, lmpage));
+		//Base UV
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u1));
 
-	//Base UV
-	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)debug);
+		//Overlay UV
+		glEnableVertexAttribArray(5);
+		glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u2));
 
-	//Overlay UV
-	glEnableVertexAttribArray(5);
-	glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u2));
+		//UV slide
+		glEnableVertexAttribArray(6);
+		glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u2));
+	}
 
 	//Check if indicies are being used
 	if (!m_indicies.empty())
 	{
-		glGenBuffers(1, &m_indexhandle);
+		if (!m_indexhandle)
+			glGenBuffers(1, &m_indexhandle);
+
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexhandle);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(short) * m_indicies.size(), m_indicies.data(), GL_STATIC_DRAW);
 	}
@@ -166,6 +178,13 @@ void MeshBuilder::Destroy()
 		m_handle = 0;
 	}
 
+	m_vertices.clear();
+	m_indicies.clear();
+	m_interactions.clear();
+}
+
+void MeshBuilder::Reset()
+{
 	m_vertices.clear();
 	m_indicies.clear();
 	m_interactions.clear();
