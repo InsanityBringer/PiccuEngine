@@ -79,8 +79,8 @@ void g3_GetProjectionMatrix( float zoom, float *projMat )
 
 	float oOT = 1.0f / zoom;
 
-	float znear = 1.0f / zoom;
-	float zfar = 10000.f / zoom; //debug
+	float znear = 1.0f;
+	float zfar = 10000.f; //debug
 
 	float C = -((zfar + znear) / (zfar - znear));
 	float D = -((2 * zfar * znear) / (zfar - znear));
@@ -149,19 +149,11 @@ void g3_StartFrame(vector *view_pos,matrix *view_matrix,float zoom)
 	View_zoom       =  zoom;
 	Unscaled_matrix = *view_matrix;
 
-	//Compute matrix scale for zoom and aspect ratio
-	if( View_zoom <= 1.0f )
-	{
-		//zoom in by scaling z
-		Matrix_scale.z = Matrix_scale.z * View_zoom;
-	}
-	else
-	{
-		//zoom out by scaling x and y
-		float oOZ = 1.0f / View_zoom;
-		Matrix_scale.x = Matrix_scale.x * oOZ;
-		Matrix_scale.y = Matrix_scale.y * oOZ;
-	}
+	//zoom by scaling x and y
+	//[ISB] This no longer will scale Z to apply FOV, since it causes problems with the depth ranges. 
+	float oOZ = 1.0f / View_zoom;
+	Matrix_scale.x = Matrix_scale.x * oOZ;
+	Matrix_scale.y = Matrix_scale.y * oOZ;
 
 	//Scale the matrix elements
 	View_matrix.rvec = Unscaled_matrix.rvec * Matrix_scale.x;

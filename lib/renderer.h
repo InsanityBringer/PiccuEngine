@@ -164,15 +164,16 @@ struct rendering_state
 	sbyte cur_fog_state;
 	sbyte cur_mip_state;
 
-	texture_type cur_texture_type;
-	color_model	cur_color_model;
-	light_state cur_light_state;
+	texture_type	cur_texture_type;
+	color_model		cur_color_model;
+	light_state		cur_light_state;
 	sbyte			cur_alpha_type;
 
-	wrap_type	cur_wrap_type;
+	wrap_type		cur_wrap_type;
 
 	float cur_fog_start,cur_fog_end;
 	float cur_near_z,cur_far_z;
+	float depth_const_a, depth_const_b;
 	float gamma_value;
 
 	int			cur_alpha;
