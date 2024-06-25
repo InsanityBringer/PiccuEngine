@@ -977,6 +977,37 @@ void rend_GetRenderState(rendering_state* rstate)
 	memcpy(rstate, &OpenGL_state, sizeof(rendering_state));
 }
 
+void rend_DLLGetRenderState(DLLrendering_state* rstate)
+{
+#define COPY_ELEMENT(element) rstate->element = OpenGL_state.element;
+	COPY_ELEMENT(initted);
+	COPY_ELEMENT(cur_bilinear_state);
+	COPY_ELEMENT(cur_zbuffer_state);
+	COPY_ELEMENT(cur_fog_state);
+	COPY_ELEMENT(cur_mip_state);
+	COPY_ELEMENT(cur_texture_type);
+	COPY_ELEMENT(cur_color_model);
+	COPY_ELEMENT(cur_light_state);
+	COPY_ELEMENT(cur_alpha_type);
+	COPY_ELEMENT(cur_wrap_type);
+	COPY_ELEMENT(cur_fog_start);
+	COPY_ELEMENT(cur_fog_end);
+	COPY_ELEMENT(cur_near_z);
+	COPY_ELEMENT(cur_far_z);
+	COPY_ELEMENT(gamma_value);
+	COPY_ELEMENT(cur_alpha);
+	COPY_ELEMENT(cur_color);
+	COPY_ELEMENT(cur_fog_color);
+	COPY_ELEMENT(cur_texture_quality);
+	COPY_ELEMENT(clip_x1);
+	COPY_ELEMENT(clip_x2);
+	COPY_ELEMENT(clip_y1);
+	COPY_ELEMENT(clip_y2);
+	COPY_ELEMENT(screen_width);
+	COPY_ELEMENT(screen_height);
+#undef COPY_ELEMENT
+}
+
 // Takes a screenshot of the current frame and puts it into the handle passed
 void rend_Screenshot(int bm_handle)
 {

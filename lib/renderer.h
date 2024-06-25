@@ -185,6 +185,37 @@ struct rendering_state
 	int clip_x1,clip_x2,clip_y1,clip_y2;
 	int screen_width,screen_height;
 	int view_width, view_height;
+};
+
+// [ISB] Legacy compatible rendering_state for dlls. 
+struct DLLrendering_state
+{
+	sbyte initted;
+
+	sbyte cur_bilinear_state;
+	sbyte cur_zbuffer_state;
+	sbyte cur_fog_state;
+	sbyte cur_mip_state;
+
+	texture_type cur_texture_type;
+	color_model	cur_color_model;
+	light_state cur_light_state;
+	sbyte			cur_alpha_type;
+
+	wrap_type	cur_wrap_type;
+
+	float cur_fog_start, cur_fog_end;
+	float cur_near_z, cur_far_z;
+	float gamma_value;
+
+	int			cur_alpha;
+	ddgr_color	cur_color;
+	ddgr_color	cur_fog_color;
+
+	sbyte cur_texture_quality;		// 0-none, 1-linear, 2-perspective
+
+	int clip_x1, clip_x2, clip_y1, clip_y2;
+	int screen_width, screen_height;
 
 };
 
@@ -372,6 +403,10 @@ void rend_SetGammaValue (float val);
 
 // Fills in the passed in pointer with the current rendering state
 void rend_GetRenderState (rendering_state *rstate);
+
+// Fills in the passed in pointer with the current rendering state
+// Uses legacy structure for compatibiltity with current DLLs. 
+void rend_DLLGetRenderState(DLLrendering_state* rstate);
 
 // Draws a simple bitmap at the specified x,y location
 void rend_DrawSimpleBitmap (int bm_handle,int x,int y);

@@ -182,7 +182,7 @@ void GetMultiAPI(multi_api* api)
 	api->fp[30] = (int*)timer_GetTime;
 	api->fp[31] = (int*)TryToJoinServer;
 	api->fp[32] = (int*)MultiStartClient;
-	api->fp[33] = (int*)rend_GetRenderState;
+	api->fp[33] = (int*)rend_DLLGetRenderState;
 	api->fp[34] = (int*)LoadMission;
 	api->fp[35] = (int*)ddio_MakePath;
 	api->fp[36] = (int*)ddio_FindFileStart;

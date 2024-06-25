@@ -22,6 +22,22 @@
 #include "pstypes.h"
 #include "vecmat.h"
 
+//A sortable element is used to batch up elements by their texture and lightmap handle, if used. 
+struct SortableElement
+{
+	int element;
+	short texturehandle;
+	short lmhandle;
+
+	friend bool operator<(const SortableElement& l, const SortableElement& r)
+	{
+		uint lh = l.texturehandle | l.lmhandle << 16;
+		uint rh = r.texturehandle | r.lmhandle << 16;
+
+		return lh < rh;
+	}
+};
+
 struct RendVertex
 {
 	vector position;

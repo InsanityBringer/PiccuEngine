@@ -30,7 +30,7 @@
 //Face flags
 //NOTE:  If you add a flag here, please check the function CopyFaceFlags()
 #define	FF_LIGHTMAP			0x0001		// Render this face with a lightmap on top
-#define	FF_VERTEX_ALPHA	0x0002		// This face has vertex alpha blending
+#define	FF_VERTEX_ALPHA		0x0002		// This face has vertex alpha blending
 #define	FF_CORONA			0x0004		// This face has a lighting corona
 #define	FF_TEXTURE_CHANGED	0x0008		// The texture on this face has changed
 #define	FF_HAS_TRIGGER		0x0010		// This face has a trigger
@@ -38,9 +38,9 @@
 #define	FF_FLOATING_TRIG	0x0040		// This face only exists as a floating trigger
 #define	FF_DESTROYED		0x0080		// This face has been blown up
 #define	FF_VOLUMETRIC		0x0100		// This face is a volumetric face
-#define	FF_TRIANGULATED	0x0200		// ??
+#define	FF_TRIANGULATED		0x0200		// ??
 #define	FF_VISIBLE			0x0400		// This face is visible this frame (Valid only during render)
-#define  FF_NOT_SHELL		0x0800		// This face is not part of the room shell
+#define FF_NOT_SHELL		0x0800		// This face is not part of the room shell
 #define	FF_TOUCHED			0x1000		// This face has been touched by fvi_QuickDistFaceList
 #define	FF_GOALFACE			0x2000	 	// This face is a goal texture face
 #define	FF_NOT_FACING		0x4000		// This face is not facing us this frame (Valid only during render)

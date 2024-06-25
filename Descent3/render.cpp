@@ -56,6 +56,7 @@
 #ifdef EDITOR
 #include "editor\d3edit.h"
 #endif
+#include "../renderer/gl_mesh.h"
 
 //Katmai enhanced rotate only in a release build, because not 
 //everyone has the intel compiler!
@@ -149,6 +150,10 @@ short Specular_faces[MAX_SPECULAR_FACES];
 int Num_specular_faces_to_render = 0;
 int Num_real_specular_faces_to_render = 0;	// Non-invisible specular faces
 
+//[ISB] temp: Should stick this in Room or a separate render-related struct later down the line (dynamic room limit at some point?)
+//These are the meshes of all normal room geometry. 
+MeshBuilder Room_meshes[MAX_ROOMS];
+
 struct smooth_spec_vert
 {
 	float r, g, b;
@@ -214,6 +219,26 @@ short Mirrored_room_list[MAX_ROOMS];
 ubyte Mirrored_room_checked[MAX_ROOMS];
 short Mirror_rooms[MAX_ROOMS];
 int Num_mirror_rooms = 0;
+
+//Meshes a given room. 
+//In time, this will create 
+void UpdateRoomMesh(int roomnum)
+{
+	Room_meshes[roomnum].Destroy(); //this kills the old mesh even if the room isn't used, since the stale mesh isn't used either. 
+
+	room& rp = Rooms[roomnum];
+	if (!rp.used)
+		return; //unused room
+}
+
+//Called during LoadLevel, builds meshes for every room. 
+void MeshRooms()
+{
+	for (int i = 0; i < Highest_room_index; i++)
+	{
+		UpdateRoomMesh(i);
+	}
+}
 
 //
 //  UTILITY FUNCS
