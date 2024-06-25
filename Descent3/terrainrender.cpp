@@ -133,17 +133,17 @@ void GenerateVertex(RendVertex& vert, int x, int y, int z, terrain_segment& base
 	int tile = rotation >> 4;
 	switch (texmode)
 	{
-	case 0:
-		vert.u1 = tile * (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
-		vert.v1 = tile * (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
+	case 0: //This seems wrong, but the coordinate system of the new renderer pipeline is different (depth down -Z as per OpenGL) and this has the right results. 
+		vert.u1 = tile * (1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH)));
+		vert.v1 = tile * (1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH)));
 		break;
 	case 1:
 		vert.u1 = tile * (1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH)));
 		vert.v1 = tile * (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
 		break;
 	case 2:
-		vert.u1 = tile * (1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH)));
-		vert.v1 = tile * (1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH)));
+		vert.u1 = tile * (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
+		vert.v1 = tile * (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
 		break;
 	case 3:
 		vert.u1 = tile * (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
@@ -151,7 +151,8 @@ void GenerateVertex(RendVertex& vert, int x, int y, int z, terrain_segment& base
 		break;
 	}
 
-	vert.u1 = 1.f - vert.u1;
+	//further adjustment for -Z depth
+	vert.u1 = 1.f -vert.u1;
 
 	//TODO: Probably should just use a single 256x256 lightmap page. 
 	vert.u2 = (x % 128) / 128.f;
@@ -229,7 +230,7 @@ void MeshTerrainCell(int x, int z)
 		//Generate tl
 		GenerateVertex(verts[0], cell.x, seg.y, cell.z, seg, false);
 		//Generate tr
-		GenerateVertex(verts[1], cell.x + 1, GetYClamped(cell.x + 1, cell.z), cell.z, seg, true); //Provoking vertex for 
+		GenerateVertex(verts[1], cell.x + 1, GetYClamped(cell.x + 1, cell.z), cell.z, seg, true);
 		//Generate bl
 		GenerateVertex(verts[2], cell.x + 1, GetYClamped(cell.x + 1, cell.z + 1), cell.z + 1, seg, false);
 		//Generate br
