@@ -137,7 +137,7 @@ int opengl_MakeBitmapCurrent(int handle, int map_type, int tn)
 		if (OpenGL_lightmap_remap[handle] == 65535)
 		{
 			texnum = opengl_MakeTextureObject(tn);
-			SET_WRAP_STATE(OpenGL_lightmap_states[handle], 1);
+			SET_WRAP_STATE(OpenGL_lightmap_states[handle], WT_WRAP);
 			SET_FILTER_STATE(OpenGL_lightmap_states[handle], 0);
 			OpenGL_lightmap_remap[handle] = texnum;
 			opengl_TranslateBitmapToOpenGL(texnum, handle, map_type, 0, tn);
@@ -154,7 +154,7 @@ int opengl_MakeBitmapCurrent(int handle, int map_type, int tn)
 		if (OpenGL_bitmap_remap[handle] == 65535)
 		{
 			texnum = opengl_MakeTextureObject(tn);
-			SET_WRAP_STATE(OpenGL_bitmap_states[handle], 1);
+			SET_WRAP_STATE(OpenGL_bitmap_states[handle], WT_WRAP);
 			SET_FILTER_STATE(OpenGL_bitmap_states[handle], 0);
 			OpenGL_bitmap_remap[handle] = texnum;
 			opengl_TranslateBitmapToOpenGL(texnum, handle, map_type, 0, tn);
@@ -204,7 +204,7 @@ void opengl_MakeWrapTypeCurrent(int handle, int map_type, int tn)
 
 	if (uwrap == dest_wrap)
 		return;
-
+	
 	if (UseMultitexture && Last_texel_unit_set != tn)
 	{
 		glActiveTexture(GL_TEXTURE0 + tn);
@@ -213,13 +213,13 @@ void opengl_MakeWrapTypeCurrent(int handle, int map_type, int tn)
 
 	OpenGL_sets_this_frame[1]++;
 
-	if (OpenGL_state.cur_wrap_type == WT_CLAMP)
+	if (dest_wrap == WT_CLAMP)
 	{
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	}
-	else if (OpenGL_state.cur_wrap_type == WT_WRAP_V)
+	else if (dest_wrap == WT_WRAP_V)
 	{
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

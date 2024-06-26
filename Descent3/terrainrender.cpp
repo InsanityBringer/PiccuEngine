@@ -114,7 +114,7 @@ struct SortableCell
 	}
 };
 
-void GenerateVertex(RendVertex& vert, int x, int y, int z, terrain_segment& basecell, bool altnormal)
+void GenerateVertex(RendVertex& vert, int x, int y, int z, int basex, int basez, terrain_segment& basecell, bool altnormal)
 {
 	vert.position.x = x * TERRAIN_SIZE;
 	vert.position.y = y;
@@ -155,8 +155,17 @@ void GenerateVertex(RendVertex& vert, int x, int y, int z, terrain_segment& base
 	vert.u1 = 1.f -vert.u1;
 
 	//TODO: Probably should just use a single 256x256 lightmap page. 
-	vert.u2 = (x % 128) / 128.f;
-	vert.v2 = 1.f - ((z % 128) / 128.f);
+	
+	//Handle lightmap texture borders to calculate the correct UV
+	if (x % 128 == 0 && x != basex)
+		vert.u2 = 1;
+	else
+		vert.u2 = (x % 128) / 128.f;
+
+	if (z % 128 == 0 && z != basez)
+		vert.v2 = 0;
+	else
+		vert.v2 = 1.f - ((z % 128) / 128.f);
 }
 
 //Blarg. The terrain is 256x256 cells, but there's only 256x256 vertices. Why.
@@ -228,13 +237,13 @@ void MeshTerrainCell(int x, int z)
 		RendVertex verts[4] = {};
 
 		//Generate tl
-		GenerateVertex(verts[0], cell.x, seg.y, cell.z, seg, false);
+		GenerateVertex(verts[0], cell.x, seg.y, cell.z, cell.x, cell.z, seg, false);
 		//Generate tr
-		GenerateVertex(verts[1], cell.x + 1, GetYClamped(cell.x + 1, cell.z), cell.z, seg, true);
+		GenerateVertex(verts[1], cell.x + 1, GetYClamped(cell.x + 1, cell.z), cell.z, cell.x, cell.z, seg, true);
 		//Generate bl
-		GenerateVertex(verts[2], cell.x + 1, GetYClamped(cell.x + 1, cell.z + 1), cell.z + 1, seg, false);
+		GenerateVertex(verts[2], cell.x + 1, GetYClamped(cell.x + 1, cell.z + 1), cell.z + 1, cell.x, cell.z, seg, false);
 		//Generate br
-		GenerateVertex(verts[3], cell.x , GetYClamped(cell.x, cell.z + 1), cell.z + 1, seg, false);
+		GenerateVertex(verts[3], cell.x , GetYClamped(cell.x, cell.z + 1), cell.z + 1, cell.x, cell.z, seg, false);
 		
 		//Generate indicies
 		int firstvert = mesh.NumVertices();
@@ -880,6 +889,7 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 	rend_SetTextureType(TT_LINEAR);
 	rend_SetAlphaType(ATF_CONSTANT + ATF_TEXTURE);
 	rend_SetLighting(LS_NONE);
+	rend_SetWrapType(WT_WRAP); //Should this be clamp? Requires smarter logic for the UV calculations to handle discontinuities. 
 	for (MeshBuilder& mesh : TerrainMeshes)
 	{
 		mesh.Draw();
