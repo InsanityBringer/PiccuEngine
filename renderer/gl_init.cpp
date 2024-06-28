@@ -23,7 +23,7 @@
 #include <Windows.h>
 #endif
 
-renderer_preferred_state OpenGL_preferred_state = { 0,1,1.0 };
+renderer_preferred_state OpenGL_preferred_state = { false, true, false, 32, 1.0 };
 rendering_state OpenGL_state;
 
 PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
