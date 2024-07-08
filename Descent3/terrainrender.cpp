@@ -143,7 +143,7 @@ struct SortableCell
 	}
 };
 
-void GenerateVertex(RendVertex& vert, int x, int y, int z, int basex, int basez, terrain_segment& basecell, bool altnormal)
+void GenerateVertex(RendVertex& vert, int x, float y, int z, int basex, int basez, terrain_segment& basecell, bool altnormal)
 {
 	vert.position.x = x * TERRAIN_SIZE;
 	vert.position.y = y;
@@ -292,14 +292,14 @@ void MeshTerrainCell(MeshBuilder& mesh, int x, int z)
 		GenerateVertex(verts[0], cell.x, seg.y, cell.z, cell.x, cell.z, seg, false);
 		//Generate tr
 		GenerateVertex(verts[1], cell.x + 1, GetYClamped(cell.x + 1, cell.z), cell.z, cell.x, cell.z, seg, true);
-		//Generate bl
-		GenerateVertex(verts[2], cell.x + 1, GetYClamped(cell.x + 1, cell.z + 1), cell.z + 1, cell.x, cell.z, seg, false);
 		//Generate br
+		GenerateVertex(verts[2], cell.x + 1, GetYClamped(cell.x + 1, cell.z + 1), cell.z + 1, cell.x, cell.z, seg, false);
+		//Generate bl
 		GenerateVertex(verts[3], cell.x , GetYClamped(cell.x, cell.z + 1), cell.z + 1, cell.x, cell.z, seg, false);
 		
 		//Generate indicies
 		int firstvert = mesh.NumVertices();
-		int indicies[6] = { firstvert + 0, firstvert + 3, firstvert + 1, firstvert + 1, firstvert + 3, firstvert + 2 };
+		int indicies[6] = { firstvert + 0, firstvert + 3, firstvert + 2, firstvert + 0, firstvert + 2, firstvert + 1 };
 
 		//And add both
 		mesh.SetIndicies(6, indicies);
@@ -937,7 +937,7 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 
 	Terrain_vertexbuffer.Bind();
 	Terrain_indexbuffer.Bind();
-	
+
 	for (TerrainDrawCell& drawcell : TerrainMeshes)
 	{
 		drawcell.DrawAll();
