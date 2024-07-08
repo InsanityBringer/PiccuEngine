@@ -2519,13 +2519,6 @@ void ReadTerrainChunks(CFILE* fp, int version)
 	BuildTerrainNormals();
 	UpdateTerrainLightmaps();
 
-	if (!Dedicated_server)
-	{
-		//[ISB] Prepare the new renderer
-		//I love the game code being so tightly coupled with the renderer
-		MeshTerrain();
-	}
-
 #if (defined(EDITOR) || defined(NEWEDITOR))
 
 	memset(TerrainSelected, 0, TERRAIN_WIDTH * TERRAIN_DEPTH);

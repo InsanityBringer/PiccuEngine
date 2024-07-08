@@ -170,6 +170,9 @@ void RenderFogFaces(room *rp);
 // Builds a list of mirror faces for each room and allocs memory accordingly
 void ConsolidateMineMirrors();
 
+//Builds static meshes for all level geometry
+void MeshRooms();
+
 extern int Num_specular_faces_to_render,Num_fog_faces_to_render;
 
 #endif

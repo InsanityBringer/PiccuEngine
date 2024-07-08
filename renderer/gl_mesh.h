@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <vector>
 #include "pstypes.h"
 #include "vecmat.h"
@@ -58,52 +59,118 @@ struct MeshBatch
 	int indexoffset, indexcount;
 };
 
+//Start and element count of a pass of a mesh
+struct ElementRange
+{
+	uint32_t offset, count;
+	ElementRange()
+	{
+		offset = count = 0;
+	}
+	ElementRange(uint32_t offset, uint32_t count) : offset(offset), count(count)
+	{
+	}
+};
+
+//Future note: These will need to become interfaces if Vulkan support is added. 
+//The same MeshBuilder should be usable across any API. 
+class VertexBuffer
+{
+	uint32_t m_name, m_vaoname;
+	uint32_t m_size;
+	uint32_t m_vertexcount;
+	bool m_dynamic_hint;
+public:
+	VertexBuffer();
+	VertexBuffer(bool allow_dynamic, bool dynamic_hint);
+
+	void Initialize(uint32_t numvertices, uint32_t datasize, void* data);
+	//Performs a dynamic update of part of the 
+	void Update(uint32_t byteoffset, uint32_t datasize, void* data);
+	void Bind() const;
+
+	//TODO: Temp interface to load textures
+	void BindBitmap(int bmhandle) const;
+	void BindLightmap(int lmhandle) const;
+
+	//Draws all the vertices in the buffer in one go
+	void Draw() const;
+	//Draws a range of vertices from the buffer.
+	void Draw(ElementRange range) const;
+	//Draws a range of vertices from the buffer, from the range of the currently bound index buffer
+	void DrawIndexed(ElementRange range) const;
+
+	void Destroy();
+};
+
+class IndexBuffer
+{
+	uint32_t m_name;
+	uint32_t m_size;
+	bool m_dynamic_hint;
+public:
+	IndexBuffer();
+	IndexBuffer(bool allow_dynamic, bool dynamic_hint);
+
+	void Initialize(uint32_t numindices, uint32_t datasize, void* data);
+
+	void Bind() const;
+
+	void Destroy();
+};
+
+
+//Should this be split into specialized builders for vertex and index buffers?
 class MeshBuilder
 {
-	unsigned int m_handle; 
-	unsigned int m_verthandle, m_indexhandle;
 	bool m_initialized;
+	bool m_vertexstarted;
 
-	std::vector<MeshBatch> m_interactions;
+	uint32_t m_vertexstartoffset;
+	uint32_t m_vertexstartcount;
+
+	bool m_indexstarted;
+	uint32_t m_indexstartoffset;
+	uint32_t m_indexstartcount;
+
 	std::vector<RendVertex> m_vertices;
-	std::vector<ushort> m_indicies;
+	std::vector<uint32_t> m_indicies;
 
-	//Updates the counts of the last batch if relevant. 
-	void UpdateLastBatch();
 public:
 	MeshBuilder();
 
-	//Starts a solid batch with no textures. 
-	//Do not mix this with any of the textured forms.
-	//These probably could take shader program numbers to deal with that but eh
-	void StartBatchSolid();
+	//Begins submitting vertices for a render pass.
+	void BeginVertices();
+	//Begins submitting indices for a render pass.
+	void BeginIndices();
 
-	//Starts a textured batch with one texture.
-	void StartBatchOneTex(int handle);
-	//Starts a textured batch with two textures.
-	void StartBatchTwoTex(int handle, int handle2);
-
-	//Sets the vertices for this mesh builder to use. 
+	//Adds vertices to the vertex buffer
 	void SetVertices(int numverts, RendVertex* vertices);
 
-	//Sets the indicies for this mesh builder to use. Optional.
-	//If set, drawing the mesh will use the index buffer while drawing.
-	void SetIndicies(int numindices, short* indicies);
+	//Adds indicies to the vertex buffer
+	void SetIndicies(int numindices, int* indicies);
 
-	//Updates the buffer. When called for the first time, will create all the relevant state
-	//Can be called again to update the buffers.
-	void Build();
+	ElementRange EndVertices();
+	ElementRange EndIndices();
+
+	void BuildVertices(VertexBuffer& buffer);
+	void BuildIndicies(IndexBuffer& buffer);
+
+	void UpdateVertices(VertexBuffer& buffer, uint32_t offset);
+	void UpdateIndicies(IndexBuffer& buffer, uint32_t offset);
 
 	void Destroy();
 
 	//For dynamic meshes
 	void Reset();
 
-	//Draws the mesh with the currently bound shader.
-	void Draw() const;
 
 	int NumVertices() const
 	{
 		return m_vertices.size();
 	}
 };
+
+//TEMP CODE: Sets vertex buffer back to draw vertex buffer. 
+//Call at the end of all mesh based rendering
+void rendTEMP_UnbindVertexBuffer();

@@ -19,6 +19,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include <stdint.h>
 #include "pstypes.h"
 #include "grdefs.h"
 
@@ -464,6 +465,12 @@ void rend_UseShaderTest(void);
 
 //Revert to non-shader rendering
 void rend_EndShaderTest(void);
+
+//Shader API 
+
+//Gets a handle to a shader by name
+uint32_t rend_GetShaderByName(const char* name);
+
 
 #if defined(DD_ACCESS_RING) 
 #if defined(WIN32)

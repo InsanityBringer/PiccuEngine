@@ -51,6 +51,7 @@
 #include "BOA.h"
 #include "terrain.h"
 #include "multi.h"
+#include "render.h"
 
 //	---------------------------------------------------------------------------
 //	Data
@@ -803,6 +804,14 @@ bool LoadMissionLevel(int level)
 		ShowProgressScreen(str,NULL,true);
 		Sleep (2000);
 	}*/
+
+	//[ISB] Prepare the new renderer
+	//I love the game code being so tightly coupled with the renderer
+	if (!Dedicated_server)
+	{
+		MeshRooms();
+		MeshTerrain();
+	}
 
 	LoadLevelText(Current_mission.levels[level - 1].filename);
 

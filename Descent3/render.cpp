@@ -150,10 +150,6 @@ short Specular_faces[MAX_SPECULAR_FACES];
 int Num_specular_faces_to_render = 0;
 int Num_real_specular_faces_to_render = 0;	// Non-invisible specular faces
 
-//[ISB] temp: Should stick this in Room or a separate render-related struct later down the line (dynamic room limit at some point?)
-//These are the meshes of all normal room geometry. 
-MeshBuilder Room_meshes[MAX_ROOMS];
-
 struct smooth_spec_vert
 {
 	float r, g, b;
@@ -197,6 +193,7 @@ struct light_glow
 	float scalar;
 	ubyte flags;
 };
+
 light_glow LightGlows[MAX_LIGHT_GLOWS];
 light_glow LightGlowsThisFrame[MAX_LIGHT_GLOWS];
 
@@ -219,26 +216,6 @@ short Mirrored_room_list[MAX_ROOMS];
 ubyte Mirrored_room_checked[MAX_ROOMS];
 short Mirror_rooms[MAX_ROOMS];
 int Num_mirror_rooms = 0;
-
-//Meshes a given room. 
-//In time, this will create 
-void UpdateRoomMesh(int roomnum)
-{
-	Room_meshes[roomnum].Destroy(); //this kills the old mesh even if the room isn't used, since the stale mesh isn't used either. 
-
-	room& rp = Rooms[roomnum];
-	if (!rp.used)
-		return; //unused room
-}
-
-//Called during LoadLevel, builds meshes for every room. 
-void MeshRooms()
-{
-	for (int i = 0; i < Highest_room_index; i++)
-	{
-		UpdateRoomMesh(i);
-	}
-}
 
 //
 //  UTILITY FUNCS
@@ -264,6 +241,17 @@ inline bool FaceIsRenderable(room* rp, face* fp)
 	//Nothing special, so face renders
 	return 1;
 }
+
+struct RoomMesh
+{
+	MeshBuilder room_lit_static;
+	MeshBuilder room_unlit_static;
+	void Reset()
+	{
+		room_lit_static.Destroy();
+		room_unlit_static.Destroy();
+	}
+};
 
 //Flags for GetFaceAlpha()
 #define FA_CONSTANT		1		//face has a constant alpha for the whole face
@@ -294,6 +282,55 @@ static inline int GetFaceAlpha(face* fp, int bm_handle)
 	return ret;
 }
 
+//[ISB] temp: Should stick this in Room or a separate render-related struct later down the line (dynamic room limit at some point?)
+//These are the meshes of all normal room geometry. 
+RoomMesh Room_meshes[MAX_ROOMS];
+
+//Meshes a given room. 
+void UpdateRoomMesh(int roomnum)
+{
+	room& rp = Rooms[roomnum];
+	if (!rp.used)
+		return; //unused room
+
+	std::vector<SortableElement> faces_lit;
+	std::vector<SortableElement> faces_unlit;
+
+	//Build a sortable list of all faces
+	for (int i = 0; i < rp.num_faces; i++)
+	{
+		face& fp = rp.faces[i];
+		//blarg
+		int bm_handle = GameTextures[fp.tmap].bm_handle;
+		int alphatype = GetFaceAlpha(&fp, bm_handle);
+		if (alphatype != AT_ALWAYS)
+			continue;
+		else
+		{
+			//Not a postrender, determine if it is unlit or lit. 
+
+		}
+	}
+}
+
+void FreeRoomMeshes()
+{
+	for (int i = 0; i < MAX_ROOMS; i++)
+	{
+		Room_meshes[i].Reset();
+	}
+}
+
+//Called during LoadLevel, builds meshes for every room. 
+void MeshRooms()
+{
+	FreeRoomMeshes();
+	for (int i = 0; i < Highest_room_index; i++)
+	{
+		UpdateRoomMesh(i);
+	}
+}
+
 //Determine if you should render through a portal
 //Parameters:	rp - the room the portal is in
 //					pp - the portal we're checking
@@ -303,8 +340,7 @@ inline bool RenderPastPortal(room* rp, portal* pp)
 	//If we don't render the portal's faces, then we see through it
 	if (!(pp->flags & PF_RENDER_FACES))
 		return 1;
-	if (!UseHardware)	// Don't render alpha stuff in software
-		return 0;
+
 	//Check if the face's texture has transparency
 	face* fp = &rp->faces[pp->portal_face];
 	if (GameTextures[fp->tmap].flags & TF_PROCEDURAL)
@@ -1175,10 +1211,10 @@ void BuildRoomListSub(int start_room_num, clip_wnd* wnd, int depth)
 					CheckFogPortalExtents(croom, pp->cportal);
 				}
 				//Combine the two windows
-				new_wnd.left = __max(wnd->left, new_wnd.left);
-				new_wnd.right = __min(wnd->right, new_wnd.right);
-				new_wnd.top = __max(wnd->top, new_wnd.top);
-				new_wnd.bot = __min(wnd->bot, new_wnd.bot);
+				new_wnd.left = std::max(wnd->left, new_wnd.left);
+				new_wnd.right = std::min(wnd->right, new_wnd.right);
+				new_wnd.top = std::max(wnd->top, new_wnd.top);
+				new_wnd.bot = std::min(wnd->bot, new_wnd.bot);
 				if (clipped)
 				{		//Free up temp points
 					g3_FreeTempPoints(pl, nv);
@@ -1215,10 +1251,10 @@ void BuildRoomListSub(int start_room_num, clip_wnd* wnd, int depth)
 							Room_depth_list[External_room_list[i]] = 255;
 						}
 						//Combine the two windows
-						Terrain_portal_left = __min(new_wnd.left, Terrain_portal_left);
-						Terrain_portal_right = __max(new_wnd.right, Terrain_portal_right);
-						Terrain_portal_top = __min(new_wnd.top, Terrain_portal_top);
-						Terrain_portal_bottom = __max(new_wnd.bot, Terrain_portal_bottom);
+						Terrain_portal_left = std::min(new_wnd.left, (float)Terrain_portal_left);
+						Terrain_portal_right = std::max(new_wnd.right, (float)Terrain_portal_right);
+						Terrain_portal_top = std::min(new_wnd.top, (float)Terrain_portal_top);
+						Terrain_portal_bottom = std::max(new_wnd.bot, (float)Terrain_portal_bottom);
 					}
 				}
 				else
@@ -1476,8 +1512,7 @@ void RenderSpecularFacesFlat(room* rp)
 	ushort smooth_used[MAX_VERTS_PER_ROOM];
 	int i;
 	ASSERT(Num_specular_faces_to_render > 0);
-	if (!UseHardware)
-		return;
+
 	if (Num_real_specular_faces_to_render == 0)
 	{
 		for (i = 0; i < Num_specular_faces_to_render; i++)
@@ -2032,7 +2067,7 @@ void RenderFace(room* rp, int facenum)
 
 			p->p3_flags |= PF_UV + PF_L + PF_UV2;	//has uv and l set
 #ifndef RELEASE
-			if ((fp->flags & FF_LIGHTMAP) && UseHardware)
+			if (fp->flags & FF_LIGHTMAP)
 				p->p3_uvl.l = Room_light_val;
 			else
 				p->p3_uvl.l = 1.0;
@@ -2061,7 +2096,7 @@ void RenderFace(room* rp, int facenum)
 
 			p->p3_flags |= PF_UV + PF_L + PF_UV2;	//has uv and l set
 #ifndef RELEASE
-			if ((fp->flags & FF_LIGHTMAP) && UseHardware)
+			if (fp->flags & FF_LIGHTMAP)
 				p->p3_uvl.l = Room_light_val;
 			else
 				p->p3_uvl.l = 1.0;
@@ -2166,16 +2201,16 @@ void RenderFace(room* rp, int facenum)
 		rend_SetAlphaValue(255);	// This prevents mirrors from rendering each other
 	else
 		rend_SetAlphaValue(GameTextures[fp->tmap].alpha * 255);
-	if (!UseHardware)
-		rend_SetLighting(Lighting_on ? LS_GOURAUD : LS_NONE);
-	else
-		rend_SetLighting(LS_GOURAUD);
+
+	rend_SetLighting(LS_GOURAUD);
+
 	if (!NoLightmaps)
 		rend_SetColorModel(CM_MONO);
 	else
 		rend_SetColorModel(CM_RGB);
+
 	// Set lighting map
-	if ((fp->flags & FF_LIGHTMAP) && (!StateLimited || UseMultitexture))
+	if (fp->flags & FF_LIGHTMAP)
 	{
 		if (GameTextures[fp->tmap].flags & TF_SATURATE)
 			rend_SetOverlayType(OT_NONE);
@@ -2187,19 +2222,7 @@ void RenderFace(room* rp, int facenum)
 		rend_SetOverlayType(OT_NONE);
 
 	//Select texture type
-	if (!UseHardware)
-	{
-		tt = TT_LINEAR;										//default to linear
-		for (vn = 0; vn < fp->num_verts; vn++)					//select perspective if close
-			if (pointlist[vn]->p3_vec.z < 35)
-			{
-				tt = TT_PERSPECTIVE;
-				break;
-			}
-		rend_SetTextureType(tt);
-	}
-	else
-		rend_SetTextureType(TT_PERSPECTIVE);
+	rend_SetTextureType(TT_PERSPECTIVE);
 
 	if (face_cc.cc_or) // Possible triangulate this face cuz its off screen somewhat
 	{
@@ -2269,17 +2292,11 @@ void RenderFace(room* rp, int facenum)
 	//Draw scorches, if any
 	if (drawn && fp->flags & FF_SCORCHED && !Render_mirror_for_room)
 	{
-		if (!StateLimited)
-			DrawScorches(ROOMNUM(rp), facenum);
-		else
-		{
-			Scorches_to_render[Num_scorches_to_render] = facenum;
-			Num_scorches_to_render++;
-		}
+		DrawScorches(ROOMNUM(rp), facenum);
 	}
 
 draw_fog:
-	if (!Render_mirror_for_room && !In_editor_mode && drawn && (rp->flags & RF_FOG) && UseHardware)
+	if (!Render_mirror_for_room && !In_editor_mode && drawn && (rp->flags & RF_FOG))
 	{
 		UpdateFogFace(rp, fp);
 	}
@@ -2447,68 +2464,6 @@ static int room_face_sort_func(const short* a, const short* b)
 		return 0;
 }
 
-//Sorts the faces of a room before rendering.  Used for rendering in the editor.
-//Parameters:	rp	- pointer to the room to be rendered
-void RenderRoomSorted(room* rp)
-{
-	int vn, fn, i, rcount;
-	int render_order[MAX_FACES_PER_ROOM];
-	ASSERT(rp->num_faces <= MAX_FACES_PER_ROOM);
-	//Rotate all the points
-	if (rp->wpb_index == -1)
-	{
-		rp->wpb_index = Global_buffer_index;
-		//Katmai enhanced rotate only in a release build, because not 
-		//everyone has the intel compiler!
-#if ( defined(RELEASE) && defined(KATMAI) )
-		if (Katmai)
-			RotateRoomPoints(rp, rp->verts4);
-		else
-#endif
-			RotateRoomPoints(rp, rp->verts);
-
-
-		Global_buffer_index += rp->num_verts;
-	}
-	//Build list of visible (non-backfacing) faces, & compute average face depths
-	for (fn = rcount = 0; fn < rp->num_faces; fn++)
-	{
-		face* fp = &rp->faces[fn];
-
-		if ((!(fp->flags & FF_VISIBLE)) || ((fp->flags & FF_NOT_FACING)))
-		{
-			fp->flags &= ~(FF_NOT_FACING | FF_VISIBLE);
-			continue;		// this guy shouldn't be rendered
-		}
-		// Clear visibility flags
-		fp->flags &= ~(FF_VISIBLE | FF_NOT_FACING);
-
-		if (!FaceIsRenderable(rp, fp))
-			continue;	//skip this face
-#ifdef EDITOR
-		if (In_editor_mode)
-		{
-			if ((Shell_render_flag & SRF_NO_NON_SHELL) && (fp->flags & FF_NOT_SHELL))
-				continue;
-			if ((Shell_render_flag & SRF_NO_SHELL) && !(fp->flags & FF_NOT_SHELL))
-				continue;
-		}
-#endif
-		face_depth[fn] = 0;
-		for (vn = 0; vn < fp->num_verts; vn++)
-			face_depth[fn] += World_point_buffer[rp->wpb_index + fp->face_verts[vn]].p3_z;
-		face_depth[fn] /= fp->num_verts;
-		//initialize order list
-		render_order[rcount] = fn;
-		rcount++;
-	}
-	//Sort the faces
-	qsort(render_order, rcount, sizeof(*render_order), (int (*)(const void*, const void*)) room_face_sort_func);
-	//Render the faces
-	for (i = rcount - 1; i >= 0; i--)
-		RenderFace(rp, render_order[i]);
-}
-
 // Sets up fog if this room is fogged
 void SetupRoomFog(room* rp, vector* eye, matrix* orient, int viewer_room)
 {
@@ -2662,49 +2617,7 @@ void RenderRoomUnsorted(room* rp)
 		}
 		else
 		{
-			if (!StateLimited)
-			{
-				RenderFace(rp, fn);
-			}
-			else
-			{
-				//setup order list
-				State_elements[rcount].facenum = fn;
-				if (fp->flags & FF_LIGHTMAP)
-					State_elements[rcount].sort_key = (LightmapInfo[fp->lmi_handle].lm_handle * MAX_TEXTURES) + fp->tmap;
-				else
-					State_elements[rcount].sort_key = fp->tmap;
-				rcount++;
-			}
-		}
-	}
-
-	if (StateLimited)
-	{
-		//Sort the faces
-		SortStates(State_elements, rcount);
-
-		//Render the faces
-		int i;
-		for (i = rcount - 1; i >= 0; i--)
-			RenderFace(rp, State_elements[i].facenum);
-
-		if (!UseMultitexture)
-		{
-			// Since we're state limited, we have to render lightmap faces completely separate
-			// Now render lightmap faces
-			rend_SetAlphaType(AT_LIGHTMAP_BLEND);
-			rend_SetLighting(LS_GOURAUD);
-			rend_SetColorModel(CM_MONO);
-			rend_SetOverlayType(OT_NONE);
-			rend_SetTextureType(TT_PERSPECTIVE);
-			rend_SetWrapType(WT_CLAMP);
-			rend_SetMipState(0);
-			for (i = rcount - 1; i >= 0; i--)
-				RenderLightmapFace(rp, State_elements[i].facenum);
-			
-			rend_SetWrapType(WT_WRAP);
-			rend_SetMipState(1);
+			RenderFace(rp, fn);
 		}
 	}
 }
@@ -3319,17 +3232,7 @@ void RenderRoom(room* rp)
 	// Mark it visible for automap
 	AutomapVisMap[rp - Rooms] = 1;
 
-#ifdef EDITOR
-	if (!UseHardware)
-	{
-		RenderRoomSorted(rp);
-	}
-	else
-#endif
-	{
-		//NOTE LINK TO ABOVE ELSE
-		RenderRoomUnsorted(rp);
-	}
+	RenderRoomUnsorted(rp);
 
 	rp->last_render_time = Gametime;
 	rp->flags &= ~RF_MIRROR_VISIBLE;
@@ -3488,7 +3391,7 @@ void RenderRoomObjects(room* rp)
 {
 	int n_objs = 0, objnum, i, visnum;
 	float zdist;
-	if (!Render_mirror_for_room && UseHardware)
+	if (!Render_mirror_for_room)
 		return;	// This function only works for mirrors now
 
 	//Add objects to sort list
@@ -3547,7 +3450,7 @@ void RenderRoomObjects(room* rp)
 #endif
 
 	//Render the objects
-	if (UseHardware && Render_mirror_for_room)
+	if (Render_mirror_for_room)
 	{
 		// Render the mirror stuff if present
 		room* mirror_rp = &Rooms[Mirror_room];
@@ -3653,68 +3556,63 @@ void RenderRoomObjects(room* rp)
 // Either renders the objects in a room, or stuffs them into our postrender list
 void CheckToRenderMineObjects(int roomnum)
 {
-	if (UseHardware)
+	int index;
+	float zdist;
+	if (Render_mirror_for_room)
+		return;
+	for (index = Rooms[roomnum].objects; index != -1; index = Objects[index].next)
 	{
-		int index;
-		float zdist;
-		if (Render_mirror_for_room)
-			return;
-		for (index = Rooms[roomnum].objects; index != -1; index = Objects[index].next)
+		object* obj = &Objects[index];
+
+		if (Objects[index].render_type == RT_NONE)
+			continue;
+
+		if (obj == Viewer_object)
+			continue;
+
+		// Don't draw piggybacked objects
+		if (Viewer_object->type == OBJ_OBSERVER && index == Players[Viewer_object->id].piggy_objnum)
+			continue;
+
+		float size = Objects[index].size;
+		// Special case weapons with streamers
+		if (Objects[index].type == OBJ_WEAPON && (Weapons[Objects[index].id].flags & WF_STREAMER))
+			size = Weapons[Objects[index].id].phys_info.velocity.z;
+
+		// Check if object is trivially rejected
+		int visible = IsPointVisible(&obj->pos, size, &zdist);		//calculate zdist
+		if ((obj->type == OBJ_WEAPON && Weapons[obj->id].flags & WF_ELECTRICAL) || visible)
 		{
-			object* obj = &Objects[index];
-
-			if (Objects[index].render_type == RT_NONE)
-				continue;
-
-			if (obj == Viewer_object)
-				continue;
-
-			// Don't draw piggybacked objects
-			if (Viewer_object->type == OBJ_OBSERVER && index == Players[Viewer_object->id].piggy_objnum)
-				continue;
-
-			float size = Objects[index].size;
-			// Special case weapons with streamers
-			if (Objects[index].type == OBJ_WEAPON && (Weapons[Objects[index].id].flags & WF_STREAMER))
-				size = Weapons[Objects[index].id].phys_info.velocity.z;
-
-			// Check if object is trivially rejected
-			int visible = IsPointVisible(&obj->pos, size, &zdist);		//calculate zdist
-			if ((obj->type == OBJ_WEAPON && Weapons[obj->id].flags & WF_ELECTRICAL) || visible)
+			if (Num_postrenders < MAX_POSTRENDERS)
 			{
-				if (Num_postrenders < MAX_POSTRENDERS)
-				{
-					Postrender_list[Num_postrenders].type = PRT_OBJECT;
-					Postrender_list[Num_postrenders].z = zdist;
-					Postrender_list[Num_postrenders++].objnum = index;
-				}
-			}
-		}
-		// Now do viseffects
-		for (index = Rooms[roomnum].vis_effects; index != -1; index = VisEffects[index].next)
-		{
-			if (VisEffects[index].type == VIS_NONE || VisEffects[index].flags & VF_DEAD)
-				continue;
-
-			if (IsPointVisible(&VisEffects[index].pos, VisEffects[index].size, &zdist))
-			{
-				if (Num_postrenders < MAX_POSTRENDERS)
-				{
-					Postrender_list[Num_postrenders].type = PRT_VISEFFECT;
-					Postrender_list[Num_postrenders].z = zdist;
-					Postrender_list[Num_postrenders++].visnum = index;
-				}
+				Postrender_list[Num_postrenders].type = PRT_OBJECT;
+				Postrender_list[Num_postrenders].z = zdist;
+				Postrender_list[Num_postrenders++].objnum = index;
 			}
 		}
 	}
-	else
-		RenderRoomObjects(&Rooms[roomnum]);
+	// Now do viseffects
+	for (index = Rooms[roomnum].vis_effects; index != -1; index = VisEffects[index].next)
+	{
+		if (VisEffects[index].type == VIS_NONE || VisEffects[index].flags & VF_DEAD)
+			continue;
+
+		if (IsPointVisible(&VisEffects[index].pos, VisEffects[index].size, &zdist))
+		{
+			if (Num_postrenders < MAX_POSTRENDERS)
+			{
+				Postrender_list[Num_postrenders].type = PRT_VISEFFECT;
+				Postrender_list[Num_postrenders].z = zdist;
+				Postrender_list[Num_postrenders++].visnum = index;
+			}
+		}
+	}
 }
 // Renders all the mirrored rooms for this frame
 void RenderMirrorRooms()
 {
 	int i;
-	if (!UseHardware || !Detail_settings.Mirrored_surfaces)
+	if (!Detail_settings.Mirrored_surfaces)
 		return;
 
 	if (Num_mirror_rooms == 0)
@@ -3900,7 +3798,7 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain)
 		// Setup fog if needed
 		g3_SetFarClipZ(VisibleTerrainZ);
 
-		if ((Terrain_sky.flags & TF_FOG) && (UseHardware || (!UseHardware && Lighting_on)))
+		if (Terrain_sky.flags & TF_FOG)
 		{
 			rend_SetZValues(0, VisibleTerrainZ);
 			rend_SetFogState(1);
@@ -3967,8 +3865,6 @@ void ResetLightGlows()
 // Renders all the lights glows for this frame
 void RenderLightGlows()
 {
-	if (!UseHardware)
-		return;
 	// Render all the glows for this mine
 	rend_SetColorModel(CM_RGB);
 	rend_SetLighting(LS_GOURAUD);
@@ -3990,70 +3886,6 @@ void RenderLightGlows()
 	rend_SetZBufferWriteMask(1);
 	rend_SetZBufferState(1);
 }
-
-/*
-// Sets fogzone start and end points
-void SetFogZoneStart(float z)
-{
-	Fog_zone_start=z;
-}
-
-void SetFogZoneEnd (float z)
-{
-	Fog_zone_end=z;
-}
-
-g3Point SolidFogPoints[128],AlphaFogPoints[128];
-// Adds a point to the fog zone face
-void FogClipPoints (g3Point *on_pnt,g3Point *off_pnt,g3Point *dest,float zval,int ending)
-{
-	float z_on,z_off;
-	float k;
-	g3Point *tmp=dest;
-	tmp->p3_flags=0;
-	z_on=on_pnt->p3_z;
-	z_off=off_pnt->p3_z;
-	k = 1.0-((z_off-zval) / (z_off-z_on));
-	tmp->p3_z = on_pnt->p3_z + ((off_pnt->p3_z-on_pnt->p3_z) * k);
-
-	tmp->p3_x = on_pnt->p3_x + ((off_pnt->p3_x-on_pnt->p3_x) * k);
-	tmp->p3_y = on_pnt->p3_y + ((off_pnt->p3_y-on_pnt->p3_y) * k);
-
-	if (on_pnt->p3_flags & PF_UV)
-	{
-		tmp->p3_u = on_pnt->p3_u + ((off_pnt->p3_u-on_pnt->p3_u) * k);
-		tmp->p3_v = on_pnt->p3_v + ((off_pnt->p3_v-on_pnt->p3_v) * k);
-		tmp->p3_flags |= PF_UV;
-	}
-
-	if (on_pnt->p3_flags & PF_UV2)
-	{
-		tmp->p3_u2 = on_pnt->p3_u2 + ((off_pnt->p3_u2-on_pnt->p3_u2) * k);
-		tmp->p3_v2 = on_pnt->p3_v2 + ((off_pnt->p3_v2-on_pnt->p3_v2) * k);
-		tmp->p3_flags |= PF_UV2;
-	}
-
-	if (on_pnt->p3_flags & PF_L)
-	{
-		tmp->p3_l = on_pnt->p3_l + ((off_pnt->p3_l-on_pnt->p3_l) * k);
-		tmp->p3_flags |= PF_L;
-	}
-
-	if (on_pnt->p3_flags & PF_RGBA)
-	{
-		tmp->p3_r = on_pnt->p3_r + ((off_pnt->p3_r-on_pnt->p3_r) * k);
-		tmp->p3_g = on_pnt->p3_g + ((off_pnt->p3_g-on_pnt->p3_g) * k);
-		tmp->p3_b = on_pnt->p3_b + ((off_pnt->p3_b-on_pnt->p3_b) * k);
-		tmp->p3_flags |= PF_RGBA;
-	}
-
-	if (ending)
-		tmp->p3_a = 0.0;
-	else
-		tmp->p3_a = 1.0;
-	g3_CodePoint(tmp);
-}
-*/
 
 #define STATE_PUSH(val) {state_stack[state_stack_counter]=val; state_stack_counter++; ASSERT (state_stack_counter<2000);}
 #define STATE_POP()	{state_stack_counter--; pop_val=state_stack[state_stack_counter];}
@@ -4163,100 +3995,6 @@ void ConsolidateMineMirrors()
 		}
 	}
 }
-
-/*
-// Takes a face and adds the appropriate vertices for drawing in the fog zone
-// Returns number of points in new polygon
-// New polygon points are in FogPoints array
-int FogBlendFace (g3Point **src,int nv,int *num_solid,int *num_alpha)
-{
-	int alpha_nv=0,solid_nv=0,temp_nv=0;
-	g3Point temp_buf[128],temp_pnt;
-	float fog_zone_range=Fog_zone_end-Fog_zone_start;
-	int i;
-
-	for (i=0;i<nv;i++)
-	{
-		int next=(i+1)%nv;
-		int prev=i-1;
-		if (prev<0)
-			prev=nv-1;
-		g3Point *thispnt=src[i];
-		g3Point *nextpnt=src[next];
-		g3Point *prevpnt=src[prev];
-		if (thispnt->p3_z>Fog_zone_end)
-		{
-			if (prevpnt->p3_z<Fog_zone_end)
-			{
-				FogClipPoints (prevpnt,thispnt,&temp_buf[temp_nv],Fog_zone_end,1);
-				temp_nv++;
-			}
-			if (nextpnt->p3_z<Fog_zone_end)
-			{
-				FogClipPoints (nextpnt,thispnt,&temp_buf[temp_nv],Fog_zone_end,1);
-				temp_nv++;
-			}
-		}
-		else
-		{
-			temp_buf[temp_nv]=*thispnt;
-			temp_buf[temp_nv].p3_a=0;
-			temp_nv++;
-		}
-	}
-	// At this stage all vertices are clipped to be nearer that Fog_zone_end
-	nv=temp_nv;
-	for (i=0;i<nv;i++)
-	{
-		int next=(i+1)%nv;
-		int prev=i-1;
-		if (prev<0)
-			prev=nv-1;
-		g3Point *thispnt=&temp_buf[i];
-		g3Point *nextpnt=&temp_buf[next];
-		g3Point *prevpnt=&temp_buf[prev];
-		if (thispnt->p3_z>Fog_zone_start)
-		{
-			if (prevpnt->p3_z<Fog_zone_start)
-			{
-				FogClipPoints (prevpnt,thispnt,&temp_pnt,Fog_zone_start,0);
-				SolidFogPoints[solid_nv]=temp_pnt;
-				solid_nv++;
-				AlphaFogPoints[alpha_nv]=temp_pnt;
-				alpha_nv++;
-			}
-			// Add this point to the list
-			//---------------------------
-			float alpha=1.0-((thispnt->p3_z-Fog_zone_start)/fog_zone_range);
-			if (alpha<0)
-				alpha=0;
-			ASSERT (alpha<=1.0);
-			AlphaFogPoints[alpha_nv]=*thispnt;
-			AlphaFogPoints[alpha_nv].p3_a=alpha;
-			alpha_nv++;
-			//------------------------------
-			if (nextpnt->p3_z<Fog_zone_start)
-			{
-				FogClipPoints (nextpnt,thispnt,&temp_pnt,Fog_zone_start,0);
-				SolidFogPoints[solid_nv]=temp_pnt;
-				solid_nv++;
-				AlphaFogPoints[alpha_nv]=temp_pnt;
-				alpha_nv++;
-
-			}
-		}
-		else
-		{
-			SolidFogPoints[solid_nv]=*thispnt;
-			SolidFogPoints[solid_nv].p3_a=1.0;
-			solid_nv++;
-		}
-	}
-	*num_alpha=alpha_nv;
-	*num_solid=solid_nv;
-	return (solid_nv>0);
-}
-*/
 
 // RenderBlankScreen
 //	Renders a blank screen, to be used for UI callbacks to prevent Hall of mirrors with mouse cursor

@@ -21,209 +21,262 @@
 
 MeshBuilder::MeshBuilder()
 {
-	m_handle = m_verthandle = m_indexhandle = 0;
 	m_initialized = false;
+	m_vertexstartoffset = m_vertexstartcount = 0;
+	m_vertexstarted = false;
+	m_indexstartoffset = m_indexstartcount = 0;
+	m_indexstarted = false;
 }
 
-void MeshBuilder::UpdateLastBatch()
+void MeshBuilder::BeginVertices()
 {
-	if (m_interactions.empty())
-		return;
-
-	MeshBatch& lastbatch = m_interactions.back();
-	lastbatch.vertexcount = m_vertices.size() - lastbatch.vertexoffset;
-	lastbatch.indexcount = m_indicies.size() - lastbatch.indexoffset;
+	m_vertexstartoffset = m_vertices.size();
+	m_vertexstartcount = 0;
+	m_vertexstarted = true;
 }
 
-void MeshBuilder::StartBatchSolid()
+void MeshBuilder::BeginIndices()
 {
-	UpdateLastBatch();
-
-	MeshBatch batch;
-	batch.primaryhandle = batch.secondaryhandle = -1;
-	batch.vertexoffset = m_vertices.size();
-	batch.vertexcount = 0;
-	batch.indexoffset = m_indicies.size();
-	batch.indexcount = 0;
-	m_interactions.push_back(batch);
-}
-
-void MeshBuilder::StartBatchOneTex(int handle)
-{
-	UpdateLastBatch();
-
-	MeshBatch batch;
-	batch.primaryhandle = handle;
-	batch.secondaryhandle = -1;
-	batch.vertexoffset = m_vertices.size();
-	batch.vertexcount = 0;
-	batch.indexoffset = m_indicies.size();
-	batch.indexcount = 0;
-	m_interactions.push_back(batch);
-}
-
-void MeshBuilder::StartBatchTwoTex(int handle, int handle2)
-{
-	UpdateLastBatch();
-
-	MeshBatch batch;
-	batch.primaryhandle = handle;
-	batch.secondaryhandle = handle2;
-	batch.vertexoffset = m_vertices.size();
-	batch.vertexcount = 0;
-	batch.indexoffset = m_indicies.size();
-	batch.indexcount = 0;
-	m_interactions.push_back(batch);
+	m_indexstartoffset = m_indicies.size();
+	m_indexstartcount = 0;
+	m_indexstarted = true;
 }
 
 void MeshBuilder::SetVertices(int numverts, RendVertex* vertices)
 {
+	if (!m_vertexstarted)
+	{
+		Error("MeshBuilder::SetVertices: BeginVertices not called!");
+	}
 	//This needs some optimization
 	for (int i = 0; i < numverts; i++)
 		m_vertices.push_back(vertices[i]);
+
+	m_vertexstartcount += numverts;
 }
 
-void MeshBuilder::SetIndicies(int numindices, short* indicies)
+void MeshBuilder::SetIndicies(int numindices, int* indicies)
 {
+	if (!m_indexstarted)
+	{
+		Error("MeshBuilder::SetIndicies: BeginIndices not called!");
+	}
 	for (int i = 0; i < numindices; i++)
 		m_indicies.push_back(indicies[i]);
+
+	m_indexstartcount += numindices;
 }
 
-void MeshBuilder::Build()
+ElementRange MeshBuilder::EndVertices()
 {
-	if (m_handle)
-		Destroy();
+	if (!m_vertexstarted)
+		Error("MeshBuilder::EndVertices: Not started!");
+	m_vertexstarted = false;
+	return ElementRange(m_vertexstartoffset, m_vertexstartcount);
+}
 
-	UpdateLastBatch();
+ElementRange MeshBuilder::EndIndices()
+{
+	if (!m_indexstarted)
+		Error("MeshBuilder::EndIndices: Not started!");
+	m_indexstarted = false;
+	return ElementRange(m_indexstartoffset, m_indexstartcount);
+}
 
-	if (m_handle == 0)
-		glGenVertexArrays(1, &m_handle);
+void MeshBuilder::BuildVertices(VertexBuffer& buffer)
+{
+	buffer.Initialize(m_vertices.size(), m_vertices.size() * sizeof(m_vertices[0]), m_vertices.data());
+}
 
-	glBindVertexArray(m_handle);
+void MeshBuilder::BuildIndicies(IndexBuffer& buffer)
+{
+	buffer.Initialize(m_indicies.size(), m_indicies.size() * sizeof(m_indicies[0]), m_indicies.data());
+}
 
-	if (m_verthandle == 0)
-		glGenBuffers(1, &m_verthandle);
+void MeshBuilder::UpdateVertices(VertexBuffer& buffer, uint32_t offset)
+{
+}
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_verthandle);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(RendVertex) * m_vertices.size(), m_vertices.data(), GL_STATIC_DRAW);
-
-	if (!m_initialized)
-	{
-		//Create the standard vertex attributes
-		//Position
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, position));
-
-		//Color
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 4, GL_BYTE, GL_TRUE, sizeof(RendVertex), (void*)offsetof(RendVertex, r));
-
-		//Normal
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, normal));
-
-		//Lightmap page
-		glEnableVertexAttribArray(3);
-		glVertexAttribIPointer(3, 1, GL_INT, sizeof(RendVertex), (void*)offsetof(RendVertex, lmpage));
-
-		//Base UV
-		glEnableVertexAttribArray(4);
-		glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u1));
-
-		//Overlay UV
-		glEnableVertexAttribArray(5);
-		glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u2));
-
-		//UV slide
-		glEnableVertexAttribArray(6);
-		glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u2));
-	}
-
-	//Check if indicies are being used
-	if (!m_indicies.empty())
-	{
-		if (!m_indexhandle)
-			glGenBuffers(1, &m_indexhandle);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexhandle);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(short) * m_indicies.size(), m_indicies.data(), GL_STATIC_DRAW);
-	}
-
-	//All the data is GPU side now, so no sense in keeping this around
-	m_vertices.clear();
-	m_indicies.clear();
-
-	GL_UseDrawVAO();
-	//TODO: Once everything is using GL 3.3 systems this shouldn't be done anymore
-	//glBindVertexArray(0);
+void MeshBuilder::UpdateIndicies(IndexBuffer& buffer, uint32_t offset)
+{
 }
 
 void MeshBuilder::Destroy()
 {
-	if (m_indexhandle)
-	{
-		glDeleteBuffers(1, &m_indexhandle);
-		m_indexhandle = 0;
-	}
-
-	if (m_verthandle)
-	{
-		glDeleteBuffers(1, &m_verthandle);
-		m_verthandle = 0;
-	}
-
-	if (m_handle)
-	{
-		glDeleteVertexArrays(1, &m_handle);
-		m_handle = 0;
-	}
-
-	m_vertices.clear();
-	m_indicies.clear();
-	m_interactions.clear();
+	Reset();
 }
 
 void MeshBuilder::Reset()
 {
 	m_vertices.clear();
 	m_indicies.clear();
-	m_interactions.clear();
 }
 
-void MeshBuilder::Draw() const
+VertexBuffer::VertexBuffer() : VertexBuffer(true, false)
 {
-	glBindVertexArray(m_handle);
-	if (m_indexhandle)
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexhandle);
+}
 
-	for (const MeshBatch& batch : m_interactions)
+VertexBuffer::VertexBuffer(bool allow_dynamic, bool dynamic_hint)
+{
+	m_name = 0;
+	m_vaoname = 0;
+	m_size = 0;
+	m_vertexcount = 0;
+	m_dynamic_hint = dynamic_hint;
+}
+
+void VertexBuffer::Initialize(uint32_t numvertices, uint32_t datasize, void* data)
+{
+	if (m_vaoname == 0)
 	{
-		//Why have I not made a "make bitmap current" function yet?
-		if (batch.primaryhandle >= 0)
-		{
-			opengl_MakeBitmapCurrent(batch.primaryhandle, MAP_TYPE_BITMAP, 0);
-			opengl_MakeWrapTypeCurrent(batch.primaryhandle, MAP_TYPE_BITMAP, 0);
-			opengl_MakeFilterTypeCurrent(batch.primaryhandle, MAP_TYPE_BITMAP, 0);
-		}
-		if (batch.secondaryhandle >= 0)
-		{
-			opengl_MakeBitmapCurrent(batch.secondaryhandle, MAP_TYPE_LIGHTMAP, 1);
-			opengl_MakeWrapTypeCurrent(batch.secondaryhandle, MAP_TYPE_LIGHTMAP, 1);
-			opengl_MakeFilterTypeCurrent(batch.secondaryhandle, MAP_TYPE_LIGHTMAP, 1);
-		}
-		//Eventually third overlay type for bump mapping?
-
-		if (m_indexhandle)
-			glDrawElements(GL_TRIANGLES, batch.indexcount, GL_UNSIGNED_SHORT, (const void*)(batch.indexoffset * sizeof(ushort)));
-		else
-			glDrawArrays(GL_TRIANGLES, batch.vertexoffset, batch.vertexcount);
-
-#ifndef NDEBUG
-		GLenum err = glGetError();
-		if (err != GL_NO_ERROR)
-			Int3();
-#endif
+		glGenVertexArrays(1, &m_vaoname);
+		glGenBuffers(1, &m_name);
 	}
 
+	glBindVertexArray(m_vaoname);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_name);
+	glBufferData(GL_ARRAY_BUFFER, datasize, data, m_dynamic_hint ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+
+	//Create the standard vertex attributes
+	//Position
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, position));
+
+	//Color
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_BYTE, GL_TRUE, sizeof(RendVertex), (void*)offsetof(RendVertex, r));
+
+	//Normal
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, normal));
+
+	//Lightmap page
+	glEnableVertexAttribArray(3);
+	glVertexAttribIPointer(3, 1, GL_INT, sizeof(RendVertex), (void*)offsetof(RendVertex, lmpage));
+
+	//Base UV
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u1));
+
+	//Overlay UV
+	glEnableVertexAttribArray(5);
+	glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u2));
+
+	//UV slide
+	glEnableVertexAttribArray(6);
+	glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u2));
+
+	GL_UseDrawVAO();
+}
+
+void VertexBuffer::Update(uint32_t byteoffset, uint32_t datasize, void* data)
+{
+	assert(m_vaoname != 0);
+	assert(byteoffset + datasize <= m_size);
+	glBindVertexArray(m_vaoname);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_name);
+	glBufferSubData(GL_ARRAY_BUFFER, byteoffset, datasize, data);
+}
+
+void VertexBuffer::Bind() const
+{
+	assert(m_vaoname != 0);
+	glBindVertexArray(m_vaoname);
+}
+
+void VertexBuffer::BindBitmap(int bmhandle) const
+{
+	opengl_MakeBitmapCurrent(bmhandle, MAP_TYPE_BITMAP, 0);
+	opengl_MakeWrapTypeCurrent(bmhandle, MAP_TYPE_BITMAP, 0);
+	opengl_MakeFilterTypeCurrent(bmhandle, MAP_TYPE_BITMAP, 0);
+}
+
+void VertexBuffer::BindLightmap(int lmhandle) const
+{
+	opengl_MakeBitmapCurrent(lmhandle, MAP_TYPE_LIGHTMAP, 1);
+	opengl_MakeWrapTypeCurrent(lmhandle, MAP_TYPE_LIGHTMAP, 1);
+	opengl_MakeFilterTypeCurrent(lmhandle, MAP_TYPE_LIGHTMAP, 1);
+}
+
+void VertexBuffer::Draw() const
+{
+	glDrawArrays(GL_TRIANGLES, 0, m_vertexcount);
+}
+
+void VertexBuffer::Draw(ElementRange range) const
+{
+	assert(range.offset + range.count <= m_vertexcount);
+	glDrawArrays(GL_TRIANGLES, range.offset, range.count);
+}
+
+void VertexBuffer::DrawIndexed(ElementRange range) const
+{
+	glDrawElements(GL_TRIANGLES, range.count, GL_UNSIGNED_INT, (const void*)(range.offset * sizeof(uint32_t)));
+}
+
+void VertexBuffer::Destroy()
+{
+	if (m_vaoname != 0)
+	{
+		glDeleteBuffers(1, &m_name);
+		glDeleteVertexArrays(1, &m_vaoname);
+		m_name = m_vaoname = 0;
+	}
+	m_size = m_vertexcount = 0;
+}
+
+IndexBuffer::IndexBuffer() : IndexBuffer(true, false)
+{
+}
+
+IndexBuffer::IndexBuffer(bool allow_dynamic, bool dynamic_hint)
+{
+	m_name = 0;
+	m_size = 0;
+	m_dynamic_hint = dynamic_hint;
+}
+
+void IndexBuffer::Initialize(uint32_t numindices, uint32_t datasize, void* data)
+{
+	if (m_size != 0 && datasize > m_size)
+	{
+		//Need to make a new buffer
+		Destroy();
+	}
+
+	if (m_name == 0)
+	{
+		glGenBuffers(1, &m_name);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_name);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, datasize, data, m_dynamic_hint ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		m_size = datasize;
+	}
+	else
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_name);
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, datasize, data);
+	}
+}
+
+void IndexBuffer::Bind() const
+{
+	assert(m_name != 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_name);
+}
+
+void IndexBuffer::Destroy()
+{
+	if (m_name != 0)
+	{
+		glDeleteBuffers(1, &m_name);
+		m_name = 0;
+	}
+}
+
+void rendTEMP_UnbindVertexBuffer()
+{
 	GL_UseDrawVAO();
 }
