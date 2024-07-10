@@ -278,14 +278,13 @@ void MeshTerrainCell(MeshBuilder& mesh, int x, int z)
 				firsttime = false;
 
 			//assumption: LMs cover 128x128 cells so there won't ever be more than one LM handle at the moment.
-			//mesh.StartBatchTwoTex(GetTextureBitmap(cell.texturehandle, 0), cell.lmhandle);
 			mesh.BeginVertices();
 			mesh.BeginIndices();
 			lasttexhandle = cell.texturehandle;
 			lastlmhandle = cell.lmhandle;
 		}
 
-		//In theory I wouldn't need to have unique rend verts, but the rotation can cause different UVs
+		//In theory I wouldn't need to have unique rend verts per cell, but the rotation can cause different UVs
 		RendVertex verts[4] = {};
 
 		//Generate tl
@@ -1864,40 +1863,6 @@ __inline void DrawTerrainOutline(int tcell, int nverts, g3Point** pointlist)
 	}
 }
 #endif
-
-int TerrainSortingFunction(const terrain_render_info* a, terrain_render_info* b)
-{
-	return b->z - a->z;
-}
-
-void SortTerrainList(int cellcount)
-{
-	int i, t, k;
-	int lod, simplemul;
-	int n[4];
-
-	for (i = 0; i < cellcount; i++)
-	{
-		t = Terrain_list[i].segment;
-		lod = Terrain_list[i].lod;
-#if (!defined(RELEASE) || defined(NEWEDITOR))
-		Terrain_seg_render_objs[t] = -1;
-#endif
-
-		simplemul = 1 << ((MAX_TERRAIN_LOD - 1) - lod);
-		Terrain_list[i].z = 0.0f;
-		n[0] = t;
-		n[1] = t + (TERRAIN_WIDTH * simplemul);
-		n[2] = t + (TERRAIN_WIDTH * simplemul) + simplemul;
-		n[3] = t + simplemul;
-		for (k = 0; k < 4; k++)
-			if (n[k] <= 65535)
-				Terrain_list[i].z += World_point_buffer[n[k]].p3_vec.z;
-		Terrain_list[i].z /= 4;
-	}
-	//Sort the faces
-	qsort(Terrain_list, cellcount, sizeof(*Terrain_list), (int (*)(const void*, const void*)) TerrainSortingFunction);
-}
 
 // Returns the number of points to rotate, plus the actual numbers of the points
 // are returned in the "n" array

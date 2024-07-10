@@ -242,14 +242,24 @@ inline bool FaceIsRenderable(room* rp, face* fp)
 	return 1;
 }
 
+VertexBuffer Room_VertexBuffer;
+IndexBuffer Room_IndexBuffer;
+
+struct RoomDrawElement
+{
+	int texturenum;
+	int lmhandle;
+	ElementRange range;
+};
+
 struct RoomMesh
 {
-	MeshBuilder room_lit_static;
-	MeshBuilder room_unlit_static;
+	std::vector<RoomDrawElement> LitInteractions;
+	std::vector<RoomDrawElement> UnlitInteractions;
 	void Reset()
 	{
-		room_lit_static.Destroy();
-		room_unlit_static.Destroy();
+		LitInteractions.clear();
+		UnlitInteractions.clear();
 	}
 };
 
@@ -286,13 +296,83 @@ static inline int GetFaceAlpha(face* fp, int bm_handle)
 //These are the meshes of all normal room geometry. 
 RoomMesh Room_meshes[MAX_ROOMS];
 
+void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements, std::vector<RoomDrawElement>& interactions, room& rp)
+{
+	if (elements.empty())
+		return;
+
+	int lasttmap = -1;
+	int lastlm = -1;
+	bool firsttime = true;
+	int triindices[3];
+	RendVertex vert;
+	for (SortableElement& element : elements)
+	{
+		if (element.texturehandle != lasttmap || element.lmhandle != lastlm)
+		{
+			if (!firsttime)
+			{
+				mesh.EndVertices();
+				RoomDrawElement element;
+				element.texturenum = lasttmap;
+				element.lmhandle = lastlm;
+				element.range = mesh.EndIndices();
+				interactions.push_back(element);
+			}
+			else
+				firsttime = false;
+
+			mesh.BeginVertices();
+			mesh.BeginIndices();
+			lasttmap = element.texturehandle;
+			lastlm = element.lmhandle;
+
+			vert.uslide = GameTextures[lasttmap].slide_u;
+			vert.vslide = GameTextures[lasttmap].slide_v;
+		}
+
+		face& fp = rp.faces[element.element];
+
+		int first_index = mesh.NumVertices();
+		for (int i = 0; i < fp.num_verts; i++)
+		{
+			roomUVL uvs = fp.face_uvls[i];
+			vert.position = rp.verts[fp.face_verts[i]];
+			vert.normal = fp.normal; //oh no, no support for phong shading..
+			vert.r = vert.g = vert.b = vert.a = 255;
+			vert.u1 = uvs.u; vert.u2 = uvs.v;
+			vert.u2 = uvs.u2; vert.v2 = uvs.v2;
+
+			mesh.AddVertex(vert);
+		}
+
+		//Generate indicies as a triangle fan
+		for (int i = 2; i < fp.num_verts; i++)
+		{
+			triindices[0] = first_index;
+			triindices[1] = first_index + i - 1;
+			triindices[2] = first_index + i;
+			mesh.SetIndicies(3, triindices);
+		}
+	}
+
+	mesh.EndVertices();
+	RoomDrawElement element;
+	element.texturenum = lasttmap;
+	element.lmhandle = lastlm;
+	element.range = mesh.EndIndices();
+	interactions.push_back(element);
+}
+
 //Meshes a given room. 
-void UpdateRoomMesh(int roomnum)
+void UpdateRoomMesh(MeshBuilder& mesh, int roomnum)
 {
 	room& rp = Rooms[roomnum];
 	if (!rp.used)
 		return; //unused room
 
+	//Maybe these should be changed into one pass using a white texture for unlit?
+	//But what happens if something silly like HDR lighting is added later?
 	std::vector<SortableElement> faces_lit;
 	std::vector<SortableElement> faces_unlit;
 
@@ -301,16 +381,30 @@ void UpdateRoomMesh(int roomnum)
 	{
 		face& fp = rp.faces[i];
 		//blarg
-		int bm_handle = GameTextures[fp.tmap].bm_handle;
+		int bm_handle = GetTextureBitmap(fp.tmap, 0);
 		int alphatype = GetFaceAlpha(&fp, bm_handle);
 		if (alphatype != AT_ALWAYS)
 			continue;
 		else
 		{
 			//Not a postrender, determine if it is unlit or lit. 
-
+			if (fp.flags & FF_LIGHTMAP)
+			{
+				//TODO: Add field names when Piccu becomes C++20.
+				faces_lit.push_back(SortableElement{ i, (ushort)fp.tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+			}
+			else
+			{
+				faces_unlit.push_back(SortableElement{ i, (ushort)fp.tmap, 0 });
+			}
 		}
 	}
+
+	std::sort(faces_lit.begin(), faces_lit.end());
+	AddFacesToBuffer(mesh, faces_lit, Room_meshes[roomnum].LitInteractions, rp);
+
+	std::sort(faces_unlit.begin(), faces_unlit.end());
+	AddFacesToBuffer(mesh, faces_unlit, Room_meshes[roomnum].UnlitInteractions, rp);
 }
 
 void FreeRoomMeshes()
@@ -319,16 +413,22 @@ void FreeRoomMeshes()
 	{
 		Room_meshes[i].Reset();
 	}
+	Room_VertexBuffer.Destroy();
+	Room_IndexBuffer.Destroy();
 }
 
 //Called during LoadLevel, builds meshes for every room. 
 void MeshRooms()
 {
+	MeshBuilder mesh;
 	FreeRoomMeshes();
 	for (int i = 0; i < Highest_room_index; i++)
 	{
-		UpdateRoomMesh(i);
+		UpdateRoomMesh(mesh, i);
 	}
+
+	mesh.BuildVertices(Room_VertexBuffer);
+	mesh.BuildIndicies(Room_IndexBuffer);
 }
 
 //Determine if you should render through a portal
@@ -1321,23 +1421,13 @@ void BuildRoomList(int start_room_num)
 	// Get our points rotated, and update the global point list
 	rp->wpb_index = Global_buffer_index;
 
-	//Katmai enhanced rotate only in a release build, because not 
-	//everyone has the intel compiler!
-#if ( defined(RELEASE) && defined(KATMAI) )
-	if (Katmai)
-
-		RotateRoomPoints(rp, rp->verts4);
-	else
-#endif
-		RotateRoomPoints(rp, rp->verts);
-
+	RotateRoomPoints(rp, rp->verts);
 
 	Global_buffer_index += rp->num_verts;
 
 	// Mark all objects in this room as visible
 	for (int objnum = rp->objects; (objnum != -1); objnum = Objects[objnum].next)
 		Objects[objnum].flags |= OF_SAFE_TO_RENDER;
-
 
 	//Initial clip window is whole screen
 	wnd.left = wnd.top = 0.0;
@@ -1383,33 +1473,6 @@ int point_in_poly(int nv, g3Point* p, float x, float y)
 
 	return c;
 }
-
-/*
-// Only called if editor active.
-// Used to determine which face was clicked on.
-void CheckFace(room *rp,int facenum, int nv, int bm,g3Point **pointlist)
-{
-	ddgr_color oldcolor;
-	//draw search pixel in bright green
-	rend_SetPixel(GR_RGB(0,255,10),search_x,search_y);
-	oldcolor = rend_GetPixel(search_x,search_y);			//will be different in 15/16-bit color
-	// Based on distance, draw in perspective or linear
-	// This is gonna be ripped out
-	rend_SetTextureType (TT_LINEAR_SPECIAL);
-	for (int i=0;i<nv;i++)
-	{
-		g3Point *t;
-		t=pointlist[i];
-		if (t[i].p3_vec.z<35)
-			rend_SetTextureType (TT_PERSPECTIVE_SPECIAL);
-	}
-	g3_DrawPoly(nv,pointlist,bm);
-	if (rend_GetPixel(search_x,search_y) != oldcolor) {
-		found_room = ROOMNUM(rp);
-		found_face = facenum;
-	}
-}
-*/
 
 #define STEPSIZE		.01f
 #define STEPSIZE_MIN	.1f
@@ -1459,47 +1522,6 @@ void RenderFloatingTrig(room* rp, face* fp)\
 	}
 	}
 #endif	//ifdef EDITOR
-
-void RenderSpecularFaces(room* rp)
-{
-	ASSERT(Num_specular_faces_to_render > 0);
-	int i, vn;
-	g3Point* pointlist[MAX_VERTS_PER_FACE];
-	g3Point  pointbuffer[MAX_VERTS_PER_FACE];
-	rend_SetWrapType(WT_CLAMP);
-	rend_SetOverlayType(OT_NONE);
-	rend_SetTextureType(TT_PERSPECTIVE);
-	rend_SetLighting(LS_NONE);
-	rend_SetColorModel(CM_MONO);
-	rend_SetAlphaType(AT_SATURATE_TEXTURE);
-	rend_SetAlphaValue(255);
-
-	for (i = 0; i < Num_specular_faces_to_render; i++)
-	{
-		face* fp = &rp->faces[Specular_faces[i]];
-		int lm_handle = LightmapInfo[fp->lmi_handle].spec_map;
-		ASSERT(lm_handle != -1);
-		for (vn = 0; vn < fp->num_verts; vn++)
-		{
-			pointbuffer[vn] = World_point_buffer[rp->wpb_index + fp->face_verts[vn]];
-			g3Point* p = &pointbuffer[vn];
-			pointlist[vn] = p;
-			p->p3_uvl.u = fp->face_uvls[vn].u2;
-			p->p3_uvl.v = fp->face_uvls[vn].v2;
-
-			p->p3_flags |= PF_UV;
-		}
-
-		int save_w = lm_w(lm_handle);
-		int save_h = lm_h(lm_handle);
-		GameLightmaps[lm_handle].width = lm_w(LightmapInfo[fp->lmi_handle].lm_handle);
-		GameLightmaps[lm_handle].height = lm_h(LightmapInfo[fp->lmi_handle].lm_handle);
-		g3_DrawPoly(fp->num_verts, pointlist, lm_handle, MAP_TYPE_LIGHTMAP);
-		GameLightmaps[lm_handle].width = save_w;
-		GameLightmaps[lm_handle].height = save_h;
-	}
-	rend_SetWrapType(WT_WRAP);
-}
 
 float Specular_scalars[4][4] = { {1.0f},{1.0f,.66f},{1.0f,.66f,.33f},{1.0f,.66f,.33f,.25f} };
 void RenderSpecularFacesFlat(room* rp)

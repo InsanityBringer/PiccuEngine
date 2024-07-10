@@ -55,6 +55,12 @@ void MeshBuilder::SetVertices(int numverts, RendVertex* vertices)
 	m_vertexstartcount += numverts;
 }
 
+void MeshBuilder::AddVertex(RendVertex& vertex)
+{
+	m_vertices.push_back(vertex);
+	m_vertexstartcount++;
+}
+
 void MeshBuilder::SetIndicies(int numindices, int* indicies)
 {
 	if (!m_indexstarted)

@@ -27,8 +27,8 @@
 struct SortableElement
 {
 	int element;
-	short texturehandle;
-	short lmhandle;
+	ushort texturehandle;
+	ushort lmhandle;
 
 	friend bool operator<(const SortableElement& l, const SortableElement& r)
 	{
@@ -146,6 +146,8 @@ public:
 
 	//Adds vertices to the vertex buffer
 	void SetVertices(int numverts, RendVertex* vertices);
+	//For when there's no reason to batch up a bunch
+	void AddVertex(RendVertex& vertex);
 
 	//Adds indicies to the vertex buffer
 	void SetIndicies(int numindices, int* indicies);
