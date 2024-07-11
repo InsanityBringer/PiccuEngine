@@ -1104,6 +1104,14 @@ void ProcessTestKeys(int key)
 		}
 		break;
 
+	case KEY_R + KEY_SHIFTED:
+		Render_use_newrender = !Render_use_newrender;
+		if (Render_use_newrender)
+			AddHUDMessage("Using newrender.");
+		else
+			AddHUDMessage("Using legacy render");
+		break;
+
 	case KEY_S:
 		if (Sound_system.IsActive()) {
 			AddHUDMessage("Sound system off.");

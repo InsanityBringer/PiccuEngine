@@ -58,13 +58,6 @@
 #endif
 #include "../renderer/gl_mesh.h"
 
-//Katmai enhanced rotate only in a release build, because not 
-//everyone has the intel compiler!
-#if ( defined(RELEASE) && defined(KATMAI) )
-// Katmai version -- Rotates all the points in a room
-void RotateRoomPoints(room* rp, vector4* world_vecs);
-#endif
-
 static int Faces_rendered = 0;
 
 extern double GetFPS();
@@ -217,13 +210,15 @@ ubyte Mirrored_room_checked[MAX_ROOMS];
 short Mirror_rooms[MAX_ROOMS];
 int Num_mirror_rooms = 0;
 
+bool Render_use_newrender = false; //debug
+
 //
 //  UTILITY FUNCS
 //
 //Determines if a face renders
 //Parameters:	rp - pointer to room that contains the face
 //					fp - pointer to the face in question
-inline bool FaceIsRenderable(room* rp, face* fp)
+static inline bool FaceIsRenderable(room* rp, face* fp)
 {
 	//Check for a floating trigger, which doesn't get rendered
 	if ((fp->flags & FF_FLOATING_TRIG) && (!In_editor_mode || !Render_floating_triggers))
@@ -232,36 +227,32 @@ inline bool FaceIsRenderable(room* rp, face* fp)
 	if (fp->portal_num != -1)
 	{
 		if (rp->portals[fp->portal_num].flags & PF_RENDER_FACES)
-			return 1;
+			return true;
 		if (rp->flags & RF_FOG && !In_editor_mode)
-			return 1;
+			return true;
 		return 0;
 	}
 
 	//Nothing special, so face renders
-	return 1;
+	return true;
 }
 
-VertexBuffer Room_VertexBuffer;
-IndexBuffer Room_IndexBuffer;
-
-struct RoomDrawElement
+//[ISB] Checks if a face is completely static and therefore should be in the normal static meshes.
+//Portals need to be put into another pass because they may or may not be visible. 
+static inline bool FaceIsStatic(room& rp, face& fp)
 {
-	int texturenum;
-	int lmhandle;
-	ElementRange range;
-};
+	//Check for a floating trigger, which doesn't get rendered
+	if ((fp.flags & FF_FLOATING_TRIG) && (!In_editor_mode || !Render_floating_triggers))
+		return false;
 
-struct RoomMesh
-{
-	std::vector<RoomDrawElement> LitInteractions;
-	std::vector<RoomDrawElement> UnlitInteractions;
-	void Reset()
-	{
-		LitInteractions.clear();
-		UnlitInteractions.clear();
-	}
-};
+	//No portals in the normal interactions. 
+	//Portal faces will be put in another list since they need to be determined at runtime. 
+	if (fp.portal_num != -1)
+		return false;
+
+	//Nothing special, so face renders
+	return true;
+}
 
 //Flags for GetFaceAlpha()
 #define FA_CONSTANT		1		//face has a constant alpha for the whole face
@@ -291,6 +282,76 @@ static inline int GetFaceAlpha(face* fp, int bm_handle)
 	}
 	return ret;
 }
+
+//Determine if you should render through a portal
+//Parameters:	rp - the room the portal is in
+//					pp - the portal we're checking
+//Returns:		true if you should render the room to which the portal connects
+inline bool RenderPastPortal(room* rp, portal* pp)
+{
+	//If we don't render the portal's faces, then we see through it
+	if (!(pp->flags & PF_RENDER_FACES))
+		return 1;
+
+	//Check if the face's texture has transparency
+	face* fp = &rp->faces[pp->portal_face];
+	if (GameTextures[fp->tmap].flags & TF_PROCEDURAL)
+		return 1;
+	int bm_handle = GetTextureBitmap(fp->tmap, 0);
+	if (GetFaceAlpha(fp, bm_handle))
+		return 1;	  	//Face has alpha or transparency, so we can see through it
+	else
+		return 0;		//Not transparent, so no render past
+}
+
+
+
+VertexBuffer Room_VertexBuffer;
+IndexBuffer Room_IndexBuffer;
+
+struct RoomDrawElement
+{
+	int texturenum;
+	int lmhandle;
+	ElementRange range;
+};
+
+struct RoomMesh
+{
+	std::vector<RoomDrawElement> LitInteractions;
+	std::vector<RoomDrawElement> UnlitInteractions;
+	void Reset()
+	{
+		LitInteractions.clear();
+		UnlitInteractions.clear();
+	}
+
+	void DrawLit()
+	{
+		for (RoomDrawElement& element : LitInteractions)
+		{
+			//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
+			Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+			Room_VertexBuffer.BindLightmap(element.lmhandle);
+
+			//And draw
+			Room_VertexBuffer.DrawIndexed(element.range);
+		}
+	}
+
+	void DrawUnlit()
+	{
+		for (RoomDrawElement& element : LitInteractions)
+		{
+			//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
+			Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+
+			//And draw
+			Room_VertexBuffer.DrawIndexed(element.range);
+		}
+	}
+};
+
 
 //[ISB] temp: Should stick this in Room or a separate render-related struct later down the line (dynamic room limit at some point?)
 //These are the meshes of all normal room geometry. 
@@ -340,7 +401,7 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 			vert.position = rp.verts[fp.face_verts[i]];
 			vert.normal = fp.normal; //oh no, no support for phong shading..
 			vert.r = vert.g = vert.b = vert.a = 255;
-			vert.u1 = uvs.u; vert.u2 = uvs.v;
+			vert.u1 = uvs.u; vert.v1 = uvs.v;
 			vert.u2 = uvs.u2; vert.v2 = uvs.v2;
 
 			mesh.AddVertex(vert);
@@ -375,11 +436,18 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum)
 	//But what happens if something silly like HDR lighting is added later?
 	std::vector<SortableElement> faces_lit;
 	std::vector<SortableElement> faces_unlit;
+	std::vector<int> faces_special;
 
 	//Build a sortable list of all faces
 	for (int i = 0; i < rp.num_faces; i++)
 	{
 		face& fp = rp.faces[i];
+		if (!FaceIsStatic(rp, fp))
+		{
+			faces_special.push_back(i);
+			continue;
+		}
+
 		//blarg
 		int bm_handle = GetTextureBitmap(fp.tmap, 0);
 		int alphatype = GetFaceAlpha(&fp, bm_handle);
@@ -429,27 +497,6 @@ void MeshRooms()
 
 	mesh.BuildVertices(Room_VertexBuffer);
 	mesh.BuildIndicies(Room_IndexBuffer);
-}
-
-//Determine if you should render through a portal
-//Parameters:	rp - the room the portal is in
-//					pp - the portal we're checking
-//Returns:		true if you should render the room to which the portal connects
-inline bool RenderPastPortal(room* rp, portal* pp)
-{
-	//If we don't render the portal's faces, then we see through it
-	if (!(pp->flags & PF_RENDER_FACES))
-		return 1;
-
-	//Check if the face's texture has transparency
-	face* fp = &rp->faces[pp->portal_face];
-	if (GameTextures[fp->tmap].flags & TF_PROCEDURAL)
-		return 1;
-	int bm_handle = GetTextureBitmap(fp->tmap, 0);
-	if (GetFaceAlpha(fp, bm_handle))
-		return 1;	  	//Face has alpha or transparency, so we can see through it
-	else
-		return 0;		//Not transparent, so no render past
 }
 
 //used during rendering as count of items in render_list[]
@@ -807,14 +854,7 @@ void MarkFacesForRendering(int roomnum, clip_wnd* wnd)
 	{
 		rp->wpb_index = Global_buffer_index;
 
-		//Katmai enhanced rotate only in a release build, because not 
-		//everyone has the intel compiler!
-#if ( defined(RELEASE) && defined(KATMAI) )
-		if (Katmai)
-			RotateRoomPoints(rp, rp->verts4);
-		else
-#endif
-			RotateRoomPoints(rp, rp->verts);
+		RotateRoomPoints(rp, rp->verts);
 
 		Global_buffer_index += rp->num_verts;
 	}
@@ -2203,16 +2243,6 @@ void RenderFace(room* rp, int facenum)
 	else
 		bm_handle = GetTextureBitmap(fp->tmap, 0);
 
-	//If searching, 
-#ifdef EDITOR
-	ddgr_color oldcolor;
-	if (TSearch_on)
-	{
-		rend_SetPixel(GR_RGB(16, 255, 16), TSearch_x, TSearch_y);
-		oldcolor = rend_GetPixel(TSearch_x, TSearch_y);
-	}
-#endif
-
 	//Set alpha, transparency, & lighting for this face
 	rend_SetAlphaType(GetFaceAlpha(fp, bm_handle));
 
@@ -2274,17 +2304,6 @@ void RenderFace(room* rp, int facenum)
 
 	//Draw the damn thing
 	drawn = g3_DrawPoly(fp->num_verts, pointlist, bm_handle, MAP_TYPE_BITMAP, &face_cc);
-#ifdef EDITOR
-	if (TSearch_on)
-	{
-		if (rend_GetPixel(TSearch_x, TSearch_y) != oldcolor)
-		{
-			TSearch_found_type = TSEARCH_FOUND_MINE;
-			TSearch_seg = rp - Rooms;
-			TSearch_face = facenum;
-		}
-	}
-#endif
 
 	// Do light saturation
 	if (!Render_mirror_for_room && Rendering_main_view && drawn && fp->portal_num == -1 && ((fp->flags & FF_CORONA) || FastCoronas) && (fp->flags & FF_LIGHTMAP) && UseHardware && (GameTextures[fp->tmap].flags & TF_LIGHT))
@@ -2547,19 +2566,7 @@ void RenderRoomUnsorted(room* rp)
 	if (rp->wpb_index == -1)
 	{
 		rp->wpb_index = Global_buffer_index;
-
-		//Katmai enhanced rotate only in a release build, because not 
-		//everyone has the intel compiler!
-#if ( defined(RELEASE) && defined(KATMAI) )
-		if (Katmai)
-		{
-			RotateRoomPoints(rp, rp->verts4);
-		}
-		else
-#endif
-		{
-			RotateRoomPoints(rp, rp->verts);
-		}
+		RotateRoomPoints(rp, rp->verts);
 
 		Global_buffer_index += rp->num_verts;
 	}
@@ -3112,20 +3119,10 @@ void BuildMirroredRoomList()
 			new_wnd.bot = y;
 	}
 
-	new_wnd.left = __max(wnd.left, new_wnd.left);
-	new_wnd.right = __min(wnd.right, new_wnd.right);
-	new_wnd.top = __max(wnd.top, new_wnd.top);
-	new_wnd.bot = __min(wnd.bot, new_wnd.bot);
-
-	/*rend_SetTextureType (TT_FLAT);
-	rend_SetAlphaType (AT_CONSTANT);
-	rend_SetAlphaValue (255);
-	rend_SetFlatColor (GR_RGB(255,255,255));
-
-	rend_DrawLine (new_wnd.left,new_wnd.top,new_wnd.right,new_wnd.top);
-	rend_DrawLine (new_wnd.right,new_wnd.top,new_wnd.right,new_wnd.bot);
-	rend_DrawLine (new_wnd.right,new_wnd.bot,new_wnd.left,new_wnd.bot);
-	rend_DrawLine (new_wnd.left,new_wnd.bot,new_wnd.left,new_wnd.top);*/
+	new_wnd.left = std::max(wnd.left, new_wnd.left);
+	new_wnd.right = std::min(wnd.right, new_wnd.right);
+	new_wnd.top = std::max(wnd.top, new_wnd.top);
+	new_wnd.bot = std::min(wnd.bot, new_wnd.bot);
 
 	BuildMirroredRoomListSub(Mirror_room, &new_wnd);
 }
@@ -3135,10 +3132,10 @@ g3Point mirror_save_points[MAX_VERTS_PER_ROOM];
 // Renders a mirror flipped about the mirrored plane
 void RenderMirroredRoom(room* rp)
 {
+	if (Render_use_newrender)
+		return; //Need new mirroring pipeline
+
 	int i;
-#if ( defined(RELEASE) && defined(KATMAI) )
-	vector4 kat_vecs[MAX_VERTS_PER_ROOM];
-#endif
 	ushort save_flags[MAX_FACES_PER_ROOM];
 	bool restore_index = true;
 	int save_index = Global_buffer_index;
@@ -3178,28 +3175,13 @@ void RenderMirroredRoom(room* rp)
 		float dist_from_mirror = vec->x * norm->x + vec->y * norm->y + vec->z * norm->z + mirror_dist;
 		// dest_vecs contains the point on the other side of the mirror (ie the reflected point)
 		mirror_dest_vecs[i] = *vec - (*norm * (dist_from_mirror * 2));
-#if ( defined(RELEASE) && defined(KATMAI) )
-		if (Katmai)
-		{
-			kat_vecs[i].x = mirror_dest_vecs[i].x;
-			kat_vecs[i].y = mirror_dest_vecs[i].y;
-			kat_vecs[i].z = mirror_dest_vecs[i].z;
-		}
-#endif
 	}
 
 	// Rotate our mirror points
 	vector revnorm = -*norm;
 	g3_SetCustomClipPlane(1, mirror_vec, &revnorm);
 
-	//Katmai enhanced rotate only in a release build, because not 
-	//everyone has the intel compiler!
-#if ( defined(RELEASE) && defined(KATMAI) )
-	if (Katmai)
-		RotateRoomPoints(rp, kat_vecs);
-	else
-#endif
-		RotateRoomPoints(rp, mirror_dest_vecs);
+	RotateRoomPoints(rp, mirror_dest_vecs);
 
 	// Mark facing faces
 	int save_frame = Facing_visited[rp - Rooms];
@@ -3254,30 +3236,38 @@ void RenderRoom(room* rp)
 	// Mark it visible for automap
 	AutomapVisMap[rp - Rooms] = 1;
 
-	RenderRoomUnsorted(rp);
-
-	rp->last_render_time = Gametime;
-	rp->flags &= ~RF_MIRROR_VISIBLE;
-
-	CheckLightGlowsForRoom(rp);
-
-	if (Num_scorches_to_render > 0)
+	if (Render_use_newrender)
 	{
-		RenderScorchesForRoom(rp);
-		Num_scorches_to_render = 0;
+		int roomnum = rp - Rooms;
+		Room_meshes[roomnum].DrawLit();
 	}
-
-	if (Num_specular_faces_to_render > 0)
+	else
 	{
-		RenderSpecularFacesFlat(rp);
-		Num_specular_faces_to_render = 0;
-		Num_real_specular_faces_to_render = 0;
-	}
+		RenderRoomUnsorted(rp);
 
-	if (Num_fog_faces_to_render > 0)
-	{
-		RenderFogFaces(rp);
-		Num_fog_faces_to_render = 0;
+		rp->last_render_time = Gametime;
+		rp->flags &= ~RF_MIRROR_VISIBLE;
+
+		CheckLightGlowsForRoom(rp);
+
+		if (Num_scorches_to_render > 0)
+		{
+			RenderScorchesForRoom(rp);
+			Num_scorches_to_render = 0;
+		}
+
+		if (Num_specular_faces_to_render > 0)
+		{
+			RenderSpecularFacesFlat(rp);
+			Num_specular_faces_to_render = 0;
+			Num_real_specular_faces_to_render = 0;
+		}
+
+		if (Num_fog_faces_to_render > 0)
+		{
+			RenderFogFaces(rp);
+			Num_fog_faces_to_render = 0;
+		}
 	}
 }
 
@@ -3836,6 +3826,13 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain)
 
 	Num_mirror_rooms = 0;
 
+	if (Render_use_newrender)
+	{
+		rend_UseShaderTest();
+		Room_VertexBuffer.Bind();
+		Room_IndexBuffer.Bind();
+	}
+
 	//Render the list of rooms
 	for (int nn = N_render_rooms - 1; nn >= 0; nn--)
 	{
@@ -3847,15 +3844,28 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain)
 #endif
 		if (roomnum != -1)
 		{
-			ASSERT(Rooms_visited[roomnum] != 255);
-			if (Outline_release_mode & 1) {
-				RenderRoomOutline(&Rooms[roomnum]);
+			if (Render_use_newrender)
+			{
+				RenderRoom(&Rooms[roomnum]);
 			}
-			RenderRoom(&Rooms[roomnum]);
-			Rooms_visited[roomnum] = (char)255;
-			// Stuff objects into our postrender list
-			CheckToRenderMineObjects(roomnum);
+			else
+			{
+				ASSERT(Rooms_visited[roomnum] != 255);
+				if (Outline_release_mode & 1) {
+					RenderRoomOutline(&Rooms[roomnum]);
+				}
+				RenderRoom(&Rooms[roomnum]);
+				Rooms_visited[roomnum] = (char)255;
+				// Stuff objects into our postrender list
+				CheckToRenderMineObjects(roomnum);
+			}
 		}
+	}
+
+	if (Render_use_newrender)
+	{
+		rendTEMP_UnbindVertexBuffer();
+		rend_EndShaderTest();
 	}
 
 	rend_SetOverlayType(OT_NONE);	// turn off lightmap blending
@@ -4024,51 +4034,3 @@ void RenderBlankScreen(void)
 {
 	rend_ClearScreen(GR_BLACK);
 }
-
-#ifdef EDITOR
-//Finds what room & face is visible at a given screen x & y
-//Everything must be set up just like for RenderMineRoom(), and presumably is the same as 
-//for the last frame rendered (though it doesn't have to be)
-//Parameters:	x,y - the screen coordinates
-//					start_roomnum - where to start rendering
-//					roomnum,facenum - these are filled in with the found values
-//					if room<0, then an object was found, and the object number is -room-1
-//Returns:		1 if found a room, else 0
-/*int FindRoomFace(short x,short y,int start_roomnum,int *roomnum,int *facenum)
-{
-	//Init search mode
-	search_mode = -1;
-	search_x = x; search_y = y;
-	found_room = INT_MAX;
-	//Render and search
-	RenderMine(start_roomnum,0,0);
-	//Turn search off
-	search_mode = 0;
-	//Set return values
-	*roomnum = found_room;
-	*facenum = found_face;
-	return (found_room != INT_MAX);
-}*/
-
-//finds what room,face,lumel is visible at a given screen x & y
-//Everything must be set up just like for RenderMineRoom(), and presumably is the same as 
-//for the last frame rendered (though it doesn't have to be)
-//Parameters:	x,y - the screen coordinates
-//					start_roomnum - where to start rendering
-//					roomnum,facenum,lumel_num - these are filled in with the found values
-//Returns:		1 if found a room, else 0
-/*int FindLightmapFace(short x,short y,int start_roomnum,int *roomnum,int *facenum,int *lumel_num)
-{
-	Search_lightmaps=1;
-	search_x = x; search_y = y;
-	found_room = INT_MAX;
-	//Get the width & height of the render window
-	rend_GetProjectionParameters(&Render_width,&Render_height);
-	RenderMine(start_roomnum,0,0);
-	Search_lightmaps=0;
-	*roomnum = found_room;
-	*facenum = found_face;
-	*lumel_num=found_lightmap;
-	return (found_room != INT_MAX);
-}*/
-#endif
