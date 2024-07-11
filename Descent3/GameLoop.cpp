@@ -1049,7 +1049,7 @@ void ProcessTestKeys(int key)
 		Render_portals = 1 - Render_portals;
 		break;
 
-	case KEY_N:
+	case KEY_N + KEY_SHIFTED:
 		if (Current_level && Current_level->filename) {
 			vector player_pos = Player_object->pos;
 			matrix player_orient = Player_object->orient;
@@ -1061,6 +1061,14 @@ void ProcessTestKeys(int key)
 			//Restore player position
 			ObjSetPos(Player_object, &player_pos, player_roomnum, &player_orient, true);
 		}
+		break;
+
+	case KEY_N:
+		Render_use_newrender = !Render_use_newrender;
+		if (Render_use_newrender)
+			AddHUDMessage("Using newrender.");
+		else
+			AddHUDMessage("Using legacy render");
 		break;
 
 	case KEY_O:
@@ -1102,14 +1110,6 @@ void ProcessTestKeys(int key)
 			Weather.flags |= WEATHER_FLAGS_SNOW;
 			AddHUDMessage("Snow turned on.");
 		}
-		break;
-
-	case KEY_R + KEY_SHIFTED:
-		Render_use_newrender = !Render_use_newrender;
-		if (Render_use_newrender)
-			AddHUDMessage("Using newrender.");
-		else
-			AddHUDMessage("Using legacy render");
 		break;
 
 	case KEY_S:

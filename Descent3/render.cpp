@@ -304,8 +304,15 @@ inline bool RenderPastPortal(room* rp, portal* pp)
 		return 0;		//Not transparent, so no render past
 }
 
+//Changes that can happen to a face to warrant a remesh
+struct FacePrevState
+{
+	int flags;
+	int tmap;
+};
 
-
+//Future profiling: Given the dynamic nature of rooms, does it make sense to have only one large vertex buffer?
+//Or would eating the cost of rebinds be paid for by more efficient generation of room meshes?
 VertexBuffer Room_VertexBuffer;
 IndexBuffer Room_IndexBuffer;
 
@@ -320,7 +327,22 @@ struct RoomMesh
 {
 	std::vector<RoomDrawElement> LitInteractions;
 	std::vector<RoomDrawElement> UnlitInteractions;
+	//One of these for each face.
+	//If the state of FacePrevStates[facenum] != roomptr->faces[facenum], remesh this part of the world. Sigh.
+	std::vector<FacePrevState> FacePrevStates;
+
+	uint32_t FirstVertexOffset;
+	uint32_t FirstVertex;
+	uint32_t FirstIndexOffset;
+	uint32_t FirstIndex;
 	void Reset()
+	{
+		LitInteractions.clear();
+		UnlitInteractions.clear();
+		FacePrevStates.clear();
+	}
+
+	void ResetInteractions()
 	{
 		LitInteractions.clear();
 		UnlitInteractions.clear();
@@ -357,7 +379,7 @@ struct RoomMesh
 //These are the meshes of all normal room geometry. 
 RoomMesh Room_meshes[MAX_ROOMS];
 
-void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements, std::vector<RoomDrawElement>& interactions, room& rp)
+void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements, std::vector<RoomDrawElement>& interactions, room& rp, int indexOffset, int firstIndex)
 {
 	if (elements.empty())
 		return;
@@ -378,6 +400,7 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 				element.texturenum = lasttmap;
 				element.lmhandle = lastlm;
 				element.range = mesh.EndIndices();
+				element.range.offset += firstIndex;
 				interactions.push_back(element);
 			}
 			else
@@ -394,7 +417,7 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 
 		face& fp = rp.faces[element.element];
 
-		int first_index = mesh.NumVertices();
+		int first_index = mesh.NumVertices() + indexOffset;
 		for (int i = 0; i < fp.num_verts; i++)
 		{
 			roomUVL uvs = fp.face_uvls[i];
@@ -422,11 +445,14 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 	element.texturenum = lasttmap;
 	element.lmhandle = lastlm;
 	element.range = mesh.EndIndices();
+	element.range.offset += firstIndex;
 	interactions.push_back(element);
 }
 
 //Meshes a given room. 
-void UpdateRoomMesh(MeshBuilder& mesh, int roomnum)
+//Index offset is added to all generated indicies, to allow updating a room at a specific place
+//later down the line, even with an empty MeshBuilder. 
+void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIndex)
 {
 	room& rp = Rooms[roomnum];
 	if (!rp.used)
@@ -438,10 +464,18 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum)
 	std::vector<SortableElement> faces_unlit;
 	std::vector<int> faces_special;
 
+	RoomMesh& roommesh = Room_meshes[roomnum];
+	if (roommesh.FacePrevStates.size() != rp.num_faces)
+		roommesh.FacePrevStates.resize(rp.num_faces);
+
+	roommesh.ResetInteractions();
+
 	//Build a sortable list of all faces
 	for (int i = 0; i < rp.num_faces; i++)
 	{
 		face& fp = rp.faces[i];
+		roommesh.FacePrevStates[i].flags = fp.flags;
+		roommesh.FacePrevStates[i].tmap = fp.tmap;
 		if (!FaceIsStatic(rp, fp))
 		{
 			faces_special.push_back(i);
@@ -455,24 +489,28 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum)
 			continue;
 		else
 		{
+			int tmap = fp.tmap;
+			if (fp.flags & FF_DESTROYED && GameTextures[tmap].flags & TF_DESTROYABLE)
+				tmap = GameTextures[tmap].destroy_handle;
+
 			//Not a postrender, determine if it is unlit or lit. 
 			if (fp.flags & FF_LIGHTMAP)
 			{
 				//TODO: Add field names when Piccu becomes C++20.
-				faces_lit.push_back(SortableElement{ i, (ushort)fp.tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+				faces_lit.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
 			}
 			else
 			{
-				faces_unlit.push_back(SortableElement{ i, (ushort)fp.tmap, 0 });
+				faces_unlit.push_back(SortableElement{ i, (ushort)tmap, 0 });
 			}
 		}
 	}
 
 	std::sort(faces_lit.begin(), faces_lit.end());
-	AddFacesToBuffer(mesh, faces_lit, Room_meshes[roomnum].LitInteractions, rp);
+	AddFacesToBuffer(mesh, faces_lit, Room_meshes[roomnum].LitInteractions, rp, indexOffset, firstIndex);
 
 	std::sort(faces_unlit.begin(), faces_unlit.end());
-	AddFacesToBuffer(mesh, faces_unlit, Room_meshes[roomnum].UnlitInteractions, rp);
+	AddFacesToBuffer(mesh, faces_unlit, Room_meshes[roomnum].UnlitInteractions, rp, indexOffset, firstIndex);
 }
 
 void FreeRoomMeshes()
@@ -492,11 +530,44 @@ void MeshRooms()
 	FreeRoomMeshes();
 	for (int i = 0; i < Highest_room_index; i++)
 	{
-		UpdateRoomMesh(mesh, i);
+		//These can be set here and should remain static, since the amount of vertices and indices should remain static across any room changes
+		Room_meshes[i].FirstVertexOffset = mesh.VertexOffset();
+		Room_meshes[i].FirstVertex = mesh.NumVertices();
+		Room_meshes[i].FirstIndex = mesh.NumIndices();
+		Room_meshes[i].FirstIndexOffset = mesh.IndexOffset();
+
+		UpdateRoomMesh(mesh, i, 0, 0);
 	}
 
 	mesh.BuildVertices(Room_VertexBuffer);
 	mesh.BuildIndicies(Room_IndexBuffer);
+}
+
+//Returns true if the room at roomnum needs to have its static mesh regenerated. 
+//Because nothing can truly be static when the original rendering code was fully dynamic.
+static bool RoomNeedRemesh(int roomnum)
+{
+	room& rp = Rooms[roomnum];
+	RoomMesh& mesh = Room_meshes[roomnum];
+	for (int i = 0; i < rp.num_faces; i++)
+	{
+		if ((rp.faces[i].flags & FF_DESTROYED) != (mesh.FacePrevStates[i].flags & FF_DESTROYED))
+			return true;
+
+		if (rp.faces[i].tmap != mesh.FacePrevStates[i].tmap)
+			return true;
+	}
+	return false;
+}
+
+static void RemeshRoom(MeshBuilder& mesh, int roomnum)
+{
+	mprintf((0, "RemeshRoom: Updating room %d\n", roomnum));
+	mesh.Destroy();
+	UpdateRoomMesh(mesh, roomnum, Room_meshes[roomnum].FirstVertex, Room_meshes[roomnum].FirstIndex);
+
+	mesh.UpdateVertices(Room_VertexBuffer, Room_meshes[roomnum].FirstVertexOffset);
+	mesh.UpdateIndicies(Room_IndexBuffer, Room_meshes[roomnum].FirstIndexOffset);
 }
 
 //used during rendering as count of items in render_list[]
@@ -3831,13 +3902,23 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain)
 		rend_UseShaderTest();
 		Room_VertexBuffer.Bind();
 		Room_IndexBuffer.Bind();
+
+		//Walk the room render list for updates
+		for (int nn = N_render_rooms - 1; nn >= 0; nn--)
+		{
+			MeshBuilder mesh;
+			int roomnum = Render_list[nn];
+			if (RoomNeedRemesh(roomnum))
+			{
+				RemeshRoom(mesh, roomnum);
+			}
+		}
 	}
 
 	//Render the list of rooms
 	for (int nn = N_render_rooms - 1; nn >= 0; nn--)
 	{
-		int roomnum;
-		roomnum = Render_list[nn];
+		int roomnum = Render_list[nn];
 #ifdef _DEBUG
 		if (In_editor_mode && Render_one_room_only && (roomnum != viewer_roomnum))
 			continue;

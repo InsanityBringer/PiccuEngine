@@ -101,10 +101,12 @@ void MeshBuilder::BuildIndicies(IndexBuffer& buffer)
 
 void MeshBuilder::UpdateVertices(VertexBuffer& buffer, uint32_t offset)
 {
+	buffer.Update(offset, m_vertices.size() * sizeof(m_vertices[0]), m_vertices.data());
 }
 
 void MeshBuilder::UpdateIndicies(IndexBuffer& buffer, uint32_t offset)
 {
+	buffer.Update(offset, m_indicies.size() * sizeof(m_indicies[0]), m_indicies.data());
 }
 
 void MeshBuilder::Destroy()
@@ -116,6 +118,8 @@ void MeshBuilder::Reset()
 {
 	m_vertices.clear();
 	m_indicies.clear();
+	m_vertexstartoffset = m_vertexstartcount = 0;
+	m_indexstartoffset = m_indexstartcount = 0;
 }
 
 VertexBuffer::VertexBuffer() : VertexBuffer(true, false)
@@ -172,6 +176,9 @@ void VertexBuffer::Initialize(uint32_t numvertices, uint32_t datasize, void* dat
 	//UV slide
 	glEnableVertexAttribArray(6);
 	glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, sizeof(RendVertex), (void*)offsetof(RendVertex, u2));
+
+	m_size = datasize;
+	m_vertexcount = numvertices;
 
 	GL_UseDrawVAO();
 }
@@ -265,6 +272,15 @@ void IndexBuffer::Initialize(uint32_t numindices, uint32_t datasize, void* data)
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_name);
 		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, datasize, data);
 	}
+}
+
+void IndexBuffer::Update(uint32_t byteoffset, uint32_t datasize, void* data)
+{
+	assert(m_name != 0);
+	assert(byteoffset + datasize <= m_size);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_name);
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, byteoffset, datasize, data);
 }
 
 void IndexBuffer::Bind() const

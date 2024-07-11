@@ -85,7 +85,8 @@ public:
 	VertexBuffer(bool allow_dynamic, bool dynamic_hint);
 
 	void Initialize(uint32_t numvertices, uint32_t datasize, void* data);
-	//Performs a dynamic update of part of the 
+	//Performs a dynamic update of part of the vertex buffer.
+	//This cannot change the size of the underlying buffer object.
 	void Update(uint32_t byteoffset, uint32_t datasize, void* data);
 	void Bind() const;
 
@@ -113,6 +114,9 @@ public:
 	IndexBuffer(bool allow_dynamic, bool dynamic_hint);
 
 	void Initialize(uint32_t numindices, uint32_t datasize, void* data);
+	//Performs a dynamic update of part of the index buffer.
+	//This cannot change the size of the underlying buffer object.
+	void Update(uint32_t byteoffset, uint32_t datasize, void* data);
 
 	void Bind() const;
 
@@ -170,6 +174,21 @@ public:
 	int NumVertices() const
 	{
 		return m_vertices.size();
+	}
+
+	int NumIndices() const
+	{
+		return m_indicies.size();
+	}
+
+	uint32_t VertexOffset() const
+	{
+		return m_vertices.size() * sizeof(m_vertices[0]);
+	}
+
+	uint32_t IndexOffset() const
+	{
+		return m_indicies.size() * sizeof(m_indicies[0]);
 	}
 };
 
