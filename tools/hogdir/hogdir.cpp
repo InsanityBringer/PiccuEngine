@@ -136,27 +136,6 @@ void add_dir(const char* directory)
 			strncpy(file.name, filename.c_str(), FILENAME_LEN);
 
 			pathlist.push_back(file);
-
-			/*pathlist.push_back(entry.path());
-			std::filesystem::path const& filepath = entry.path();
-#ifdef _MSC_VER
-			FILE* fp = _wfopen(filepath.c_str(), L"rb");
-#else
-			FILE* fp = fopen(filepath.c_str(), "rb");
-#endif
-			if (!fp)
-			{
-#ifdef _MSC_VER
-				fprintf(stderr, "Failed to open file %ls.\n", filepath.c_str());
-#else
-				fprintf(stderr, "Failed to open file %s.\n", filepath.c_str());
-#endif
-			}
-			else
-			{
-				add_file(filepath.filename().c_str(), fp);
-				fclose(fp);
-			}*/
 		}
 	}
 
