@@ -39,7 +39,8 @@
 
 #define BOA_VERSION 25
 
-const ubyte bbf_lookup[27] =
+#define NUM_BBF_LOOKUP 27
+const ubyte bbf_lookup[NUM_BBF_LOOKUP] =
 {
 (0),
 (0x01),
@@ -2310,7 +2311,7 @@ static int face_sort_func2(const short* a, const short* b)
 		return 0;
 }
 
-#define MAX_REGIONS_PER_ROOM 200
+#define MAX_REGIONS_PER_ROOM 250
 
 void ComputeAABB(bool f_full)
 {
@@ -2522,7 +2523,7 @@ void ComputeAABB(bool f_full)
 				mem_free(nfaces);
 				mem_free(used);
 
-				ASSERT(num_struct < MAX_REGIONS_PER_ROOM);  // get chris
+				ASSERT(num_struct < (MAX_REGIONS_PER_ROOM - NUM_BBF_LOOKUP));  // get chris
 				num_structs_per_room[i] = num_struct;
 				//			mprintf((0, "%d structs in r %d\n", num_struct, i));
 			}
