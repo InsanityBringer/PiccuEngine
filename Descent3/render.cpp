@@ -277,7 +277,7 @@ static inline int GetFaceAlpha(face* fp, int bm_handle)
 			ret |= ATF_CONSTANT;
 
 		//Check for transparency
-		if (GameBitmaps[bm_handle].format != BITMAP_FORMAT_4444 && GameTextures[fp->tmap].flags & TF_TMAP2)
+		if (bm_handle >= 0 && GameBitmaps[bm_handle].format != BITMAP_FORMAT_4444 && GameTextures[fp->tmap].flags & TF_TMAP2)
 			ret |= ATF_TEXTURE;
 	}
 	return ret;
@@ -323,10 +323,18 @@ struct RoomDrawElement
 	ElementRange range;
 };
 
+struct SpecularDrawElement
+{
+	int texturenum;
+	ElementRange range;
+	special_face* special;
+};
+
 struct RoomMesh
 {
 	std::vector<RoomDrawElement> LitInteractions;
 	std::vector<RoomDrawElement> UnlitInteractions;
+	std::vector<SpecularDrawElement> SpecInteractions;
 	//One of these for each face.
 	//If the state of FacePrevStates[facenum] != roomptr->faces[facenum], remesh this part of the world. Sigh.
 	std::vector<FacePrevState> FacePrevStates;
@@ -335,17 +343,17 @@ struct RoomMesh
 	uint32_t FirstVertex;
 	uint32_t FirstIndexOffset;
 	uint32_t FirstIndex;
-	void Reset()
-	{
-		LitInteractions.clear();
-		UnlitInteractions.clear();
-		FacePrevStates.clear();
-	}
-
 	void ResetInteractions()
 	{
 		LitInteractions.clear();
 		UnlitInteractions.clear();
+		SpecInteractions.clear();
+	}
+
+	void Reset()
+	{
+		ResetInteractions();
+		FacePrevStates.clear();
 	}
 
 	void DrawLit()
@@ -363,7 +371,19 @@ struct RoomMesh
 
 	void DrawUnlit()
 	{
-		for (RoomDrawElement& element : LitInteractions)
+		for (RoomDrawElement& element : UnlitInteractions)
+		{
+			//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
+			Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+
+			//And draw
+			Room_VertexBuffer.DrawIndexed(element.range);
+		}
+	}
+
+	void DrawSpecular()
+	{
+		for (SpecularDrawElement& element : SpecInteractions)
 		{
 			//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
 			Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
@@ -452,6 +472,7 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 //Meshes a given room. 
 //Index offset is added to all generated indicies, to allow updating a room at a specific place
 //later down the line, even with an empty MeshBuilder. 
+//First index is added to all interactions to indicate where the first index to draw is. 
 void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIndex)
 {
 	room& rp = Rooms[roomnum];
@@ -462,6 +483,7 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 	//But what happens if something silly like HDR lighting is added later?
 	std::vector<SortableElement> faces_lit;
 	std::vector<SortableElement> faces_unlit;
+	std::vector<SortableElement> faces_spec;
 	std::vector<int> faces_special;
 
 	RoomMesh& roommesh = Room_meshes[roomnum];
@@ -484,8 +506,8 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 
 		//blarg
 		int bm_handle = GetTextureBitmap(fp.tmap, 0);
-		int alphatype = GetFaceAlpha(&fp, bm_handle);
-		if (alphatype != AT_ALWAYS)
+		int alphatype = GetFaceAlpha(&fp, -1);
+		if ((alphatype & (ATF_CONSTANT | ATF_TEXTURE)) != 0)
 			continue;
 		else
 		{
@@ -496,8 +518,19 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 			//Not a postrender, determine if it is unlit or lit. 
 			if (fp.flags & FF_LIGHTMAP)
 			{
-				//TODO: Add field names when Piccu becomes C++20.
-				faces_lit.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+				//If the face is specular, add it for a post stage. 
+				//Specs have to be in a special pass like this so that the size of the room vertex buffer never changes,
+				// no matter how the visibility or 
+				//TODO: Determine if any levels have unlit speculars, but this seems like a bit of a nonsequitur. 
+				if (fp.special_handle != BAD_SPECIAL_FACE_INDEX && SpecialFaces[fp.special_handle].type == SFT_SPECULAR)
+				{
+					faces_spec.push_back(SortableElement{ i, (ushort)tmap, 0 });
+				}
+				else
+				{
+					//TODO: Add field names when Piccu becomes C++20.
+					faces_lit.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+				}
 			}
 			else
 			{
@@ -511,6 +544,10 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 
 	std::sort(faces_unlit.begin(), faces_unlit.end());
 	AddFacesToBuffer(mesh, faces_unlit, Room_meshes[roomnum].UnlitInteractions, rp, indexOffset, firstIndex);
+
+	//Even though they're not batched up (may be fixable if I can quickly determine if they have identical light sources), 
+	//sort specular faces to try to minimize texture state thrashing. Even though that's trivial compared to the buffer state thrashing. 
+	std::sort(faces_spec.begin(), faces_spec.end()); 
 }
 
 void FreeRoomMeshes()
@@ -1634,7 +1671,7 @@ void RenderFloatingTrig(room* rp, face* fp)\
 	}
 #endif	//ifdef EDITOR
 
-float Specular_scalars[4][4] = { {1.0f},{1.0f,.66f},{1.0f,.66f,.33f},{1.0f,.66f,.33f,.25f} };
+float Specular_scalars[4] = { 1.0f,.66f,.33f,.25f };
 void RenderSpecularFacesFlat(room* rp)
 {
 	static int first = 1;
@@ -1740,10 +1777,7 @@ void RenderSpecularFacesFlat(room* rp)
 			{
 				int limit = SpecialFaces[fp->special_handle].num;
 				int spec_index = limit - 1;
-				/*if (GameTextures[fp->tmap].flags & TF_SMOOTH_SPECULAR)
-				{
-					limit/=2;
-				}*/
+				assert(limit <= 4);
 
 				for (t = 0; t < limit; t++)
 				{
@@ -1756,7 +1790,7 @@ void RenderSpecularFacesFlat(room* rp)
 					if (color == 0)
 						continue;
 					incident_norm = rp->verts[fp->face_verts[vn]] - SpecialFaces[fp->special_handle].spec_instance[t].bright_center;
-					spec_scalar = Specular_scalars[spec_index][t];
+					spec_scalar = Specular_scalars[t];
 
 					vm_NormalizeVectorFast(&incident_norm);
 					float d;

@@ -752,6 +752,8 @@ void InitIOSystems(bool editor)
 	ddio_init_info io_info;
 	int dirlen = _MAX_PATH;
 
+	char Working_directory[_MAX_PATH];
+	ddio_GetWorkingDir(Working_directory, sizeof(Working_directory));
 	
 	//Dedicated server is always portable on Windows, not the most ideal but it will make admin's lives easier.
 	if (FindArg("-portable") != 0 || Dedicated_server)
@@ -867,19 +869,6 @@ void InitIOSystems(bool editor)
 		ddio_MouseSetCallbackFn(ShouldCaptureMouse);
 	}
 
-	int rocknride_arg = FindArg("-rocknride");
-	if(rocknride_arg)
-	{
-		int comm_port = atoi(GameArgs[rocknride_arg+1]);
-		if(!RNR_Initialize(comm_port))
-		{
-			mprintf((0,"Rock'n'Ride Init failed!\n"));
-		}else
-		{
-			mprintf((0,"Rock'n'Ride Init success!\n"));
-		}
-	}
-
 	rtp_Init();
 	RTP_ENABLEFLAGS(RTI_FRAMETIME|RTI_RENDERFRAMETIME|RTI_MULTIFRAMETIME|RTI_MUSICFRAMETIME|RTI_AMBSOUNDFRAMETIME);
 	RTP_ENABLEFLAGS(RTI_WEATHERFRAMETIME|RTI_PLAYERFRAMETIME|RTI_DOORFRAMETIME|RTI_LEVELGOALTIME|RTI_MATCENFRAMETIME);
@@ -911,6 +900,13 @@ void InitIOSystems(bool editor)
 	//Init hogfiles
 	int d3_hid=-1,extra_hid=-1,extra1_hid=-1,merc_hid=-1,sys_hid=-1,extra13_hid=-1;
 	char fullname[_MAX_PATH];
+
+	ddio_MakePath(fullname, Working_directory, "piccuengine.hog", nullptr);
+	int piccu_hid = cf_OpenLibrary(fullname);
+	if (piccu_hid == -1)
+	{
+		Error("Cannot find piccuengine.hog file!");
+	}
 	
 	#ifdef DEMO
 //DAJ	d3_hid = cf_OpenLibrary("d3demo.hog");

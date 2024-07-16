@@ -467,10 +467,43 @@ void rend_UseShaderTest(void);
 void rend_EndShaderTest(void);
 
 //Shader API 
+//Eventually I would like to remove this and make ALL world rendering part of renderer, instead of having main handle it.
+//Rather than abstract specific features like this, it would let the game abstract rendering to let specific backends handle it optimally. 
 
 //Gets a handle to a shader by name
-uint32_t rend_GetShaderByName(const char* name);
+uint32_t rend_GetPipelineByName(const char* name);
 
+//Given a handle from rend_GetShaderByName, binds that particular pipeline object
+void rend_BindPipeline(uint32_t handle);
+
+constexpr int MAX_SPECULARS = 4; //Limit isn't enforced by Descent 3 normally, but errors would occur if there were more. 
+
+struct RoomBlock
+{
+	float fog_color[4];
+	float fog_distance;
+	float brightness;
+};
+
+struct SpecularDef
+{
+	float bright_center[4];
+	float color[4];
+};
+
+struct SpecularBlock
+{
+	int num_speculars;
+	int exponent;
+	int pad[2]; //std140
+	SpecularDef speculars[MAX_SPECULARS];
+};
+
+//Updates specular components
+void rend_UpdateSpecular(SpecularBlock* specularstate);
+
+//Updates brightness/fog components
+void rend_UpdateFogBrightness(RoomBlock* roomstate);
 
 #if defined(DD_ACCESS_RING) 
 #if defined(WIN32)

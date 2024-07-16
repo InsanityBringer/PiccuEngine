@@ -19,9 +19,12 @@
 #include <string>
 #include "gl_shader.h"
 #include "pserror.h"
+#include "renderer.h"
 
 GLuint commonbuffername;
 GLuint legacycommonbuffername;
+GLuint fogbuffername;
+GLuint specularbuffername;
 
 void opengl_InitCommonBuffer(void)
 {
@@ -34,7 +37,15 @@ void opengl_InitCommonBuffer(void)
 	if (err != GL_NO_ERROR)
 		Int3();
 
-	//Ensure this is always ready for usage later. 
+	
+	glGenBuffers(1, &specularbuffername);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, specularbuffername);
+	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(SpecularBlock), nullptr, GL_DYNAMIC_READ);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 1, specularbuffername);
+
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
 
 	//The legacy common buffer uses the ortho matrix as a passthrough.
 	glGenBuffers(1, &legacycommonbuffername);
@@ -74,6 +85,20 @@ void GL_UpdateLegacyBlock(float* projection, float* modelview)
 	if (err != GL_NO_ERROR)
 		Int3();
 }
+
+//Shader pipeline system.
+//Contains a table of all shader definitions used by newrender. Renderer will request shader handles by name.
+//Eventually this should load from files.
+
+extern const char* testVertexSrc;
+extern const char* testFragmentSrc;
+ShaderDefinition gl_shaderdefs[] =
+{
+	{"lightmapped", SF_HASCOMMON, 0, testVertexSrc, testFragmentSrc},
+	{"lightmapped_shaded", SF_HASCOMMON, SF_HASROOM, testVertexSrc, testFragmentSrc},
+	{"lightmapped_shaded_fogged", SF_HASCOMMON, SF_HASROOM, testVertexSrc, testFragmentSrc},
+	{"lightmapped_shaded_specular", SF_HASCOMMON | SF_HASSPECULAR, SF_HASROOM | SF_HASSPECULAR, testVertexSrc, testFragmentSrc},
+};
 
 static GLuint CompileShader(GLenum type, int numstrs, const char** src, GLint* lengths)
 {

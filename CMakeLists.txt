@@ -6,6 +6,27 @@ SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 
 PROJECT(Descent3)
 
+function(add_hog_file HOG_NAME HOG_SRC_DIR)
+	string( REPLACE "." "_" HOG_TARGET ${HOG_NAME} )
+	
+	#message(${HOG_SRC_DIR})
+	
+	#Iterate all the files in the hog source dir, for usage in a target.
+	file(GLOB_RECURSE HOG_SOURCES ${HOG_SRC_DIR}/*)
+	
+	#Create the command that actually invokes hogdir to build the hogfile.
+	add_custom_command( OUTPUT ${CMAKE_BINARY_DIR}/${HOG_NAME}
+		COMMAND hogdir ${CMAKE_BINARY_DIR}/${HOG_NAME} ${HOG_SRC_DIR}
+		DEPENDS hogdir )
+		
+	#Create the target that uses this command to build the hogfile.
+	#From GZDoom: Touch the hogdir binary to ensure that this rule always rebuilds
+	add_custom_target( ${HOG_TARGET} ALL
+		COMMAND ${CMAKE_COMMAND} -E touch $<TARGET_FILE:hogdir>
+		DEPENDS ${CMAKE_BINARY_DIR}/${HOG_NAME}
+		SOURCES ${HOG_SOURCES})
+endfunction()
+
 IF (UNIX)
 SET (D3_GAMEDIR "~/Descent3/")
 
@@ -41,8 +62,6 @@ IF (WIN32)
 	SET(CMAKE_CXX_FLAGS_DEBUG "/Od /EHsc /RTC1 /MTd /MP /W3 /nologo /c /ZI /TP /errorReport:prompt")
 	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL /FD /EHsc /MT /W3 /nologo /c /Zi /TP /errorReport:prompt")
 	
-	
-	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
 	SET(CMAKE_MODULE_LINKER_FLAGS "/SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
 	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DMONO -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
 
@@ -62,6 +81,10 @@ ENDIF ()
 MESSAGE("Install will copy files to ${D3_GAMEDIR}")
 
 include_directories("lib" "Descent3" ${PLATFORM_INCLUDES})
+
+#Hogdir stuff
+add_subdirectory(tools)
+add_subdirectory(hogfiles)
 
 ADD_SUBDIRECTORY (AudioEncode)
 ADD_SUBDIRECTORY (bitmap)
@@ -175,25 +198,26 @@ SET (DESCENT3_SOURCES
 	${DDVID_LNX_SOURCES}
 	${DD_LNXSOUND_SOURCES}
 	${DDIO_SOURCES})
-ENDIF()		
-
-IF (WIN32)
-SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib
-	${DSOUND_LIBRARY} ${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${DDRAW_LIBRARY} ${OPENAL_LIBRARY})
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
-ENDIF()
-
-IF (UNIX AND NOT APPLE)
-SET (PLATFORM_LIBS ${SDL_LIBRARY} caca asound audio esd aa directfb m dl GLU)
-SET(CMAKE_EXE_LINKER_FLAGS "/usr/lib/libpulse-simple.so.0")
-ENDIF()
-	
-IF (APPLE)
-SET (PLATFORM_LIBS ${SDL_LIBRARY} ncurses )
-SET(CMAKE_EXE_LINKER_FLAGS "-framework IOKit -framework Cocoa -framework OpenGL -framework Carbon")
 ENDIF()
 
 add_executable(PiccuEngine ${DESCENT3_SOURCES})
+	
+IF (WIN32)
+SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib
+	${DSOUND_LIBRARY} ${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${DDRAW_LIBRARY} ${OPENAL_LIBRARY})
+	target_link_options(PiccuEngine PUBLIC /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC)
+ENDIF()
+
+IF (UNIX AND NOT APPLE)
+	SET (PLATFORM_LIBS ${SDL_LIBRARY} caca asound audio esd aa directfb m dl GLU)
+	target_link_options(PiccuEngine PUBLIC /usr/lib/libpulse-simple.so.0)
+ENDIF()
+	
+IF (APPLE)
+	SET (PLATFORM_LIBS ${SDL_LIBRARY} ncurses )
+	target_link_options(PiccuEngine PUBLIC -framework IOKit -framework Cocoa -framework OpenGL -framework Carbon)
+ENDIF()
+
 target_link_libraries(PiccuEngine 
 	${PLATFORM_LIBS})
 	
@@ -204,7 +228,7 @@ target_compile_definitions(PiccuEngine PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:RELEAS
 add_library(dmfc SHARED ${DMFC_SOURCES})
 target_compile_definitions(dmfc PUBLIC -DOUTRAGE_VERSION -DDMFC_DLL)
 target_include_directories(dmfc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/netgames/includes")
-add_dependencies(PiccuEngine revision_check)
+add_dependencies(PiccuEngine revision_check piccuengine_hog)
 	
 install(TARGETS PiccuEngine DESTINATION ${D3_GAMEDIR})
 

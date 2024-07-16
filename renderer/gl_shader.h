@@ -24,6 +24,20 @@ struct CommonBlock
 	float modelview[16];
 };
 
+//Shader definition nonsense
+constexpr int SF_HASCOMMON = 1; //Shader will use the common block
+constexpr int SF_HASROOM = 2; //Shader will use the room (fog, brightness) block
+constexpr int SF_HASSPECULAR = 4; //Shader will use the specular block
+
+struct ShaderDefinition
+{
+	const char* name;
+	int vs_flags; //see SF_ flags above, controls uniforms in vertex shader
+	int fs_flags; //Controls uniforms in fragment shader
+	const char* vertex_body;
+	const char* fragment_body;
+};
+
 void opengl_InitCommonBuffer(void);
 
 class ShaderProgram
