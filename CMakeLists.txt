@@ -80,7 +80,7 @@ ENDIF ()
 
 MESSAGE("Install will copy files to ${D3_GAMEDIR}")
 
-include_directories("lib" "Descent3" ${PLATFORM_INCLUDES})
+include_directories("lib" "Descent3" "netcon/includes" ${PLATFORM_INCLUDES})
 
 #Hogdir stuff
 add_subdirectory(tools)
@@ -132,6 +132,7 @@ ADD_SUBDIRECTORY (md5)
 ADD_SUBDIRECTORY (libacm)
 ADD_SUBDIRECTORY (netgames)
 ADD_SUBDIRECTORY (Descent3)
+ADD_SUBDIRECTORY (netcon/inetfile)
 
 # For now we don't need to build the scripts under windows, so we'll only include
 # the directory when building for linux/osx. In the future we may want to to fix bugs, etc.
@@ -178,6 +179,7 @@ SET (DESCENT3_SOURCES
 		${VECMAT_SOURCES}
 		${MD5_SOURCES}
 		${LIBACM_SOURCES}
+		${INETFILE_SOURCES}
 		${MAIN_SOURCES})
 		
 IF (WIN32)
@@ -203,7 +205,7 @@ ENDIF()
 add_executable(PiccuEngine ${DESCENT3_SOURCES})
 	
 IF (WIN32)
-SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib
+SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib wininet.lib
 	${DSOUND_LIBRARY} ${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${DDRAW_LIBRARY} ${OPENAL_LIBRARY})
 	target_link_options(PiccuEngine PUBLIC /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC)
 ENDIF()
