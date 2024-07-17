@@ -503,7 +503,7 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 	opengl_GetInformation();
 
 	//Initialize the common buffer that will be shared across shaders. 
-	opengl_InitCommonBuffer();
+	opengl_InitShaders();
 
 	// Update framebuffer
 	opengl_UpdateFramebuffer();

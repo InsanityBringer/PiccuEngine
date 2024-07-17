@@ -32,13 +32,12 @@ constexpr int SF_HASSPECULAR = 4; //Shader will use the specular block
 struct ShaderDefinition
 {
 	const char* name;
-	int vs_flags; //see SF_ flags above, controls uniforms in vertex shader
-	int fs_flags; //Controls uniforms in fragment shader
-	const char* vertex_body;
-	const char* fragment_body;
+	int flags; //see SF_ flags above
+	const char* vertex_filename;
+	const char* fragment_filename;
 };
 
-void opengl_InitCommonBuffer(void);
+void opengl_InitShaders(void);
 
 class ShaderProgram
 {
@@ -54,6 +53,7 @@ public:
 	}
 
 	void AttachSource(const char* vertexsource, const char* fragsource);
+	void AttachSourceFromDefiniton(ShaderDefinition& def);
 	//Attaches strings with some preprocessor statements. 
 	//Defines USE_TEXTURING if textured is true.
 	//Defines USE_LIGHTMAP if lightmapped is true.
@@ -62,10 +62,7 @@ public:
 	GLint FindUniform(const char* uniform);
 	void Destroy();
 
-	void Use()
-	{
-		glUseProgram(m_name);
-	}
+	void Use();
 
 	GLuint Handle() const
 	{

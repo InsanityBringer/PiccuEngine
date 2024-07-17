@@ -326,6 +326,7 @@ struct RoomDrawElement
 struct SpecularDrawElement
 {
 	int texturenum;
+	int lmhandle;
 	ElementRange range;
 	special_face* special;
 };
@@ -383,10 +384,38 @@ struct RoomMesh
 
 	void DrawSpecular()
 	{
+		int last_texture = -1;
+		int last_lightmap = -1;
 		for (SpecularDrawElement& element : SpecInteractions)
 		{
+			static SpecularBlock specblock;
+			specblock.exponent = 6;
+			specblock.num_speculars = element.special->num;
+			for (int i = 0; i < specblock.num_speculars; i++) //aaaaaaa
+			{
+				specblock.speculars[i].bright_center[0] = element.special->spec_instance[i].bright_center.x;
+				specblock.speculars[i].bright_center[1] = element.special->spec_instance[i].bright_center.y;
+				specblock.speculars[i].bright_center[2] = element.special->spec_instance[i].bright_center.z;
+				specblock.speculars[i].bright_center[3] = 1;
+				specblock.speculars[i].color[2] = (element.special->spec_instance[i].bright_color & 31) / 31.f;
+				specblock.speculars[i].color[1] = ((element.special->spec_instance[i].bright_color >> 5) & 31) / 31.f;
+				specblock.speculars[i].color[0] = ((element.special->spec_instance[i].bright_color >> 10) & 31) / 31.f;
+			}
+
+			rend_UpdateSpecular(&specblock);
+
 			//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
-			Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+			if (element.texturenum != last_texture)
+			{
+				last_texture = element.texturenum;
+				Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+			}
+
+			if (element.lmhandle != last_lightmap)
+			{
+				last_lightmap = element.lmhandle;
+				Room_VertexBuffer.BindLightmap(element.lmhandle);
+			}
 
 			//And draw
 			Room_VertexBuffer.DrawIndexed(element.range);
@@ -469,6 +498,78 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 	interactions.push_back(element);
 }
 
+void AddSpecFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements, std::vector<SpecularDrawElement>& interactions, room& rp, int indexOffset, int firstIndex)
+{
+	if (elements.empty())
+		return;
+
+	int lasttmap = -1;
+	int lastlm = -1;
+	bool firsttime = true;
+	int triindices[3];
+	RendVertex vert;
+	for (SortableElement& element : elements)
+	{
+		mesh.BeginVertices();
+		mesh.BeginIndices();
+		lasttmap = element.texturehandle;
+		lastlm = element.lmhandle;
+
+		vert.uslide = GameTextures[lasttmap].slide_u;
+		vert.vslide = GameTextures[lasttmap].slide_v;
+
+		face& fp = rp.faces[element.element];
+
+		int first_index = mesh.NumVertices() + indexOffset;
+		if (GameTextures[element.texturehandle].flags & TF_SMOOTH_SPECULAR)
+		{
+			for (int i = 0; i < fp.num_verts; i++)
+			{
+				roomUVL uvs = fp.face_uvls[i];
+				vert.position = rp.verts[fp.face_verts[i]];
+				vert.normal = SpecialFaces[fp.special_handle].vertnorms[i];
+				vert.r = vert.g = vert.b = vert.a = 255;
+				vert.u1 = uvs.u; vert.v1 = uvs.v;
+				vert.u2 = uvs.u2; vert.v2 = uvs.v2;
+
+				mesh.AddVertex(vert);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < fp.num_verts; i++)
+			{
+				roomUVL uvs = fp.face_uvls[i];
+				vert.position = rp.verts[fp.face_verts[i]];
+				vert.normal = fp.normal;
+				vert.r = vert.g = vert.b = vert.a = 255;
+				vert.u1 = uvs.u; vert.v1 = uvs.v;
+				vert.u2 = uvs.u2; vert.v2 = uvs.v2;
+
+				mesh.AddVertex(vert);
+			}
+		}
+
+		//Generate indicies as a triangle fan
+		for (int i = 2; i < fp.num_verts; i++)
+		{
+			triindices[0] = first_index;
+			triindices[1] = first_index + i - 1;
+			triindices[2] = first_index + i;
+			mesh.SetIndicies(3, triindices);
+		}
+
+		mesh.EndVertices();
+		SpecularDrawElement element;
+		element.texturenum = lasttmap;
+		element.lmhandle = lastlm;
+		element.range = mesh.EndIndices();
+		element.range.offset += firstIndex;
+		element.special = &SpecialFaces[fp.special_handle];
+		interactions.push_back(element);
+	}
+}
+
 //Meshes a given room. 
 //Index offset is added to all generated indicies, to allow updating a room at a specific place
 //later down the line, even with an empty MeshBuilder. 
@@ -507,9 +608,9 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 		//blarg
 		int bm_handle = GetTextureBitmap(fp.tmap, 0);
 		int alphatype = GetFaceAlpha(&fp, -1);
-		if ((alphatype & (ATF_CONSTANT | ATF_TEXTURE)) != 0)
+		/*if ((alphatype & (ATF_CONSTANT | ATF_TEXTURE)) != 0)
 			continue;
-		else
+		else*/
 		{
 			int tmap = fp.tmap;
 			if (fp.flags & FF_DESTROYED && GameTextures[tmap].flags & TF_DESTROYABLE)
@@ -522,9 +623,9 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 				//Specs have to be in a special pass like this so that the size of the room vertex buffer never changes,
 				// no matter how the visibility or 
 				//TODO: Determine if any levels have unlit speculars, but this seems like a bit of a nonsequitur. 
-				if (fp.special_handle != BAD_SPECIAL_FACE_INDEX && SpecialFaces[fp.special_handle].type == SFT_SPECULAR)
+				if (fp.special_handle != BAD_SPECIAL_FACE_INDEX)
 				{
-					faces_spec.push_back(SortableElement{ i, (ushort)tmap, 0 });
+					faces_spec.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
 				}
 				else
 				{
@@ -548,6 +649,7 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 	//Even though they're not batched up (may be fixable if I can quickly determine if they have identical light sources), 
 	//sort specular faces to try to minimize texture state thrashing. Even though that's trivial compared to the buffer state thrashing. 
 	std::sort(faces_spec.begin(), faces_spec.end()); 
+	AddSpecFacesToBuffer(mesh, faces_spec, Room_meshes[roomnum].SpecInteractions, rp, indexOffset, firstIndex);
 }
 
 void FreeRoomMeshes()
@@ -560,9 +662,16 @@ void FreeRoomMeshes()
 	Room_IndexBuffer.Destroy();
 }
 
+uint32_t lightmap_specular_handle = 0xFFFFFFFFu;
+
 //Called during LoadLevel, builds meshes for every room. 
 void MeshRooms()
 {
+	if (lightmap_specular_handle == 0xFFFFFFFFu)
+	{
+		lightmap_specular_handle = rend_GetPipelineByName("lightmapped_specular");
+		assert(lightmap_specular_handle != 0xFFFFFFFFu);
+	}
 	MeshBuilder mesh;
 	FreeRoomMeshes();
 	for (int i = 0; i < Highest_room_index; i++)
@@ -3979,6 +4088,15 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain)
 
 	if (Render_use_newrender)
 	{
+		rend_BindPipeline(lightmap_specular_handle);
+
+		for (int nn = N_render_rooms - 1; nn >= 0; nn--)
+		{
+			int roomnum = Render_list[nn];
+			Room_meshes[roomnum].DrawSpecular();
+		}
+
+
 		rendTEMP_UnbindVertexBuffer();
 		rend_EndShaderTest();
 	}

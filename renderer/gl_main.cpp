@@ -1081,5 +1081,5 @@ void rend_UseShaderTest(void)
 
 void rend_EndShaderTest(void)
 {
-	glUseProgram(0);
+	//glUseProgram(0);
 }
