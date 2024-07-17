@@ -33,6 +33,7 @@
 #include "Mission.h"
 #include "mission_download.h"
 #include "renderer.h"
+#include "inetgetfile.h"
 
 #ifndef MACINTOSH
 #include "unzip.h"
@@ -217,8 +218,6 @@ int msn_ShowDownloadChoices(msn_urls* urls)
 //1 Success
 int msn_DownloadWithStatus(char* url, char* filename)
 {
-	return 0;
-	/*
 	char qualfile[_MAX_PATH*2];
 	float last_refresh;
 	int total_bytes = 0;
@@ -424,7 +423,6 @@ int msn_DownloadWithStatus(char* url, char* filename)
 	menu_wnd.Destroy();
 	delete getmsnfile;
 	return ret;
-	*/
 }
 
 
@@ -657,7 +655,7 @@ int msn_ExtractZipFile(char* zipfilename, char* mn3name)
 
 	if (!zfile.OpenZip(zipfilename))
 	{
-		mprintf((0, "Unable to open zip file\n"));
+		DoMessageBox("Download", "Unable to open zip file, it might be corrupt.", MSGBOX_OK, UICOL_WINDOW_TITLE, UICOL_TEXT_NORMAL);
 		return 0;
 	}
 

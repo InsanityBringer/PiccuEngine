@@ -129,9 +129,13 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef WIN32
+#include <wininet.h>
+#endif
 
 #include "inetgetfile.h"
 #include "Chttpget.h"
+#include "mono.h"
 
 #ifndef WIN32
 #include "mem.h"
@@ -352,9 +356,94 @@ unsigned int ChttpGet::GetTotalBytes()
 	return m_iBytesTotal;
 }
 
-
 void ChttpGet::WorkerThread()
 {
+#ifdef WIN32
+	HINTERNET hInternetSession;
+	HINTERNET hURL;
+	BOOL bResult;
+	DWORD dwBytesRead = 1;
+	char buf[1024];
+
+	hInternetSession = InternetOpen("Descent3", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+	if (!hInternetSession)
+	{
+		m_State = HTTP_STATE_UNKNOWN_ERROR;
+		fclose(LOCALFILE);
+		return;
+	}
+
+	hURL = InternetOpenUrl(hInternetSession, m_URL, NULL, 0, 0, 0);
+	if (!hURL)
+	{
+		DWORD err = GetLastError();
+		m_State = err == ERROR_INTERNET_NAME_NOT_RESOLVED ? HTTP_STATE_HOST_NOT_FOUND :
+			err == ERROR_INTERNET_CANNOT_CONNECT ? HTTP_STATE_CANT_CONNECT :
+			err == ERROR_FILE_NOT_FOUND ? HTTP_STATE_FILE_NOT_FOUND : HTTP_STATE_UNKNOWN_ERROR;
+		InternetCloseHandle(hInternetSession);
+		fclose(LOCALFILE);
+		return;
+	}
+
+
+	DWORD dwStatusCode;
+	DWORD dwStatusCodeSize = sizeof(dwStatusCode);
+	if (!HttpQueryInfo(hURL, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatusCode, &dwStatusCodeSize, NULL))
+	{
+		DWORD err = GetLastError();
+		m_State = HTTP_STATE_UNKNOWN_ERROR;
+		InternetCloseHandle(hURL);
+		InternetCloseHandle(hInternetSession);
+		fclose(LOCALFILE);
+		return;
+	}
+
+	if (dwStatusCode != 200)
+	{
+		m_State = dwStatusCode == 404 ? HTTP_STATE_FILE_NOT_FOUND : HTTP_STATE_UNKNOWN_ERROR;
+		InternetCloseHandle(hURL);
+		InternetCloseHandle(hInternetSession);
+		fclose(LOCALFILE);
+		return;
+	}
+
+	DWORD dwContentLength;
+	DWORD dwContentLengthSize = sizeof(dwContentLength);
+	if (HttpQueryInfo(hURL, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER,
+		&dwContentLength, &dwContentLengthSize, NULL))
+	{
+		m_iBytesTotal = dwContentLength;
+	}
+
+	for (; dwBytesRead > 0;)
+	{
+		if (!InternetReadFile(hURL, buf, (DWORD)sizeof(buf), &dwBytesRead))
+		{
+			DWORD err = GetLastError();
+			mprintf((0,"InternetReadFile error %d\n", err));
+			m_State = HTTP_STATE_RECV_FAILED;
+			InternetCloseHandle(hURL);
+			InternetCloseHandle(hInternetSession);
+			fclose(LOCALFILE);
+			return;
+		}
+		if (fwrite(buf, 1, dwBytesRead, LOCALFILE) != dwBytesRead)
+		{
+			m_State = HTTP_STATE_CANT_WRITE_FILE;
+			InternetCloseHandle(hURL);
+			InternetCloseHandle(hInternetSession);
+			fclose(LOCALFILE);
+			return;
+		}
+		m_iBytesIn += dwBytesRead;
+	}
+
+	InternetCloseHandle(hURL);
+	InternetCloseHandle(hInternetSession);
+
+	m_State = HTTP_STATE_FILE_RECEIVED;
+	fclose(LOCALFILE);
+#else
 	char szCommand[1000];
 	char *p;
 	int irsp = 0;
@@ -488,6 +577,7 @@ void ChttpGet::WorkerThread()
 		fclose(LOCALFILE);
 		return;
 	}
+#endif
 }
 
 int ChttpGet::ConnectSocket()

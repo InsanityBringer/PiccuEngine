@@ -191,14 +191,7 @@ InetGetFile::InetGetFile(char *URL,char *localfile)
 	{
 		m_HardError = INET_ERROR_BADPARMS;
 	}
-	if(strstr(URL,"http:"))
-	{
-		m_bUseHTTP = true;
-		http = new ChttpGet(URL,localfile);
-		if(http==NULL)
-			m_HardError = INET_ERROR_NO_MEMORY;
-	}
-	else if(strstr(URL,"HTTP:"))
+	if(strstr(URL,"http:") || strstr(URL, "HTTP:") || strstr(URL, "https:") || strstr(URL, "HTTPS:"))
 	{
 		m_bUseHTTP = true;
 		http = new ChttpGet(URL,localfile);
