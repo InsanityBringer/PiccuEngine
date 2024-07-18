@@ -679,7 +679,7 @@ void MeshRooms()
 	}
 	MeshBuilder mesh;
 	FreeRoomMeshes();
-	for (int i = 0; i < Highest_room_index; i++)
+	for (int i = 0; i <= Highest_room_index; i++)
 	{
 		//These can be set here and should remain static, since the amount of vertices and indices should remain static across any room changes
 		Room_meshes[i].FirstVertexOffset = mesh.VertexOffset();
@@ -4061,6 +4061,8 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain)
 				RemeshRoom(mesh, roomnum);
 			}
 		}
+
+		rend_SetAlphaType(AT_ALWAYS);
 	}
 
 	//Render the list of rooms
