@@ -16,6 +16,7 @@ layout(std140) uniform SpecularBlock
 {
 	int num_specular;
 	int exponent;
+	float strength;
 	specular speculars[4];
 } specular_data;
 

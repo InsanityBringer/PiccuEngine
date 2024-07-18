@@ -389,6 +389,24 @@ struct RoomMesh
 		for (SpecularDrawElement& element : SpecInteractions)
 		{
 			static SpecularBlock specblock;
+
+			//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
+			if (element.texturenum != last_texture)
+			{
+				last_texture = element.texturenum;
+				Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+				if (GameTextures[element.texturenum].flags & TF_SMOOTH_SPECULAR)
+					specblock.strength = 1;
+				else
+					specblock.strength = 4;
+			}
+
+			if (element.lmhandle != last_lightmap)
+			{
+				last_lightmap = element.lmhandle;
+				Room_VertexBuffer.BindLightmap(element.lmhandle);
+			}
+
 			specblock.exponent = 6;
 			specblock.num_speculars = element.special->num;
 			for (int i = 0; i < specblock.num_speculars; i++) //aaaaaaa
@@ -403,19 +421,6 @@ struct RoomMesh
 			}
 
 			rend_UpdateSpecular(&specblock);
-
-			//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
-			if (element.texturenum != last_texture)
-			{
-				last_texture = element.texturenum;
-				Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
-			}
-
-			if (element.lmhandle != last_lightmap)
-			{
-				last_lightmap = element.lmhandle;
-				Room_VertexBuffer.BindLightmap(element.lmhandle);
-			}
 
 			//And draw
 			Room_VertexBuffer.DrawIndexed(element.range);

@@ -13,6 +13,7 @@ layout(std140) uniform SpecularBlock
 {
 	int num_specular;
 	int exponent;
+	float strength;
 	specular speculars[4];
 } specular_data;
 
@@ -28,7 +29,8 @@ void main()
 {
 	const float[4] weights = float[4](1.0, 0.66, 0.33, 0.25);
 	vec4 basecolor = texture(colortexture, outuv);
-	color = vec4(basecolor.rgb * texture(lightmaptexture, outuv2).rgb, 1.0);
+	vec4 lmcolor = texture(lightmaptexture, outuv2);
+	color = vec4(basecolor.rgb * lmcolor.rgb, 1.0);
 	
 	vec3 pos = normalize(outpos);
 	vec3 normal = normalize(outnormal);
@@ -37,6 +39,6 @@ void main()
 		vec3 lightvec = normalize(outlightpos[i] + outpos);
 		vec3 reflectlight = reflect(-lightvec, normal);
 		
-		color += vec4(pow(max(dot(reflectlight, pos), 0.0), specular_data.exponent) * specular_data.speculars[i].color.xyz, 0.0) * basecolor.a * weights[i];
+		color += vec4(pow(max(dot(reflectlight, pos), 0.0), specular_data.exponent) * specular_data.speculars[i].color.xyz, 0.0) * lmcolor * specular_data.strength * basecolor.a * weights[i];
 	}
 }

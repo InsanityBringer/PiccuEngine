@@ -495,7 +495,8 @@ struct SpecularBlock
 {
 	int num_speculars;
 	int exponent;
-	int pad[2]; //std140
+	float strength;
+	int pad; //std140
 	SpecularDef speculars[MAX_SPECULARS];
 };
 
