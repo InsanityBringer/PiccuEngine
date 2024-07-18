@@ -399,6 +399,13 @@ struct RoomMesh
 					specblock.strength = 1;
 				else
 					specblock.strength = 4;
+
+				if (GameTextures[element.texturenum].flags & TF_PLASTIC)
+					specblock.exponent = 14;
+				else if (GameTextures[element.texturenum].flags & TF_MARBLE)
+					specblock.exponent = 4;
+				else
+					specblock.exponent = 6;
 			}
 
 			if (element.lmhandle != last_lightmap)
@@ -407,7 +414,6 @@ struct RoomMesh
 				Room_VertexBuffer.BindLightmap(element.lmhandle);
 			}
 
-			specblock.exponent = 6;
 			specblock.num_speculars = element.special->num;
 			for (int i = 0; i < specblock.num_speculars; i++) //aaaaaaa
 			{
