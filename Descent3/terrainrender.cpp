@@ -926,31 +926,36 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 		rend_SetZValues(0, 5000);
 	}
 
-	//mesh test
-	rend_UseShaderTest();
-	rend_SetColorModel(CM_RGB);
-	rend_SetTextureType(TT_LINEAR);
-	rend_SetAlphaType(ATF_CONSTANT + ATF_TEXTURE);
-	rend_SetLighting(LS_NONE);
-	rend_SetWrapType(WT_WRAP); //Should this be clamp? Requires smarter logic for the UV calculations to handle discontinuities. 
-
-	Terrain_vertexbuffer.Bind();
-	Terrain_indexbuffer.Bind();
-
-	for (TerrainDrawCell& drawcell : TerrainMeshes)
+	if (Render_use_newrender)
 	{
-		drawcell.DrawAll();
+		//mesh test
+		rend_UseShaderTest();
+		rend_SetColorModel(CM_RGB);
+		rend_SetTextureType(TT_LINEAR);
+		rend_SetAlphaType(ATF_CONSTANT + ATF_TEXTURE);
+		rend_SetLighting(LS_NONE);
+		rend_SetWrapType(WT_WRAP); //Should this be clamp? Requires smarter logic for the UV calculations to handle discontinuities. 
+
+		Terrain_vertexbuffer.Bind();
+		Terrain_indexbuffer.Bind();
+
+		for (TerrainDrawCell& drawcell : TerrainMeshes)
+		{
+			drawcell.DrawAll();
+		}
+
+		rendTEMP_UnbindVertexBuffer();
+
+		rend_EndShaderTest();
 	}
-
-	rendTEMP_UnbindVertexBuffer();
-
-	rend_EndShaderTest();
-
-	// And display!
-	/*if (nt > 0)
+	else
 	{
-		DisplayTerrainList(nt);
-	}*/
+		// And display!
+		if (nt > 0)
+		{
+			DisplayTerrainList(nt);
+		}
+	}
 
 	// Draw rooms
 	RenderTerrainRooms();
