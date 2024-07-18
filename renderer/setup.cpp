@@ -68,7 +68,7 @@ void g3_GetProjectionMatrix( float zoom, float *projMat )
 	int viewportWidth, viewportHeight;
 	rend_GetProjectionParameters( &viewportWidth, &viewportHeight );
 
-	float s = ((float)Window_width / Window_height);
+	float s = ((float)viewportWidth / viewportHeight);
 
 	// setup the matrix
 	memset( projMat, 0, sizeof(float) * 16 );
