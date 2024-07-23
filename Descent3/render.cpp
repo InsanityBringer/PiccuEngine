@@ -333,6 +333,7 @@ struct SpecularDrawElement
 
 struct RoomMesh
 {
+	int roomnum;
 	std::vector<RoomDrawElement> LitInteractions;
 	std::vector<RoomDrawElement> UnlitInteractions;
 	std::vector<SpecularDrawElement> SpecInteractions;
@@ -386,50 +387,97 @@ struct RoomMesh
 	{
 		int last_texture = -1;
 		int last_lightmap = -1;
-		for (SpecularDrawElement& element : SpecInteractions)
+		static SpecularBlock specblock;
+		if (Rooms[roomnum].flags & RF_EXTERNAL)
 		{
-			static SpecularBlock specblock;
-
-			//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
-			if (element.texturenum != last_texture)
+			for (SpecularDrawElement& element : SpecInteractions)
 			{
-				last_texture = element.texturenum;
-				Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
-				if (GameTextures[element.texturenum].flags & TF_SMOOTH_SPECULAR)
-					specblock.strength = 1;
-				else
-					specblock.strength = 4;
+				//External rooms only can have speculars to one satellite in the sky, and it's always white. 
+				//But it emits colored light? heh. 
+				specblock.num_speculars = 1;
+				specblock.speculars[0].bright_center[0] = Terrain_sky.satellite_vectors[0].x;
+				specblock.speculars[0].bright_center[1] = Terrain_sky.satellite_vectors[0].y;
+				specblock.speculars[0].bright_center[2] = Terrain_sky.satellite_vectors[0].z;
+				specblock.speculars[0].bright_center[3] = 1;
+				specblock.speculars[0].color[2] =
+					specblock.speculars[0].color[1] =
+					specblock.speculars[0].color[0] = 1.0f;
 
-				if (GameTextures[element.texturenum].flags & TF_PLASTIC)
-					specblock.exponent = 14;
-				else if (GameTextures[element.texturenum].flags & TF_MARBLE)
-					specblock.exponent = 4;
-				else
-					specblock.exponent = 6;
+				//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
+				if (element.texturenum != last_texture)
+				{
+					last_texture = element.texturenum;
+					Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+					if (GameTextures[element.texturenum].flags & TF_SMOOTH_SPECULAR)
+						specblock.strength = 1;
+					else
+						specblock.strength = 4;
+
+					if (GameTextures[element.texturenum].flags & TF_PLASTIC)
+						specblock.exponent = 14;
+					else if (GameTextures[element.texturenum].flags & TF_MARBLE)
+						specblock.exponent = 4;
+					else
+						specblock.exponent = 6;
+				}
+
+				if (element.lmhandle != last_lightmap)
+				{
+					last_lightmap = element.lmhandle;
+					Room_VertexBuffer.BindLightmap(element.lmhandle);
+				}
+
+				rend_UpdateSpecular(&specblock);
+
+				//And draw
+				Room_VertexBuffer.DrawIndexed(element.range);
 			}
-
-			if (element.lmhandle != last_lightmap)
+		}
+		else
+		{
+			for (SpecularDrawElement& element : SpecInteractions)
 			{
-				last_lightmap = element.lmhandle;
-				Room_VertexBuffer.BindLightmap(element.lmhandle);
+				//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
+				if (element.texturenum != last_texture)
+				{
+					last_texture = element.texturenum;
+					Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+					if (GameTextures[element.texturenum].flags & TF_SMOOTH_SPECULAR)
+						specblock.strength = 1;
+					else
+						specblock.strength = 4;
+
+					if (GameTextures[element.texturenum].flags & TF_PLASTIC)
+						specblock.exponent = 14;
+					else if (GameTextures[element.texturenum].flags & TF_MARBLE)
+						specblock.exponent = 4;
+					else
+						specblock.exponent = 6;
+				}
+
+				if (element.lmhandle != last_lightmap)
+				{
+					last_lightmap = element.lmhandle;
+					Room_VertexBuffer.BindLightmap(element.lmhandle);
+				}
+
+				specblock.num_speculars = element.special->num;
+				for (int i = 0; i < specblock.num_speculars; i++) //aaaaaaa
+				{
+					specblock.speculars[i].bright_center[0] = element.special->spec_instance[i].bright_center.x;
+					specblock.speculars[i].bright_center[1] = element.special->spec_instance[i].bright_center.y;
+					specblock.speculars[i].bright_center[2] = element.special->spec_instance[i].bright_center.z;
+					specblock.speculars[i].bright_center[3] = 1;
+					specblock.speculars[i].color[2] = (element.special->spec_instance[i].bright_color & 31) / 31.f;
+					specblock.speculars[i].color[1] = ((element.special->spec_instance[i].bright_color >> 5) & 31) / 31.f;
+					specblock.speculars[i].color[0] = ((element.special->spec_instance[i].bright_color >> 10) & 31) / 31.f;
+				}
+
+				rend_UpdateSpecular(&specblock);
+
+				//And draw
+				Room_VertexBuffer.DrawIndexed(element.range);
 			}
-
-			specblock.num_speculars = element.special->num;
-			for (int i = 0; i < specblock.num_speculars; i++) //aaaaaaa
-			{
-				specblock.speculars[i].bright_center[0] = element.special->spec_instance[i].bright_center.x;
-				specblock.speculars[i].bright_center[1] = element.special->spec_instance[i].bright_center.y;
-				specblock.speculars[i].bright_center[2] = element.special->spec_instance[i].bright_center.z;
-				specblock.speculars[i].bright_center[3] = 1;
-				specblock.speculars[i].color[2] = (element.special->spec_instance[i].bright_color & 31) / 31.f;
-				specblock.speculars[i].color[1] = ((element.special->spec_instance[i].bright_color >> 5) & 31) / 31.f;
-				specblock.speculars[i].color[0] = ((element.special->spec_instance[i].bright_color >> 10) & 31) / 31.f;
-			}
-
-			rend_UpdateSpecular(&specblock);
-
-			//And draw
-			Room_VertexBuffer.DrawIndexed(element.range);
 		}
 	}
 };
@@ -532,7 +580,7 @@ void AddSpecFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& eleme
 		face& fp = rp.faces[element.element];
 
 		int first_index = mesh.NumVertices() + indexOffset;
-		if (GameTextures[element.texturehandle].flags & TF_SMOOTH_SPECULAR)
+		if (GameTextures[element.texturehandle].flags & TF_SMOOTH_SPECULAR && fp.special_handle != BAD_SPECIAL_FACE_INDEX)
 		{
 			for (int i = 0; i < fp.num_verts; i++)
 			{
@@ -602,6 +650,8 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 	if (roommesh.FacePrevStates.size() != rp.num_faces)
 		roommesh.FacePrevStates.resize(rp.num_faces);
 
+	roommesh.roomnum = roomnum;
+
 	roommesh.ResetInteractions();
 
 	//Build a sortable list of all faces
@@ -631,10 +681,9 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 			if (fp.flags & FF_LIGHTMAP)
 			{
 				//If the face is specular, add it for a post stage. 
-				//Specs have to be in a special pass like this so that the size of the room vertex buffer never changes,
-				// no matter how the visibility or 
-				//TODO: Determine if any levels have unlit speculars, but this seems like a bit of a nonsequitur. 
-				if (fp.special_handle != BAD_SPECIAL_FACE_INDEX)
+				//Specs have to be in a special pass like this so that the size of the room vertex buffer never changes
+				//External specular faces don't use a special face, and therefore can never be smooth. Heh. 
+				if (GameTextures[tmap].flags & TF_SPECULAR && (fp.special_handle != BAD_SPECIAL_FACE_INDEX || (rp.flags & RF_EXTERNAL)))
 				{
 					faces_spec.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
 				}
