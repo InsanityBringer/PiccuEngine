@@ -903,7 +903,7 @@ void InitIOSystems(bool editor)
 
 	ddio_MakePath(fullname, Working_directory, "piccuengine.hog", nullptr);
 	int piccu_hid = cf_OpenLibrary(fullname);
-	if (piccu_hid == -1)
+	if (piccu_hid == 0)
 	{
 		Error("Cannot find piccuengine.hog file!");
 	}
@@ -984,15 +984,15 @@ void InitIOSystems(bool editor)
 	//	initialize all the OSIRIS systems
 	//	extract from extra.hog first, so it's dll files are listed ahead of d3.hog's
 	Osiris_InitModuleLoader();	
-	if(extra13_hid!=-1)
+	if(extra13_hid != 0)
 		Osiris_ExtractScriptsFromHog(extra13_hid,false);
-	if (extra1_hid != -1)
+	if (extra1_hid != 0)
 		Osiris_ExtractScriptsFromHog(extra1_hid, false);
-	if(extra_hid!=-1)
+	if(extra_hid != 0)
 		Osiris_ExtractScriptsFromHog(extra_hid,false);
-	if(merc_hid!=-1)
+	if(merc_hid != 0)
 		Osiris_ExtractScriptsFromHog(merc_hid,false);
-	if(sys_hid!=-1)
+	if(sys_hid != 0)
 		Osiris_ExtractScriptsFromHog(sys_hid,false);
 	Osiris_ExtractScriptsFromHog(d3_hid,false);	
 }
