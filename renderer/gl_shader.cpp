@@ -34,7 +34,11 @@ ShaderProgram* lastshaderprog = nullptr;
 //Contains a table of all shader definitions used by newrender. Renderer will request shader handles by name.
 ShaderDefinition gl_shaderdefs[] =
 {
+	{"lightmap", SF_HASCOMMON, "lightmap.vert", "lightmap.frag"},
+	{"lightmap_room", SF_HASCOMMON, "lightmap_room.vert", "lightmap_room.frag"},
 	{"lightmapped_specular", SF_HASCOMMON | SF_HASSPECULAR, "lightmap_specular.vert", "lightmap_specular.frag"},
+	{"lightmap_room_fog", SF_HASCOMMON | SF_HASROOM, "lightmap_room_fog.vert", "lightmap_room_fog.frag"},
+	{"lightmap_room_specular_fog", SF_HASCOMMON | SF_HASROOM | SF_HASSPECULAR, "lightmap_room_specular_fog.vert", "lightmap_room_specular_fog.frag"},
 };
 
 #define NUM_SHADERDEFS sizeof(gl_shaderdefs) / sizeof(gl_shaderdefs[0])
@@ -67,6 +71,15 @@ void opengl_InitShaders(void)
 	glBindBuffer(GL_COPY_WRITE_BUFFER, specularbuffername);
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(SpecularBlock), nullptr, GL_STREAM_READ);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 2, specularbuffername);
+
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+
+	glGenBuffers(1, &fogbuffername);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, fogbuffername);
+	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(RoomBlock), nullptr, GL_DYNAMIC_READ);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 3, fogbuffername);
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -113,6 +126,16 @@ void rend_UpdateSpecular(SpecularBlock* specularstate)
 {
 	glBindBuffer(GL_COPY_WRITE_BUFFER, specularbuffername);
 	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, 16 + (specularstate->num_speculars * 32), specularstate);
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+}
+
+void rend_UpdateFogBrightness(RoomBlock* roomstate)
+{
+	glBindBuffer(GL_COPY_WRITE_BUFFER, fogbuffername);
+	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(RoomBlock), roomstate);
 
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -214,6 +237,13 @@ void ShaderProgram::CreateCommonBindings(int bindindex)
 	if (uboindex != GL_INVALID_INDEX)
 	{
 		glUniformBlockBinding(m_name, uboindex, 2);
+	}
+	
+	//Find RoomBlock
+	uboindex = glGetUniformBlockIndex(m_name, "RoomBlock");
+	if (uboindex != GL_INVALID_INDEX)
+	{
+		glUniformBlockBinding(m_name, uboindex, 3);
 	}
 
 	GLenum err = glGetError();

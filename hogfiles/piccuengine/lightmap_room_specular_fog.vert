@@ -20,6 +20,13 @@ layout(std140) uniform SpecularBlock
 	specular speculars[4];
 } specular_data;
 
+layout(std140) uniform RoomBlock
+{
+	vec4 fog_color;
+	float fog_distance;
+	float fog_modifier;
+	float brightness;
+} room;
 
 layout(location = 0) in vec3 position;
 layout(location = 2) in vec3 normal;
@@ -31,6 +38,8 @@ out vec2 outuv2;
 out vec3 outpos;
 out vec3 outnormal;
 flat out vec3[4] outlightpos;
+out float outz;
+out float outlight;
 
 void main()
 {
@@ -40,6 +49,8 @@ void main()
 	outuv2 = uv2;
 	outpos = -temp.xyz;
 	outnormal = mat3(commons.modelview) * normal;
+	outz = abs(-temp.z);
+	outlight = room.brightness;
 	
 	//Need to transform the light positions too..
 	for (int i = 0; i < specular_data.num_specular; i++)

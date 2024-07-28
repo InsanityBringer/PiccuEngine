@@ -76,9 +76,6 @@ extern bool StateLimited;
 extern bool NoLightmaps;
 extern bool UseMultitexture;
 extern bool UseWBuffer;
-extern bool UseMipmap;	//DAJ
-extern bool ATIRagePro;	//DAJ
-extern bool Formac;	//DAJ
 
 // various state setting functions
 //------------------------------------
@@ -478,25 +475,42 @@ void rend_BindPipeline(uint32_t handle);
 
 constexpr int MAX_SPECULARS = 4; //Limit isn't enforced by Descent 3 normally, but errors would occur if there were more. 
 
+//Block used to represent all dynamic data per room
 struct RoomBlock
 {
+	//Color of the room's fog
 	float fog_color[4];
+	//Distance where the fog will reach full density, in map units.
 	float fog_distance;
+	//Modifier applied to fog depth calculation. Used to limit fogginess of rooms you aren't in.
+	float fog_modifier;
+	//Brightness multiplier applied to all vertex light values.
 	float brightness;
 };
 
+//A single light used for specular reflections.
 struct SpecularDef
 {
+	//Position of the reflected light
 	float bright_center[4];
+	//Color of the reflected lights
 	float color[4];
 };
 
+//Block used to represent specular reflections on a surface.
+//The current implementation is a little inefficient, being updated before drawing every surface.
 struct SpecularBlock
 {
+	//The count of light sources affecting this surface.
 	int num_speculars;
+	//Exponent used to control sharpness of reflection.
 	int exponent;
+	//Strength modifier applied to lighting calculation
 	float strength;
-	int pad; //std140
+	//padding for std140
+	int pad; 
+
+	//All light sources. 
 	SpecularDef speculars[MAX_SPECULARS];
 };
 

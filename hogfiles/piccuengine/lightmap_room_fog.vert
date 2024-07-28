@@ -6,12 +6,22 @@ layout(std140) uniform CommonBlock
 	mat4 modelview;
 } commons;
 
+layout(std140) uniform RoomBlock
+{
+	vec4 fog_color;
+	float fog_distance;
+	float fog_modifier;
+	float brightness;
+} room;
+
 layout(location = 0) in vec3 position;
 layout(location = 4) in vec2 uv;
 layout(location = 5) in vec2 uv2;
 
 out vec2 outuv;
 out vec2 outuv2;
+out float outz;
+out float outlight;
 
 void main()
 {
@@ -19,4 +29,6 @@ void main()
 	gl_Position = commons.projection * vec4(temp.xy, -temp.z, temp.w);
 	outuv = uv;
 	outuv2 = uv2;
+	outz = abs(-temp.z);
+	outlight = room.brightness;
 }

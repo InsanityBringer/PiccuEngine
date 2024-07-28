@@ -722,7 +722,10 @@ void FreeRoomMeshes()
 	Room_IndexBuffer.Destroy();
 }
 
+uint32_t lightmap_room_handle = 0xFFFFFFFFu;
 uint32_t lightmap_specular_handle = 0xFFFFFFFFu;
+uint32_t lightmap_room_fog_handle = 0xFFFFFFFFu;
+uint32_t lightmap_room_specular_fog_handle = 0xFFFFFFFFu;
 
 //Called during LoadLevel, builds meshes for every room. 
 void MeshRooms()
@@ -731,6 +734,21 @@ void MeshRooms()
 	{
 		lightmap_specular_handle = rend_GetPipelineByName("lightmapped_specular");
 		assert(lightmap_specular_handle != 0xFFFFFFFFu);
+	}
+	if (lightmap_room_fog_handle == 0xFFFFFFFFu)
+	{
+		lightmap_room_fog_handle = rend_GetPipelineByName("lightmap_room_fog");
+		assert(lightmap_room_fog_handle != 0xFFFFFFFFu);
+	}
+	if (lightmap_room_handle == 0xFFFFFFFFu)
+	{
+		lightmap_room_handle = rend_GetPipelineByName("lightmap_room");
+		assert(lightmap_room_handle != 0xFFFFFFFFu);
+	}
+	if (lightmap_room_specular_fog_handle == 0xFFFFFFFFu)
+	{
+		lightmap_room_specular_fog_handle = rend_GetPipelineByName("lightmap_room_specular_fog");
+		assert(lightmap_room_specular_fog_handle != 0xFFFFFFFFu);
 	}
 	MeshBuilder mesh;
 	FreeRoomMeshes();
@@ -780,6 +798,70 @@ static void RemeshRoom(MeshBuilder& mesh, int roomnum)
 int N_render_rooms;
 int first_terminal_room;
 #define round(a)  (int((a) + 0.5f))
+
+struct NewRenderPassInfo
+{
+	//Pointer to the shader handle that will be used for this pass.
+	uint32_t& handle;
+	//True if only fog rooms should be rendered.
+	bool fog;
+	//True if only specular faces should be rendered.
+	bool specular;
+} renderpass_info[] = 
+{ 
+	{lightmap_room_handle, false, false},
+	{lightmap_room_handle, false, false},
+	{lightmap_specular_handle, false, true}, 
+	{lightmap_room_fog_handle, true, false}, 
+	{lightmap_room_fog_handle, true, false},
+	{lightmap_room_specular_fog_handle, true, true},
+};
+
+//I'm begging you please switch to a newer spec so you can use std::array with deduction guides. 
+//Actually would that work with a composite type here? Actually would this just be another use for a C#-like array class?
+#define NUM_NEWRENDERPASSES sizeof(renderpass_info) / sizeof(renderpass_info[0])
+
+void ComputeRoomPulseLight(room* rp);
+
+void DoNewRenderPass(int passnum)
+{
+	assert(passnum >= 0 && passnum < NUM_NEWRENDERPASSES);
+	NewRenderPassInfo& passinfo = renderpass_info[passnum];
+	static RoomBlock roomblock;
+
+	rend_BindPipeline(passinfo.handle);
+
+	for (int nn = N_render_rooms - 1; nn >= 0; nn--)
+	{
+		int roomnum = Render_list[nn];
+		room& rp = Rooms[roomnum];
+		ComputeRoomPulseLight(&Rooms[roomnum]);
+		roomblock.brightness = Room_light_val;
+
+		if (passinfo.fog)
+		{
+			if (Detail_settings.Fog_enabled && !(Rooms[roomnum].flags & RF_FOG))
+				continue;
+
+			roomblock.fog_distance = rp.fog_depth;
+			roomblock.fog_color[0] = rp.fog_r;
+			roomblock.fog_color[1] = rp.fog_g;
+			roomblock.fog_color[2] = rp.fog_b;
+		}
+		else
+		{
+			if (Detail_settings.Fog_enabled && Rooms[roomnum].flags & RF_FOG)
+				continue;
+		}
+
+		rend_UpdateFogBrightness(&roomblock);
+
+		if (passinfo.specular)
+			Room_meshes[roomnum].DrawSpecular();
+		else
+			Room_meshes[roomnum].DrawLit();
+	}
+}
 
 #ifdef EDITOR
 #define CROSS_WIDTH  8.0
@@ -2240,93 +2322,6 @@ void RenderScorchesForRoom(room* rp)
 	//Reset rendering states
 	rend_SetZBias(0);
 	rend_SetZBufferWriteMask(1);
-}
-
-//Draw the specified face
-//Parameters:	rp - pointer to the room the face is un
-//				facenum - which face in the specified room
-void RenderLightmapFace(room* rp, int facenum)
-{
-	int		vn, drawn = 0;
-	face* fp = &rp->faces[facenum];
-	g3Point* pointlist[MAX_VERTS_PER_FACE];
-	g3Point  pointbuffer[MAX_VERTS_PER_FACE];
-	ubyte face_code = 255;
-	if (NoLightmaps)
-		return;
-	if (fp->lmi_handle == BAD_LMI_INDEX)
-		return;
-	if (!(fp->flags & FF_LIGHTMAP))
-		return;
-
-	// check for render windows hack
-	if (No_render_windows_hack == 1)
-	{
-		if (fp->portal_num != -1)
-			return;
-	}
-	if (GameTextures[fp->tmap].flags & TF_SATURATE)
-		return;
-#ifdef EDITOR	
-	if (In_editor_mode && !Lighting_on)
-		return;
-#endif
-
-	int lm_handle = LightmapInfo[fp->lmi_handle].lm_handle;
-	// Setup saturation if needed
-	if (GameTextures[fp->tmap].flags & TF_SATURATE_LIGHTMAP)
-		rend_SetAlphaType(AT_LIGHTMAP_BLEND_SATURATE);
-
-	// Our lightmaps aren't square, but our destination texture surfaces are
-	// Use these scalars to get them into the correct coordinates
-	float xscalar = (float)GameLightmaps[lm_handle].width / (float)GameLightmaps[lm_handle].square_res;
-	float yscalar = (float)GameLightmaps[lm_handle].height / (float)GameLightmaps[lm_handle].square_res;
-	if (!Render_mirror_for_room)
-	{
-		for (vn = 0; vn < fp->num_verts; vn++)
-		{
-			pointbuffer[vn] = World_point_buffer[rp->wpb_index + fp->face_verts[vn]];
-			g3Point* p = &pointbuffer[vn];
-			pointlist[vn] = p;
-			p->p3_uvl.u = fp->face_uvls[vn].u2 * xscalar;
-			p->p3_uvl.v = fp->face_uvls[vn].v2 * yscalar;
-
-			p->p3_flags |= PF_UV + PF_L + PF_RGBA;	//has uv and l set
-			p->p3_uvl.l = 1.0;
-
-			face_code &= p->p3_codes;
-		}
-	}
-	else
-	{
-		for (vn = 0; vn < fp->num_verts; vn++)
-		{
-			pointbuffer[vn] = World_point_buffer[rp->wpb_index + fp->face_verts[vn]];
-			g3Point* p = &pointbuffer[vn];
-			pointlist[(fp->num_verts - 1) - vn] = p;
-			p->p3_uvl.u = fp->face_uvls[vn].u2 * xscalar;
-			p->p3_uvl.v = fp->face_uvls[vn].v2 * yscalar;
-
-			p->p3_flags |= PF_UV + PF_L + PF_RGBA;	//has uv and l set
-			p->p3_uvl.l = 1.0;
-
-			face_code &= p->p3_codes;
-		}
-	}
-
-	if (face_code)	// This entire face is off the scren
-		return;
-
-	rend_SetAlphaValue(GameTextures[fp->tmap].alpha * 255);
-	if (fp->flags & FF_TRIANGULATED)
-		g3_SetTriangulationTest(1);
-	//Draw the damn thing
-	drawn = g3_DrawPoly(fp->num_verts, pointlist, lm_handle, MAP_TYPE_LIGHTMAP);
-	if (fp->flags & FF_TRIANGULATED)
-		g3_SetTriangulationTest(0);
-	// Restore if using saturated blending
-	if (GameTextures[fp->tmap].flags & TF_SATURATE_LIGHTMAP)
-		rend_SetAlphaType(AT_LIGHTMAP_BLEND);
 }
 
 //Draw the specified face
@@ -4102,7 +4097,13 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain)
 
 	if (Render_use_newrender)
 	{
-		rend_UseShaderTest();
+		//Set up rendering states
+		//I hate this global state thing how can I make it better
+		rend_SetColorModel(CM_MONO);
+		rend_SetLighting(LS_GOURAUD);
+		rend_SetWrapType(WT_WRAP);
+
+
 		Room_VertexBuffer.Bind();
 		Room_IndexBuffer.Bind();
 
@@ -4118,49 +4119,45 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain)
 		}
 
 		rend_SetAlphaType(AT_ALWAYS);
-	}
 
-	//Render the list of rooms
-	for (int nn = N_render_rooms - 1; nn >= 0; nn--)
-	{
-		int roomnum = Render_list[nn];
-#ifdef _DEBUG
-		if (In_editor_mode && Render_one_room_only && (roomnum != viewer_roomnum))
-			continue;
-#endif
-		if (roomnum != -1)
-		{
-			if (Render_use_newrender)
-			{
-				RenderRoom(&Rooms[roomnum]);
-			}
-			else
-			{
-				ASSERT(Rooms_visited[roomnum] != 255);
-				if (Outline_release_mode & 1) {
-					RenderRoomOutline(&Rooms[roomnum]);
-				}
-				RenderRoom(&Rooms[roomnum]);
-				Rooms_visited[roomnum] = (char)255;
-				// Stuff objects into our postrender list
-				CheckToRenderMineObjects(roomnum);
-			}
-		}
-	}
-
-	if (Render_use_newrender)
-	{
-		rend_BindPipeline(lightmap_specular_handle);
-
-		for (int nn = N_render_rooms - 1; nn >= 0; nn--)
-		{
-			int roomnum = Render_list[nn];
-			Room_meshes[roomnum].DrawSpecular();
-		}
-
+		//TODO: fix magic numbers
+		DoNewRenderPass(0);
+		DoNewRenderPass(2);
+		DoNewRenderPass(3);
+		DoNewRenderPass(5);
 
 		rendTEMP_UnbindVertexBuffer();
 		rend_EndShaderTest();
+	}
+	else
+	{
+		//Render the list of rooms
+		for (int nn = N_render_rooms - 1; nn >= 0; nn--)
+		{
+			int roomnum = Render_list[nn];
+#ifdef _DEBUG
+			if (In_editor_mode && Render_one_room_only && (roomnum != viewer_roomnum))
+				continue;
+#endif
+			if (roomnum != -1)
+			{
+				if (Render_use_newrender)
+				{
+					RenderRoom(&Rooms[roomnum]);
+				}
+				else
+				{
+					ASSERT(Rooms_visited[roomnum] != 255);
+					if (Outline_release_mode & 1) {
+						RenderRoomOutline(&Rooms[roomnum]);
+					}
+					RenderRoom(&Rooms[roomnum]);
+					Rooms_visited[roomnum] = (char)255;
+					// Stuff objects into our postrender list
+					CheckToRenderMineObjects(roomnum);
+				}
+			}
+		}
 	}
 
 	rend_SetOverlayType(OT_NONE);	// turn off lightmap blending
