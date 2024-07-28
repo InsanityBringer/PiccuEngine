@@ -20,7 +20,7 @@ layout(location = 5) in vec2 uv2;
 
 out vec2 outuv;
 out vec2 outuv2;
-out float outz;
+out vec3 outpt;
 out float outlight;
 
 void main()
@@ -29,6 +29,6 @@ void main()
 	gl_Position = commons.projection * vec4(temp.xy, -temp.z, temp.w);
 	outuv = uv;
 	outuv2 = uv2;
-	outz = abs(-temp.z);
+	outpt = temp.xyz;
 	outlight = room.brightness;
 }

@@ -76,7 +76,7 @@ float Fog_zone_start = FLT_MAX, Fog_zone_end = FLT_MAX;
 int Must_render_terrain;
 int Global_buffer_index;
 int No_render_windows_hack = -1;
-#define WALL_PULSE_INCREMENT	.01
+constexpr float WALL_PULSE_INCREMENT = .01;
 
 //Variables for various debugging features
 #ifndef _DEBUG
@@ -128,7 +128,7 @@ static int Render_width, Render_height;
 int   Clear_window_color = -1;
 int   Clear_window = 2;         // 1 = Clear whole background window, 2 = clear view portals into rest of world, 0 = no clear
 
-#define MAX_RENDER_ROOMS   100
+constexpr int MAX_RENDER_ROOMS = 100;
 char Rooms_visited[MAX_ROOMS + MAX_PALETTE_ROOMS];
 int Facing_visited[MAX_ROOMS + MAX_PALETTE_ROOMS];
 // For keeping track of portal recursion
@@ -138,7 +138,7 @@ short External_room_list[MAX_ROOMS];
 int N_external_rooms;
 
 // For rendering specular faces
-#define MAX_SPECULAR_FACES 2500
+constexpr int MAX_SPECULAR_FACES = 2500;
 short Specular_faces[MAX_SPECULAR_FACES];
 int Num_specular_faces_to_render = 0;
 int Num_real_specular_faces_to_render = 0;	// Non-invisible specular faces
@@ -155,7 +155,7 @@ ushort Scorches_to_render[MAX_FACES_PER_ROOM];
 int Num_scorches_to_render = 0;
 
 // For rendering volumetric fog
-#define MAX_FOGGED_ROOMS_PER_FRAME	8
+constexpr int MAX_FOGGED_ROOMS_PER_FRAME = 8;
 fog_portal_data Fog_portal_data[MAX_FOGGED_ROOMS_PER_FRAME];
 int Num_fogged_rooms_this_frame = 0;
 float Room_light_val = 0;
@@ -166,16 +166,16 @@ vector Room_fog_plane, Room_fog_portal_vert;
 short Fog_faces[MAX_FACES_PER_ROOM];
 int Num_fog_faces_to_render = 0;
 
-#define MAX_EXTERNAL_ROOMS	100
+constexpr int MAX_EXTERNAL_ROOMS = 100;
 vector External_room_corners[MAX_EXTERNAL_ROOMS][8];
 ubyte External_room_codes[MAX_EXTERNAL_ROOMS];
 ubyte External_room_project_net[MAX_EXTERNAL_ROOMS];
 
 // For light glows
-#define MAX_LIGHT_GLOWS	100
-#define LGF_USED		1
-#define LGF_INCREASING	2
-#define LGF_FAST		4
+constexpr int MAX_LIGHT_GLOWS = 100;
+constexpr int LGF_USED = 1;
+constexpr int LGF_INCREASING = 2;
+constexpr int LGF_FAST = 4;
 
 struct light_glow
 {
@@ -254,10 +254,6 @@ static inline bool FaceIsStatic(room& rp, face& fp)
 	return true;
 }
 
-//Flags for GetFaceAlpha()
-#define FA_CONSTANT		1		//face has a constant alpha for the whole face
-#define FA_VERTEX		2		//face has different alpha per vertex
-#define FA_TRANSPARENT	4		//face has transparency (i.e. per pixel 1-bit alpha)
 //Determines if a face draws with alpha blending
 //Parameters:	fp - pointer to the face in question
 //					bm_handle - the handle for the bitmap for this frame, or -1 if don't care about transparence
@@ -822,6 +818,25 @@ struct NewRenderPassInfo
 #define NUM_NEWRENDERPASSES sizeof(renderpass_info) / sizeof(renderpass_info[0])
 
 void ComputeRoomPulseLight(room* rp);
+
+//Performs tasks that need to be done before rendering a room.
+void NewRenderPreDraw()
+{
+	for (int nn = N_render_rooms - 1; nn >= 0; nn--)
+	{
+		int roomnum = Render_list[nn];
+		room& rp = Rooms[roomnum];
+
+		for (int facenum = 0; facenum < rp.num_faces; facenum++)
+		{
+			face& fp = rp.faces[facenum];
+			if (fp.flags & FF_VISIBLE)
+			{
+				fp.renderframe = FrameCount & 0xFF;
+			}
+		}
+	}
+}
 
 void DoNewRenderPass(int passnum)
 {
@@ -4120,6 +4135,7 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain)
 
 		rend_SetAlphaType(AT_ALWAYS);
 
+		NewRenderPreDraw();
 		//TODO: fix magic numbers
 		DoNewRenderPass(0);
 		DoNewRenderPass(2);

@@ -38,7 +38,6 @@ out vec2 outuv2;
 out vec3 outpos;
 out vec3 outnormal;
 flat out vec3[4] outlightpos;
-out float outz;
 out float outlight;
 
 void main()
@@ -49,7 +48,6 @@ void main()
 	outuv2 = uv2;
 	outpos = -temp.xyz;
 	outnormal = mat3(commons.modelview) * normal;
-	outz = abs(-temp.z);
 	outlight = room.brightness;
 	
 	//Need to transform the light positions too..

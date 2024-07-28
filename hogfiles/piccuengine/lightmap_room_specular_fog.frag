@@ -30,7 +30,6 @@ in vec2 outuv2;
 in vec3 outpos;
 in vec3 outnormal;
 flat in vec3[4] outlightpos;
-in float outz;
 in float outlight;
 
 out vec4 color;
@@ -52,5 +51,5 @@ void main()
 		tempcolor += vec4(pow(max(dot(reflectlight, pos), 0.0), specular_data.exponent) * specular_data.speculars[i].color.xyz, 0.0) * lmcolor * specular_data.strength * basecolor.a * weights[i];
 	}
 	
-	color = mix(tempcolor, vec4(room.fog_color.xyz, tempcolor.z), outz / room.fog_distance) * vec4(outlight, outlight, outlight, 1.0); 
+	color = mix(tempcolor, vec4(room.fog_color.xyz, tempcolor.z), clamp(-outpos.z / room.fog_distance, 0, 1)) * vec4(outlight, outlight, outlight, 1.0); 
 }
