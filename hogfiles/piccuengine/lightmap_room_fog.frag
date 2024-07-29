@@ -28,14 +28,11 @@ void main()
 	float mag = 0;
 	if (room.not_in_room != 0)
 	{
+		//alternate way of doing this suggested by Jeff Graw
 		float dist = dot(outpt, outplane.xyz) + outplane.w;
-		if (dist > 0)
-		{
-			float t = outplane.w / (outplane.w - dist);
-			vec3 portal_point = outpt * t;
-			
-			mag = max(0, (outpt.z - portal_point.z));
-		}
+		float t = outplane.w / (outplane.w - dist);
+		vec3 portal_point = outpt * t; 
+		mag = step(0, dist) * max(0, (outpt.z - portal_point.z));
 	}
 	else
 	{

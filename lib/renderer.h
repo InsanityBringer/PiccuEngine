@@ -522,6 +522,8 @@ void rend_UpdateSpecular(SpecularBlock* specularstate);
 //Updates brightness/fog components
 void rend_UpdateFogBrightness(RoomBlock* roomstate);
 
+void rend_UpdateBrightnessOnly(float newbrightness);
+
 #if defined(DD_ACCESS_RING) 
 #if defined(WIN32)
 // returns the direct draw object 

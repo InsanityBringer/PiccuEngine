@@ -1883,7 +1883,7 @@ void GameDrawMainView()
 	DebugBlockPrint("SR");
 
 	//Start rendering
-	StartFrame(false);
+	StartFrame(true);
 
 	// Set guided view
 	if (!Cinematic_inuse && Players[Player_num].guided_obj != NULL && !Guided_missile_smallview)

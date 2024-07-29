@@ -269,10 +269,18 @@ int rend_SetPreferredState(renderer_preferred_state* pref_state)
 
 void rend_StartFrame(int x1, int y1, int x2, int y2, int clear_flags)
 {
+	GLenum glclearflags = 0;
 	if (clear_flags & RF_CLEAR_ZBUFFER)
+		glclearflags |= GL_DEPTH_BUFFER_BIT;
+	
+	if (clear_flags & RF_CLEAR_COLOR)
 	{
-		glClear(GL_DEPTH_BUFFER_BIT);
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glclearflags |= GL_COLOR_BUFFER_BIT;
 	}
+
+	if (glclearflags != 0)
+		glClear(glclearflags);
 
 	OpenGL_state.clip_x1 = x1;
 	OpenGL_state.clip_y1 = y1;

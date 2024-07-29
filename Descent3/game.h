@@ -55,8 +55,8 @@ void SetScreenMode(int sm, bool force_res_change=false);
 int GetScreenMode();
 
 //	ALWAYS CALL THESE TO START AND END RENDERING
-void StartFrame(bool clear=true);
-void StartFrame(int x, int y, int x2, int y2, bool clear=true,bool push_on_stack=true);
+void StartFrame(bool clear = false); //[ISB] Don't default to clear because the expectation was that the clear parameter did literally nothing heh
+void StartFrame(int x, int y, int x2, int y2, bool clear = false,bool push_on_stack=true);
 void EndFrame();
 
 // retrives the settings of the last call to StartFrame

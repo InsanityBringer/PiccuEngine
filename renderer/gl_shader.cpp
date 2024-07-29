@@ -142,6 +142,16 @@ void rend_UpdateFogBrightness(RoomBlock* roomstate)
 		Int3();
 }
 
+void rend_UpdateBrightnessOnly(float newbrightness)
+{
+	glBindBuffer(GL_COPY_WRITE_BUFFER, fogbuffername);
+	glBufferSubData(GL_COPY_WRITE_BUFFER, offsetof(RoomBlock, brightness), sizeof(float), &newbrightness);
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+}
+
 void GL_UpdateLegacyBlock(float* projection, float* modelview)
 {
 	CommonBlock newblock;
