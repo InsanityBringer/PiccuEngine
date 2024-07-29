@@ -28,7 +28,7 @@ layout(std140) uniform RoomBlock
 
 in vec2 outuv;
 in vec2 outuv2;
-in vec3 outpos;
+in vec3 outpt;
 in vec3 outnormal;
 flat in vec3[4] outlightpos;
 in float outlight;
@@ -43,11 +43,11 @@ void main()
 	vec4 lmcolor = texture(lightmaptexture, outuv2);
 	vec4 tempcolor = vec4(basecolor.rgb * lmcolor.rgb, 1.0);
 	
-	vec3 pos = normalize(-outpos);
+	vec3 pos = normalize(-outpt);
 	vec3 normal = normalize(outnormal);
 	for (int i = 0; i < specular_data.num_specular; i++)
 	{
-		vec3 lightvec = normalize(outlightpos[i] - outpos);
+		vec3 lightvec = normalize(outlightpos[i] - outpt);
 		vec3 reflectlight = reflect(-lightvec, normal);
 		
 		tempcolor += vec4(pow(max(dot(reflectlight, pos), 0.0), specular_data.exponent) * specular_data.speculars[i].color.xyz, 0.0) * lmcolor * specular_data.strength * basecolor.a * weights[i];
@@ -67,7 +67,7 @@ void main()
 	}
 	else
 	{
-		mag = outpos.z / room.fog_distance;
+		mag = outpt.z;
 	}
-	color = mix(tempcolor, vec4(room.fog_color.xyz, tempcolor.z), clamp(mag, 0, 1)) * vec4(outlight, outlight, outlight, 1.0); 
+	color = mix(tempcolor, vec4(room.fog_color.xyz, tempcolor.z), clamp(mag / room.fog_distance, 0, 1)) * vec4(outlight, outlight, outlight, 1.0); 
 }

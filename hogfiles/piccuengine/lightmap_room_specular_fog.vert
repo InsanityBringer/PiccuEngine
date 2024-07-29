@@ -36,7 +36,7 @@ layout(location = 5) in vec2 uv2;
 
 out vec2 outuv;
 out vec2 outuv2;
-out vec3 outpos;
+out vec3 outpt;
 out vec3 outnormal;
 flat out vec4 outplane;
 flat out vec3[4] outlightpos;
@@ -48,7 +48,7 @@ void main()
 	gl_Position = commons.projection * vec4(temp.xy, -temp.z, temp.w);
 	outuv = uv;
 	outuv2 = uv2;
-	outpos = temp.xyz;
+	outpt = temp.xyz;
 	outnormal = mat3(commons.modelview) * normal;
 	outlight = room.brightness;
 	
