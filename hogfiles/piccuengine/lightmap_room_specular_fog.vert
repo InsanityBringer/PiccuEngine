@@ -61,5 +61,6 @@ void main()
 	//fog plane nonsense
 	//This will take the room's fog plane and translate it into view space, so that the position doesn't need to be extracted from the modelview matrix.	
 	vec4 fogplane = transpose(inverse(commons.modelview)) * room.fog_plane;
-	outplane = vec4(normalize(fogplane.xyz), fogplane.w);
+	float normmag = length(fogplane.xyz);
+	outplane = vec4(normalize(fogplane.xyz), fogplane.w / normmag);
 }

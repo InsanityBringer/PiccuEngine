@@ -53,16 +53,17 @@ void main()
 		tempcolor += vec4(pow(max(dot(reflectlight, pos), 0.0), specular_data.exponent) * specular_data.speculars[i].color.xyz, 0.0) * lmcolor * specular_data.strength * basecolor.a * weights[i];
 	}
 	
-	float mag;
+	float mag = 0;
 	if (room.not_in_room != 0)
 	{
-		float dist = dot(outpos, outplane.xyz) + outplane.w;
-		
-		float t = outplane.w / (outplane.w - dist);
-		vec3 portal_point = outpos * t;
-		
-		mag = (outpos.z - portal_point.z) / room.fog_distance;
-		//mag = dist / room.fog_distance;
+		float dist = dot(outpt, outplane.xyz) + outplane.w;
+		if (dist > 0)
+		{
+			float t = outplane.w / (outplane.w - dist);
+			vec3 portal_point = outpt * t;
+			
+			mag = max(0, (outpt.z - portal_point.z));
+		}
 	}
 	else
 	{
