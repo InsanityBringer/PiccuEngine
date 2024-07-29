@@ -482,10 +482,12 @@ struct RoomBlock
 	float fog_color[4];
 	//Distance where the fog will reach full density, in map units.
 	float fog_distance;
-	//Modifier applied to fog depth calculation. Used to limit fogginess of rooms you aren't in.
-	float fog_modifier;
 	//Brightness multiplier applied to all vertex light values.
 	float brightness;
+	//Set to !0 if not in this room, will use the plane for fog
+	int not_in_room;
+	int pad;
+	float fog_plane[4];
 };
 
 //A single light used for specular reflections.

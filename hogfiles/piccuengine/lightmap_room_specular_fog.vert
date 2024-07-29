@@ -24,8 +24,9 @@ layout(std140) uniform RoomBlock
 {
 	vec4 fog_color;
 	float fog_distance;
-	float fog_modifier;
 	float brightness;
+	int not_in_room;
+	vec4 fog_plane;
 } room;
 
 layout(location = 0) in vec3 position;
@@ -37,6 +38,7 @@ out vec2 outuv;
 out vec2 outuv2;
 out vec3 outpos;
 out vec3 outnormal;
+flat out vec4 outplane;
 flat out vec3[4] outlightpos;
 out float outlight;
 
@@ -46,7 +48,7 @@ void main()
 	gl_Position = commons.projection * vec4(temp.xy, -temp.z, temp.w);
 	outuv = uv;
 	outuv2 = uv2;
-	outpos = -temp.xyz;
+	outpos = temp.xyz;
 	outnormal = mat3(commons.modelview) * normal;
 	outlight = room.brightness;
 	
@@ -55,4 +57,9 @@ void main()
 	{
 		outlightpos[i] = (commons.modelview * specular_data.speculars[i].bright_center).xyz;
 	}
+	
+	//fog plane nonsense
+	//This will take the room's fog plane and translate it into view space, so that the position doesn't need to be extracted from the modelview matrix.	
+	vec4 fogplane = transpose(inverse(commons.modelview)) * room.fog_plane;
+	outplane = vec4(normalize(fogplane.xyz), fogplane.w);
 }

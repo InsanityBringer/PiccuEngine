@@ -10,8 +10,9 @@ layout(std140) uniform RoomBlock
 {
 	vec4 fog_color;
 	float fog_distance;
-	float fog_modifier;
 	float brightness;
+	int not_in_room;
+	vec4 fog_plane;
 } room;
 
 layout(location = 0) in vec3 position;

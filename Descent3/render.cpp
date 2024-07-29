@@ -858,10 +858,25 @@ void DoNewRenderPass(int passnum)
 			if (Detail_settings.Fog_enabled && !(Rooms[roomnum].flags & RF_FOG))
 				continue;
 
+			SetupRoomFog(&rp, &Viewer_eye, &Viewer_orient, Viewer_roomnum);
+
 			roomblock.fog_distance = rp.fog_depth;
 			roomblock.fog_color[0] = rp.fog_r;
 			roomblock.fog_color[1] = rp.fog_g;
 			roomblock.fog_color[2] = rp.fog_b;
+
+			if (Room_fog_plane_check == 0)
+			{
+				roomblock.not_in_room = true;
+				roomblock.fog_plane[0] = Room_fog_plane.x;
+				roomblock.fog_plane[1] = Room_fog_plane.y;
+				roomblock.fog_plane[2] = Room_fog_plane.z;
+				roomblock.fog_plane[3] = Room_fog_distance;
+			}
+			else
+			{
+				roomblock.not_in_room = false;
+			}
 		}
 		else
 		{
@@ -2245,8 +2260,6 @@ void UpdateFogFace(room* rp, face* fp)
 // Render a fog layer on top of a face
 void RenderFogFaces(room* rp)
 {
-	int vn;
-	float eye_distance;
 	g3Point* pointlist[MAX_VERTS_PER_FACE];
 	g3Point  pointbuffer[MAX_VERTS_PER_FACE];
 	rend_SetOverlayType(OT_NONE);
@@ -2262,7 +2275,7 @@ void RenderFogFaces(room* rp)
 	for (int i = 0; i < Num_fog_faces_to_render; i++)
 	{
 		face* fp = &rp->faces[Fog_faces[i]];
-		for (vn = 0; vn < fp->num_verts; vn++)
+		for (int vn = 0; vn < fp->num_verts; vn++)
 		{
 			pointbuffer[vn] = World_point_buffer[rp->wpb_index + fp->face_verts[vn]];
 			g3Point* p = &pointbuffer[vn];
@@ -2280,10 +2293,10 @@ void RenderFogFaces(room* rp)
 				float dist = (*vec * Room_fog_plane) + Room_fog_distance;
 
 				vector subvec = *vec - Viewer_eye;
-				float	t = Room_fog_eye_distance / (Room_fog_eye_distance - dist);
+				float t = Room_fog_eye_distance / (Room_fog_eye_distance - dist);
 				vector portal_point = Viewer_eye + (t * subvec);
 
-				eye_distance = -(vm_DotProduct(&Viewer_orient.fvec, &portal_point));
+				float eye_distance = -(vm_DotProduct(&Viewer_orient.fvec, &portal_point));
 				mag = vm_DotProduct(&Viewer_orient.fvec, vec) + eye_distance;
 			}
 			else if (Room_fog_plane_check == 1)
