@@ -15,28 +15,34 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/lib/psrand.h $
-* $Revision: 2 $
-* $Date: 4/21/99 11:05a $
-* $Author: Kevin $
-*
-* Outrage random number generator code
-*
-* $Log: /DescentIII/Main/lib/psrand.h $
- * 
- * 2     4/21/99 11:05a Kevin
- * new ps_rand and ps_srand to replace rand & srand
- * 
- * 1     4/21/99 10:16a Kevin
-*
-* $NoKeywords: $
-*/
 
 #undef RAND_MAX
 
 #define RAND_MAX	0x7fff
 
 void ps_srand(unsigned int seed);
-
 int ps_rand(void);
+
+//[ISB] I wanted to use a std::linear_congruential_engine here but it doesn't allow a shift to be specialized.
+//Class form of ps_rand to allow isolating various random sources to avoid changing the seed every frame.. 
+//Eventually I'd like to make the game use a mersenne twister or different algorithm for better randomization.
+class PSRand
+{
+	unsigned int state;
+public:
+	PSRand()
+	{
+		state = 1;
+	}
+
+	void seed(unsigned int newseed)
+	{
+		state = newseed;
+	}
+
+	int operator()()
+	{
+		state = state * 214013 + 2531011;
+		return (state >> 16) & RAND_MAX;
+	}
+};

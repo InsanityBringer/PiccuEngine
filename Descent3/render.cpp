@@ -1135,13 +1135,14 @@ void MakePointsFromMinMax(vector* corners, vector* minp, vector* maxp)
 // Rotates all the points in a room
 void RotateRoomPoints(room* rp, vector* world_vecs)
 {
+	static PSRand legacy_jitter_rand;
 	// Jig the vertices a bit if being deformed
 	if (Viewer_object->effect_info && (Viewer_object->effect_info->type_flags & EF_DEFORM))
 	{
 		for (int i = 0; i < rp->num_verts; i++)
 		{
 			vector vec = world_vecs[i];
-			float val = ((ps_rand() % 1000) - 500.0) / 500.0;
+			float val = ((legacy_jitter_rand() % 1000) - 500.0) / 500.0;
 			val *= Viewer_object->effect_info->deform_time;
 			vec += Global_alter_vec * (Viewer_object->effect_info->deform_range * val);
 
@@ -2916,6 +2917,7 @@ void RenderRoomUnsorted(room* rp)
 // Figures out a scalar value to apply to all vertices in the room
 void ComputeRoomPulseLight(room* rp)
 {
+	static PSRand flicker_rand;
 	if (rp->pulse_time == 0 || In_editor_mode)
 		Room_light_val = 1.0;
 	else
@@ -2941,8 +2943,8 @@ void ComputeRoomPulseLight(room* rp)
 		}
 		if (rp->flags & RF_FLICKER)
 		{
-			ps_srand((Gametime * 1000) + (rp - Rooms));
-			if (ps_rand() % 2)
+			flicker_rand.seed((Gametime * 1000) + (rp - Rooms));
+			if (flicker_rand() % 2)
 				Room_light_val = 0;
 		}
 	}

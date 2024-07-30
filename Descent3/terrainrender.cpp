@@ -1015,6 +1015,7 @@ void DrawLightningSegment(vector* from, vector* to)
 // Draws an entire strip of lightning
 void DrawLightning(void)
 {
+	static PSRand lightning_rand;
 	angvec player_angs;
 	matrix mat;
 	vector froms[50];
@@ -1024,17 +1025,17 @@ void DrawLightning(void)
 	int cur_splits = 0;
 	int new_heading;
 	float scalar;
-	scalar = ((ps_rand() % 1000) - 500) / 500.0;
+	scalar = ((lightning_rand() % 1000) - 500) / 500.0;
 	scalar *= 15000;
 	vm_ExtractAnglesFromMatrix(&player_angs, &Viewer_object->orient);
 	new_heading = (player_angs.h + (int)scalar) % 65536;
 	vm_AnglesToMatrix(&mat, 0, new_heading, 0);
 	// Put the starting point way up in the air
-	float ylimit = (-(Viewer_object->pos.y * 2)) + (ps_rand() % 400);
+	float ylimit = (-(Viewer_object->pos.y * 2)) + (lightning_rand() % 400);
 	vector cur_from = Viewer_object->pos + (mat.fvec * 4000);
 	vector new_vec;
 	cur_from.y += 800.0f;
-	cur_from.y += (ps_rand() % 100);
+	cur_from.y += (lightning_rand() % 100);
 	// Set some states
 
 	rend_SetAlphaType(AT_SATURATE_TEXTURE);
@@ -1043,15 +1044,15 @@ void DrawLightning(void)
 	int bm_handle;
 
 	// See if we should drawn an origin bitmap
-	if (ps_rand() % 3)
+	if (lightning_rand() % 3)
 	{
 		// Pick an origin bitmap
-		if (ps_rand() % 2)
+		if (lightning_rand() % 2)
 			bm_handle = Fireballs[LIGHTNING_ORIGIN_INDEXA].bm_handle;
 		else
 			bm_handle = Fireballs[LIGHTNING_ORIGIN_INDEXB].bm_handle;
 		//Draw the origin bitmap
-		int size = 300 + (ps_rand() % 200);
+		int size = 300 + (lightning_rand() % 200);
 		g3_DrawRotatedBitmap(&cur_from, 0, size, (size * bm_h(bm_handle, 0)) / bm_w(bm_handle, 0), bm_handle);
 	}
 	PUSH_LIGHTNING_TREE(cur_from, 0, 0)
@@ -1059,8 +1060,8 @@ void DrawLightning(void)
 		{
 			POP_LIGHTNING_TREE()
 				ASSERT(level < 50);
-			float x_adjust = ((ps_rand() % 200) - 100) / 100.0;
-			float y_adjust = .3 + ((ps_rand() % 100) / 100.0);
+			float x_adjust = ((lightning_rand() % 200) - 100) / 100.0;
+			float y_adjust = .3 + ((lightning_rand() % 100) / 100.0);
 
 			new_vec = cur_from;
 			new_vec += x_adjust * (mat.rvec * 70);
@@ -1069,7 +1070,7 @@ void DrawLightning(void)
 			if (cur_from.y < ylimit) // We're close to the ground, so just bail!
 				continue;
 
-			if ((ps_rand() % ((level * level * 20) + 8)) == 0 && cur_splits < 2)
+			if ((lightning_rand() % ((level * level * 20) + 8)) == 0 && cur_splits < 2)
 			{
 				// Make this branch split
 				PUSH_LIGHTNING_TREE(new_vec, level, cur_splits + 1)
@@ -2081,6 +2082,7 @@ int BuildEdgeLists(int* n, int tlist_index)
 vector Terrain_alter_vec = { 19,-19,19 };
 void RotateTerrainList(int cellcount, bool from_automap)
 {
+	static PSRand legacy_jitter_rand;
 	int lod, simplemul, edgecount;
 	int i, n[200], t, k, cx, cz;
 	vector camlight = Terrain_sky.lightsource;
@@ -2145,7 +2147,7 @@ void RotateTerrainList(int cellcount, bool from_automap)
 
 				if (Viewer_object->effect_info && (Viewer_object->effect_info->type_flags & EF_DEFORM))
 				{
-					float val = (((ps_rand() % 1000) - 500.0f) / 500.0f) * Viewer_object->effect_info->deform_time;
+					float val = (((legacy_jitter_rand() % 1000) - 500.0f) / 500.0f) * Viewer_object->effect_info->deform_time;
 					vector jitterVec = Terrain_alter_vec * (Viewer_object->effect_info->deform_range * val);
 					World_point_buffer[n[k]].p3_vec += jitterVec;
 					World_point_buffer[n[k]].p3_vecPreRot += jitterVec;
