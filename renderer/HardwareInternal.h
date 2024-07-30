@@ -47,11 +47,10 @@ extern float Clip_plane_distance;
 extern vector Clip_plane;
 
 extern float gTransformViewPort[4][4];
-extern float gTransformProjection[4][4];
-extern float gTransformModelView[4][4];
+extern float gTransformProjection[16];
+extern float gTransformModelView[16];
 extern float gTransformFull[4][4];
 void g3_UpdateFullTransform();
-void g3_ForceTransformRefresh(void);
 
 void rend_TransformSetToPassthru(void);
 void rend_TransformSetViewport( int lx, int ty, int width, int height );

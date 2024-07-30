@@ -17,6 +17,7 @@
 */
 #include "3d.h"
 #include "HardwareInternal.h"
+#include "renderer.h"
 #include <string.h>
 
 struct InstanceContext
@@ -24,10 +25,10 @@ struct InstanceContext
 	matrix m_viewMatrix;		// matrix
 	matrix m_unscaledMatrix;	// unscaled matrix
 	vector m_viewPosition;		// position
-	float  m_modelView[4][4];	// model/view transform
+	float  m_modelView[16];	// model/view transform
 };
 
-#define MAX_INSTANCE_DEPTH	30
+constexpr int MAX_INSTANCE_DEPTH = 35; //[ISB] extra instances since I might use instances for mirrors and the like
 static InstanceContext sInstanceStack[MAX_INSTANCE_DEPTH];
 static int sInstanceDepth = 0;
 
@@ -59,10 +60,26 @@ void g3_StartInstanceMatrix( vector *pos, matrix *orient )
 	Unscaled_matrix = tempm;
 
 	// transform the model/view matrix
-	g3_GetModelViewMatrix( &View_position, &Unscaled_matrix, (float*)gTransformModelView );
+	g3_GetModelViewMatrix( &View_position, &Unscaled_matrix, gTransformModelView );
+	rend_UpdateCommon(gTransformProjection, gTransformModelView, sInstanceDepth);
 	g3_UpdateFullTransform();
 }
 
+void g3_StartInstanceMatrix4(float* mat)
+{
+	ASSERT(sInstanceDepth < MAX_INSTANCE_DEPTH);
+
+	sInstanceStack[sInstanceDepth].m_viewMatrix = View_matrix;
+	sInstanceStack[sInstanceDepth].m_viewPosition = View_position;
+	sInstanceStack[sInstanceDepth].m_unscaledMatrix = Unscaled_matrix;
+	memcpy(sInstanceStack[sInstanceDepth].m_modelView, gTransformModelView, sizeof(gTransformModelView));
+	++sInstanceDepth;
+
+	// transform the model/view matrix
+	g3_Mat4Multiply(gTransformModelView, mat);
+	rend_UpdateCommon(gTransformProjection, gTransformModelView, sInstanceDepth);
+	g3_UpdateFullTransform();
+}
 
 //instance at specified point with specified orientation
 void g3_StartInstanceAngles(vector *pos,angvec *angles)
@@ -92,5 +109,6 @@ void g3_DoneInstance()
 	View_matrix     = sInstanceStack[sInstanceDepth].m_viewMatrix;
 	Unscaled_matrix = sInstanceStack[sInstanceDepth].m_unscaledMatrix;
 	memcpy( gTransformModelView, sInstanceStack[sInstanceDepth].m_modelView, sizeof(gTransformModelView) );
+	rend_SetCommonDepth(sInstanceDepth);
 	g3_UpdateFullTransform();
 }

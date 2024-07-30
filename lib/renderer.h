@@ -454,7 +454,8 @@ void rend_CopyBitmapToFramebuffer (int bm_handle,int x,int y);
 // Gets a renderer ready for a framebuffer copy, or stops a framebuffer copy
 void rend_SetFrameBufferCopyState (bool state);
 
-void rend_UpdateCommon(float* projection, float* modelview);
+void rend_UpdateCommon(float* projection, float* modelview, int depth = 0);
+void rend_SetCommonDepth(int depth);
 
 //These are temporary, used to test shader code.
 //Use the test shader.

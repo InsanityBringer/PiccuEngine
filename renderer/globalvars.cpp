@@ -40,6 +40,6 @@ float	Window_w2;				//width/2
 float	Window_h2;				//height/2
 
 float gTransformViewPort[4][4];
-float gTransformProjection[4][4];
-float gTransformModelView[4][4];
+float gTransformProjection[16];
+float gTransformModelView[16];
 float gTransformFull[4][4];

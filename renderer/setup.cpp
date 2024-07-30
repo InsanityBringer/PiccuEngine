@@ -109,12 +109,12 @@ void g3_StartFrame(vector *view_pos,matrix *view_matrix,float zoom)
 {
 	// initialize the viewport transform
 	g3_GetViewPortMatrix( (float*)gTransformViewPort );
-	g3_GetProjectionMatrix( zoom, (float*)gTransformProjection );
-	g3_GetModelViewMatrix( view_pos, view_matrix, (float*)gTransformModelView );
+	g3_GetProjectionMatrix( zoom, gTransformProjection );
+	g3_GetModelViewMatrix( view_pos, view_matrix, gTransformModelView );
 	g3_UpdateFullTransform();
 
 	//[ISB] Update the common uniform block for all 3D shaders. 
-	rend_UpdateCommon((float*)gTransformProjection, (float*)gTransformModelView);
+	rend_UpdateCommon(gTransformProjection, gTransformModelView);
 
 	// get window size
 	rend_GetProjectionParameters( &Window_width, &Window_height );

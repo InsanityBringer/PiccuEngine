@@ -21,10 +21,7 @@
 #include "renderer.h"
 #include <string.h>
 
-// Whether or not to use T&L transforms or the pass-thru ones
-static int sUseTransformPassthru = -1;
-
-void Mat4Multiply(float* res, float* right)
+void g3_Mat4Multiply(float* res, float* right)
 {
 	float left[16];
 	memcpy(left, res, sizeof(left));
@@ -55,17 +52,6 @@ void g3_GetModelViewMatrix( const vector *viewPos, const matrix *viewMatrix, flo
 {
 	matrix localOrient = (*viewMatrix);
 	vector localPos    = -(*viewPos);
-	/*mvMat[0] = localOrient.rvec.x;
-	mvMat[4] = localOrient.uvec.x;
-	mvMat[8] = localOrient.fvec.x;
-	mvMat[3] = 0.0f;
-	mvMat[1] = localOrient.rvec.y;
-	mvMat[5] = localOrient.uvec.y;
-	mvMat[9] = localOrient.fvec.y;
-	mvMat[7] = 0.0f;
-	mvMat[2] = localOrient.rvec.z;
-	mvMat[6] = localOrient.uvec.z;
-	mvMat[10] = localOrient.fvec.z;*/
 	mvMat[0]  = localOrient.rvec.x;
 	mvMat[1]  = localOrient.uvec.x;
 	mvMat[2]  = localOrient.fvec.x;
@@ -129,43 +115,28 @@ void g3_TransformTrans( float res[4][4], float t[4][4] )
 void g3_UpdateFullTransform()
 {
 	// ModelView -> projection
-	g3_TransformMult( gTransformFull, gTransformModelView, gTransformProjection );
+	//g3_TransformMult( gTransformFull, gTransformModelView, gTransformProjection );
 
 	// projection  -> ViewPort
-	g3_TransformMult( gTransformFull, gTransformFull, gTransformViewPort );
+	//g3_TransformMult( gTransformFull, gTransformFull, gTransformViewPort );
 }
 
-void g3_ForceTransformRefresh(void)
+void g3_GenerateReflect(g3Plane& plane, float* mat)
 {
-	sUseTransformPassthru = -1;
-}
+	mat[3] = mat[7] = mat[11] = 0;
+	mat[15] = 1;
+	mat[0] = -2 * plane.x * plane.x + 1;
+	mat[1] = -2 * plane.x * plane.y;
+	mat[2] = -2 * plane.x * plane.z;
+	mat[12] = -2 * plane.x * plane.d;
 
-void g3_RefreshTransforms(bool usePassthru)
-{
-	/*if( sUseTransformPassthru == 1 && usePassthru )
-	{
-		// we don't have to do anything because we are already setup for pass-thru
-		return;
-	}
+	mat[4] = -2 * plane.y * plane.x;
+	mat[5] = -2 * plane.y * plane.y + 1;
+	mat[6] = -2 * plane.y * plane.z;
+	mat[13] = -2 * plane.y * plane.d;
 
-	if( usePassthru )
-	{
-		// setup OpenGL to use pass-thru
-		rend_TransformSetToPassthru();
-	}
-	else
-	{
-		// extract the viewport data from the renderer
-		int viewportWidth, viewportHeight, viewportX, viewportY;
-		rend_GetProjectionScreenParameters( viewportX, viewportY, viewportWidth, viewportHeight );
-
-		// setup OpenGL to use full transform stack
-		// TODO: in the future we only need to set those that have changed
-		rend_TransformSetViewport( viewportX, viewportY, viewportWidth, viewportHeight );
-		rend_TransformSetProjection( gTransformProjection );
-		rend_TransformSetModelView( gTransformModelView );
-	}
-
-	// store the pass-thru
-	sUseTransformPassthru = (usePassthru) ? 1 : 0;*/
+	mat[8] = -2 * plane.z * plane.x;
+	mat[9] = -2 * plane.z * plane.y;
+	mat[10] = -2 * plane.z * plane.z + 1;
+	mat[14] = -2 * plane.z * plane.d;
 }

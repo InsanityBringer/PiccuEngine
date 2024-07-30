@@ -333,6 +333,7 @@ struct RoomMesh
 	std::vector<RoomDrawElement> LitInteractions;
 	std::vector<RoomDrawElement> UnlitInteractions;
 	std::vector<SpecularDrawElement> SpecInteractions;
+	std::vector<RoomDrawElement> MirrorInteractions;
 	//One of these for each face.
 	//If the state of FacePrevStates[facenum] != roomptr->faces[facenum], remesh this part of the world. Sigh.
 	std::vector<FacePrevState> FacePrevStates;
@@ -346,6 +347,7 @@ struct RoomMesh
 		LitInteractions.clear();
 		UnlitInteractions.clear();
 		SpecInteractions.clear();
+		MirrorInteractions.clear();
 	}
 
 	void Reset()
@@ -373,6 +375,22 @@ struct RoomMesh
 		{
 			//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
 			Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+
+			//And draw
+			Room_VertexBuffer.DrawIndexed(element.range);
+		}
+	}
+
+	void DrawMirrorFaces()
+	{
+		if (MirrorInteractions.size() == 0)
+			return;
+
+		assert(Rooms[roomnum].mirror_face != -1);
+		Room_VertexBuffer.BindBitmap(GetTextureBitmap(Rooms[roomnum].faces[Rooms[roomnum].mirror_face].tmap, 0));
+		for (RoomDrawElement& element : MirrorInteractions)
+		{
+			Room_VertexBuffer.BindLightmap(element.lmhandle);
 
 			//And draw
 			Room_VertexBuffer.DrawIndexed(element.range);
@@ -493,6 +511,7 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 	bool firsttime = true;
 	int triindices[3];
 	RendVertex vert;
+	float alpha = 1;
 	for (SortableElement& element : elements)
 	{
 		if (element.texturehandle != lasttmap || element.lmhandle != lastlm)
@@ -517,6 +536,8 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 
 			vert.uslide = GameTextures[lasttmap].slide_u;
 			vert.vslide = GameTextures[lasttmap].slide_v;
+
+			alpha = GameTextures[element.texturehandle].alpha;
 		}
 
 		face& fp = rp.faces[element.element];
@@ -527,7 +548,8 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 			roomUVL uvs = fp.face_uvls[i];
 			vert.position = rp.verts[fp.face_verts[i]];
 			vert.normal = fp.normal; //oh no, no support for phong shading..
-			vert.r = vert.g = vert.b = vert.a = 255;
+			vert.r = vert.g = vert.b = 255;
+			vert.a = (ubyte)(std::min(1.f, std::max(0.f, alpha)) * 255);
 			vert.u1 = uvs.u; vert.v1 = uvs.v;
 			vert.u2 = uvs.u2; vert.v2 = uvs.v2;
 
@@ -640,6 +662,7 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 	std::vector<SortableElement> faces_lit;
 	std::vector<SortableElement> faces_unlit;
 	std::vector<SortableElement> faces_spec;
+	std::vector<SortableElement> faces_mirror;
 	std::vector<int> faces_special;
 
 	RoomMesh& roommesh = Room_meshes[roomnum];
@@ -649,6 +672,13 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 	roommesh.roomnum = roomnum;
 
 	roommesh.ResetInteractions();
+
+	//Mirrors are defined as "the mirror face and every other face that happens to share the same texture"
+	uint32_t mirror_tex_hack = UINT32_MAX;
+	if (rp.mirror_face != -1)
+	{
+		mirror_tex_hack = rp.faces[rp.mirror_face].tmap;
+	}
 
 	//Build a sortable list of all faces
 	for (int i = 0; i < rp.num_faces; i++)
@@ -674,7 +704,11 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 				tmap = GameTextures[tmap].destroy_handle;
 
 			//Not a postrender, determine if it is unlit or lit. 
-			if (fp.flags & FF_LIGHTMAP)
+			if (rp.mirror_face != -1 && tmap == mirror_tex_hack)
+			{
+				faces_mirror.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+			}
+			else if (fp.flags & FF_LIGHTMAP)
 			{
 				//If the face is specular, add it for a post stage. 
 				//Specs have to be in a special pass like this so that the size of the room vertex buffer never changes
@@ -701,6 +735,9 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 
 	std::sort(faces_unlit.begin(), faces_unlit.end());
 	AddFacesToBuffer(mesh, faces_unlit, Room_meshes[roomnum].UnlitInteractions, rp, indexOffset, firstIndex);
+
+	std::sort(faces_mirror.begin(), faces_mirror.end());
+	AddFacesToBuffer(mesh, faces_mirror, Room_meshes[roomnum].MirrorInteractions, rp, indexOffset, firstIndex);
 
 	//Even though they're not batched up (may be fixable if I can quickly determine if they have identical light sources), 
 	//sort specular faces to try to minimize texture state thrashing. Even though that's trivial compared to the buffer state thrashing. 
@@ -897,7 +934,26 @@ void DoNewRenderPass(int passnum)
 		if (passinfo.specular)
 			Room_meshes[roomnum].DrawSpecular();
 		else
+		{
 			Room_meshes[roomnum].DrawLit();
+			//Room_meshes[roomnum].DrawMirrorFaces();
+		}
+
+		//TEMP mirror test
+		if (!passinfo.specular)
+		{
+			if (rp.mirror_face != -1)
+			{
+				g3Plane plane(rp.faces[rp.mirror_face].normal, rp.verts[rp.faces[rp.mirror_face].face_verts[0]]);
+				float reflectmat[16];
+				g3_GenerateReflect(plane, reflectmat);
+				g3_StartInstanceMatrix4(reflectmat);
+
+				Room_meshes[roomnum].DrawLit();
+
+				g3_DoneInstance();
+			}
+		}
 	}
 }
 
@@ -3883,6 +3939,9 @@ void RenderMirrorRooms()
 
 	if (Num_mirror_rooms == 0)
 		return;
+
+	if (Render_use_newrender)
+		return; 
 
 	for (int i = 0; i < Num_mirror_rooms; i++)
 	{

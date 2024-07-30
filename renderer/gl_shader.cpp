@@ -50,7 +50,7 @@ void opengl_InitShaders(void)
 	lastshaderprog = nullptr;
 	glGenBuffers(1, &commonbuffername);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, commonbuffername);
-	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock), nullptr, GL_DYNAMIC_READ);
+	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock) * 35, nullptr, GL_DYNAMIC_READ);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, commonbuffername);
 
 	GLenum err = glGetError();
@@ -108,18 +108,25 @@ void rend_BindPipeline(uint32_t handle)
 		gl_shaderprogs[handle].Use();
 }
 
-void rend_UpdateCommon(float* projection, float* modelview)
+void rend_UpdateCommon(float* projection, float* modelview, int depth)
 {
 	CommonBlock newblock;
 	memcpy(newblock.projection, projection, sizeof(newblock.projection));
 	memcpy(newblock.modelview, modelview, sizeof(newblock.modelview));
 
 	glBindBuffer(GL_COPY_WRITE_BUFFER, commonbuffername);
-	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(CommonBlock), &newblock);
+	glBufferSubData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock) * depth, sizeof(CommonBlock), &newblock);
 
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+
+	rend_SetCommonDepth(depth);
+}
+
+void rend_SetCommonDepth(int depth)
+{
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, commonbuffername, depth * sizeof(CommonBlock), sizeof(CommonBlock));
 }
 
 void rend_UpdateSpecular(SpecularBlock* specularstate)

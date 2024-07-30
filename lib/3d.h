@@ -31,7 +31,22 @@ extern vector Matrix_scale;		//how the matrix is currently scaled
 //[ISB] Plane structure used for frustum culling.
 struct g3Plane
 {
-	float a, b, c, d;
+	float x, y, z, d;
+	g3Plane()
+	{
+		x = y = z = d = 0;
+	}
+	g3Plane(float x, float y, float z, float d) : x(x), y(y), z(z), d(d)
+	{
+	}
+
+	g3Plane(vector& normal, vector& pt)
+	{
+		x = normal.x;
+		y = normal.y;
+		z = normal.z;
+		d = -vm_DotProduct(&normal, &pt);
+	}
 };
 
 //Structure for storing u,v,light values.  This structure doesn't have a
@@ -138,6 +153,10 @@ void g3_GetUnscaledMatrix(matrix *mat);
 //instance at specified point with specified orientation
 void g3_StartInstanceMatrix(vector *pos,matrix *orient);
 
+//instance by transforming the current modelview with a 4x4 matrix.
+//Caveat: This will NOT work for legacy!
+void g3_StartInstanceMatrix4(float* mat);
+
 //instance at specified point with specified orientation
 void g3_StartInstanceAngles(vector *pos,angvec *angles);
 
@@ -219,21 +238,6 @@ void g3_DrawRotatedBitmap (vector *pos,angle rot_angle,float width,float height,
 //NULL for either or both restores defaults
 void g3_SetSpecialRender(void (*tmap_drawer)(),void (*flat_drawer)(),int (*line_drawer)());
 
-//Object functions:
-
-//init code for bitmap models
-void g3_InitPolygonModel(void *model_ptr);
-
-//un-initialize, i.e., convert color entries back to RGB15
-void g3_UninitPolygonModel(void *model_ptr);
-
-//alternate interpreter for morphing object
-void g3_DrawMorphingModel(void *model_ptr,int *model_bitmaps,angvec *anim_angles,float light,vector *new_points);
-
-//this remaps the 15bpp colors for the models into a new palette.  It should
-//be called whenever the palette changes
-void g3_RemapInterpColors(void);
-
 //Draw a wireframe box aligned with the screen.  Used for the editor.
 //Parameters:	color - the color to draw the lines
 //					pnt - the center point
@@ -282,13 +286,13 @@ void g3_DrawPlanarRotatedBitmap (vector *pos,vector *norm,angle rot_angle,float 
 void g3_TransformVert( float res[4], float pt[4], float a[4][4] );
 void g3_TransformMult( float res[4][4], float a[4][4], float b[4][4] );
 void g3_TransformTrans( float res[4][4], float t[4][4] );
+void g3_GenerateReflect(g3Plane& plane, float* mat);
+void g3_Mat4Multiply(float* res, float* right);
 void g3_GetModelViewMatrix( const vector *viewPos, const matrix *viewMatrix, float *mvMat );
 extern float gTransformViewPort[4][4];
-extern float gTransformProjection[4][4];
-extern float gTransformModelView[4][4];
+extern float gTransformProjection[16];
+extern float gTransformModelView[16];
 extern float gTransformFull[4][4];
-
-void g3_RefreshTransforms(bool usePassthru);
 
 #endif
 
