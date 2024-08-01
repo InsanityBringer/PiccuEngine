@@ -521,9 +521,8 @@ struct SpecularBlock
 void rend_UpdateSpecular(SpecularBlock* specularstate);
 
 //Updates brightness/fog components
-void rend_UpdateFogBrightness(RoomBlock* roomstate);
-
-void rend_UpdateBrightnessOnly(float newbrightness);
+void rend_UpdateFogBrightness(RoomBlock* roomstate, int numrooms);
+void rend_SetCurrentRoomNum(int roomblocknum);
 
 #if defined(DD_ACCESS_RING) 
 #if defined(WIN32)

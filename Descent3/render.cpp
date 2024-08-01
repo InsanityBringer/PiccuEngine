@@ -859,13 +859,41 @@ void ComputeRoomPulseLight(room* rp);
 //Performs tasks that need to be done before rendering a room.
 void NewRenderPreDraw()
 {
+	RoomBlock roomblocks[MAX_RENDER_ROOMS];
 	for (int nn = N_render_rooms - 1; nn >= 0; nn--)
 	{
 		int roomnum = Render_list[nn];
 		room& rp = Rooms[roomnum];
+		RoomBlock& roomblock = roomblocks[nn];
 
 		// Mark it visible for automap
 		AutomapVisMap[&rp - Rooms] = 1;
+
+		ComputeRoomPulseLight(&Rooms[roomnum]);
+		roomblock.brightness = Room_light_val;
+
+		if (rp.flags & RF_FOG)
+		{
+			SetupRoomFog(&rp, &Viewer_eye, &Viewer_orient, Viewer_roomnum);
+
+			roomblock.fog_distance = rp.fog_depth;
+			roomblock.fog_color[0] = rp.fog_r;
+			roomblock.fog_color[1] = rp.fog_g;
+			roomblock.fog_color[2] = rp.fog_b;
+
+			if (Room_fog_plane_check == 0)
+			{
+				roomblock.not_in_room = true;
+				roomblock.fog_plane[0] = Room_fog_plane.x;
+				roomblock.fog_plane[1] = Room_fog_plane.y;
+				roomblock.fog_plane[2] = Room_fog_plane.z;
+				roomblock.fog_plane[3] = Room_fog_distance;
+			}
+			else
+			{
+				roomblock.not_in_room = false;
+			}
+		}
 
 		rp.last_render_time = Gametime;
 		rp.flags &= ~RF_MIRROR_VISIBLE;
@@ -873,12 +901,14 @@ void NewRenderPreDraw()
 		for (int facenum = 0; facenum < rp.num_faces; facenum++)
 		{
 			face& fp = rp.faces[facenum];
-			if (fp.flags & FF_VISIBLE)
+			if (!(fp.flags & FF_NOT_FACING))
 			{
 				fp.renderframe = FrameCount & 0xFF;
 			}
 		}
 	}
+
+	rend_UpdateFogBrightness(roomblocks, N_render_rooms);
 }
 
 void DoNewRenderPass(int passnum)
@@ -899,37 +929,14 @@ void DoNewRenderPass(int passnum)
 		{
 			if (Detail_settings.Fog_enabled && !(Rooms[roomnum].flags & RF_FOG))
 				continue;
-
-			SetupRoomFog(&rp, &Viewer_eye, &Viewer_orient, Viewer_roomnum);
-
-			roomblock.fog_distance = rp.fog_depth;
-			roomblock.fog_color[0] = rp.fog_r;
-			roomblock.fog_color[1] = rp.fog_g;
-			roomblock.fog_color[2] = rp.fog_b;
-
-			if (Room_fog_plane_check == 0)
-			{
-				roomblock.not_in_room = true;
-				roomblock.fog_plane[0] = Room_fog_plane.x;
-				roomblock.fog_plane[1] = Room_fog_plane.y;
-				roomblock.fog_plane[2] = Room_fog_plane.z;
-				roomblock.fog_plane[3] = Room_fog_distance;
-			}
-			else
-			{
-				roomblock.not_in_room = false;
-			}
-
-			roomblock.brightness = Room_light_val;
-			rend_UpdateFogBrightness(&roomblock);
 		}
 		else
 		{
 			if (Detail_settings.Fog_enabled && Rooms[roomnum].flags & RF_FOG)
 				continue;
-
-			rend_UpdateBrightnessOnly(Room_light_val);
 		}
+
+		rend_SetCurrentRoomNum(nn);
 
 		if (passinfo.specular)
 			Room_meshes[roomnum].DrawSpecular();

@@ -30,6 +30,11 @@ GLuint specularbuffername;
 
 ShaderProgram* lastshaderprog = nullptr;
 
+constexpr int COMMON_BINDING = 0;
+constexpr int LEGACY_BINDING = 1;
+constexpr int SPECULAR_BINDING = 2;
+constexpr int ROOM_BINDING = 3;
+
 //Shader pipeline system.
 //Contains a table of all shader definitions used by newrender. Renderer will request shader handles by name.
 ShaderDefinition gl_shaderdefs[] =
@@ -51,7 +56,7 @@ void opengl_InitShaders(void)
 	glGenBuffers(1, &commonbuffername);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, commonbuffername);
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock) * 35, nullptr, GL_DYNAMIC_READ);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 0, commonbuffername);
+	glBindBufferBase(GL_UNIFORM_BUFFER, COMMON_BINDING, commonbuffername);
 
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -61,7 +66,7 @@ void opengl_InitShaders(void)
 	glGenBuffers(1, &legacycommonbuffername);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, legacycommonbuffername);
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock), nullptr, GL_DYNAMIC_READ);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 1, legacycommonbuffername);
+	glBindBufferBase(GL_UNIFORM_BUFFER, LEGACY_BINDING, legacycommonbuffername);
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -70,7 +75,7 @@ void opengl_InitShaders(void)
 	glGenBuffers(1, &specularbuffername);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, specularbuffername);
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(SpecularBlock), nullptr, GL_STREAM_READ);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 2, specularbuffername);
+	glBindBufferBase(GL_UNIFORM_BUFFER, SPECULAR_BINDING, specularbuffername);
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -78,8 +83,8 @@ void opengl_InitShaders(void)
 
 	glGenBuffers(1, &fogbuffername);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, fogbuffername);
-	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(RoomBlock), nullptr, GL_DYNAMIC_READ);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 3, fogbuffername);
+	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(RoomBlock) * 100, nullptr, GL_DYNAMIC_READ);
+	glBindBufferBase(GL_UNIFORM_BUFFER, ROOM_BINDING, fogbuffername);
 
 	err = glGetError();
 	if (err != GL_NO_ERROR)
@@ -126,7 +131,7 @@ void rend_UpdateCommon(float* projection, float* modelview, int depth)
 
 void rend_SetCommonDepth(int depth)
 {
-	glBindBufferRange(GL_UNIFORM_BUFFER, 0, commonbuffername, depth * sizeof(CommonBlock), sizeof(CommonBlock));
+	glBindBufferRange(GL_UNIFORM_BUFFER, COMMON_BINDING, commonbuffername, depth * sizeof(CommonBlock), sizeof(CommonBlock));
 }
 
 void rend_UpdateSpecular(SpecularBlock* specularstate)
@@ -139,24 +144,19 @@ void rend_UpdateSpecular(SpecularBlock* specularstate)
 		Int3();
 }
 
-void rend_UpdateFogBrightness(RoomBlock* roomstate)
+void rend_UpdateFogBrightness(RoomBlock* roomstate, int numrooms)
 {
 	glBindBuffer(GL_COPY_WRITE_BUFFER, fogbuffername);
-	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(RoomBlock), roomstate);
+	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(RoomBlock) * numrooms, roomstate);
 
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
 }
 
-void rend_UpdateBrightnessOnly(float newbrightness)
+void rend_SetCurrentRoomNum(int roomblocknum)
 {
-	glBindBuffer(GL_COPY_WRITE_BUFFER, fogbuffername);
-	glBufferSubData(GL_COPY_WRITE_BUFFER, offsetof(RoomBlock, brightness), sizeof(float), &newbrightness);
-
-	GLenum err = glGetError();
-	if (err != GL_NO_ERROR)
-		Int3();
+	glBindBufferRange(GL_UNIFORM_BUFFER, ROOM_BINDING, fogbuffername, roomblocknum * sizeof(RoomBlock), sizeof(RoomBlock));
 }
 
 void GL_UpdateLegacyBlock(float* projection, float* modelview)
@@ -253,14 +253,14 @@ void ShaderProgram::CreateCommonBindings(int bindindex)
 	uboindex = glGetUniformBlockIndex(m_name, "SpecularBlock");
 	if (uboindex != GL_INVALID_INDEX)
 	{
-		glUniformBlockBinding(m_name, uboindex, 2);
+		glUniformBlockBinding(m_name, uboindex, SPECULAR_BINDING);
 	}
 	
 	//Find RoomBlock
 	uboindex = glGetUniformBlockIndex(m_name, "RoomBlock");
 	if (uboindex != GL_INVALID_INDEX)
 	{
-		glUniformBlockBinding(m_name, uboindex, 3);
+		glUniformBlockBinding(m_name, uboindex, ROOM_BINDING);
 	}
 
 	GLenum err = glGetError();
@@ -296,7 +296,7 @@ void ShaderProgram::AttachSource(const char* vertexsource, const char* fragsourc
 	glDeleteShader(vertexprog);
 	glDeleteShader(fragmentprog);
 
-	CreateCommonBindings(0);
+	CreateCommonBindings(COMMON_BINDING);
 }
 
 void ShaderProgram::AttachSourceFromDefiniton(ShaderDefinition& def)
@@ -323,7 +323,7 @@ void ShaderProgram::AttachSourceFromDefiniton(ShaderDefinition& def)
 	glDeleteShader(vertexprog);
 	glDeleteShader(fragmentprog);
 
-	CreateCommonBindings(0);
+	CreateCommonBindings(COMMON_BINDING);
 }
 
 void ShaderProgram::AttachSourcePreprocess(const char* vertexsource, const char* fragsource, bool textured, bool lightmapped, bool speculared)
@@ -373,7 +373,7 @@ void ShaderProgram::AttachSourcePreprocess(const char* vertexsource, const char*
 	glDeleteShader(fragmentprog);
 
 	//Always use the legacy block with these preprocessed shaders, for now.
-	CreateCommonBindings(1);
+	CreateCommonBindings(LEGACY_BINDING);
 }
 
 GLint ShaderProgram::FindUniform(const char* uniform)
