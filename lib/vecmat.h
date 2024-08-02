@@ -15,156 +15,23 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/vecmat.h $
- * $Revision: 21 $
- * $Date: 1/21/99 11:16p $
- * $Author: Jeff $
- *
- * Vector/Matrix routines
- *
- * $Log: /DescentIII/Main/lib/vecmat.h $
- * 
- * 21    1/21/99 11:16p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 20    1/11/99 4:45p Jason
- * added first pass at katmai support
- * 
- * 19    1/01/99 4:10p Chris
- * Added some const parameters, improved ray cast object collide/rejection
- * code
- * 
- * 18    5/25/98 3:45p Jason
- * added vm_GetCentroidFast
- * 
- * 17    3/12/98 7:30p Chris
- * Added ObjSetOrient
- * 
- * 16    2/08/98 6:01p Matt
- * Added functions to multiply by a transposed matrix, and simplified some
- * other code a bit.
- * 
- * 15    2/06/98 11:02a Matt
- * Added missing include
- * 
- * 14    2/06/98 10:43a Matt
- * Made vm_VectorToMatrix() take any one or two vectors, & not require
- * forward vec.
- * Also, made the uvec and rvec parameters default to NULL if not
- * specified.
- * 
- * 13    2/02/98 8:17p Chris
- * Added a != operator and a Zero_vector constant
- * 
- * 12    1/20/98 4:04p Matt
- * Made vm_GetNormalizedDir() and vm_GetNormalizeDirFast() return the
- * distance between the two input points.
- * 
- * 11    1/13/98 1:30p Jason
- * changed vm_GetCentroid to also return the size of the area
- * 
- * 10    11/04/97 6:21p Chris
- * Allowed other files to use the vm_DeltaAngVecNorm function
- * 
- * 9     10/25/97 7:15p Jason
- * implemented vm_ComputeBoundingSphere
- * 
- * 8     10/14/97 4:35p Samir
- * Added vm_MakeRandomVector.
- * 
- * 7     9/23/97 2:26p Matt
- * Made vm_GetNormal() return the magnitude of the normal (before it was
- * normalized)
- * 
- * 6     8/28/97 4:56p Jason
- * implemented vm_GetCentroid
- * 
- * 5     8/18/97 6:39p Matt
- * Added vm_VectorAngleToMatrix()
- * 
- * 4     8/04/97 12:36p Chris
- * Added an == operator for vectors
- * 
- * 3     7/17/97 3:56p Matt
- * Added vm_Orthogonalize()
- * 
- * 2     7/16/97 5:15p Chris
- * Moved the XYZ() macro to vecmat.h
- * 
- * 1     6/23/97 9:25p Samir
- * added because source safe sucks
- * 
- * 31    4/18/97 2:14p Samir
- * Added vm_DeltaAngVec.
- * 
- * 30    2/27/97 6:16p Chris
- * Added the vector_array type 
- * 
- * 29    2/27/97 6:08 PM Jeremy
- * added prototypes for vm_MakeInverseMatrix and vm_SinCosToMatrix
- * 
- * 28    2/27/97 5:23p Chris
- * Removed the remainding extern inline 
- * 
- * 27    2/27/97 4:56p Samir
- * took out ifndef MAC stuff
- * 
- * 26    2/27/97 1:40p Chris
- * Added a function to compute the determinate --
- * BTW on the last rev. I moved all inline functions
- * to the header.  (So they will be inlined)
- * 
- * 25    2/26/97 7:33p Chris
- * 
- * 24    2/26/97 6:17 PM Jeremy
- * put #pragma warning inside #ifndef macintosh
- * 
- * 23    2/20/97 11:41a Chris
- * Added a negate unary operator for vectors
- * 
- * 22    2/12/97 5:28p Jason
- * implemented ExtractAnglesFromMatrix function
- * 
- * 21    2/11/97 6:49p Matt
- * Added vm_VectorToMatrix()
- * Made vm_NormalizeVector() return the old vector mag
- * Fixed bug in inline version of crossprod
- * 
- * 20    2/11/97 11:54a Jason
- * 
- * 19    2/10/97 3:36p Matt
- * Fixed (added) IDENTITY_MATRIX define
- * 
- * 18    2/07/97 5:38p Matt
- * Moved fixed-point math funcs to fix.lib
- *
- * $NoKeywords: $
- */
 
 #ifndef _VECMAT_H
 #define _VECMAT_H
 
+#include <math.h>
 #include "pstypes.h"
-#include "math.h"
 #include "fix.h"
 
 //what does this do?  Why didn't Jason put a comment here?
 // Jason replies: This pragma disables the "possible loss of data" warning that
 // is generated when converting doubles to floats
 // A thousand pardons for the confusion
-
 #pragma warning (disable:4244)
 
 // All structs, defines and inline functions are located in vecmat_external.h
 // vecmat_external.h is where anything that can be used by DLLs should be.
 #include "vecmat_external.h"
-
 
 extern const vector Zero_vector;
 extern const matrix Identity_matrix;
@@ -193,9 +60,6 @@ extern void vm_MatrixMul (matrix *,matrix *,matrix *);
  
 //Multiply a matrix times the transpose of a matrix
 void vm_MatrixMulTMatrix(matrix *dest,matrix *src0,matrix *src1);
-
-// Computes all math look up tables, must be called before any vector stuff is used
-extern void vm_InitMathTables();
 
 // Given a vector, returns the magnitude.  Uses sqrt so it's slow
 extern float vm_GetMagnitude (vector *);

@@ -36,8 +36,16 @@ struct g3Plane
 	{
 		x = y = z = d = 0;
 	}
-	g3Plane(float x, float y, float z, float d) : x(x), y(y), z(z), d(d)
+	g3Plane(float nx, float ny, float nz, float nd, bool normalize = false) : x(nx), y(ny), z(nz), d(nd)
 	{
+		if (normalize)
+		{
+			float mag = sqrt(x * x + y * y + z * z);
+			x /= mag;
+			y /= mag;
+			z /= mag;
+			d /= mag;
+		}
 	}
 
 	g3Plane(vector& normal, vector& pt)
@@ -46,6 +54,17 @@ struct g3Plane
 		y = normal.y;
 		z = normal.z;
 		d = -vm_DotProduct(&normal, &pt);
+	}
+
+	g3Plane Normalize() const
+	{
+		float mag = sqrt(x * x + y * y + z * z);
+		return g3Plane(x / mag, y / mag, z / mag, d / mag);
+	}
+
+	float Dot(vector& vec) const
+	{
+		return vec.x * x + vec.y * y + vec.z * z + d;
 	}
 };
 
@@ -69,6 +88,18 @@ struct g3UVL
 struct g3Codes
 {
 	ubyte cc_or,cc_and;
+};
+
+//A frustum. Used for culling.
+//Can code points and probably spheres and boxes for a given viewport. 
+class Frustum
+{
+	g3Plane planes[6];
+public:
+	//Constructs a frustum from the specified combined projection/modelview matrix
+	Frustum(float* matrix);
+
+	void TestPoint(vector& vec, g3Codes& codes) const;
 };
 
 //flags for point structure
@@ -234,10 +265,6 @@ void g3_DrawBitmap(vector *pos,float width,float height,int bm,int color=-1);
 // Draws a bitmap that has been rotated about its center.  Angle of rotation is passed as 'rot_angle'
 void g3_DrawRotatedBitmap (vector *pos,angle rot_angle,float width,float height,int bm,int color=-1);
 
-//specifies 2d drawing routines to use instead of defaults.  Passing
-//NULL for either or both restores defaults
-void g3_SetSpecialRender(void (*tmap_drawer)(),void (*flat_drawer)(),int (*line_drawer)());
-
 //Draw a wireframe box aligned with the screen.  Used for the editor.
 //Parameters:	color - the color to draw the lines
 //					pnt - the center point
@@ -281,18 +308,14 @@ void g3_DrawSpecialLine(g3Point *p0,g3Point *p1);
 // Draws a bitmap on a specific plane.  Also does rotation.  Angle of rotation is passed as 'rot_angle'
 void g3_DrawPlanarRotatedBitmap (vector *pos,vector *norm,angle rot_angle,float width,float height,int bm);
 
-
-
-void g3_TransformVert( float res[4], float pt[4], float a[4][4] );
-void g3_TransformMult( float res[4][4], float a[4][4], float b[4][4] );
-void g3_TransformTrans( float res[4][4], float t[4][4] );
 void g3_GenerateReflect(g3Plane& plane, float* mat);
 void g3_Mat4Multiply(float* res, float* right);
+void g3_Mat4Multiply(float* res, float* left, float* right);
 void g3_GetModelViewMatrix( const vector *viewPos, const matrix *viewMatrix, float *mvMat );
-extern float gTransformViewPort[4][4];
+
 extern float gTransformProjection[16];
 extern float gTransformModelView[16];
-extern float gTransformFull[4][4];
+extern float gTransformFull[16];
 
 #endif
 

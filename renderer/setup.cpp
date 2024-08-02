@@ -43,25 +43,6 @@ void g3_SetAspectRatio(float aspect)
 	sAspect = aspect;
 }
 
-void g3_GetViewPortMatrix( float *viewMat )
-{
-	// extract the viewport data from the renderer
-	int viewportWidth, viewportHeight;
-	int viewportX, viewportY;
-	rend_GetProjectionScreenParameters( viewportX, viewportY, viewportWidth, viewportHeight );
-
-	float viewportWidthOverTwo  =  ((float)viewportWidth) * 0.5f;
-	float viewportHeightOverTwo = ((float)viewportHeight) * 0.5f;
-
-	// setup the matrix
-	memset( viewMat, 0, sizeof(float) * 16 );
-	viewMat[0]  = viewportWidthOverTwo;
-	viewMat[5]  = -viewportHeightOverTwo;
-	viewMat[12] = viewportWidthOverTwo + (float)viewportX;
-	viewMat[13] = viewportHeightOverTwo + (float)viewportY;	
-	viewMat[10] = viewMat[15] = 1.0f;
-}
-
 void g3_GetProjectionMatrix( float zoom, float *projMat )
 {
 	// get window size
@@ -108,7 +89,6 @@ void g3_GetProjectionMatrix( float zoom, float *projMat )
 void g3_StartFrame(vector *view_pos,matrix *view_matrix,float zoom)
 {
 	// initialize the viewport transform
-	g3_GetViewPortMatrix( (float*)gTransformViewPort );
 	g3_GetProjectionMatrix( zoom, gTransformProjection );
 	g3_GetModelViewMatrix( view_pos, view_matrix, gTransformModelView );
 	g3_UpdateFullTransform();

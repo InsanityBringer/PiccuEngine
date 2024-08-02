@@ -963,22 +963,6 @@ void rend_SetMipState(sbyte mipstate)
 	OpenGL_state.cur_mip_state = mipstate;
 }
 
-void rend_TransformSetToPassthru(void)
-{
-}
-
-void rend_TransformSetViewport(int lx, int ty, int width, int height)
-{
-}
-
-void rend_TransformSetProjection(float trans[4][4])
-{
-}
-
-void rend_TransformSetModelView(float trans[4][4])
-{
-}
-
 // Fills in the passed in pointer with the current rendering state
 void rend_GetRenderState(rendering_state* rstate)
 {

@@ -67,7 +67,7 @@ const char* testVertexSrc =
 "void main()\n"
 "{\n"
 "	vec4 temp = commons.modelview * vec4(position, 1.0);\n"
-"	gl_Position = commons.projection * vec4(temp.xy, -temp.z, temp.w);\n"
+"	gl_Position = commons.projection * vec4(temp.xyz, temp.w);\n"
 "	outuv = uv;\n"
 "	outuv2 = uv2;\n"
 "}\n"

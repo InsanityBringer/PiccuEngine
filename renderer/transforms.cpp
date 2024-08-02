@@ -47,6 +47,29 @@ void g3_Mat4Multiply(float* res, float* right)
 	res[15] = left[3] * right[12] + left[7] * right[13] + left[11] * right[14] + left[15] * right[15]; //i4 j4
 }
 
+void g3_Mat4Multiply(float* res, float* left, float* right)
+{
+	res[0] = left[0] * right[0] + left[4] * right[1] + left[8] * right[2] + left[12] * right[3]; //i1 j1
+	res[1] = left[1] * right[0] + left[5] * right[1] + left[9] * right[2] + left[13] * right[3]; //i2 j1
+	res[2] = left[2] * right[0] + left[6] * right[1] + left[10] * right[2] + left[14] * right[3]; //i3 j1
+	res[3] = left[3] * right[0] + left[7] * right[1] + left[11] * right[2] + left[15] * right[3]; //14 j1
+
+	res[4] = left[0] * right[4] + left[4] * right[5] + left[8] * right[6] + left[12] * right[7]; //i1 j2
+	res[5] = left[1] * right[4] + left[5] * right[5] + left[9] * right[6] + left[13] * right[7]; //i2 j2
+	res[6] = left[2] * right[4] + left[6] * right[5] + left[10] * right[6] + left[14] * right[7]; //i3 j2
+	res[7] = left[3] * right[4] + left[7] * right[5] + left[11] * right[6] + left[15] * right[7]; //i4 j2
+
+	res[8] = left[0] * right[8] + left[4] * right[9] + left[8] * right[10] + left[12] * right[11]; //i1 j3
+	res[9] = left[1] * right[8] + left[5] * right[9] + left[9] * right[10] + left[13] * right[11]; //i2 j3
+	res[10] = left[2] * right[8] + left[6] * right[9] + left[10] * right[10] + left[14] * right[11]; //i3 j3
+	res[11] = left[3] * right[8] + left[7] * right[9] + left[11] * right[10] + left[15] * right[11]; //i4 j3
+
+	res[12] = left[0] * right[12] + left[4] * right[13] + left[8] * right[14] + left[12] * right[15]; //i1 j4
+	res[13] = left[1] * right[12] + left[5] * right[13] + left[9] * right[14] + left[13] * right[15]; //i2 j4
+	res[14] = left[2] * right[12] + left[6] * right[13] + left[10] * right[14] + left[14] * right[15]; //i3 j4
+	res[15] = left[3] * right[12] + left[7] * right[13] + left[11] * right[14] + left[15] * right[15]; //i4 j4
+}
+
 extern float Z_bias;
 void g3_GetModelViewMatrix( const vector *viewPos, const matrix *viewMatrix, float *mvMat )
 {
@@ -54,62 +77,20 @@ void g3_GetModelViewMatrix( const vector *viewPos, const matrix *viewMatrix, flo
 	vector localPos    = -(*viewPos);
 	mvMat[0]  = localOrient.rvec.x;
 	mvMat[1]  = localOrient.uvec.x;
-	mvMat[2]  = localOrient.fvec.x;
+	mvMat[2]  = -localOrient.fvec.x;
 	mvMat[3]  = 0.0f;
 	mvMat[4]  = localOrient.rvec.y;
 	mvMat[5]  = localOrient.uvec.y;
-	mvMat[6]  = localOrient.fvec.y;
+	mvMat[6]  = -localOrient.fvec.y;
 	mvMat[7]  = 0.0f;
 	mvMat[8]  = localOrient.rvec.z;
 	mvMat[9]  = localOrient.uvec.z;
-	mvMat[10] = localOrient.fvec.z;
+	mvMat[10] = -localOrient.fvec.z;
 	mvMat[11] = 0.0f;
 	mvMat[12] = localPos * localOrient.rvec;
 	mvMat[13] = localPos * localOrient.uvec;
-	mvMat[14] = localPos * localOrient.fvec + Z_bias;
+	mvMat[14] = localPos * -localOrient.fvec + Z_bias;
 	mvMat[15] = 1.0f;
-}
-
-void g3_TransformVert( float res[4], float pt[4], float a[4][4] )
-{
-	int y;
-	for( y = 0; y < 4; ++y )
-	{
-		res[y] = (pt[0] * a[0][y]) + (pt[1] * a[1][y]) + (pt[2] * a[2][y]) + (pt[3] * a[3][y]);
-	}
-}
-
-void g3_TransformMult( float res[4][4], float a[4][4], float b[4][4] )
-{
-	float temp[4][4];
-
-	int x, y;
-	for( y = 0; y < 4; ++y )
-	{
-		for( x = 0; x < 4; ++x )
-		{
-			temp[y][x] =	(a[y][0] * b[0][x]) +
-				(a[y][1] * b[1][x]) +
-				(a[y][2] * b[2][x]) +
-				(a[y][3] * b[3][x]);
-		}
-	}
-	memcpy( res, temp, 16 * sizeof(float) );
-}
-
-void g3_TransformTrans( float res[4][4], float t[4][4] )
-{
-	float temp[4][4];
-	int y;
-	for( y = 0; y < 4; ++y )
-	{
-		int x;
-		for( x = 0; x < 4; ++x )
-		{
-			temp[x][y] = t[y][x];
-		}
-	}
-	memcpy( res, temp, 16 * sizeof(float) );
 }
 
 void g3_UpdateFullTransform()
@@ -119,6 +100,9 @@ void g3_UpdateFullTransform()
 
 	// projection  -> ViewPort
 	//g3_TransformMult( gTransformFull, gTransformFull, gTransformViewPort );
+
+	//g3_Mat4Multiply(gTransformFull, gTransformModelView, gTransformProjection);
+	g3_Mat4Multiply(gTransformFull, gTransformProjection, gTransformModelView);
 }
 
 void g3_GenerateReflect(g3Plane& plane, float* mat)
@@ -139,4 +123,49 @@ void g3_GenerateReflect(g3Plane& plane, float* mat)
 	mat[9] = -2 * plane.z * plane.y;
 	mat[10] = -2 * plane.z * plane.z + 1;
 	mat[14] = -2 * plane.z * plane.d;
+}
+
+Frustum::Frustum(float* matrix)
+	: planes{ 
+	g3Plane(matrix[3] - matrix[0], matrix[7] - matrix[4], matrix[11] - matrix[8],  matrix[15] - matrix[12], true),
+	g3Plane(matrix[3] + matrix[0], matrix[7] + matrix[4], matrix[11] + matrix[8],  matrix[15] + matrix[12], true),
+	g3Plane(matrix[3] + matrix[1], matrix[7] + matrix[5], matrix[11] + matrix[9],  matrix[15] + matrix[13], true),
+	g3Plane(matrix[3] - matrix[1], matrix[7] - matrix[5], matrix[11] - matrix[9],  matrix[15] - matrix[13], true),
+	g3Plane(matrix[3] - matrix[2], matrix[7] - matrix[6], matrix[11] - matrix[10], matrix[15] - matrix[14], true),
+	g3Plane(matrix[3] + matrix[2], matrix[7] + matrix[6], matrix[11] + matrix[10], matrix[15] + matrix[14], true) }
+{
+}
+
+void Frustum::TestPoint(vector& vec, g3Codes& codes) const
+{
+	if (planes[0].Dot(vec) > 0)
+	{
+		codes.cc_or |= CC_OFF_LEFT;
+		codes.cc_and &= CC_OFF_LEFT;
+	}
+	if (planes[1].Dot(vec) > 0)
+	{
+		codes.cc_or |= CC_OFF_RIGHT;
+		codes.cc_and &= CC_OFF_RIGHT;
+	}
+	if (planes[2].Dot(vec) > 0)
+	{
+		codes.cc_or |= CC_OFF_TOP;
+		codes.cc_and &= CC_OFF_TOP;
+	}
+	if (planes[3].Dot(vec) > 0)
+	{
+		codes.cc_or |= CC_OFF_BOT;
+		codes.cc_and &= CC_OFF_BOT;
+	}
+	if (planes[4].Dot(vec) > 0)
+	{
+		codes.cc_or |= CC_OFF_FAR;
+		codes.cc_and &= CC_OFF_FAR;
+	}
+	if (planes[5].Dot(vec) > 0)
+	{
+		codes.cc_or |= CC_BEHIND;
+		codes.cc_and &= CC_BEHIND;
+	}
 }

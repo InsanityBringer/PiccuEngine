@@ -35,7 +35,7 @@ flat out vec3[4] outlightpos;
 void main()
 {
 	vec4 temp = commons.modelview * vec4(position, 1.0);
-	gl_Position = commons.projection * vec4(temp.xy, -temp.z, temp.w);
+	gl_Position = commons.projection * vec4(temp.xyz, temp.w);
 	outuv = uv;
 	outuv2 = uv2;
 	outpos = -temp.xyz;
