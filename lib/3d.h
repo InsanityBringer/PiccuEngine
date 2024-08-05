@@ -96,6 +96,7 @@ class Frustum
 {
 	g3Plane planes[6];
 public:
+	Frustum();
 	//Constructs a frustum from the specified combined projection/modelview matrix
 	Frustum(float* matrix);
 

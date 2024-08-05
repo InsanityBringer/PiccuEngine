@@ -95,13 +95,6 @@ void g3_GetModelViewMatrix( const vector *viewPos, const matrix *viewMatrix, flo
 
 void g3_UpdateFullTransform()
 {
-	// ModelView -> projection
-	//g3_TransformMult( gTransformFull, gTransformModelView, gTransformProjection );
-
-	// projection  -> ViewPort
-	//g3_TransformMult( gTransformFull, gTransformFull, gTransformViewPort );
-
-	//g3_Mat4Multiply(gTransformFull, gTransformModelView, gTransformProjection);
 	g3_Mat4Multiply(gTransformFull, gTransformProjection, gTransformModelView);
 }
 
@@ -125,47 +118,49 @@ void g3_GenerateReflect(g3Plane& plane, float* mat)
 	mat[14] = -2 * plane.z * plane.d;
 }
 
+Frustum::Frustum()
+{
+}
+
 Frustum::Frustum(float* matrix)
 	: planes{ 
-	g3Plane(matrix[3] - matrix[0], matrix[7] - matrix[4], matrix[11] - matrix[8],  matrix[15] - matrix[12], true),
-	g3Plane(matrix[3] + matrix[0], matrix[7] + matrix[4], matrix[11] + matrix[8],  matrix[15] + matrix[12], true),
-	g3Plane(matrix[3] + matrix[1], matrix[7] + matrix[5], matrix[11] + matrix[9],  matrix[15] + matrix[13], true),
-	g3Plane(matrix[3] - matrix[1], matrix[7] - matrix[5], matrix[11] - matrix[9],  matrix[15] - matrix[13], true),
-	g3Plane(matrix[3] - matrix[2], matrix[7] - matrix[6], matrix[11] - matrix[10], matrix[15] - matrix[14], true),
-	g3Plane(matrix[3] + matrix[2], matrix[7] + matrix[6], matrix[11] + matrix[10], matrix[15] + matrix[14], true) }
+	g3Plane(matrix[3] - matrix[0], matrix[7] - matrix[4], matrix[11] - matrix[8],  (matrix[15] - matrix[12]), true),
+	g3Plane(matrix[3] + matrix[0], matrix[7] + matrix[4], matrix[11] + matrix[8],  (matrix[15] + matrix[12]), true),
+	g3Plane(matrix[3] + matrix[1], matrix[7] + matrix[5], matrix[11] + matrix[9],  (matrix[15] + matrix[13]), true),
+	g3Plane(matrix[3] - matrix[1], matrix[7] - matrix[5], matrix[11] - matrix[9],  (matrix[15] - matrix[13]), true),
+	g3Plane(matrix[3] - matrix[2], matrix[7] - matrix[6], matrix[11] - matrix[10], (matrix[15] - matrix[14]), true),
+	g3Plane(matrix[3] + matrix[2], matrix[7] + matrix[6], matrix[11] + matrix[10], (matrix[15] + matrix[14]), true) }
 {
 }
 
 void Frustum::TestPoint(vector& vec, g3Codes& codes) const
 {
-	if (planes[0].Dot(vec) > 0)
+	int codebits = 0;
+	if (planes[0].Dot(vec) <= 0)
 	{
-		codes.cc_or |= CC_OFF_LEFT;
-		codes.cc_and &= CC_OFF_LEFT;
+		codebits |= CC_OFF_RIGHT;
 	}
-	if (planes[1].Dot(vec) > 0)
+	if (planes[1].Dot(vec) <= 0)
 	{
-		codes.cc_or |= CC_OFF_RIGHT;
-		codes.cc_and &= CC_OFF_RIGHT;
+		codebits |= CC_OFF_LEFT;
 	}
-	if (planes[2].Dot(vec) > 0)
+	if (planes[2].Dot(vec) <= 0)
 	{
-		codes.cc_or |= CC_OFF_TOP;
-		codes.cc_and &= CC_OFF_TOP;
+		codebits |= CC_OFF_TOP;
 	}
-	if (planes[3].Dot(vec) > 0)
+	if (planes[3].Dot(vec) <= 0)
 	{
-		codes.cc_or |= CC_OFF_BOT;
-		codes.cc_and &= CC_OFF_BOT;
+		codebits |= CC_OFF_BOT;
 	}
-	if (planes[4].Dot(vec) > 0)
+	if (planes[4].Dot(vec) <= 0)
 	{
-		codes.cc_or |= CC_OFF_FAR;
-		codes.cc_and &= CC_OFF_FAR;
+		codebits |= CC_OFF_FAR;
 	}
-	if (planes[5].Dot(vec) > 0)
+	if (planes[5].Dot(vec) <= 0)
 	{
-		codes.cc_or |= CC_BEHIND;
-		codes.cc_and &= CC_BEHIND;
+		codebits |= CC_BEHIND;
 	}
+
+	codes.cc_or |= codebits;
+	codes.cc_and &= codebits;
 }
