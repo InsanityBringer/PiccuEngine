@@ -15,66 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/model/newstyle.cpp $
- * $Revision: 122 $
- * $Date: 3/20/00 12:28p $
- * $Author: Matt $
- *
- * Polygon model code
- *
- * $Log: /DescentIII/Main/model/newstyle.cpp $
- * 
- * 122   3/20/00 12:28p Matt
- * Merge of Duane's post-1.3 changes.
- * Check for NULL pointer.
- * 
- * 121   7/08/99 5:47p Jason
- * changes for new bumpmapping system in 1.1 update patch
- * 
- * 120   6/08/99 1:00p Jason
- * changes for bumpmapping
- * 
- * 119   5/18/99 10:31a Jason
- * polymodel stuff wasn't getting paged in before drawing
- * 
- * 118   5/14/99 2:03p Jason
- * added polymodel errors to catch bugs
- * 
- * 117   5/14/99 12:02a Jason
- * more speedups for g3_DrawPoly
- * 
- * 116   5/13/99 8:33p Matt
- * Consolidated Mac & Windows code.
- * 
- * 115   5/13/99 5:07p Ardussi
- * changes for compiling on the Mac
- * 
- * 114   5/04/99 4:34p Jason
- * changes for bumpmapping
- * 
- * 113   4/22/99 8:29p Kevin
- * made psrand.h come after stdlib.h
- * 
- * 112   4/21/99 11:05a Kevin
- * new ps_rand and ps_srand to replace rand & srand
- * 
- * 111   4/16/99 5:32p Jason
- * fixed smooth specularity with objects
- * 
- * 110   4/14/99 1:36a Jeff
- * fixed case mismatched #includes
- * 
- * 109   4/09/99 12:06p Jason
- * made model setup code faster
- * 
- * 108   3/31/99 12:26p Jason
- * fixed some issues related to non wbuffer cards
- * 
- * 107   3/24/99 10:22a Matt
- * Fixed null-pointer bug
- * 
- */
 
 #include "pserror.h"
 #include "pstypes.h"
@@ -323,13 +263,11 @@ inline void RenderSubmodelFace (poly_model *pm,bsp_info *sm,int facenum)
 		// Setup custom color if there is one
 		if (Polymodel_use_effect && (Polymodel_effect.type & PEF_CUSTOM_COLOR) && (texp-GameTextures)==Multicolor_texture)
 		{
-			int r,g,b;
-
 			rend_SetLighting (LS_FLAT_GOURAUD);
 			
-			r=GR_COLOR_RED (Polymodel_effect.custom_color);
-			g=GR_COLOR_GREEN (Polymodel_effect.custom_color);
-			b=GR_COLOR_BLUE (Polymodel_effect.custom_color);
+			int r=GR_COLOR_RED (Polymodel_effect.custom_color);
+			int g=GR_COLOR_GREEN (Polymodel_effect.custom_color);
+			int b=GR_COLOR_BLUE (Polymodel_effect.custom_color);
 		
 			if (Polymodel_light_type==POLYMODEL_LIGHTING_GOURAUD)
 			{

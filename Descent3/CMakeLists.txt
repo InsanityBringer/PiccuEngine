@@ -83,6 +83,8 @@ SET (MAIN_SOURCES
 		Descent3/multi_ui.h
 		Descent3/multi_world_state.h
 		Descent3/NewPyroGauges.h
+		Descent3/newrender.cpp
+		Descent3/newrender.h
 		Descent3/newui.h
 		Descent3/newui_core.h
 		Descent3/object.h
