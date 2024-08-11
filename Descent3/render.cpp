@@ -53,6 +53,7 @@
 #include "psrand.h"
 #include "player.h"
 #include "args.h"
+#include "newrender.h"
 #ifdef EDITOR
 #include "editor\d3edit.h"
 #endif
@@ -3426,6 +3427,12 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain)
 
 	//Assume no terrain
 	Must_render_terrain = 0;
+
+	if (Render_use_newrender)
+	{
+		NewRender_Render(Viewer_eye, Viewer_orient, viewer_roomnum);
+		return;
+	}
 
 	//Get the width & height of the render window
 	rend_GetProjectionParameters(&Render_width, &Render_height);

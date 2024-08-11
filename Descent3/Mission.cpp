@@ -52,6 +52,7 @@
 #include "terrain.h"
 #include "multi.h"
 #include "render.h"
+#include "newrender.h"
 
 //	---------------------------------------------------------------------------
 //	Data
@@ -809,8 +810,7 @@ bool LoadMissionLevel(int level)
 	//I love the game code being so tightly coupled with the renderer
 	if (!Dedicated_server)
 	{
-		MeshRooms();
-		MeshTerrain();
+		NewRender_InitNewLevel();
 	}
 
 	LoadLevelText(Current_mission.levels[level - 1].filename);

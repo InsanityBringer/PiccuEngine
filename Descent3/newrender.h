@@ -22,6 +22,14 @@
 #include <queue>
 #include "3d.h"
 #include "pserror.h"
+#include "room.h"
+
+struct FogPortalData
+{
+	int roomnum;
+	float close_dist;
+	face* close_face;
+};
 
 class RenderList
 {
@@ -29,13 +37,18 @@ class RenderList
 	std::vector<int> VisibleRoomNums;
 	//Transiently sized and updated to check if a room has been iterated into. 
 	std::vector<bool> RoomChecked;
+	std::vector<FogPortalData> FogPortals;
 	//Double set of check rooms. One level will be filled while the other is processed. These flip when one empties out
 	std::queue<int> RoomCheckList[2];
 	int CurrentCheck;
+	bool HasFoundTerrain;
+
+	vector EyePos;
+	matrix EyeOrient;
 	
 	//Adds a room. Will mark it as checked, add it to the visible list, 
 	// and will check if each portal is visible and add linked rooms to the BFS queue. 
-	bool PendingRooms()
+	bool PendingRooms() const
 	{
 		return RoomCheckList[0].size() > 0 || RoomCheckList[1].size() > 0;
 	}
@@ -60,6 +73,8 @@ class RenderList
 		return check;
 	}
 
+	bool CheckFace(room& rp, face& fp, Frustum& frustum) const;
+	void MaybeUpdateFogPortal(int roomnum, face& fp);
 	//Adds a room to the visible list. Will check visibility of all portal faces,
 	//and add all visibile connected rooms to the room check queue. 
 	void AddRoom(int roomnum, Frustum& frustum);
@@ -68,8 +83,11 @@ public:
 	//Gathers all visible interactions
 	//g3_StartFrame must have been called, this will use the current modelview and projection matricies loaded in the 3d system
 	//The search starts from the specified roomnum, unless it is negative, then iteration will start from the terrain. 
-	void GatherVisible(vector& eye_pos, int viewroomnum);
+	void GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroomnum);
 };
 
 //Called after LoadLevel, initializes the newrenderer for the current level.
 void NewRender_InitNewLevel();
+
+//Builds renderlists for the main camera, all mirrors, and so on
+void NewRender_Render(vector& vieweye, matrix& vieworientation, int roomnum);

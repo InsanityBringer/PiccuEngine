@@ -52,21 +52,21 @@ static inline bool FaceIsStatic(room& rp, face& fp)
 //					bm_handle - the handle for the bitmap for this frame, or -1 if don't care about transparence
 //Returns:		bitmask describing the alpha blending for the face
 //					the return bits are the ATF_ flags in renderer.h
-static inline int GetFaceAlpha(face* fp, int bm_handle)
+static inline int GetFaceAlpha(face& fp, int bm_handle)
 {
 	int ret = AT_ALWAYS;
-	if (GameTextures[fp->tmap].flags & TF_SATURATE)
+	if (GameTextures[fp.tmap].flags & TF_SATURATE)
 	{
 		ret = AT_SATURATE_TEXTURE;
 	}
 	else
 	{
 		//Check the face's texture for an alpha value
-		if (GameTextures[fp->tmap].alpha < 1.0)
+		if (GameTextures[fp.tmap].alpha < 1.0)
 			ret |= ATF_CONSTANT;
 
 		//Check for transparency
-		if (bm_handle >= 0 && GameBitmaps[bm_handle].format != BITMAP_FORMAT_4444 && GameTextures[fp->tmap].flags & TF_TMAP2)
+		if (bm_handle >= 0 && GameBitmaps[bm_handle].format != BITMAP_FORMAT_4444 && GameTextures[fp.tmap].flags & TF_TMAP2)
 			ret |= ATF_TEXTURE;
 	}
 	return ret;
@@ -466,7 +466,7 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 
 		//blarg
 		int bm_handle = GetTextureBitmap(fp.tmap, 0);
-		int alphatype = GetFaceAlpha(&fp, -1);
+		int alphatype = GetFaceAlpha(fp, -1);
 		/*if ((alphatype & (ATF_CONSTANT | ATF_TEXTURE)) != 0)
 			continue;
 		else*/
@@ -731,8 +731,11 @@ void DoNewRenderPass(int passnum)
 	}*/
 }
 
-void NewRender_Render(vector& vieweye, matrix& vieworientation)
+//Primary RenderList for the main view
+RenderList gRenderList;
+void NewRender_Render(vector& vieweye, matrix& vieworientation, int roomnum)
 {
+	gRenderList.GatherVisible(vieweye, vieworientation, roomnum);
 	/*//Set up rendering states
 	//I hate this global state thing how can I make it better
 	rend_SetColorModel(CM_MONO);
@@ -769,21 +772,130 @@ void NewRender_Render(vector& vieweye, matrix& vieworientation)
 
 void NewRender_InitNewLevel()
 {
+	MeshRooms();
+	MeshTerrain();
+}
+
+static bool NewRenderPastPortal(room& rp, portal& pp)
+{
+	//If we don't render the portal's faces, then we see through it
+	if (!(pp.flags & PF_RENDER_FACES))
+		return true;
+
+	//Check if the face's texture has transparency
+	face& fp = rp.faces[pp.portal_face];
+	if (GameTextures[fp.tmap].flags & TF_PROCEDURAL)
+		return true;
+	int bm_handle = GetTextureBitmap(fp.tmap, 0);
+	if (GetFaceAlpha(fp, bm_handle))
+		return true;	  //Face has alpha or transparency, so we can see through it
+
+	return false;		//Not transparent, so no render past
+}
+
+bool RenderList::CheckFace(room& rp, face& fp, Frustum& frustum) const
+{
+	g3Codes cc = {};
+	for (int i = 0; i < fp.num_verts; i++)
+	{
+		vector& pt = rp.verts[fp.face_verts[i]];
+		frustum.TestPoint(pt, cc);
+	}
+
+	//All off screen?
+	if (cc.cc_and != 0)
+		return false;
+
+	return true;
+}
+
+void RenderList::MaybeUpdateFogPortal(int roomnum, face& fp)
+{
+	room& rp = Rooms[roomnum];
+	auto it = FogPortals.begin();
+	FogPortalData* fogdata = nullptr;
+	while (it != FogPortals.end())
+	{
+		FogPortalData& data = *it;
+		if (data.roomnum == roomnum)
+			break;
+		it++;
+	}
+
+	if (fogdata == nullptr)
+	{
+		//Couldn't find this room, so add it
+		FogPortals.push_back({ roomnum });
+		fogdata = &FogPortals[FogPortals.size() - 1];
+	}
+
+	float distance = vm_DotProduct(&rp.verts[fp.face_verts[0]], &fp.normal);
+	distance = vm_DotProduct(&fp.normal, &EyePos) - distance;
+	if (distance < fogdata->close_dist)
+	{
+		fogdata->close_dist = distance;
+		fogdata->close_face = &fp;
+	}
 }
 
 void RenderList::AddRoom(int roomnum, Frustum& frustum)
 {
 	//Mark it as visible
-	RoomChecked[roomnum] = true;
 	VisibleRoomNums.push_back(roomnum);
+
+	room& rp = Rooms[roomnum];
+
+	//Iterate all the portals to see if they're visible
+	for (int portalnum = 0; portalnum < rp.num_portals; portalnum++)
+	{
+		portal& pp = rp.portals[portalnum];
+		face& fp = rp.faces[pp.portal_face];
+		int croomnum = pp.croom;
+		room& crp = Rooms[croomnum];
+		
+		//Can you actually see through this portal?
+		if (!NewRenderPastPortal(rp, pp))
+			continue;
+
+		//Can you see this portal face in the first place?
+		if (!CheckFace(rp, fp, frustum))
+			continue; 
+
+		//Before the check if crp is already iterated, check if it is a fog room, and if it is, check if this portal is closer
+		if (crp.flags & RF_FOG)
+			MaybeUpdateFogPortal(croomnum, fp);
+
+		//Don't iterate into a room if it's already been added to the visible room list.
+		//Unlike the original code, this means that a room may not be iterated into by the closest portal, but that's okay.
+		//Render order shouldn't need to be precise in the world of Z buffers
+		if (RoomChecked[croomnum])
+			continue;
+
+		//Add this room to the future check list
+		RoomChecked[croomnum] = true;
+		PushRoom(croomnum);
+
+		//Is the room being checked external? If so, oops, gotta render that terrain
+		if (crp.flags & RF_EXTERNAL)
+		{
+			HasFoundTerrain = true;
+		}
+	}
 }
 
-RenderList::RenderList()
+RenderList::RenderList() 
+	: EyePos{},
+	EyeOrient{}
 {
 	CurrentCheck = 0;
+	HasFoundTerrain = false;
+
+	//Reserve space in the vectors to their original limits, to establish a reasonable initial allocation
+	VisibleRoomNums.reserve(100);
+	FogPortals.reserve(8);
 }
 
-void RenderList::GatherVisible(vector& eye_pos, int viewroomnum)
+void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroomnum)
 {
 	//Initialize the room checked list
 	RoomChecked.clear();
@@ -791,11 +903,16 @@ void RenderList::GatherVisible(vector& eye_pos, int viewroomnum)
 	VisibleRoomNums.clear();
 
 	CurrentCheck = 0;
+	HasFoundTerrain = false;
+
+	EyePos = eye_pos;
+	EyeOrient = eye_orient;
 
 	Frustum viewFrustum(gTransformFull);
 
 	if (viewroomnum >= 0) //is a room?
 	{
+		RoomChecked[viewroomnum] = true;
 		AddRoom(viewroomnum, viewFrustum);
 	}
 
