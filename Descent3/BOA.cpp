@@ -1301,11 +1301,9 @@ int BOAGetMineChecksum()
 
 			for (k = 0; k < fp->num_verts; k++)
 			{
-				int x, y, z;
-				x = floor(rp->verts[fp->face_verts[k]].x);
-				y = floor(rp->verts[fp->face_verts[k]].y);
-				z = floor(rp->verts[fp->face_verts[k]].z);
-				total += x + y + z;
+				total += (double)rp->verts[fp->face_verts[k]].x;
+				total += (double)rp->verts[fp->face_verts[k]].y;
+				total += (double)rp->verts[fp->face_verts[k]].z;
 			}
 
 			total += fp->num_verts << 4;
