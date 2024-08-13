@@ -38,38 +38,33 @@ class RenderList
 	//Transiently sized and updated to check if a room has been iterated into. 
 	std::vector<bool> RoomChecked;
 	std::vector<FogPortalData> FogPortals;
-	//Double set of check rooms. One level will be filled while the other is processed. These flip when one empties out
-	std::queue<int> RoomCheckList[2];
-	int CurrentCheck;
+	//Queue used for a room breadth first search
+	std::queue<int> RoomCheckList;
 	bool HasFoundTerrain;
 
 	vector EyePos;
 	matrix EyeOrient;
+	int EyeRoomnum;
+
+	void SetupLegacyFog(room& rp);
 	
 	//Adds a room. Will mark it as checked, add it to the visible list, 
 	// and will check if each portal is visible and add linked rooms to the BFS queue. 
 	bool PendingRooms() const
 	{
-		return RoomCheckList[0].size() > 0 || RoomCheckList[1].size() > 0;
+		return !RoomCheckList.empty();
 	}
 
 	void PushRoom(int roomnum)
 	{
-		if (RoomChecked[roomnum])
-			return;
-
-		int listnum = CurrentCheck ^ 1;
-		RoomCheckList[listnum].push(roomnum);
+		RoomCheckList.push(roomnum);
 	}
 
 	int PopRoom()
 	{
-		assert(CurrentCheck == 0 || CurrentCheck == 1);
-		int check = RoomCheckList[CurrentCheck].back();
-		RoomCheckList[CurrentCheck].pop();
+		int check = RoomCheckList.front();
+		RoomCheckList.pop();
 
-		if (RoomCheckList[CurrentCheck].empty())
-			CurrentCheck ^= 1;
 		return check;
 	}
 
@@ -78,12 +73,18 @@ class RenderList
 	//Adds a room to the visible list. Will check visibility of all portal faces,
 	//and add all visibile connected rooms to the room check queue. 
 	void AddRoom(int roomnum, Frustum& frustum);
+
+	void PreDraw();
+	void DrawWorld(int passnum);
 public:
 	RenderList();
 	//Gathers all visible interactions
 	//g3_StartFrame must have been called, this will use the current modelview and projection matricies loaded in the 3d system
 	//The search starts from the specified roomnum, unless it is negative, then iteration will start from the terrain. 
 	void GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroomnum);
+
+	//Draws the entire render list to the current view.
+	void Draw();
 };
 
 //Called after LoadLevel, initializes the newrenderer for the current level.

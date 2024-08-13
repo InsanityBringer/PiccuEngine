@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include "descent.h"
+#include "game.h"
 #include "newrender.h"
 #include "render.h"
 #include "3d.h"
@@ -29,6 +30,8 @@
 #include "special_face.h"
 #include "terrain.h"
 #include "lightmap_info.h"
+#include "TelComAutoMap.h"
+#include "config.h"
 
 //[ISB] Checks if a face is completely static and therefore should be in the normal static meshes.
 //Portals need to be put into another pass because they may or may not be visible. 
@@ -623,151 +626,12 @@ struct NewRenderPassInfo
 
 void ComputeRoomPulseLight(room* rp);
 
-//Performs tasks that need to be done before rendering a room.
-void NewRenderPreDraw()
-{
-	/*RoomBlock roomblocks[MAX_RENDER_ROOMS];
-	for (int nn = N_render_rooms - 1; nn >= 0; nn--)
-	{
-		int roomnum = Render_list[nn];
-		room& rp = Rooms[roomnum];
-		RoomBlock& roomblock = roomblocks[nn];
-
-		// Mark it visible for automap
-		AutomapVisMap[&rp - Rooms] = 1;
-
-		ComputeRoomPulseLight(&Rooms[roomnum]);
-		roomblock.brightness = Room_light_val;
-
-		if (rp.flags & RF_FOG)
-		{
-			SetupRoomFog(&rp, &Viewer_eye, &Viewer_orient, Viewer_roomnum);
-
-			roomblock.fog_distance = rp.fog_depth;
-			roomblock.fog_color[0] = rp.fog_r;
-			roomblock.fog_color[1] = rp.fog_g;
-			roomblock.fog_color[2] = rp.fog_b;
-
-			if (Room_fog_plane_check == 0)
-			{
-				roomblock.not_in_room = true;
-				roomblock.fog_plane[0] = Room_fog_plane.x;
-				roomblock.fog_plane[1] = Room_fog_plane.y;
-				roomblock.fog_plane[2] = Room_fog_plane.z;
-				roomblock.fog_plane[3] = Room_fog_distance;
-			}
-			else
-			{
-				roomblock.not_in_room = false;
-			}
-		}
-
-		rp.last_render_time = Gametime;
-		rp.flags &= ~RF_MIRROR_VISIBLE;
-
-		for (int facenum = 0; facenum < rp.num_faces; facenum++)
-		{
-			face& fp = rp.faces[facenum];
-			if (!(fp.flags & FF_NOT_FACING))
-			{
-				fp.renderframe = FrameCount & 0xFF;
-			}
-		}
-	}
-
-	rend_UpdateFogBrightness(roomblocks, N_render_rooms);*/
-}
-
-void DoNewRenderPass(int passnum)
-{
-	/*assert(passnum >= 0 && passnum < NUM_NEWRENDERPASSES);
-	NewRenderPassInfo& passinfo = renderpass_info[passnum];
-	static RoomBlock roomblock;
-
-	rend_BindPipeline(passinfo.handle);
-
-	for (int nn = N_render_rooms - 1; nn >= 0; nn--)
-	{
-		int roomnum = Render_list[nn];
-		room& rp = Rooms[roomnum];
-		ComputeRoomPulseLight(&Rooms[roomnum]);
-
-		if (passinfo.fog)
-		{
-			if (Detail_settings.Fog_enabled && !(Rooms[roomnum].flags & RF_FOG))
-				continue;
-		}
-		else
-		{
-			if (Detail_settings.Fog_enabled && Rooms[roomnum].flags & RF_FOG)
-				continue;
-		}
-
-		rend_SetCurrentRoomNum(nn);
-
-		if (passinfo.specular)
-			Room_meshes[roomnum].DrawSpecular();
-		else
-		{
-			Room_meshes[roomnum].DrawLit();
-			//Room_meshes[roomnum].DrawMirrorFaces();
-		}
-
-		//TEMP mirror test
-		if (!passinfo.specular)
-		{
-			if (rp.mirror_face != -1)
-			{
-				g3Plane plane(rp.faces[rp.mirror_face].normal, rp.verts[rp.faces[rp.mirror_face].face_verts[0]]);
-				float reflectmat[16];
-				g3_GenerateReflect(plane, reflectmat);
-				g3_StartInstanceMatrix4(reflectmat);
-
-				Room_meshes[roomnum].DrawLit();
-
-				g3_DoneInstance();
-			}
-		}
-	}*/
-}
-
 //Primary RenderList for the main view
 RenderList gRenderList;
 void NewRender_Render(vector& vieweye, matrix& vieworientation, int roomnum)
 {
 	gRenderList.GatherVisible(vieweye, vieworientation, roomnum);
-	/*//Set up rendering states
-	//I hate this global state thing how can I make it better
-	rend_SetColorModel(CM_MONO);
-	rend_SetLighting(LS_GOURAUD);
-	rend_SetWrapType(WT_WRAP);
-
-
-	Room_VertexBuffer.Bind();
-	Room_IndexBuffer.Bind();
-
-	//Walk the room render list for updates
-	for (int nn = N_render_rooms - 1; nn >= 0; nn--)
-	{
-		MeshBuilder mesh;
-		int roomnum = Render_list[nn];
-		if (RoomNeedRemesh(roomnum))
-		{
-			RemeshRoom(mesh, roomnum);
-		}
-	}
-
-	rend_SetAlphaType(AT_ALWAYS);
-
-	NewRenderPreDraw();
-	//TODO: fix magic numbers
-	DoNewRenderPass(0);
-	DoNewRenderPass(2);
-	DoNewRenderPass(3);
-	DoNewRenderPass(5);
-
-	rendTEMP_UnbindVertexBuffer();
-	rend_EndShaderTest();*/
+	gRenderList.Draw();
 }
 
 void NewRender_InitNewLevel()
@@ -793,9 +657,58 @@ static bool NewRenderPastPortal(room& rp, portal& pp)
 	return false;		//Not transparent, so no render past
 }
 
+void RenderList::SetupLegacyFog(room& rp)
+{
+	if ((rp.flags & RF_FOG) == 0)
+		return;
+
+	if (!Detail_settings.Fog_enabled)
+	{
+		// fog is disabled
+		Room_fog_plane_check = -1;
+		return;
+	}
+
+	if (EyeRoomnum == (&rp - Rooms))
+	{
+		// viewer is in the room
+		Room_fog_plane_check = 1;
+		Room_fog_distance = -vm_DotProduct(&EyeOrient.fvec, &EyePos);
+		Room_fog_plane = EyeOrient.fvec;
+		return;
+	}
+
+	// find the 'fogroom' number (we should have put it in here if we will render the room)
+	int found_room = -1;
+	for (int i = 0; i < FogPortals.size() && found_room == -1; i++)
+	{
+		if (FogPortals[i].roomnum == &rp - Rooms)
+		{
+			found_room = i;
+			break;
+		}
+	}
+
+	if (found_room == -1 || FogPortals[found_room].close_face == NULL)
+	{
+		// we won't be rendering this room
+		Room_fog_plane_check = -1;
+		return;
+	}
+
+	// Use the closest face
+	face* close_face = FogPortals[found_room].close_face;
+	Room_fog_plane_check = 0;
+	Room_fog_plane = close_face->normal;
+	Room_fog_portal_vert = rp.verts[close_face->face_verts[0]];
+	Room_fog_distance = -vm_DotProduct(&Room_fog_plane, &Room_fog_portal_vert);
+	Room_fog_eye_distance = (EyePos * Room_fog_plane) + Room_fog_distance;
+}
+
 bool RenderList::CheckFace(room& rp, face& fp, Frustum& frustum) const
 {
 	g3Codes cc = {};
+	cc.cc_and = 0xFF;
 	for (int i = 0; i < fp.num_verts; i++)
 	{
 		vector& pt = rp.verts[fp.face_verts[i]];
@@ -883,12 +796,124 @@ void RenderList::AddRoom(int roomnum, Frustum& frustum)
 	}
 }
 
+void RenderList::PreDraw()
+{
+	RoomBlock roomblocks[100];
+	int renderrooms = std::min(100, (int)VisibleRoomNums.size());
+
+	for (int nn = 0; nn < renderrooms; nn++)
+	{
+		int roomnum = VisibleRoomNums[nn];
+		room& rp = Rooms[roomnum];
+		RoomBlock& roomblock = roomblocks[nn];
+
+		// Mark it visible for automap
+		AutomapVisMap[&rp - Rooms] = 1;
+
+		ComputeRoomPulseLight(&Rooms[roomnum]);
+		roomblock.brightness = Room_light_val;
+
+		if (rp.flags & RF_FOG)
+		{
+			SetupLegacyFog(rp);
+
+			roomblock.fog_distance = rp.fog_depth;
+			roomblock.fog_color[0] = rp.fog_r;
+			roomblock.fog_color[1] = rp.fog_g;
+			roomblock.fog_color[2] = rp.fog_b;
+
+			if (Room_fog_plane_check == 0)
+			{
+				roomblock.not_in_room = true;
+				roomblock.fog_plane[0] = Room_fog_plane.x;
+				roomblock.fog_plane[1] = Room_fog_plane.y;
+				roomblock.fog_plane[2] = Room_fog_plane.z;
+				roomblock.fog_plane[3] = Room_fog_distance;
+			}
+			else
+			{
+				roomblock.not_in_room = false;
+			}
+		}
+
+		rp.last_render_time = Gametime;
+		rp.flags &= ~RF_MIRROR_VISIBLE;
+
+		for (int facenum = 0; facenum < rp.num_faces; facenum++)
+		{
+			face& fp = rp.faces[facenum];
+			if (!(fp.flags & FF_NOT_FACING))
+			{
+				fp.renderframe = FrameCount & 0xFF;
+			}
+		}
+	}
+
+	rend_UpdateFogBrightness(roomblocks, renderrooms);
+}
+
+void RenderList::DrawWorld(int passnum)
+{
+	assert(passnum >= 0 && passnum < NUM_NEWRENDERPASSES);
+	NewRenderPassInfo& passinfo = renderpass_info[passnum];
+	static RoomBlock roomblock;
+
+	rend_BindPipeline(passinfo.handle);
+
+	//TODO: The max count should be obtained from the renderer, since some platforms don't have a limit of 100 UBOs. 
+	int renderrooms = std::min(100, (int)VisibleRoomNums.size());
+
+	for (int nn = 0; nn < renderrooms; nn++) //forward first to try to draw nearest rooms first. 
+	{
+		int roomnum = VisibleRoomNums[nn];
+		room& rp = Rooms[roomnum];
+		ComputeRoomPulseLight(&Rooms[roomnum]);
+
+		if (passinfo.fog)
+		{
+			if (Detail_settings.Fog_enabled && !(Rooms[roomnum].flags & RF_FOG))
+				continue;
+		}
+		else
+		{
+			if (Detail_settings.Fog_enabled && Rooms[roomnum].flags & RF_FOG)
+				continue;
+		}
+
+		rend_SetCurrentRoomNum(nn);
+
+		if (passinfo.specular)
+			Room_meshes[roomnum].DrawSpecular();
+		else
+		{
+			Room_meshes[roomnum].DrawLit();
+			Room_meshes[roomnum].DrawMirrorFaces();
+		}
+
+		//TEMP mirror test
+		/*if (!passinfo.specular)
+		{
+			if (rp.mirror_face != -1)
+			{
+				g3Plane plane(rp.faces[rp.mirror_face].normal, rp.verts[rp.faces[rp.mirror_face].face_verts[0]]);
+				float reflectmat[16];
+				g3_GenerateReflect(plane, reflectmat);
+				g3_StartInstanceMatrix4(reflectmat);
+
+				Room_meshes[roomnum].DrawLit();
+
+				g3_DoneInstance();
+			}
+		}*/
+	}
+}
+
 RenderList::RenderList() 
 	: EyePos{},
 	EyeOrient{}
 {
-	CurrentCheck = 0;
 	HasFoundTerrain = false;
+	EyeRoomnum = 0;
 
 	//Reserve space in the vectors to their original limits, to establish a reasonable initial allocation
 	VisibleRoomNums.reserve(100);
@@ -899,14 +924,15 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 {
 	//Initialize the room checked list
 	RoomChecked.clear();
-	RoomChecked.resize(Highest_room_index);
+	RoomChecked.resize(Highest_room_index + 1);
 	VisibleRoomNums.clear();
+	FogPortals.clear();
 
-	CurrentCheck = 0;
 	HasFoundTerrain = false;
 
 	EyePos = eye_pos;
 	EyeOrient = eye_orient;
+	EyeRoomnum = viewroomnum;
 
 	Frustum viewFrustum(gTransformFull);
 
@@ -915,10 +941,45 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 		RoomChecked[viewroomnum] = true;
 		AddRoom(viewroomnum, viewFrustum);
 	}
+	else
+	{
+		HasFoundTerrain = true;
+		//add external rooms here
+	}
 
 	while (PendingRooms())
 	{
 		int roomnum = PopRoom();
 		AddRoom(roomnum, viewFrustum);
 	}
+}
+
+void RenderList::Draw()
+{
+	rend_SetColorModel(CM_MONO);
+	rend_SetLighting(LS_GOURAUD);
+	rend_SetWrapType(WT_WRAP);
+	rend_SetAlphaType(AT_ALWAYS);
+
+	//Walk the room render list for updates
+	for (int nn = 0; nn < VisibleRoomNums.size(); nn++)
+	{
+		MeshBuilder mesh;
+		int roomnum = VisibleRoomNums[nn];
+		if (RoomNeedRemesh(roomnum))
+		{
+			RemeshRoom(mesh, roomnum);
+		}
+	}
+
+	Room_VertexBuffer.Bind();
+	Room_IndexBuffer.Bind();
+
+	PreDraw();
+	DrawWorld(0);
+	DrawWorld(2);
+	DrawWorld(3);
+	DrawWorld(5);
+
+	rendTEMP_UnbindVertexBuffer();
 }
