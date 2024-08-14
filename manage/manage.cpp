@@ -15,423 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/manage/manage.cpp $
- * $Revision: 103 $
- * $Date: 10/10/01 11:32a $
- * $Author: Matt $
- *
- * Jason should put something here
- *
- * $Log: /DescentIII/Main/manage/manage.cpp $
- * 
- * 103   10/10/01 11:32a Matt
- * Added system to check for errors when reading in add-on data.
- * 
- * 102   10/08/01 1:50p Matt
- * Added a case for gamefile pagetype to avoid int3
- * 
- * 101   4/19/00 5:07p Matt
- * From Duane for 1.4
- * Added checks, asserts, and fixes for bad return values
- * 
- * 100   3/20/00 12:27p Matt
- * Merge of Duane's post-1.3 changes.
- * Mac pilot directory stuff.
- * 
- * 99    10/26/99 3:30p Jeff
- * handle extra.gam addon tablefile
- * 
- * 98    10/20/99 6:27p Jeff
- * sped up addon page popping (by saving page offsets)
- * 
- * 97    10/19/99 9:14p Chris
- * Fixed a memory free bug
- * 
- * 96    8/11/99 5:32p Jeff
- * changes to fix addon tablefile support so it works correctly
- * 
- * 95    7/28/99 2:29p Kevin
- * Added macintosh DLL extentions (msl)
- * 
- * 94    5/14/99 12:45p Matt
- * Removed yet more static data
- * 
- * 93    5/14/99 12:33p Matt
- * Fixed another case of too much local data for the Mac.
- * 
- * 92    5/13/99 8:36p Matt
- * Made some local variables global to get around the 32K local variable
- * limit on the Mac.
- * 
- * 91    5/12/99 3:01p Matt
- * Declared one texpage structure statically for all the functions that
- * need it, because the Mac limits local data to 32K.
- * 
- * 90    4/30/99 8:53p Matt
- * Added a "voice" directory for gamefiles.
- * 
- * 89    4/22/99 3:26p Jason
- * added transferring of pagelocks
- * 
- * 88    4/20/99 12:06a Jeff
- * added so files to data/scripts search path
- * 
- * 87    4/15/99 5:21p Jason
- * sped up table file loading
- * 
- * 86    4/14/99 10:46a Kevin
- * Removed OutrageMessageBox from release builds
- * 
- * 85    4/14/99 1:33a Jeff
- * fixed case mismatched #includes
- * 
- * 84    4/12/99 3:05p Jason
- * changes for 256 textures
- * 
- * 83    3/05/99 10:42a Jason
- * more deletion of pagelocls
- * 
- * 82    3/04/99 1:46p Jason
- * fixed some manage problems
- * 
- * 81    2/27/99 5:15p Jason
- * fixed search path bug
- * 
- * 80    2/17/99 12:11p Jason
- * added music directory to searchable list
- * 
- * 79    2/16/99 11:35a Samir
- * added art directory.
- * 
- * 78    2/10/99 3:47p Jason
- * before doing a backup, makes sure that the tablefile version is the
- * same on the net and on the local machine
- * 
- * 77    1/29/99 6:29p Jason
- * first pass at adding bumpmaps
- * 
- * 76    1/21/99 11:16p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
- * 
- * 75    1/13/99 2:49p Jeff
- * added .msg to the search path for data\scripts
- * 
- * 74    1/13/99 7:08a Jeff
- * put some #ifdef's around some window's specific code (really only used
- * in the editor, but EDITOR is never defined when building manage) so it
- * builds in linux
- * 
- * 73    12/30/98 6:52p Matt
- * Fixed compile warnings
- * 
- * 72    12/29/98 4:30p Jason
- * added add-on data functionality
- * 
- * 71    12/13/98 7:51p Jeff
- * only check the script directory for cpp,dll and def files
- * 
- * 70    12/11/98 5:50p Jeff
- * implemented and added changes regarding Level&Scripting manage system
- * and compiler interface
- * 
- * 69    11/28/98 2:19p Jason
- * fixed stupid filecopy bug
- * 
- * 68    11/18/98 11:02a Jason
- * temp fix for table problems
- * 
- * 67    11/16/98 3:49p Jason
- * changes for manage system
- * 
- * 66    11/16/98 2:43p Jason
- * better file checking for old files
- * 
- * 65    11/13/98 12:30p Jason
- * fixed reordered pages bug
- * 
- * 64    11/13/98 12:30p Jason
- * changes for weapons
- * 
- * 63    11/06/98 6:00p Josh
- * fixed dumb bug
- * 
- * 62    11/06/98 5:28p Josh
- * FROM JASON:upped tracklock limit
- * 
- * 61    11/06/98 12:35p Jason
- * more speedups for manage system
- * 
- * 60    11/05/98 7:55p Jason
- * changes for new manage system
- * 
- * 59    11/04/98 11:02a Jason
- * added levels and briefing directories to new "old files" update method
- * 
- * 58    11/02/98 6:35p Jason
- * changes for filter
- * 
- * 57    11/02/98 6:02p Jason
- * made yes network updates much faster
- * 
- * 56    10/15/98 8:48a Matt
- * Changed some errors to use Error() instead of OutrageMessageBox() 
- * 
- * 55    10/14/98 5:15p Jason
- * added version checking to the table file
- * 
- * 54    10/12/98 11:38p Jeff
- * wrapped all the Object_info[].description whenever freed...trying to
- * find an obscure bug.  Added icon_name to manage page of Generic
- * 
- * 53    10/12/98 10:31a Jason
- * don't seach data directories if release
- * 
- * 52    10/09/98 4:39p Jason
- * fixed local table file message
- * 
- * 51    10/09/98 2:27p Jason
- * reorganized table file system
- * 
- * 50    10/09/98 2:40a Jason
- * fixed table file issues with demo
- * 
- * 49    10/08/98 10:03p Jason
- * more filtered table file stuff
- * 
- * 48    10/08/98 7:05p Jason
- * added file filter support
- * 
- * 47    9/28/98 6:53p Kevin
- * localized some multiplayer menus
- * 
- * 46    9/25/98 4:37p Jason
- * fixed dedicated server printing out progress messages
- * 
- * 45    9/25/98 2:53p Jason
- * added progress bar
- * 
- * 44    9/25/98 12:24p Samir
- * fixed bugs for release version.
- * 
- * 43    9/24/98 6:22p Jason
- * fixed RELEASE version asking to update network files
- * 
- * 42    9/18/98 3:58p Jason
- * change weapon reordering to do countermeasure weapons after generics
- * 
- * 41    9/15/98 4:31p Jason
- * added more functionality for the dedicated server
- * 
- * 40    9/14/98 6:28p Jason
- * first pass at getting dedicated server working
- * 
- * 39    8/25/98 3:42p Jason
- * fixed generic object problems
- * 
- * 38    8/25/98 3:25p Jason
- * turned off fast load trick
- * 
- * 37    8/17/98 4:00p Jason
- * Added mprintf
- * 
- * 36    8/15/98 5:17p Matt
- * Added new Base_directory variable.  Got rid of D3_LOCAL check and
- * 'local directory' registry variable.
- * 
- * 35    8/13/98 6:34p Jason
- * made table file loading much faster
- * 
- * 34    8/10/98 1:49p Samir
- * added music directory.
- * 
- * 33    8/03/98 6:44p Jason
- * set custom graphics in the search path
- * 
- * 32    7/27/98 6:25p Jeff
- * added creation of custom directories
- * 
- * 31    6/23/98 2:43p Matt
- * Changed calls to OutrageMessageBox() & Debug_MessageBox() to deal with
- * int return value (instead of bool).
- * 
- * 30    6/12/98 1:06p Jason
- * added smart loading from local table file
- * 
- * 29    5/04/98 5:00p Keneta
- * FROM JASON:Fixed copyfile bug
- * 
- * 28    5/04/98 4:42p Jason
- * even better error checking
- * 
- * 26    5/04/98 4:24p Jason
- * upped MAX_TRIES
- * 
- * 25    5/04/98 4:18p Jason
- * added assert to prevent table file problems
- * 
- * 24    3/31/98 3:49p Jason
- * added memory lib
- * 
- * 23    3/19/98 3:51p Samir
- * added misc data directory.
- * 
- * 22    2/23/98 2:00p Jason
- * Pop up a message box when table file couldn't be opened
- * 
- * 21    2/06/98 12:15p Jason
- * upped max times program will try to delete the table file before
- * bailing
- * 
- * 20    2/04/98 11:47a Jason
- * added dynamic description field to generic pages
- * 
- * 19    1/26/98 11:32a Jason
- * upped the number of times the system will try to delete a table file
- * 
- * 18    1/22/98 2:49p Samir
- * Added D3 Local Dir to the search path.
- * 
- * 17    1/15/98 6:22p Jason
- * added safety checks so the network won't copy over a primitive you have
- * held locally
- * 
- * 16    1/15/98 4:54p Mark
- * FROM JASON:Do switcheroo a few times before giving up
- * 
- * 15    12/22/97 3:50p Chris
- * 
- * 14    11/17/97 4:16p Jason
- * added briefings directory
- * 
- * 13    9/09/97 4:07p Matt
- * Added mprintf()
- * 
- * 12    9/04/97 2:53p Samir
- * Added gamefile and generic page strings to PageNames array.
- * 
- * 11    8/12/97 12:47p Matt
- * Only copy pagefile from net if different from local copy.
- * When loading pages, print different char for each type
- * Show how long it took to load the pagefile
- * 
- * 10    8/11/97 1:54p Matt
- * Ripped out robot & powerup pages, and added generic page
- * 
- * 9     8/08/97 5:17p Jason
- * made it so that when you update from the network it doesn't halt other
- * users
- * 
- * 8     8/08/97 3:44p Jason
- * added code to support new generic page
- * 
- * 7     8/08/97 1:57p Matt
- * Took out error message now handled by mng_MakeLocker()
- * 
- * 6     7/29/97 12:07p Jason
- * added gamefile page for auto retrieval of non-standard page types
- * 
- * 50    6/27/97 3:11p Jason
- * added room directories
- * 
- * 
- * 49    6/11/97 1:07p Samir
- * The removal of gameos and replaced with oeApplication, oeDatabase
- * 
- * 48    6/10/97 5:08p Jason
- * added reorderpages menu item
- * 
- * 47    6/05/97 2:52p Jason
- * added megacell functions
- * 
- * 46    5/30/97 11:41a Jason
- * made a better error message if someone already has the table file
- * locked upon startup
- * 
- * 45    5/22/97 3:08p Jason
- * added the ReorderPage function
- * 
- * 44    5/16/97 3:53p Jason
- * added filepage dialog
- * 
- * 43    5/15/97 5:56 PM Jeremy
- * made initlocaltable files check if the file exists by using cfexist
- * rather than trying to open the file and checking the error code
- * 
- * 42    5/14/97 6:38p Jason
- * fixed a plethora of potential problems by locking the table file when
- * someone is starting up.
- * 
- * 41    5/14/97 6:44 PM Jeremy
- * fixed a bug where local dir backup directory was not being set
- * correctly in init local table files
- * 
- * 40    5/13/97 3:41p Jason
- * made all manage code work with the new device independant database
- * 
- * 39    5/08/97 12:41p Jason
- * made manage system work with device dependant path names
- * 
- * 38    4/29/97 5:07p Samir
- * Added levels directory to search path
- * 
- * 37    4/25/97 6:16p Jason
- * added switcheroo function
- * 
- * 36    4/01/97 2:13p Jason
- * changes for sound page functionality
- * 
- * 35    3/31/97 4:35p Jason
- * added player ship and weapon pages
- * 
- * 34    3/25/97 3:10p Jason
- * added robots and robot page functionality
- * 
- * 33    3/17/97 4:27p Jason
- * added sounds directory to path list
- * 
- * 32    3/14/97 7:18p Matt
- * Added missing include
- * 
- * 31    3/14/97 6:13 PM Jeremy
- * changed calls to windows "MessageBox" to OutrageMessageBox, changed
- * call of GetUserName to os_database->get_user_name, #included descent.h
- * in order to refer to the OS_database object, unincluded <windows.h> and
- * <direct.h>
- * 
- * 30    3/13/97 7:39p Matt
- * Changed code to use getenv() (ANSI-standard) instead of
- * GetEnvironmentVariable()
- * 
- * 29    3/13/97 12:34p Matt
- * Changed code to not leave directory changed after checking for presence
- * of a directory.
- * 
- * 28    3/13/97 11:37a Samir
- * Changed os file functions to ddio file functions
- * 
- * 27    3/10/97 2:23p Jason
- * added auto creation of models directory
- * 
- * 26    3/07/97 1:02p Jason
- * Now uses Samir's OS specific directory functions
- * 
- * 25    3/05/97 3:10p Jason
- * added more door functionality
- * 
- * 24    3/05/97 12:16p Jason
- * added code to support our new 3d doors
- * 
- * 23    3/03/97 6:21p Matt
- * Changed cfile functions to use D3 naming convention
- *
- * $NoKeywords: $
- */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -470,9 +54,7 @@ int Old_table_method=0;
 void mng_WriteNewUnknownPage (CFILE *outfile);
 //	This is for levels
 char LocalLevelsDir[TABLE_NAME_LEN];
-#ifdef MACINTOSH
-char LocalPilotsDir[TABLE_NAME_LEN];
-#endif
+
 //	This is for pages
 char TableLockFilename[TABLE_NAME_LEN],TableFilename[TABLE_NAME_LEN];
 char TempTableLockFilename[TABLE_NAME_LEN],TempTableFilename[TABLE_NAME_LEN];
@@ -1374,48 +956,48 @@ int mng_LoadNetPages (int show_progress)
 		switch (pagetype)
 		{
 			case PAGETYPE_TEXTURE:
-				mprintf ((0,"T"));
+				/*mprintf ((0,"T"));
 				
-				PrintDedicatedMessage ("T");
+				PrintDedicatedMessage ("T");*/
 				mng_LoadNetTexturePage (infile);
 				break;
 			case PAGETYPE_POWERUP:
 			case PAGETYPE_ROBOT:
-				Error("Your local table file is invalid.  You must update from the network.");
+				Error("Unsupported page type in game table!");
 				break;
 			case PAGETYPE_DOOR:
-				mprintf ((0,"D"));
-				PrintDedicatedMessage ("D");
+				/*mprintf ((0,"D"));
+				PrintDedicatedMessage ("D");*/
 				mng_LoadNetDoorPage (infile);
 				break;
 			case PAGETYPE_GENERIC:
-				mprintf ((0,"G"));
-				PrintDedicatedMessage ("G");
+				/*mprintf ((0,"G"));
+				PrintDedicatedMessage ("G");*/
 				mng_LoadNetGenericPage (infile);
 				break;
 			case PAGETYPE_GAMEFILE:
-				mprintf ((0,"F"));
-				PrintDedicatedMessage ("F");
+				/*mprintf ((0,"F"));
+				PrintDedicatedMessage ("F");*/
 				mng_LoadNetGamefilePage (infile);
 				break;
 			case PAGETYPE_SOUND:
-				mprintf ((0,"S"));
-				PrintDedicatedMessage ("S");
+				/*mprintf ((0,"S"));
+				PrintDedicatedMessage ("S");*/
 				mng_LoadNetSoundPage (infile);
 				break;
 			case PAGETYPE_SHIP:
-				mprintf ((0,"P"));
-				PrintDedicatedMessage ("P");
+				/*mprintf ((0,"P"));
+				PrintDedicatedMessage ("P");*/
 				mng_LoadNetShipPage (infile);
 				break;
 			case PAGETYPE_WEAPON:
-				mprintf ((0,"W"));
-				PrintDedicatedMessage ("W");
+				/*mprintf ((0,"W"));
+				PrintDedicatedMessage ("W");*/
 				mng_LoadNetWeaponPage (infile);
 				break;
 			case PAGETYPE_MEGACELL:
-				mprintf ((0,"M"));
-				PrintDedicatedMessage ("M");
+				/*mprintf ((0,"M"));
+				PrintDedicatedMessage ("M");*/
 				mng_LoadNetMegacellPage (infile);
 				break;
 			case PAGETYPE_UNKNOWN:
@@ -1456,38 +1038,38 @@ int mng_LoadNetPages (int show_progress)
 		switch (pagetype)
 		{
 			case PAGETYPE_TEXTURE:
-				mprintf ((0,"T"));
-				PrintDedicatedMessage ("T");
+				/*mprintf ((0,"T"));
+				PrintDedicatedMessage ("T");*/
 				mng_LoadNetTexturePage (infile,true);
 				break;
 			case PAGETYPE_DOOR:
-				mprintf ((0,"D"));
-				PrintDedicatedMessage ("D");
+				/*mprintf ((0,"D"));
+				PrintDedicatedMessage ("D");*/
 				mng_LoadNetDoorPage (infile,true);
 				break;
 			case PAGETYPE_GENERIC:
-				mprintf ((0,"G"));
-				PrintDedicatedMessage ("G");
+				/*mprintf ((0,"G"));
+				PrintDedicatedMessage ("G");*/
 				mng_LoadNetGenericPage (infile,true);
 				break;
 			case PAGETYPE_GAMEFILE:
-				mprintf ((0,"F"));
-				PrintDedicatedMessage ("F");
+				/*mprintf ((0,"F"));
+				PrintDedicatedMessage ("F");*/
 				mng_LoadNetGamefilePage (infile,true);
 				break;
 			case PAGETYPE_SOUND:
-				mprintf ((0,"S"));
-				PrintDedicatedMessage ("S");
+				/*mprintf ((0,"S"));
+				PrintDedicatedMessage ("S");*/
 				mng_LoadNetSoundPage (infile,true);
 				break;
 			case PAGETYPE_SHIP:
-				mprintf ((0,"P"));
-				PrintDedicatedMessage ("P");
+				/*mprintf ((0,"P"));
+				PrintDedicatedMessage ("P");*/
 				mng_LoadNetShipPage (infile,true);
 				break;
 			case PAGETYPE_WEAPON:
-				mprintf ((0,"W"));
-				PrintDedicatedMessage ("W");
+				/*mprintf ((0,"W"));
+				PrintDedicatedMessage ("W");*/
 				mng_LoadNetWeaponPage (infile,true);
 				break;
 			case PAGETYPE_UNKNOWN:
@@ -3354,44 +2936,6 @@ void mng_LoadAddonPages ()
 	//Clear flag
 	Loading_addon = false;
 }
-/*
-#define MAX_256s	200
-int Num_256s=0;
-char Texture256Names[MAX_256s][80];
-void Read256TextureNames ()
-{
-	int n=FindArg ("-File256");
-	if (!n)
-		return;
-	CFILE *infile;
-	infile=(CFILE *)cfopen (GameArgs[n+1],"rt");
-	if (!infile)
-	{
-		mprintf ((0,"Couldn't open 256 file!\n"));
-		return;
-	}
-	
-	char curline[200];
-	int done=0;
-	while (!done)
-	{
-		if (cfeof(infile))
-		{
-			done=1;
-			continue;
-		}
-		
-		// Read a line and parse it
-		cf_ReadString (curline,200,infile);
-		if (curline[0]==';' || curline[1]==';' || curline[0]==' ' || curline[1]==' ')
-			continue;
-		if (!(isalnum(curline[0])))
-			continue;
-		strcpy (Texture256Names[Num_256s],curline);
-		Num_256s++;
-	}
-	cfclose (infile);
-}*/
 
 #include "pstring.h"
 
@@ -3408,7 +2952,8 @@ void DataError(char *fmt,...)
 	Data_error_count++;
 
 	//Write to file if switch specified
-	if (FindArg("-datacheck")) {
+	if (FindArg("-datacheck")) 
+	{
 		static char last_filename[_MAX_PATH];
 		va_list arglist;
 		char buf[1024];
@@ -3418,7 +2963,8 @@ void DataError(char *fmt,...)
 		va_end(arglist);
 
 		//Open file if not already open
-		if (Data_error_file == NULL) {
+		if (Data_error_file == NULL) 
+		{
 			Data_error_file = fopen("datacheck.out","wt");
 
 			if (Data_error_file == NULL)
@@ -3428,7 +2974,8 @@ void DataError(char *fmt,...)
 		}
 
 		//If this is a new addon file, print the name
-		if (strcmp(last_filename,Addon_filename)) {
+		if (strcmp(last_filename,Addon_filename)) 
+		{
 			if (last_filename[0])
 				fprintf(Data_error_file,"\n\n");
 			fprintf(Data_error_file,"Errors in addon file <%s>:\n\n",Addon_filename);
