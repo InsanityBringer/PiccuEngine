@@ -74,7 +74,11 @@ int GL_CopyVertices(int numvertices)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
 	if (nextcommittedvertex + numvertices > NUM_VERTS_PER_BUFFER)
+	{
+		size_t buffersize = NUM_VERTS_PER_BUFFER * sizeof(gl_vertex);
+		glBufferData(GL_ARRAY_BUFFER, buffersize, nullptr, GL_STREAM_DRAW);
 		nextcommittedvertex = 0;
+	}
 
 	int startoffset = nextcommittedvertex;
 
@@ -105,7 +109,7 @@ void opengl_SetDrawDefaults(void)
 	glGenBuffers(1, &drawbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
 	size_t buffersize = NUM_VERTS_PER_BUFFER * sizeof(gl_vertex);
-	glBufferData(GL_ARRAY_BUFFER, buffersize, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, buffersize, nullptr, GL_STREAM_DRAW);
 
 	//Init VAO and vertex state
 	glGenVertexArrays(1, &drawvao);
