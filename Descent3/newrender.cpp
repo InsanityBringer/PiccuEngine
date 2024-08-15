@@ -140,7 +140,7 @@ struct RoomMesh
 			Room_VertexBuffer.BindLightmap(element.lmhandle);
 
 			//And draw
-			Room_VertexBuffer.DrawIndexed(element.range);
+			Room_VertexBuffer.DrawIndexed(PrimitiveType::Triangles, element.range);
 		}
 	}
 
@@ -152,7 +152,7 @@ struct RoomMesh
 			Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
 
 			//And draw
-			Room_VertexBuffer.DrawIndexed(element.range);
+			Room_VertexBuffer.DrawIndexed(PrimitiveType::Triangles, element.range);
 		}
 	}
 
@@ -168,7 +168,7 @@ struct RoomMesh
 			Room_VertexBuffer.BindLightmap(element.lmhandle);
 
 			//And draw
-			Room_VertexBuffer.DrawIndexed(element.range);
+			Room_VertexBuffer.DrawIndexed(PrimitiveType::Triangles, element.range);
 		}
 	}
 
@@ -219,7 +219,7 @@ struct RoomMesh
 				rend_UpdateSpecular(&specblock);
 
 				//And draw
-				Room_VertexBuffer.DrawIndexed(element.range);
+				Room_VertexBuffer.DrawIndexed(PrimitiveType::Triangles, element.range);
 			}
 		}
 		else
@@ -265,7 +265,7 @@ struct RoomMesh
 				rend_UpdateSpecular(&specblock);
 
 				//And draw
-				Room_VertexBuffer.DrawIndexed(element.range);
+				Room_VertexBuffer.DrawIndexed(PrimitiveType::Triangles, element.range);
 			}
 		}
 	}
@@ -707,7 +707,7 @@ void RenderList::SetupLegacyFog(room& rp)
 
 bool RenderList::CheckFace(room& rp, face& fp, Frustum& frustum) const
 {
-	g3Codes cc = {};
+	/*g3Codes cc = {};
 	cc.cc_and = 0xFF;
 	for (int i = 0; i < fp.num_verts; i++)
 	{
@@ -719,7 +719,35 @@ bool RenderList::CheckFace(room& rp, face& fp, Frustum& frustum) const
 	if (cc.cc_and != 0)
 		return false;
 
-	return true;
+	return true;*/
+
+	//Just a behind check now
+	int numbehind = 0;
+	g3Plane cameraplane(EyeOrient.fvec, EyePos);
+
+	for (int i = 0; i < fp.num_verts; i++)
+	{
+		vector& pt = rp.verts[fp.face_verts[i]];
+		if (cameraplane.Dot(pt) < 0)
+			numbehind++;
+	}
+
+	return numbehind < fp.num_verts;
+}
+
+NewRenderWindow RenderList::GetWindowForFace(room& rp, face& fp) const
+{
+	NewRenderWindow window(INT_MAX, INT_MAX, 0, 0);
+
+	g3Point point = {};
+	for (int i = 0; i < fp.num_verts; i++)
+	{
+		g3_RotatePoint(&point, &rp.verts[fp.face_verts[i]]);
+		g3_ProjectPoint(&point);
+		window.Encompass(point.p3_sx, point.p3_sy);
+	}
+
+	return window;
 }
 
 void RenderList::MaybeUpdateFogPortal(int roomnum, face& fp)
@@ -751,12 +779,12 @@ void RenderList::MaybeUpdateFogPortal(int roomnum, face& fp)
 	}
 }
 
-void RenderList::AddRoom(int roomnum, Frustum& frustum)
+void RenderList::AddRoom(RenderListEntry& entry, Frustum& frustum)
 {
 	//Mark it as visible
-	VisibleRoomNums.push_back(roomnum);
+	VisibleRooms.push_back(entry);
 
-	room& rp = Rooms[roomnum];
+	room& rp = Rooms[entry.roomnum];
 
 	//Iterate all the portals to see if they're visible
 	for (int portalnum = 0; portalnum < rp.num_portals; portalnum++)
@@ -774,6 +802,10 @@ void RenderList::AddRoom(int roomnum, Frustum& frustum)
 		if (!CheckFace(rp, fp, frustum))
 			continue; 
 
+		NewRenderWindow portalwindow = GetWindowForFace(rp, fp);
+		if (!portalwindow.Clip(entry.window)) //Window off screen?
+			continue;
+
 		//Before the check if crp is already iterated, check if it is a fog room, and if it is, check if this portal is closer
 		if (crp.flags & RF_FOG)
 			MaybeUpdateFogPortal(croomnum, fp);
@@ -786,7 +818,7 @@ void RenderList::AddRoom(int roomnum, Frustum& frustum)
 
 		//Add this room to the future check list
 		RoomChecked[croomnum] = true;
-		PushRoom(croomnum);
+		PushRoom(croomnum, portalwindow);
 
 		//Is the room being checked external? If so, oops, gotta render that terrain
 		if (crp.flags & RF_EXTERNAL)
@@ -799,11 +831,11 @@ void RenderList::AddRoom(int roomnum, Frustum& frustum)
 void RenderList::PreDraw()
 {
 	RoomBlock roomblocks[100];
-	int renderrooms = std::min(100, (int)VisibleRoomNums.size());
+	int renderrooms = std::min(100, (int)VisibleRooms.size());
 
 	for (int nn = 0; nn < renderrooms; nn++)
 	{
-		int roomnum = VisibleRoomNums[nn];
+		int roomnum = VisibleRooms[nn].roomnum;
 		room& rp = Rooms[roomnum];
 		RoomBlock& roomblock = roomblocks[nn];
 
@@ -861,11 +893,11 @@ void RenderList::DrawWorld(int passnum)
 	rend_BindPipeline(passinfo.handle);
 
 	//TODO: The max count should be obtained from the renderer, since some platforms don't have a limit of 100 UBOs. 
-	int renderrooms = std::min(100, (int)VisibleRoomNums.size());
+	int renderrooms = std::min(100, (int)VisibleRooms.size());
 
 	for (int nn = 0; nn < renderrooms; nn++) //forward first to try to draw nearest rooms first. 
 	{
-		int roomnum = VisibleRoomNums[nn];
+		int roomnum = VisibleRooms[nn].roomnum;
 		room& rp = Rooms[roomnum];
 		ComputeRoomPulseLight(&Rooms[roomnum]);
 
@@ -916,7 +948,7 @@ RenderList::RenderList()
 	EyeRoomnum = 0;
 
 	//Reserve space in the vectors to their original limits, to establish a reasonable initial allocation
-	VisibleRoomNums.reserve(100);
+	VisibleRooms.reserve(100);
 	FogPortals.reserve(8);
 }
 
@@ -925,7 +957,7 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 	//Initialize the room checked list
 	RoomChecked.clear();
 	RoomChecked.resize(Highest_room_index + 1);
-	VisibleRoomNums.clear();
+	VisibleRooms.clear();
 	FogPortals.clear();
 
 	HasFoundTerrain = false;
@@ -936,10 +968,12 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 
 	Frustum viewFrustum(gTransformFull);
 
+	NewRenderWindow initialWindow(0, 0, Game_window_w - 1, Game_window_h - 1);
+
 	if (viewroomnum >= 0) //is a room?
 	{
 		RoomChecked[viewroomnum] = true;
-		AddRoom(viewroomnum, viewFrustum);
+		AddRoom(RenderListEntry(viewroomnum, initialWindow), viewFrustum);
 	}
 	else
 	{
@@ -949,8 +983,8 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 
 	while (PendingRooms())
 	{
-		int roomnum = PopRoom();
-		AddRoom(roomnum, viewFrustum);
+		RenderListEntry entry = PopRoom();
+		AddRoom(entry, viewFrustum);
 	}
 }
 
@@ -962,10 +996,10 @@ void RenderList::Draw()
 	rend_SetAlphaType(AT_ALWAYS);
 
 	//Walk the room render list for updates
-	for (int nn = 0; nn < VisibleRoomNums.size(); nn++)
+	for (int nn = 0; nn < VisibleRooms.size(); nn++)
 	{
 		MeshBuilder mesh;
-		int roomnum = VisibleRoomNums[nn];
+		int roomnum = VisibleRooms[nn].roomnum;
 		if (RoomNeedRemesh(roomnum))
 		{
 			RemeshRoom(mesh, roomnum);

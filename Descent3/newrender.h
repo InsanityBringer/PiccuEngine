@@ -18,11 +18,61 @@
 
 #pragma once
 #include <vector>
+#include <algorithm>
+#include <unordered_map>
 #include "vecmat.h"
 #include <queue>
 #include "3d.h"
 #include "pserror.h"
 #include "room.h"
+
+struct NewRenderWindow
+{
+	int left, top, right, bottom;
+
+	NewRenderWindow()
+	{
+		left = top = right = bottom = 0;
+	}
+
+	NewRenderWindow(int left, int top, int right, int bottom)
+		: left(left), top(top), right(right), bottom(bottom)
+	{
+	}
+
+	//Clips the window to another window. 
+	//Returns false if the window is entirely outside the other window, true if some is visible.
+	bool Clip(const NewRenderWindow& window)
+	{
+		if (left > window.right || top > window.bottom || right < window.left || bottom < window.top)
+			return false;
+
+		left = std::max(window.left, left);
+		top = std::max(window.top, top);
+		right = std::min(window.right, right);
+		bottom = std::min(window.bottom, bottom);
+
+		return true;
+	}
+
+	//Grows the window to contain another window.
+	void Encompass(const NewRenderWindow& window)
+	{
+		left = std::min(window.left, left);
+		top = std::min(window.top, top);
+		right = std::max(window.right, right);
+		bottom = std::max(window.bottom, bottom);
+	}
+
+	//Grows the window to encompass a single point in space
+	void Encompass(int x, int y)
+	{
+		left = std::min(x, left);
+		top = std::min(y, top);
+		right = std::max(x, right);
+		bottom = std::max(y, bottom);
+	}
+};
 
 struct FogPortalData
 {
@@ -31,15 +81,31 @@ struct FogPortalData
 	face* close_face;
 };
 
+struct RenderListEntry
+{
+	int roomnum;
+	NewRenderWindow window;
+
+	RenderListEntry()
+	{
+		roomnum = 0;
+	}
+
+	RenderListEntry(int roomnum, NewRenderWindow& window)
+		: roomnum(roomnum), window(window)
+	{
+	}
+};
+
 class RenderList
 {
 	//List of all rooms that are currently visible
-	std::vector<int> VisibleRoomNums;
+	std::vector<RenderListEntry> VisibleRooms;
 	//Transiently sized and updated to check if a room has been iterated into. 
 	std::vector<bool> RoomChecked;
 	std::vector<FogPortalData> FogPortals;
 	//Queue used for a room breadth first search
-	std::queue<int> RoomCheckList;
+	std::queue<RenderListEntry> RoomCheckList;
 	bool HasFoundTerrain;
 
 	vector EyePos;
@@ -55,24 +121,25 @@ class RenderList
 		return !RoomCheckList.empty();
 	}
 
-	void PushRoom(int roomnum)
+	void PushRoom(int roomnum, NewRenderWindow& window)
 	{
-		RoomCheckList.push(roomnum);
+		RoomCheckList.emplace(roomnum, window);
 	}
 
-	int PopRoom()
+	RenderListEntry PopRoom()
 	{
-		int check = RoomCheckList.front();
+		RenderListEntry check = RoomCheckList.front();
 		RoomCheckList.pop();
 
 		return check;
 	}
 
 	bool CheckFace(room& rp, face& fp, Frustum& frustum) const;
+	NewRenderWindow GetWindowForFace(room& rp, face& fp) const;
 	void MaybeUpdateFogPortal(int roomnum, face& fp);
 	//Adds a room to the visible list. Will check visibility of all portal faces,
 	//and add all visibile connected rooms to the room check queue. 
-	void AddRoom(int roomnum, Frustum& frustum);
+	void AddRoom(RenderListEntry& entry, Frustum& frustum);
 
 	void PreDraw();
 	void DrawWorld(int passnum);

@@ -37,13 +37,14 @@ extern bool Use_software_zbuffer;
 extern bool Render_all_external_rooms;		// If true, draw all the outside rooms
 extern bool Render_one_room_only;
 extern bool Render_inside_only;
-extern bool Render_use_newrender;
 
 #else
 #define Lighting_on 1
 #define Outline_mode 0
 #endif
 extern short use_opengl_1555_format;				//DAJ
+
+extern bool Render_use_newrender;
 
 #ifndef RELEASE
 extern int Mine_depth;

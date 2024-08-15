@@ -213,20 +213,35 @@ void VertexBuffer::BindLightmap(int lmhandle) const
 	opengl_MakeFilterTypeCurrent(lmhandle, MAP_TYPE_LIGHTMAP, 1);
 }
 
-void VertexBuffer::Draw() const
+static GLenum GetGLPrimitiveType(PrimitiveType mode)
 {
-	glDrawArrays(GL_TRIANGLES, 0, m_vertexcount);
+	switch (mode)
+	{
+	case PrimitiveType::Triangles:
+		return GL_TRIANGLES;
+	case PrimitiveType::Lines:
+		return GL_LINES;
+	case PrimitiveType::Points:
+		return GL_POINTS;
+	}
+
+	return GL_TRIANGLES; //blarg
 }
 
-void VertexBuffer::Draw(ElementRange range) const
+void VertexBuffer::Draw(PrimitiveType mode) const
+{
+	glDrawArrays(GetGLPrimitiveType(mode), 0, m_vertexcount);
+}
+
+void VertexBuffer::Draw(PrimitiveType mode, ElementRange range) const
 {
 	assert(range.offset + range.count <= m_vertexcount);
-	glDrawArrays(GL_TRIANGLES, range.offset, range.count);
+	glDrawArrays(GetGLPrimitiveType(mode), range.offset, range.count);
 }
 
-void VertexBuffer::DrawIndexed(ElementRange range) const
+void VertexBuffer::DrawIndexed(PrimitiveType mode, ElementRange range) const
 {
-	glDrawElements(GL_TRIANGLES, range.count, GL_UNSIGNED_INT, (const void*)(range.offset * sizeof(uint32_t)));
+	glDrawElements(GetGLPrimitiveType(mode), range.count, GL_UNSIGNED_INT, (const void*)(range.offset * sizeof(uint32_t)));
 }
 
 void VertexBuffer::Destroy()
@@ -264,13 +279,14 @@ void IndexBuffer::Initialize(uint32_t numindices, uint32_t datasize, void* data)
 		glGenBuffers(1, &m_name);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_name);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, datasize, data, m_dynamic_hint ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, datasize, data, m_dynamic_hint ? GL_STREAM_DRAW : GL_STATIC_DRAW);
 		m_size = datasize;
 	}
 	else
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_name);
-		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, datasize, data);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, datasize, data, m_dynamic_hint ? GL_STREAM_DRAW : GL_STATIC_DRAW); //always orphan, maybe faster for dynamic meshes?
+		//glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, datasize, data);
 	}
 }
 

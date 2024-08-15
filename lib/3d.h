@@ -48,7 +48,7 @@ struct g3Plane
 		}
 	}
 
-	g3Plane(vector& normal, vector& pt)
+	g3Plane(const vector& normal, const vector& pt)
 	{
 		x = normal.x;
 		y = normal.y;

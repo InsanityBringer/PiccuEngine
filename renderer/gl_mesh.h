@@ -72,6 +72,13 @@ struct ElementRange
 	}
 };
 
+enum class PrimitiveType
+{
+	Triangles,
+	Lines,
+	Points,
+};
+
 //Future note: These will need to become interfaces if Vulkan support is added. 
 //The same MeshBuilder should be usable across any API. 
 class VertexBuffer
@@ -95,11 +102,11 @@ public:
 	void BindLightmap(int lmhandle) const;
 
 	//Draws all the vertices in the buffer in one go
-	void Draw() const;
+	void Draw(PrimitiveType mode) const;
 	//Draws a range of vertices from the buffer.
-	void Draw(ElementRange range) const;
+	void Draw(PrimitiveType mode, ElementRange range) const;
 	//Draws a range of vertices from the buffer, from the range of the currently bound index buffer
-	void DrawIndexed(ElementRange range) const;
+	void DrawIndexed(PrimitiveType mode, ElementRange range) const;
 
 	void Destroy();
 };

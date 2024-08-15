@@ -119,7 +119,7 @@ struct TerrainDrawCell
 			Terrain_vertexbuffer.BindLightmap(element.lmhandle);
 
 			//And draw
-			Terrain_vertexbuffer.DrawIndexed(element.range);
+			Terrain_vertexbuffer.DrawIndexed(PrimitiveType::Triangles, element.range);
 		}
 	}
 };
