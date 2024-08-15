@@ -101,8 +101,8 @@ class RenderList
 {
 	//List of all rooms that are currently visible
 	std::vector<RenderListEntry> VisibleRooms;
-	//Transiently sized and updated to check if a room has been iterated into. 
-	std::vector<bool> RoomChecked;
+	//Transiently sized and updated to check if a room has been iterated into, and where it is in the render list. 
+	std::vector<int> RoomChecked;
 	std::vector<FogPortalData> FogPortals;
 	//Queue used for a room breadth first search
 	std::queue<RenderListEntry> RoomCheckList;
@@ -135,7 +135,9 @@ class RenderList
 	}
 
 	bool CheckFace(room& rp, face& fp, Frustum& frustum) const;
-	NewRenderWindow GetWindowForFace(room& rp, face& fp) const;
+	//Projects face fp and creates a window encompassing it. 
+	//If the window crosses nearclip, the window can't be reliably calculated, so instead the parent will be used. 
+	NewRenderWindow GetWindowForFace(room& rp, face& fp, NewRenderWindow& parent) const;
 	void MaybeUpdateFogPortal(int roomnum, face& fp);
 	//Adds a room to the visible list. Will check visibility of all portal faces,
 	//and add all visibile connected rooms to the room check queue. 

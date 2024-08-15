@@ -735,14 +735,18 @@ bool RenderList::CheckFace(room& rp, face& fp, Frustum& frustum) const
 	return numbehind < fp.num_verts;
 }
 
-NewRenderWindow RenderList::GetWindowForFace(room& rp, face& fp) const
+NewRenderWindow RenderList::GetWindowForFace(room& rp, face& fp, NewRenderWindow& parent) const
 {
 	NewRenderWindow window(INT_MAX, INT_MAX, 0, 0);
 
 	g3Point point = {};
 	for (int i = 0; i < fp.num_verts; i++)
 	{
-		g3_RotatePoint(&point, &rp.verts[fp.face_verts[i]]);
+		int codes = g3_RotatePoint(&point, &rp.verts[fp.face_verts[i]]);
+		//Shouldn't need to check andcodes, since a behind test was done earlier.
+		if (codes & CC_BEHIND)
+			return parent;
+
 		g3_ProjectPoint(&point);
 		window.Encompass(point.p3_sx, point.p3_sy);
 	}
@@ -781,9 +785,6 @@ void RenderList::MaybeUpdateFogPortal(int roomnum, face& fp)
 
 void RenderList::AddRoom(RenderListEntry& entry, Frustum& frustum)
 {
-	//Mark it as visible
-	VisibleRooms.push_back(entry);
-
 	room& rp = Rooms[entry.roomnum];
 
 	//Iterate all the portals to see if they're visible
@@ -802,7 +803,7 @@ void RenderList::AddRoom(RenderListEntry& entry, Frustum& frustum)
 		if (!CheckFace(rp, fp, frustum))
 			continue; 
 
-		NewRenderWindow portalwindow = GetWindowForFace(rp, fp);
+		NewRenderWindow portalwindow = GetWindowForFace(rp, fp, entry.window);
 		if (!portalwindow.Clip(entry.window)) //Window off screen?
 			continue;
 
@@ -810,14 +811,16 @@ void RenderList::AddRoom(RenderListEntry& entry, Frustum& frustum)
 		if (crp.flags & RF_FOG)
 			MaybeUpdateFogPortal(croomnum, fp);
 
-		//Don't iterate into a room if it's already been added to the visible room list.
-		//Unlike the original code, this means that a room may not be iterated into by the closest portal, but that's okay.
-		//Render order shouldn't need to be precise in the world of Z buffers
-		if (RoomChecked[croomnum])
+		//Don't iterate into a room if it's already been added to the visible room list, but do expand its portal window if needed.
+		if (RoomChecked[croomnum] != -1)
+		{
+			VisibleRooms[RoomChecked[croomnum]].window.Encompass(portalwindow);
 			continue;
+		}
 
 		//Add this room to the future check list
-		RoomChecked[croomnum] = true;
+		RoomChecked[croomnum] = VisibleRooms.size();
+		VisibleRooms.emplace_back(croomnum, portalwindow);
 		PushRoom(croomnum, portalwindow);
 
 		//Is the room being checked external? If so, oops, gotta render that terrain
@@ -956,7 +959,7 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 {
 	//Initialize the room checked list
 	RoomChecked.clear();
-	RoomChecked.resize(Highest_room_index + 1);
+	RoomChecked.resize(Highest_room_index + 1, -1);
 	VisibleRooms.clear();
 	FogPortals.clear();
 
@@ -972,7 +975,8 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 
 	if (viewroomnum >= 0) //is a room?
 	{
-		RoomChecked[viewroomnum] = true;
+		RoomChecked[viewroomnum] = 0;
+		VisibleRooms.emplace_back(viewroomnum, initialWindow);
 		AddRoom(RenderListEntry(viewroomnum, initialWindow), viewFrustum);
 	}
 	else
