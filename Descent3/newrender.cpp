@@ -754,28 +754,32 @@ NewRenderWindow RenderList::GetWindowForFace(room& rp, face& fp, NewRenderWindow
 	return window;
 }
 
-void RenderList::MaybeUpdateFogPortal(int roomnum, face& fp)
+void RenderList::MaybeUpdateFogPortal(int roomnum, int portalnum)
 {
 	room& rp = Rooms[roomnum];
+	face& fp = rp.faces[rp.portals[portalnum].portal_face];
 	auto it = FogPortals.begin();
 	FogPortalData* fogdata = nullptr;
 	while (it != FogPortals.end())
 	{
 		FogPortalData& data = *it;
 		if (data.roomnum == roomnum)
+		{
+			fogdata = &data;
 			break;
+		}
 		it++;
 	}
 
 	if (fogdata == nullptr)
 	{
 		//Couldn't find this room, so add it
-		FogPortals.push_back({ roomnum });
+		FogPortals.push_back({ roomnum, FLT_MAX });
 		fogdata = &FogPortals[FogPortals.size() - 1];
 	}
 
-	float distance = vm_DotProduct(&rp.verts[fp.face_verts[0]], &fp.normal);
-	distance = vm_DotProduct(&fp.normal, &EyePos) - distance;
+	float distance = -vm_DotProduct(&fp.normal, &rp.verts[fp.face_verts[0]]);
+	distance = vm_DotProduct(&fp.normal, &EyePos) + distance;
 	if (distance < fogdata->close_dist)
 	{
 		fogdata->close_dist = distance;
@@ -809,7 +813,7 @@ void RenderList::AddRoom(RenderListEntry& entry, Frustum& frustum)
 
 		//Before the check if crp is already iterated, check if it is a fog room, and if it is, check if this portal is closer
 		if (crp.flags & RF_FOG)
-			MaybeUpdateFogPortal(croomnum, fp);
+			MaybeUpdateFogPortal(croomnum, pp.cportal);
 
 		//Don't iterate into a room if it's already been added to the visible room list, but do expand its portal window if needed.
 		if (RoomChecked[croomnum] != -1)

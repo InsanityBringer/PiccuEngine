@@ -138,7 +138,7 @@ class RenderList
 	//Projects face fp and creates a window encompassing it. 
 	//If the window crosses nearclip, the window can't be reliably calculated, so instead the parent will be used. 
 	NewRenderWindow GetWindowForFace(room& rp, face& fp, NewRenderWindow& parent) const;
-	void MaybeUpdateFogPortal(int roomnum, face& fp);
+	void MaybeUpdateFogPortal(int roomnum, int portalnum);
 	//Adds a room to the visible list. Will check visibility of all portal faces,
 	//and add all visibile connected rooms to the room check queue. 
 	void AddRoom(RenderListEntry& entry, Frustum& frustum);
