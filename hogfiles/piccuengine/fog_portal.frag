@@ -12,18 +12,13 @@ layout(std140) uniform RoomBlock
 	vec4 fog_plane;
 } room;
 
-in vec2 outuv;
 in vec3 outpt;
-in float outlight;
-in float outalpha;
 flat in vec4 outplane;
 
 out vec4 color;
 
 void main()
 {
-	vec4 basecolor = texture(colortexture, outuv);
-	
 	float mag = 0;
 	if (room.not_in_room != 0)
 	{
@@ -38,6 +33,5 @@ void main()
 		mag = -outpt.z;
 	}
 	
-	color = mix(vec4(basecolor.rgb, 1.0), vec4(room.fog_color.rgb, 1.0f), clamp(mag / room.fog_distance, 0, 1)) * vec4(outlight, outlight, outlight, 1.0);
-	color.a *= outalpha;
+	color = vec4(room.fog_color.rgb, clamp(mag / room.fog_distance, 0, 1));
 }

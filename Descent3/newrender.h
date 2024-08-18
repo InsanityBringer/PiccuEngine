@@ -102,7 +102,7 @@ struct NewPostRender
 
 	friend bool operator<(const NewPostRender& l, const NewPostRender& r)
 	{
-		return l.z < r.z;
+		return l.z > r.z;
 	}
 };
 

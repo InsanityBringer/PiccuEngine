@@ -111,6 +111,13 @@ struct SpecularDrawElement
 	special_face* special;
 };
 
+enum class PostRenderMode
+{
+	Lit,
+	Unlit,
+	Fog
+};
+
 struct RoomMesh
 {
 	int roomnum;
@@ -152,7 +159,7 @@ struct RoomMesh
 			int portalnum = Rooms[roomnum].faces[element.facenum].portal_num;
 			if (portalnum != -1)
 			{
-				if (!(Rooms[roomnum].portals[portalnum].flags & PF_RENDER_FACES))
+				if (!(Rooms[roomnum].portals[portalnum].flags & PF_RENDER_FACES) && !(Rooms[roomnum].flags & RF_FOG))
 					continue;
 			}
 
@@ -161,12 +168,16 @@ struct RoomMesh
 		}
 	}
 
-	bool PostrenderLit(int num)
+	PostRenderMode PostrenderLit(int num)
 	{
-		if (Rooms[roomnum].faces[TransparentInteractions[num].facenum].flags & FF_LIGHTMAP)
-			return true;
+		int portalnum = Rooms[roomnum].faces[TransparentInteractions[num].facenum].portal_num;
+		if (portalnum != -1 && Rooms[roomnum].flags & RF_FOG && !(Rooms[roomnum].portals[portalnum].flags & PF_RENDER_FACES))
+			return PostRenderMode::Fog;
 
-		return false;
+		if (Rooms[roomnum].faces[TransparentInteractions[num].facenum].flags & FF_LIGHTMAP)
+			return PostRenderMode::Lit;
+
+		return PostRenderMode::Unlit;
 	}
 
 	void DrawPostrender(int num)
@@ -658,6 +669,7 @@ uint32_t lightmap_room_fog_handle = 0xFFFFFFFFu;
 uint32_t lightmap_room_specular_fog_handle = 0xFFFFFFFFu;
 uint32_t unlit_room_handle = 0xFFFFFFFFu;
 uint32_t unlit_room_fog_handle = 0xFFFFFFFFu;
+uint32_t fog_portal_handle = 0xFFFFFFFFu;
 
 //Called during LoadLevel, builds meshes for every room. 
 void MeshRooms()
@@ -691,6 +703,11 @@ void MeshRooms()
 	{
 		unlit_room_fog_handle = rend_GetPipelineByName("unlit_room_fog");
 		assert(unlit_room_fog_handle != 0xFFFFFFFFu);
+	}
+	if (fog_portal_handle == 0xFFFFFFFFu)
+	{
+		fog_portal_handle = rend_GetPipelineByName("fog_portal");
+		assert(fog_portal_handle != 0xFFFFFFFFu);
 	}
 	MeshBuilder mesh;
 	FreeRoomMeshes();
@@ -1102,17 +1119,19 @@ void RenderList::DrawPostrenders()
 		if (postrender.type == NewPostRenderType::Wall)
 		{
 			uint32_t shaderhandle = lightmap_room_handle;
-			bool lit = Room_meshes[lastroomnum].PostrenderLit(postrender.elementnum);
-			if (Rooms[lastroomnum].flags & RF_FOG)
+			PostRenderMode mode = Room_meshes[lastroomnum].PostrenderLit(postrender.elementnum);
+			if (mode == PostRenderMode::Fog)
+				shaderhandle = fog_portal_handle;
+			else if (Rooms[lastroomnum].flags & RF_FOG)
 			{
-				if (lit)
+				if (mode == PostRenderMode::Lit)
 					shaderhandle = lightmap_room_fog_handle;
 				else
 					shaderhandle = unlit_room_fog_handle;
 			}
 			else
 			{
-				if (lit)
+				if (mode == PostRenderMode::Lit)
 					shaderhandle = lightmap_room_handle;
 				else
 					shaderhandle = unlit_room_handle;
