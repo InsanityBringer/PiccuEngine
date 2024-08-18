@@ -81,6 +81,31 @@ struct FogPortalData
 	face* close_face;
 };
 
+enum class NewPostRenderType
+{
+	//Normal transparent wall
+	Wall,
+	//Untextured wall that's just fog
+	FogWall,
+	//Particle effect
+	VisEffect,
+	//Object of any kind
+	Object
+};
+
+struct NewPostRender
+{
+	NewPostRenderType type;
+	int roomnum;
+	int elementnum;
+	float z;
+
+	friend bool operator<(const NewPostRender& l, const NewPostRender& r)
+	{
+		return l.z < r.z;
+	}
+};
+
 struct RenderListEntry
 {
 	int roomnum;
@@ -101,15 +126,21 @@ class RenderList
 {
 	//List of all rooms that are currently visible
 	std::vector<RenderListEntry> VisibleRooms;
-	//Transiently sized and updated to check if a room has been iterated into, and where it is in the render list. 
+	//Transiently sized and updated to check if a room has been iterated into,
+	//and where it is in the render list. 
 	std::vector<int> RoomChecked;
 	std::vector<FogPortalData> FogPortals;
+	//Things that need to be rendered after the solid world pass,
+	//sorted by approximate z depth. 
+	std::vector<NewPostRender> PostRenders;
 	//Queue used for a room breadth first search
 	std::queue<RenderListEntry> RoomCheckList;
 	bool HasFoundTerrain;
 
 	vector EyePos;
 	matrix EyeOrient;
+	//plane used for determination of postrender z
+	g3Plane EyePlane;
 	int EyeRoomnum;
 
 	void SetupLegacyFog(room& rp);
@@ -145,6 +176,7 @@ class RenderList
 
 	void PreDraw();
 	void DrawWorld(int passnum);
+	void DrawPostrenders();
 public:
 	RenderList();
 	//Gathers all visible interactions
@@ -154,6 +186,13 @@ public:
 
 	//Draws the entire render list to the current view.
 	void Draw();
+
+	void AddPostrender(NewPostRenderType type, int roomnum, int elementnum, float z);
+
+	const g3Plane& GetEyePlane() const
+	{
+		return EyePlane;
+	}
 };
 
 //Called after LoadLevel, initializes the newrenderer for the current level.

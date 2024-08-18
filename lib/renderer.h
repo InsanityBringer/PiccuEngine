@@ -121,6 +121,7 @@ enum texture_type
 #define ATF_CONSTANT	1		// Take constant alpha into account
 #define ATF_TEXTURE		2		// Take texture alpha into account
 #define ATF_VERTEX		4		// Take vertex alpha into account
+#define ATF_SATURATE	8		// Use additive blending
 
 // Alpha types
 #define	AT_ALWAYS						0	// Alpha is always 255 (1.0)					
@@ -463,6 +464,8 @@ void rend_UseShaderTest(void);
 
 //Revert to non-shader rendering
 void rend_EndShaderTest(void);
+
+void rend_SetCullFace(bool state);
 
 //Shader API 
 //Eventually I would like to remove this and make ALL world rendering part of renderer, instead of having main handle it.

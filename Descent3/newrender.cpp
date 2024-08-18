@@ -94,6 +94,15 @@ struct RoomDrawElement
 	ElementRange range;
 };
 
+struct PostDrawElement
+{
+	int facenum;
+	int texturenum;
+	int lmhandle;
+	vector avg;
+	ElementRange range;
+};
+
 struct SpecularDrawElement
 {
 	int texturenum;
@@ -109,6 +118,7 @@ struct RoomMesh
 	std::vector<RoomDrawElement> UnlitInteractions;
 	std::vector<SpecularDrawElement> SpecInteractions;
 	std::vector<RoomDrawElement> MirrorInteractions;
+	std::vector<PostDrawElement> TransparentInteractions;
 	//One of these for each face.
 	//If the state of FacePrevStates[facenum] != roomptr->faces[facenum], remesh this part of the world. Sigh.
 	std::vector<FacePrevState> FacePrevStates;
@@ -123,12 +133,52 @@ struct RoomMesh
 		UnlitInteractions.clear();
 		SpecInteractions.clear();
 		MirrorInteractions.clear();
+		TransparentInteractions.clear();
 	}
 
 	void Reset()
 	{
 		ResetInteractions();
 		FacePrevStates.clear();
+	}
+
+	void GetPostrenders(RenderList& list)
+	{
+		g3Plane eyeplane = list.GetEyePlane();
+		for (int i = 0; i < TransparentInteractions.size(); i++)
+		{
+			PostDrawElement& element = TransparentInteractions[i];
+			//Check if it's a portal, and if so, if it's actually visible
+			int portalnum = Rooms[roomnum].faces[element.facenum].portal_num;
+			if (portalnum != -1)
+			{
+				if (!(Rooms[roomnum].portals[portalnum].flags & PF_RENDER_FACES))
+					continue;
+			}
+
+			float z = eyeplane.Dot(element.avg);
+			list.AddPostrender(NewPostRenderType::Wall, roomnum, i, z);
+		}
+	}
+
+	bool PostrenderLit(int num)
+	{
+		if (Rooms[roomnum].faces[TransparentInteractions[num].facenum].flags & FF_LIGHTMAP)
+			return true;
+
+		return false;
+	}
+
+	void DrawPostrender(int num)
+	{
+		PostDrawElement& element = TransparentInteractions[num];
+
+		//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
+		Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+		Room_VertexBuffer.BindLightmap(element.lmhandle);
+
+		//And draw
+		Room_VertexBuffer.DrawIndexed(PrimitiveType::Triangles, element.range);
 	}
 
 	void DrawLit()
@@ -334,9 +384,9 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 		//Generate indicies as a triangle fan
 		for (int i = 2; i < fp.num_verts; i++)
 		{
-			triindices[0] = first_index;
+			triindices[2] = first_index;
 			triindices[1] = first_index + i - 1;
-			triindices[2] = first_index + i;
+			triindices[0] = first_index + i;
 			mesh.SetIndicies(3, triindices);
 		}
 	}
@@ -348,6 +398,73 @@ void AddFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements,
 	element.range = mesh.EndIndices();
 	element.range.offset += firstIndex;
 	interactions.push_back(element);
+}
+
+void AddPostFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements, std::vector<PostDrawElement>& interactions, room& rp, int indexOffset, int firstIndex)
+{
+	if (elements.empty())
+		return;
+
+	int lasttmap = -1;
+	int lastlm = -1;
+	int lastfacenum = -1;
+	bool firsttime = true;
+	int triindices[3];
+	RendVertex vert;
+	float alpha = 1;
+
+	vector avg = {};
+	for (SortableElement& element : elements)
+	{
+		mesh.BeginVertices();
+		mesh.BeginIndices();
+		lasttmap = element.texturehandle;
+		lastlm = element.lmhandle;
+		lastfacenum = element.element;
+
+		vert.uslide = GameTextures[lasttmap].slide_u;
+		vert.vslide = GameTextures[lasttmap].slide_v;
+
+		alpha = GameTextures[element.texturehandle].alpha;
+		avg.x = avg.y = avg.z = 0;
+
+		face& fp = rp.faces[element.element];
+
+		int first_index = mesh.NumVertices() + indexOffset;
+		for (int i = 0; i < fp.num_verts; i++)
+		{
+			roomUVL uvs = fp.face_uvls[i];
+			vert.position = rp.verts[fp.face_verts[i]];
+			vert.normal = fp.normal; //oh no, no support for phong shading..
+			vert.r = vert.g = vert.b = 255;
+			vert.a = (ubyte)(std::min(1.f, std::max(0.f, alpha)) * 255);
+			vert.u1 = uvs.u; vert.v1 = uvs.v;
+			vert.u2 = uvs.u2; vert.v2 = uvs.v2;
+
+			avg += vert.position;
+
+			mesh.AddVertex(vert);
+		}
+
+		//Generate indicies as a triangle fan
+		for (int i = 2; i < fp.num_verts; i++)
+		{
+			triindices[2] = first_index;
+			triindices[1] = first_index + i - 1;
+			triindices[0] = first_index + i;
+			mesh.SetIndicies(3, triindices);
+		}
+
+		mesh.EndVertices();
+		PostDrawElement element;
+		element.facenum = lastfacenum;
+		element.texturenum = lasttmap;
+		element.lmhandle = lastlm;
+		element.range = mesh.EndIndices();
+		element.range.offset += firstIndex;
+		element.avg = avg / (float)rp.faces[lastfacenum].num_verts;
+		interactions.push_back(element);
+	}
 }
 
 void AddSpecFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& elements, std::vector<SpecularDrawElement>& interactions, room& rp, int indexOffset, int firstIndex)
@@ -405,9 +522,9 @@ void AddSpecFacesToBuffer(MeshBuilder& mesh, std::vector<SortableElement>& eleme
 		//Generate indicies as a triangle fan
 		for (int i = 2; i < fp.num_verts; i++)
 		{
-			triindices[0] = first_index;
+			triindices[2] = first_index;
 			triindices[1] = first_index + i - 1;
-			triindices[2] = first_index + i;
+			triindices[0] = first_index + i;
 			mesh.SetIndicies(3, triindices);
 		}
 
@@ -438,7 +555,7 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 	std::vector<SortableElement> faces_unlit;
 	std::vector<SortableElement> faces_spec;
 	std::vector<SortableElement> faces_mirror;
-	std::vector<int> faces_special;
+	std::vector<SortableElement> faces_trans;
 
 	RoomMesh& roommesh = Room_meshes[roomnum];
 	if (roommesh.FacePrevStates.size() != rp.num_faces)
@@ -461,23 +578,25 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 		face& fp = rp.faces[i];
 		roommesh.FacePrevStates[i].flags = fp.flags;
 		roommesh.FacePrevStates[i].tmap = fp.tmap;
-		if (!FaceIsStatic(rp, fp))
-		{
-			faces_special.push_back(i);
-			continue;
-		}
 
 		//blarg
 		int bm_handle = GetTextureBitmap(fp.tmap, 0);
 		int alphatype = GetFaceAlpha(fp, -1);
-		/*if ((alphatype & (ATF_CONSTANT | ATF_TEXTURE)) != 0)
-			continue;
-		else*/
-		{
-			int tmap = fp.tmap;
-			if (fp.flags & FF_DESTROYED && GameTextures[tmap].flags & TF_DESTROYABLE)
-				tmap = GameTextures[tmap].destroy_handle;
 
+		int tmap = fp.tmap;
+		if (fp.flags & FF_DESTROYED && GameTextures[tmap].flags & TF_DESTROYABLE)
+			tmap = GameTextures[tmap].destroy_handle;
+
+		if (fp.portal_num != -1)
+		{
+			faces_trans.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+		}
+		else if ((alphatype & (ATF_CONSTANT | ATF_TEXTURE)) != 0)
+		{
+			faces_trans.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+		}
+		else
+		{
 			//Not a postrender, determine if it is unlit or lit. 
 			if (rp.mirror_face != -1 && tmap == mirror_tex_hack)
 			{
@@ -518,6 +637,9 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 	//sort specular faces to try to minimize texture state thrashing. Even though that's trivial compared to the buffer state thrashing. 
 	std::sort(faces_spec.begin(), faces_spec.end());
 	AddSpecFacesToBuffer(mesh, faces_spec, Room_meshes[roomnum].SpecInteractions, rp, indexOffset, firstIndex);
+
+	std::sort(faces_trans.begin(), faces_trans.end());
+	AddPostFacesToBuffer(mesh, faces_trans, Room_meshes[roomnum].TransparentInteractions, rp, indexOffset, firstIndex);
 }
 
 void FreeRoomMeshes()
@@ -534,6 +656,8 @@ uint32_t lightmap_room_handle = 0xFFFFFFFFu;
 uint32_t lightmap_specular_handle = 0xFFFFFFFFu;
 uint32_t lightmap_room_fog_handle = 0xFFFFFFFFu;
 uint32_t lightmap_room_specular_fog_handle = 0xFFFFFFFFu;
+uint32_t unlit_room_handle = 0xFFFFFFFFu;
+uint32_t unlit_room_fog_handle = 0xFFFFFFFFu;
 
 //Called during LoadLevel, builds meshes for every room. 
 void MeshRooms()
@@ -557,6 +681,16 @@ void MeshRooms()
 	{
 		lightmap_room_specular_fog_handle = rend_GetPipelineByName("lightmap_room_specular_fog");
 		assert(lightmap_room_specular_fog_handle != 0xFFFFFFFFu);
+	}
+	if (unlit_room_handle == 0xFFFFFFFFu)
+	{
+		unlit_room_handle = rend_GetPipelineByName("unlit_room");
+		assert(unlit_room_handle != 0xFFFFFFFFu);
+	}
+	if (unlit_room_fog_handle == 0xFFFFFFFFu)
+	{
+		unlit_room_fog_handle = rend_GetPipelineByName("unlit_room_fog");
+		assert(unlit_room_fog_handle != 0xFFFFFFFFu);
 	}
 	MeshBuilder mesh;
 	FreeRoomMeshes();
@@ -886,6 +1020,8 @@ void RenderList::PreDraw()
 				fp.renderframe = FrameCount & 0xFF;
 			}
 		}
+
+		Room_meshes[roomnum].GetPostrenders(*this);
 	}
 
 	rend_UpdateFogBrightness(roomblocks, renderrooms);
@@ -947,6 +1083,52 @@ void RenderList::DrawWorld(int passnum)
 	}
 }
 
+void RenderList::DrawPostrenders()
+{
+	//let's try to avoid juggling state as much as possible.. it's worth a shot
+	int lastroomnum = -1;
+	uint32_t lastshaderhandle = UINT32_MAX;
+
+	rend_SetAlphaType(AT_CONSTANT);
+
+	for (NewPostRender& postrender : PostRenders)
+	{
+		if (postrender.roomnum != lastroomnum)
+		{
+			rend_SetCurrentRoomNum(RoomChecked[postrender.roomnum]);
+			lastroomnum = postrender.roomnum;
+		}
+
+		if (postrender.type == NewPostRenderType::Wall)
+		{
+			uint32_t shaderhandle = lightmap_room_handle;
+			bool lit = Room_meshes[lastroomnum].PostrenderLit(postrender.elementnum);
+			if (Rooms[lastroomnum].flags & RF_FOG)
+			{
+				if (lit)
+					shaderhandle = lightmap_room_fog_handle;
+				else
+					shaderhandle = unlit_room_fog_handle;
+			}
+			else
+			{
+				if (lit)
+					shaderhandle = lightmap_room_handle;
+				else
+					shaderhandle = unlit_room_handle;
+			}
+
+			if (shaderhandle != lastshaderhandle)
+			{
+				lastshaderhandle = shaderhandle;
+				rend_BindPipeline(shaderhandle);
+			}
+
+			Room_meshes[lastroomnum].DrawPostrender(postrender.elementnum);
+		}
+	}
+}
+
 RenderList::RenderList() 
 	: EyePos{},
 	EyeOrient{}
@@ -957,6 +1139,7 @@ RenderList::RenderList()
 	//Reserve space in the vectors to their original limits, to establish a reasonable initial allocation
 	VisibleRooms.reserve(100);
 	FogPortals.reserve(8);
+	PostRenders.reserve(3000);
 }
 
 void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroomnum)
@@ -966,12 +1149,15 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 	RoomChecked.resize(Highest_room_index + 1, -1);
 	VisibleRooms.clear();
 	FogPortals.clear();
+	PostRenders.clear();
 
 	HasFoundTerrain = false;
 
 	EyePos = eye_pos;
 	EyeOrient = eye_orient;
 	EyeRoomnum = viewroomnum;
+
+	EyePlane = g3Plane(eye_orient.fvec, eye_pos);
 
 	Frustum viewFrustum(gTransformFull);
 
@@ -1002,6 +1188,7 @@ void RenderList::Draw()
 	rend_SetLighting(LS_GOURAUD);
 	rend_SetWrapType(WT_WRAP);
 	rend_SetAlphaType(AT_ALWAYS);
+	rend_SetCullFace(true);
 
 	//Walk the room render list for updates
 	for (int nn = 0; nn < VisibleRooms.size(); nn++)
@@ -1023,5 +1210,15 @@ void RenderList::Draw()
 	DrawWorld(3);
 	DrawWorld(5);
 
+	std::sort(PostRenders.begin(), PostRenders.end());
+	DrawPostrenders();
+
 	rendTEMP_UnbindVertexBuffer();
+
+	rend_SetCullFace(false);
+}
+
+void RenderList::AddPostrender(NewPostRenderType type, int roomnum, int elementnum, float z)
+{
+	PostRenders.push_back(NewPostRender{ type, roomnum, elementnum, z });
 }

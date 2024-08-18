@@ -44,6 +44,8 @@ ShaderDefinition gl_shaderdefs[] =
 	{"lightmapped_specular", SF_HASCOMMON | SF_HASSPECULAR, "lightmap_specular.vert", "lightmap_specular.frag"},
 	{"lightmap_room_fog", SF_HASCOMMON | SF_HASROOM, "lightmap_room_fog.vert", "lightmap_room_fog.frag"},
 	{"lightmap_room_specular_fog", SF_HASCOMMON | SF_HASROOM | SF_HASSPECULAR, "lightmap_room_specular_fog.vert", "lightmap_room_specular_fog.frag"},
+	{"unlit_room", SF_HASCOMMON, "unlit_room.vert", "unlit_room.frag"},
+	{"unlit_room_fog", SF_HASCOMMON | SF_HASROOM, "unlit_room_fog.vert", "unlit_room_fog.frag"},
 };
 
 #define NUM_SHADERDEFS sizeof(gl_shaderdefs) / sizeof(gl_shaderdefs[0])
@@ -157,6 +159,10 @@ void rend_UpdateFogBrightness(RoomBlock* roomstate, int numrooms)
 void rend_SetCurrentRoomNum(int roomblocknum)
 {
 	glBindBufferRange(GL_UNIFORM_BUFFER, ROOM_BINDING, fogbuffername, roomblocknum * sizeof(RoomBlock), sizeof(RoomBlock));
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
 }
 
 void GL_UpdateLegacyBlock(float* projection, float* modelview)

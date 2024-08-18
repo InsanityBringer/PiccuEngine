@@ -13,6 +13,5 @@ out vec4 color;
 void main()
 {
 	vec4 basecolor = texture(colortexture, outuv);
-	vec4 lmcolor = texture(lightmaptexture, outuv2);
-	color = vec4(basecolor.rgb * lmcolor.rgb * outlight, basecolor.a * outalpha);
+	color = vec4(basecolor.rgb * outlight, basecolor.a * outalpha);
 }

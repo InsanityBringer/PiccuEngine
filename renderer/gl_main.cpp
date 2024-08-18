@@ -1075,3 +1075,11 @@ void rend_EndShaderTest(void)
 {
 	//glUseProgram(0);
 }
+
+void rend_SetCullFace(bool state)
+{
+	if (state)
+		glEnable(GL_CULL_FACE);
+	else
+		glDisable(GL_CULL_FACE);
+}
