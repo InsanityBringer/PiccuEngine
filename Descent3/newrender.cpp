@@ -746,7 +746,7 @@ static bool RoomNeedRemesh(int roomnum)
 static void RemeshRoom(MeshBuilder& mesh, int roomnum)
 {
 	mprintf((0, "RemeshRoom: Updating room %d\n", roomnum));
-	mesh.Destroy();
+	mesh.Reset();
 	UpdateRoomMesh(mesh, roomnum, Room_meshes[roomnum].FirstVertex, Room_meshes[roomnum].FirstIndex);
 
 	mesh.UpdateVertices(Room_VertexBuffer, Room_meshes[roomnum].FirstVertexOffset);

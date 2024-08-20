@@ -99,6 +99,12 @@ void MeshBuilder::BuildIndicies(IndexBuffer& buffer)
 	buffer.Initialize(m_indicies.size(), m_indicies.size() * sizeof(m_indicies[0]), m_indicies.data());
 }
 
+ElementRange MeshBuilder::AppendVertices(VertexBuffer& buffer)
+{
+	uint32_t offset = buffer.Append(m_vertices.size() * sizeof(m_vertices[0]), m_vertices.data());
+	return ElementRange(offset, m_vertexstartcount);
+}
+
 void MeshBuilder::UpdateVertices(VertexBuffer& buffer, uint32_t offset)
 {
 	buffer.Update(offset, m_vertices.size() * sizeof(m_vertices[0]), m_vertices.data());
@@ -107,11 +113,6 @@ void MeshBuilder::UpdateVertices(VertexBuffer& buffer, uint32_t offset)
 void MeshBuilder::UpdateIndicies(IndexBuffer& buffer, uint32_t offset)
 {
 	buffer.Update(offset, m_indicies.size() * sizeof(m_indicies[0]), m_indicies.data());
-}
-
-void MeshBuilder::Destroy()
-{
-	Reset();
 }
 
 void MeshBuilder::Reset()
@@ -132,6 +133,7 @@ VertexBuffer::VertexBuffer(bool allow_dynamic, bool dynamic_hint)
 	m_vaoname = 0;
 	m_size = 0;
 	m_vertexcount = 0;
+	m_appendcounter = 0;
 	m_dynamic_hint = dynamic_hint;
 }
 
@@ -143,10 +145,11 @@ void VertexBuffer::Initialize(uint32_t numvertices, uint32_t datasize, void* dat
 		glGenBuffers(1, &m_name);
 	}
 
+	m_appendcounter = 0;
 	glBindVertexArray(m_vaoname);
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_name);
-	glBufferData(GL_ARRAY_BUFFER, datasize, data, m_dynamic_hint ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, datasize, data, m_dynamic_hint ? GL_STREAM_DRAW : GL_STATIC_DRAW);
 
 	//Create the standard vertex attributes
 	//Position
@@ -191,6 +194,25 @@ void VertexBuffer::Update(uint32_t byteoffset, uint32_t datasize, void* data)
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_name);
 	glBufferSubData(GL_ARRAY_BUFFER, byteoffset, datasize, data);
+}
+
+uint32_t VertexBuffer::Append(uint32_t size, void* data)
+{
+	assert(m_vaoname != 0);
+	assert(size <= m_size);
+	glBindVertexArray(m_vaoname);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_name);
+	if (m_appendcounter + size > m_size)
+	{
+		m_appendcounter = 0;
+		glBufferData(GL_ARRAY_BUFFER, m_size, nullptr, m_dynamic_hint ? GL_STREAM_DRAW : GL_STATIC_DRAW);
+	}
+	glBufferSubData(GL_ARRAY_BUFFER, m_appendcounter, size, data);
+	uint32_t initial = m_appendcounter;
+	m_appendcounter += size;
+
+	return initial;
 }
 
 void VertexBuffer::Bind() const

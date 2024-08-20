@@ -38,12 +38,7 @@
 #include "psrand.h"
 #include "mem.h"
 
-//DAJ vis_effect VisEffects[max_vis_effects];
-//DAJ ushort VisDeadList[max_vis_effects];
-//DAJ static short Vis_free_list[max_vis_effects];
-
 vis_effect* VisEffects = NULL;
-
 static short* Vis_free_list = NULL;
 ushort* VisDeadList = NULL;
 

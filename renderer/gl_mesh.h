@@ -86,6 +86,7 @@ class VertexBuffer
 	uint32_t m_name, m_vaoname;
 	uint32_t m_size;
 	uint32_t m_vertexcount;
+	uint32_t m_appendcounter;
 	bool m_dynamic_hint;
 public:
 	VertexBuffer();
@@ -95,6 +96,10 @@ public:
 	//Performs a dynamic update of part of the vertex buffer.
 	//This cannot change the size of the underlying buffer object.
 	void Update(uint32_t byteoffset, uint32_t datasize, void* data);
+	//Used for streaming buffers, appends data to the end of the buffer.
+	//When the buffer fills, will orphan the previous one to avoid sync if possible. 
+	//Buffer must have been initialized before using. Returns offset of data. 
+	uint32_t Append(uint32_t size, void* data);
 	void Bind() const;
 
 	//TODO: Temp interface to load textures
@@ -169,12 +174,13 @@ public:
 	void BuildVertices(VertexBuffer& buffer);
 	void BuildIndicies(IndexBuffer& buffer);
 
+	//Appends vertices to the vertex buffer, used for streaming buffers. 
+	ElementRange AppendVertices(VertexBuffer& buffer);
+
 	void UpdateVertices(VertexBuffer& buffer, uint32_t offset);
 	void UpdateIndicies(IndexBuffer& buffer, uint32_t offset);
 
-	void Destroy();
-
-	//For dynamic meshes
+	//Clears out the current mesh, allowing it to be reused. 
 	void Reset();
 
 
