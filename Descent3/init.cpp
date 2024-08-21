@@ -101,7 +101,6 @@
 	#include "editor\HFile.h"
 	#include "editor\d3edit.h"
 	#include "slew.h"
-	#include "gr.h"
 	#define INIT_MESSAGE(c) SplashMessage c	
 #else
 	void IntroScreen();
@@ -1025,20 +1024,9 @@ void InitGraphics(bool editor)
 	if (!InitTextures())
 		Error("Failed to initialize texture system.");
 
-#ifdef EDITOR
-	char *driver = "GDIX";
-	
-	if (!ddgr_Init(Descent, driver, editor ? false: true)) 
-		Error("DDGR graphic system init failed.");
-
-// Init our renderer
-	grSurface::init_system();
-	rend_Init (RENDERER_SOFTWARE_16BIT, Descent,NULL);
-	Desktop_surf = new grSurface(0,0,0, SURFTYPE_VIDEOSCREEN, 0);
-#else
 	INIT_MESSAGE("Loading fonts.");
 	LoadAllFonts();
-#endif
+
 	Graphics_init = true;
 }
 

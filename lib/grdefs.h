@@ -15,37 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/grdefs.h $
- * $Revision: 8 $
- * $Date: 10/21/98 11:54p $
- * $Author: Samir $
- *
- *	
- *
- * $Log: /DescentIII/Main/lib/grdefs.h $
- * 
- * 8     10/21/98 11:54p Samir
- * added GR_NULL
- * 
- * 7     5/06/98 4:33p Samir
- * added fixed screen width and height to grdefs.h (default res.)
- * 
- * 6     4/23/98 6:38p Jason
- * made bitmaps use 1555 format
- * 
- * 5     12/29/97 5:50p Samir
- * Moved GR_COLOR_CHAR to grdefs.h from gr.h.
- * 
- * 4     12/22/97 7:39p Samir
- * Moved color constants from gr.h to grdefs.h
- * 
- * 3     12/22/97 7:34p Samir
- * Added transparent color info.
- * 
- * $NoKeywords: $
- */
-
 
 #ifndef GRDEFS_H
 #define GRDEFS_H

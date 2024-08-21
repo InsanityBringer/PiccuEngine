@@ -59,8 +59,8 @@ ENDIF()
 IF (WIN32)
 	SET(D3_GAMEDIR "c:/games/Descent3/")	
 	set (CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "lib/win" "lib/win/directx" "thirdparty/OpenAL/libs/Win32") 
-	SET(CMAKE_CXX_FLAGS_DEBUG "/Od /EHsc /RTC1 /MTd /MP /W3 /nologo /c /ZI /TP /errorReport:prompt")
-	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL /FD /EHsc /MT /W3 /nologo /c /Zi /TP /errorReport:prompt")
+	SET(CMAKE_CXX_FLAGS_DEBUG "/Od /EHsc /RTC1 /MTd /MP /W3 /nologo /c /Zi /errorReport:prompt")
+	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL /FD /EHsc /MT /W3 /nologo /c /Zi /errorReport:prompt")
 	
 	SET(CMAKE_MODULE_LINKER_FLAGS "/SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
 	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DMONO -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
@@ -70,10 +70,8 @@ IF (WIN32)
 	SET(CMAKE_FIND_LIBRARY_PREFIXES "")
 	SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
 	
-	FIND_LIBRARY(DSOUND_LIBRARY NAMES dsound "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
 	FIND_LIBRARY(DINPUT_LIBRARY NAMES dinput "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
 	FIND_LIBRARY(DXGUID_LIBRARY NAMES dxguid "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
-	FIND_LIBRARY(DDRAW_LIBRARY NAMES ddraw "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
 	#TODO: May need to find OpenAL64 eventually
 	FIND_LIBRARY(OPENAL_LIBRARY NAMES openal32 "${CMAKE_SOURCE_DIR}/thirdparty/OpenAL/libs" "${CMAKE_SOURCE_DIR}/thirdparty/OpenAL/libs/Win32")
 ENDIF ()
@@ -92,7 +90,6 @@ ADD_SUBDIRECTORY (cfile)
 ADD_SUBDIRECTORY (d3music)
 
 IF (WIN32)
-ADD_SUBDIRECTORY (dd_grwin32)
 ADD_SUBDIRECTORY (ddio_win)
 ADD_SUBDIRECTORY (win32)
 ADD_SUBDIRECTORY (dd_sndlib)
@@ -183,7 +180,6 @@ SET (DESCENT3_SOURCES
 IF (WIN32)
 SET (DESCENT3_SOURCES
 	${DESCENT3_SOURCES}
-	${DD_GRWIN32_SOURCES}
 	${DDIO_WIN_SOURCES}
 	${WIN32_SOURCES}
 	${DD_SNDLIB_SOURCES}
@@ -202,7 +198,7 @@ add_executable(PiccuEngine ${DESCENT3_SOURCES})
 	
 IF (WIN32)
 SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib wininet.lib
-	${DSOUND_LIBRARY} ${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${DDRAW_LIBRARY} ${OPENAL_LIBRARY})
+	${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${OPENAL_LIBRARY})
 	target_link_options(PiccuEngine PUBLIC /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC)
 ENDIF()
 
@@ -234,7 +230,6 @@ source_group("AudioEncode" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/Audio
 source_group("bitmap" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/bitmap/.+")
 source_group("cfile" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/cfile/.+")
 source_group("d3music" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/d3music/.+")
-source_group("dd_grwin32" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_grwin32/.+")
 source_group("dd_lnxsound" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_lnxsound/.+")
 source_group("dd_sndlib" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_sndlib/.+")
 source_group("ddio_common" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_common/.+")
