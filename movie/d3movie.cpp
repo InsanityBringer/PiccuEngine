@@ -55,7 +55,8 @@
 
 //#define NO_MOVIES
 
-namespace {
+namespace 
+{
 	MovieFrameCallback_fp Movie_callback = NULL;	
 	char                  MovieDir[512];
 	char                  SoundCardName[512];
@@ -63,489 +64,8 @@ namespace {
 	int                   Movie_bm_handle = -1;
 	uint                  Movie_current_framenum = 0;
 	bool                  Movie_looping = false;
-
-
-
-
-#ifndef NO_MOVIES
-
-#if 0
-#ifdef WIN32
-class MovieSoundBuffer : public ISysSoundBuffer
-	{
-	private:
-		LPDIRECTSOUNDBUFFER m_pBuffer;
-
-	public:
-		MovieSoundBuffer(LPDIRECTSOUNDBUFFER buffer)
-			: m_pBuffer( buffer )
-		{
-		}
-
-		////////////////////////////
-		// Release
-		////////////////////////////
-		// Releases the memory associated with a sound buffer.  This pointer is
-		// no longer valid after return.
-		//
-		// Returns:
-		//       -1 : Invalid Parameter
-		//        0 : Ok!
-		int Release()
-		{
-			m_pBuffer->Release();
-			delete this;
-			return 0;
-		}
-
-		//////////////////////////////
-		// SetVolume
-		//////////////////////////////
-		// Sets the volume of a buffer.
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : Cannot set volume
-		//       -2 : Invalid parameters
-		int SetVolume(signed long vol)
-		{
-			return m_pBuffer->SetVolume( vol );
-		}
-
-		///////////////////////////
-		// SetPan
-		///////////////////////////
-		// Sets the pan of a buffer.
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : Cannot set pan
-		//       -2 : Invalid parameters
-		int SetPan(signed long pan)
-		{
-			return m_pBuffer->SetPan( pan );
-		}
-
-		/////////////////////////
-		// Stop
-		/////////////////////////
-		// Stops a buffer from playing
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int Stop()
-		{
-			return m_pBuffer->Stop();
-		}
-
-		/////////////////////////
-		// Play
-		/////////////////////////
-		// Starts a buffer playing (or changes the flags for a buffer currently
-		// playing).
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int Play(unsigned int flags)
-		{
-			DWORD dsFlags = ( flags & LNXSND_LOOPING ) ? DSBPLAY_LOOPING : 0;
-			return m_pBuffer->Play( 0, 0, dsFlags );
-		}
-
-		////////////////////////////
-		// GetCaps
-		////////////////////////////
-		// Get the capabilities of a sound buffer
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int GetCaps(SysSoundCaps *caps)
-		{
-			DSBCAPS dsCaps;
-			dsCaps.dwSize = sizeof(dsCaps);
-			int res = m_pBuffer->GetCaps( &dsCaps );
-			if( res != 0 )
-				return res;
-
-			caps->dwBufferBytes = dsCaps.dwBufferBytes;
-			caps->dwFlags       = dsCaps.dwFlags;
-			return 0;
-		}
-
-		//////////////////////////////
-		// GetStatus
-		//////////////////////////////
-		// Returns the status of a buffer
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int GetStatus(unsigned int *status)
-		{
-			return m_pBuffer->GetStatus( reinterpret_cast<LPDWORD>( status ) );
-		}
-
-		///////////////////////////////////////
-		// GetCurrentPosition
-		///////////////////////////////////////
-		// Returns the current play and write positions of the buffer
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int GetCurrentPosition(unsigned int *ppos,unsigned int *wpos)
-		{
-			return m_pBuffer->GetCurrentPosition( reinterpret_cast<LPDWORD>( ppos ), reinterpret_cast<LPDWORD>( wpos ) );
-		}
-
-		///////////////////////////////////////
-		// SetCurrentPosition
-		///////////////////////////////////////
-		// Sets the current play position of the buffer
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int SetCurrentPosition(unsigned int pos)
-		{
-			return m_pBuffer->SetCurrentPosition( pos );
-		}
-
-		/////////////////////////
-		// Lock
-		/////////////////////////
-		// Locks the given buffer, returning pointer(s) to the buffer(s) along with
-		// available the size of the buffer(s) for writing.
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int Lock(
-				unsigned int pos,
-				unsigned int numbytes,
-				void **ptr1,
-				unsigned int *numbytes1,
-				void **ptr2,
-				unsigned int *numbytes2,
-				unsigned int flags)
-		{
-			return m_pBuffer->Lock( pos, numbytes, ptr1, reinterpret_cast<LPDWORD>( numbytes1 ), ptr2, reinterpret_cast<LPDWORD>( numbytes2 ), flags );
-		}
-
-		///////////////////////////
-		// Unlock
-		///////////////////////////
-		// Unlocks a buffer.
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int Unlock(
-					void *ptr1,
-					unsigned int num1,
-					void *ptr2,
-					unsigned int num2)
-		{
-			return m_pBuffer->Unlock( ptr1, num1, ptr2, num2 );
-		}
-	};
-
-	class MovieSoundDevice : public ISoundDevice
-	{
-	private:
-		LPDIRECTSOUND m_ds;
-
-	public:
-		MovieSoundDevice()
-			: m_ds( NULL )
-		{
-		}
-
-		void SetDirectSound( LPDIRECTSOUND ds )
-		{
-			m_ds = ds;
-		}
-
-		LPDIRECTSOUND GetDirectSound()
-		{
-			return m_ds;
-		}
-
-		///////////////////////////////
-		// CreateSoundBuffer
-		///////////////////////////////
-		// Creates a sound buffer to be used with mixing and output.
-		//
-		// Returns:
-		//       -1 : Invalid Parameter
-		//       -2 : Out of memory
-		//        0 : Ok!
-		int CreateSoundBuffer( SysSoundBufferDesc *lbdesc, ISysSoundBuffer **lsndb )
-		{
-			if( m_ds == NULL )
-				return -1;
-
-			DSBUFFERDESC dsBufferDesc;
-			dsBufferDesc.dwSize        = sizeof(dsBufferDesc);
-			dsBufferDesc.dwFlags       = lbdesc->dwFlags;
-			dsBufferDesc.dwBufferBytes = lbdesc->dwBufferBytes;
-			dsBufferDesc.dwReserved    = 0;
-			dsBufferDesc.lpwfxFormat   = reinterpret_cast<LPWAVEFORMATEX>( lbdesc->lpwfxFormat );
-
-			LPDIRECTSOUNDBUFFER dsSndBuffer = NULL;
-			int res = m_ds->CreateSoundBuffer( &dsBufferDesc, &dsSndBuffer, NULL );
-			if( res != DS_OK )
-			{
-				*lsndb = NULL;
-				return res;
-			}
-
-			*lsndb = new MovieSoundBuffer( dsSndBuffer );
-			return res;
-		}
-	};
-
-
-	
-
-#else
-
-	class MovieSoundBuffer : public ISysSoundBuffer
-	{
-	private:
-		LnxSoundBuffer *m_pBuffer;
-
-	public:
-
-	  LnxSoundBuffer *GetLnxBuffer()
-	  {
-	    return m_pBuffer;
-	  }
-		MovieSoundBuffer(LnxSoundBuffer *buffer)
-			: m_pBuffer( buffer )
-		{
-		}
-
-		////////////////////////////
-		// Release
-		////////////////////////////
-		// Releases the memory associated with a sound buffer.  This pointer is
-		// no longer valid after return.
-		//
-		// Returns:
-		//       -1 : Invalid Parameter
-		//        0 : Ok!
-		int Release()
-		{
-		  return LnxSoundBuffer_Release(m_pBuffer);
-		  //m_pBuffer->Release();
-			delete this;
-			return 0;
-		}
-
-		//////////////////////////////
-		// SetVolume
-		//////////////////////////////
-		// Sets the volume of a buffer.
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : Cannot set volume
-		//       -2 : Invalid parameters
-		int SetVolume(signed long vol)
-		{
-		  return LnxSoundBuffer_SetVolume(m_pBuffer, vol );
-		}
-
-		///////////////////////////
-		// SetPan
-		///////////////////////////
-		// Sets the pan of a buffer.
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : Cannot set pan
-		//       -2 : Invalid parameters
-		int SetPan(signed long pan)
-		{
-		  return LnxSoundBuffer_SetPan(m_pBuffer, pan );
-		}
-
-		/////////////////////////
-		// Stop
-		/////////////////////////
-		// Stops a buffer from playing
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int Stop()
-		{
-		  return LnxSoundBuffer_Stop(m_pBuffer);
-		}
-
-		/////////////////////////
-		// Play
-		/////////////////////////
-		// Starts a buffer playing (or changes the flags for a buffer currently
-		// playing).
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int Play(unsigned int flags)
-		{
-			unsigned int dsFlags = ( flags & LNXSND_LOOPING ) ? LNXSND_LOOPING : 0;
-			return LnxSoundBuffer_Play( m_pBuffer, dsFlags );
-		}
-
-		////////////////////////////
-		// GetCaps
-		////////////////////////////
-		// Get the capabilities of a sound buffer
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int GetCaps(SysSoundCaps *caps)
-		{
-		  return LnxSoundBuffer_GetCaps(m_pBuffer,(LinuxSoundCaps *)caps);
-		}
-
-		//////////////////////////////
-		// GetStatus
-		//////////////////////////////
-		// Returns the status of a buffer
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int GetStatus(unsigned int *status)
-		{
-		  return LnxSoundBuffer_GetStatus(m_pBuffer, status );
-		}
-
-		///////////////////////////////////////
-		// GetCurrentPosition
-		///////////////////////////////////////
-		// Returns the current play and write positions of the buffer
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int GetCurrentPosition(unsigned int *ppos,unsigned int *wpos)
-		{
-		  
-		  return LnxSoundBuffer_GetCurrentPosition(m_pBuffer, ppos , wpos );
-		}
-
-		///////////////////////////////////////
-		// SetCurrentPosition
-		///////////////////////////////////////
-		// Sets the current play position of the buffer
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int SetCurrentPosition(unsigned int pos)
-		{
-		  return LnxSoundBuffer_SetCurrentPosition(m_pBuffer, pos );
-		}
-
-		/////////////////////////
-		// Lock
-		/////////////////////////
-		// Locks the given buffer, returning pointer(s) to the buffer(s) along with
-		// available the size of the buffer(s) for writing.
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int Lock(
-				unsigned int pos,
-				unsigned int numbytes,
-				void **ptr1,
-				unsigned int *numbytes1,
-				void **ptr2,
-				unsigned int *numbytes2,
-				unsigned int flags)
-		{
-		  return LnxSoundBuffer_Lock(m_pBuffer, pos, numbytes, ptr1, numbytes1 , ptr2, numbytes2 , flags );
-		}
-
-		///////////////////////////
-		// Unlock
-		///////////////////////////
-		// Unlocks a buffer.
-		//
-		// Returns:
-		//        0 : no error
-		//       -1 : invalid parameters
-		int Unlock(
-					void *ptr1,
-					unsigned int num1,
-					void *ptr2,
-					unsigned int num2)
-		{
-		  return LnxSoundBuffer_Unlock(m_pBuffer, ptr1, num1, ptr2, num2 );
-		}
-	};
-	class MovieSoundDevice : public ISoundDevice
-	{
-	private:
-	  LnxSoundDevice m_ds;
-	public:
-	  MovieSoundDevice()
-		{
-
-		}
-	  
-		void SetDirectSound( LnxSoundDevice ds )
-		{
-			m_ds = ds;
-		}
-	  
-		LnxSoundDevice GetDirectSound()
-		{
-			return m_ds;
-		}
-	  
-		///////////////////////////////
-		// CreateSoundBuffer
-		///////////////////////////////
-		// Creates a sound buffer to be used with mixing and output.
-		//
-		// Returns:
-		//       -1 : Invalid Parameter
-		//       -2 : Out of memory
-		//        0 : Ok!
-		int CreateSoundBuffer( SysSoundBufferDesc *lbdesc, ISysSoundBuffer **lsndb )
-		{
-		  LnxSoundBuffer *sb = NULL;
-		  int ret = LnxSound_CreateSoundBuffer(&m_ds,(LnxBufferDesc *)lbdesc,(LnxSoundBuffer**)&sb);
-		  if(ret==0)
-		    {
-		      ISysSoundBuffer *p = (ISysSoundBuffer *)new MovieSoundBuffer(sb);
-		      *lsndb = p;
-		    }
-		  else
-		    {
-		      lsndb = NULL;
-		    }
-		  return ret;
-		}
-	};
-
-
-#endif
-
-#endif
+	bool				  Movie_vid_set = false;
 }
-
-#endif
 
 void* CallbackAlloc( unsigned int size );
 void CallbackFree( void *p );
@@ -622,6 +142,9 @@ int mve_PlayMovie( const char *pMovieName, oeApplication *pApp )
 		return MVELIB_INIT_ERROR;
 	}
 
+	renderer_preferred_state oldstate = Render_preferred_state;
+	Movie_vid_set = false;
+
 	bool aborted = false;
 	Movie_current_framenum = 0;
 	while( (result = MVE_rmStepMovie()) == 0 )
@@ -662,6 +185,12 @@ int mve_PlayMovie( const char *pMovieName, oeApplication *pApp )
 	// cleanup and shutdown
 	MVE_rmEndMovie();
 	MVE_ReleaseMem();
+
+	if (Movie_vid_set)
+	{
+		rend_SetPreferredState(&oldstate);
+		Render_preferred_state = oldstate;
+	}
 
 	// return out
 	return err;
@@ -730,19 +259,8 @@ void BlitToMovieBitmap(unsigned char* buf, unsigned int bufw, unsigned int bufh,
 	int drawWidth  = hicolor ? (bufw >> 1) : bufw;
 	int drawHeight = bufh;
 
-	if( usePow2Texture )
-	{
-		int wPow2      = NextPow2( drawWidth );
-		int hPow2      = NextPow2( drawHeight );
-		int texSize    = ( wPow2 > hPow2 ) ? wPow2 : hPow2;
-		texW = texSize;
-		texH = texSize;
-	}
-	else
-	{
-		texW = drawWidth;
-		texH = drawHeight;
-	}
+	texW = drawWidth;
+	texH = drawHeight;
 
 	if( Movie_bm_handle == -1 )
 	{
@@ -803,7 +321,16 @@ void CallbackShowFrame( unsigned char* buf, unsigned int bufw, unsigned int bufh
 	float u = float(drawWidth-1) / float(texW-1);
 	float v = float(drawHeight-1) / float(texH-1);
 
-	StartFrame( 0, 0, 640, 480, false );
+	if (!Movie_vid_set)
+	{
+		Render_preferred_state.width = drawWidth;
+		Render_preferred_state.height = drawHeight;
+		Movie_vid_set = true;
+
+		rend_SetPreferredState(&Render_preferred_state);
+	}
+
+	StartFrame( 0, 0, drawWidth, drawHeight, false );
 
 	rend_ClearScreen( GR_BLACK );
 	rend_SetAlphaType( AT_CONSTANT );
@@ -814,7 +341,7 @@ void CallbackShowFrame( unsigned char* buf, unsigned int bufw, unsigned int bufh
 	rend_SetWrapType( WT_CLAMP );
 	rend_SetFiltering( 0 );
 	rend_SetZBufferState( 0 );
-	rend_DrawScaledBitmap( dstx, dsty, dstx+drawWidth, dsty+drawHeight, Movie_bm_handle, 0.0f, 0.0f, u, v );
+	rend_DrawScaledBitmap( 0, 0, drawWidth, drawHeight, Movie_bm_handle, 0.0f, 0.0f, u, v );
 	rend_SetFiltering( 1 );
 	rend_SetZBufferState( 1 );
 
