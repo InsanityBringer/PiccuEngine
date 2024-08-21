@@ -7,5 +7,4 @@ SET (DDIO_WIN_SOURCES
 		ddio_win/winjoy.cpp
 		ddio_win/winkey.cpp
 		ddio_win/winmouse.cpp
-		ddio_win/wintimer.cpp
 		PARENT_SCOPE)
