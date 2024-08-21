@@ -20,23 +20,19 @@
 
 #include "pstypes.h"
 
-#ifdef MACINTOSH
-#define MAX_BUMPMAPS 1
-#else
 #define MAX_BUMPMAPS 500
-#endif
 #define BAD_BUMP_INDEX	65535
 
 #define BUMPF_USED	1
 #define BUMPF_CHANGED	2
 
-typedef struct
+struct bms_bumpmap
 {
 	ushort *data;					// 8bit data
 	short	cache_slot;				// for the renderers use
 	ubyte width,height;
 	ubyte flags,pad;
-} bms_bumpmap;
+};
 
 extern bms_bumpmap GameBumpmaps[MAX_BUMPMAPS];
 
@@ -58,6 +54,5 @@ ushort *bump_data (int handle);
 // returns width or height of the passed in bumpmap
 ubyte bump_w(int handle);
 ubyte bump_h(int handle);
-
 
 #endif

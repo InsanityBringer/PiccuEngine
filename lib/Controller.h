@@ -15,102 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/Controller.h $
- * $Revision: 21 $
- * $Date: 3/20/00 12:25p $
- * $Author: Matt $
- *
- * Universal controller header
- *
- * $Log: /DescentIII/Main/lib/Controller.h $
- * 
- * 21    3/20/00 12:25p Matt
- * Merge of Duane's post-1.3 changes.
- * Added declaration.
- * 
- * 20    8/11/99 6:06p Samir
- * added flag to determine whether packet contained mouse info.
- * 
- * 19    7/20/99 4:53p Samir
- * added ability to manually set the deadzone for a controller.
- * 
- * 18    7/16/99 11:14a Samir
- * multiple hat support and improved direct input support.
- * 
- * 17    4/29/99 2:23a Samir
- * moved binding text functions to wincontroller.cpp and new text for
- * multiple joysticks.
- * 
- * 16    4/16/99 7:34p Jeff
- * added linux controller
- * 
- * 15    2/16/99 11:59a Samir
- * added proper constants for controller and binding null values.
- * 
- * 14    12/18/98 6:00p Samir
- * added enable_function.
- * 
- * 13    10/24/98 2:18p Samir
- * added mouse and joytick raw value retrieval functions.
- * 
- * 12    10/21/98 10:36a Samir
- * added code to turn on or off joystick or mouse.
- * 
- * 11    10/18/98 7:29p Samir
- * made assign_function public.
- * 
- * 10    10/17/98 7:31p Samir
- * added invertible axes
- * 
- * 9     9/10/98 12:39p Samir
- * added senstivity issures for controller.
- * 
- * 8     6/18/98 4:48p Samir
- * added changes for multiple configs for joystick controls.
- * 
- * 7     5/15/98 3:13p Samir
- * added 2 key support for controller functions.
- * 
- * 6     2/24/98 11:03a Samir
- * Added flush function to controller system.
- * 
- * 5     2/16/98 3:04p Samir
- * ctAxis instead of ctXAxis, ctYAxis, etc.
- * 
- * 4     2/13/98 6:38p Samir
- * Added get and set controller function.
- * 
- * 3     12/03/97 7:35p Samir
- * Newer joystick library support and some POV.
- * 
- * 2     10/29/97 4:44p Samir
- * Added ctDownCount format.
- * 
- * 8     5/21/97 3:51p Samir
- * changed ct_need to ct_function
- * 
- * 7     5/12/97 4:39 PM Jeremy
- * #include of macController.h on Macintosh
- * 
- * 6     5/12/97 1:21p Samir
- * Added suspend and resume functions.
- * 
- * 5     4/23/97 1:07p Samir
- * Now we can poll for either positonal or evaluator data.
- * 
- * 4     4/16/97 1:04p Samir
- * For get packet, allow one to return an alternate format value if that
- * function supports it.
- * 
- * 3     4/16/97 12:27p Samir
- * Added mouse support.
- * 
- * 2     4/11/97 2:13p Samir
- * Universal header for control system. first version
- *
- * $NoKeywords: $
- */
 
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
@@ -118,61 +22,64 @@
 #include "pstypes.h"
 #include "Macros.h"
 
-typedef enum ct_format {
+enum ct_format 
+{
 	ctNoFormat,
-	ctAnalog,							// analog information (-1.0 to 1.0)
-	ctDigital,							// digital information (0 or 1) 
-	ctDownCount,						//	special information for key presses and button/mouse presses.
-	ctTime								// time in seconds format
-} ct_format;
+	ctAnalog,						// analog information (-1.0 to 1.0)
+	ctDigital,						// digital information (0 or 1) 
+	ctDownCount,					//	special information for key presses and button/mouse presses.
+	ctTime							// time in seconds format
+};
 
-typedef enum ct_type {
+enum ct_type 
+{
 	ctNone,
-	ctAxis,								// axis element of controller. 
-	ctPOV,								// function value (hiword = +axis, loword = -axis)
-	ctButton,							// fn value: controller button #
-	ctKey,								// fn value: lobyte(key constant), hibyte(alternate key constant)
+	ctAxis,							// axis element of controller. 
+	ctPOV,							// function value (hiword = +axis, loword = -axis)
+	ctButton,						// fn value: controller button #
+	ctKey,							// fn value: lobyte(key constant), hibyte(alternate key constant)
 	ctMouseAxis,
 	ctMouseButton,
 	ctPOV2,
 	ctPOV3,
-	ctPOV4								// auxillary POV values.
-} ct_type;
+	ctPOV4							// auxillary POV values.
+};
 
 
-typedef struct ct_function {
-	int id;								// identifier for the function (like forward thrust)
-	ct_format format;					// what format should the return value be for this function
-	ct_type ctype[2];					// type of controller requested for this id. (1 for each value packed.)
+struct ct_function 
+{
+	int id;							// identifier for the function (like forward thrust)
+	ct_format format;				// what format should the return value be for this function
+	ct_type ctype[2];				// type of controller requested for this id. (1 for each value packed.)
 	ubyte value[2];					// corresponding value to ctype
 	ubyte flags[2];					// flags.
-} ct_function;
+};
 
 
-typedef struct ct_packet {
-	ct_format format;					// format of value.
-	float value;						// time value for buttons, absolute value for axis values
+struct ct_packet 
+{
+	ct_format format;				// format of value.
+	float value;					// time value for buttons, absolute value for axis values
 	unsigned flags;					// additional information (see below)
-} ct_packet;
+};
 
-typedef unsigned ct_config_data;		// passed by controller system to the outside, and back to controller system
+typedef unsigned ct_config_data;	// passed by controller system to the outside, and back to controller system
 
 //	values for ct_packet.flags
 #define CTPK_ELEMENTACTIVE		0x1	// indicates element was activated but no time/analog information is available.
 #define CTPK_MOUSE				0x2	// this is coming from a mouse device. default is joystick/keyboard.
 
 //	element values
-const ubyte CT_X_AXIS = 1,				// AXIS constants for ctAxis
+const ubyte CT_X_AXIS = 1,			// AXIS constants for ctAxis
 			CT_Y_AXIS = 2,
 			CT_Z_AXIS = 3,
 			CT_R_AXIS = 4,
 			CT_U_AXIS = 5,
 			CT_V_AXIS = 6,
-			CT_NUM_AXES = 6;				// number of axes
+			CT_NUM_AXES = 6;		// number of axes
 
 // ct_function flags
 #define CTFNF_INVERT				0x1	// invert values returned via get_packet.
-
 
 
 #define NULL_BINDING				0x00
@@ -196,10 +103,6 @@ const ubyte CT_X_AXIS = 1,				// AXIS constants for ctAxis
 #define MAKE_CONFIG_DATA(_c, _v) makeword(_c,_v)
 
 #define CTLBINDS_PER_FUNC	2
-
-	
-
-
 
 class gameController
 {
@@ -271,11 +174,8 @@ void DestroyController(gameController *ctl);
 
 #if defined(WIN32)
 	#include "win\WinController.h"
-#elif defined(MACINTOSH)
-	#include "macController.h"
 #elif defined(__LINUX__)
 	#include "linux/lnxcontroller.h"
 #endif
-
 
 #endif

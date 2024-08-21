@@ -15,6 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#pragma once
+
 #include <stdint.h>
 #include <string.h>
 #include "ssl_lib.h"
@@ -22,7 +25,6 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
-
 
 //OpenAL LLS system implementation
 

@@ -21,22 +21,22 @@
 #define CVAR_GAMEINIT	0x0001	//this variable can be set/changed during server init
 #define CVAR_GAMEPLAY	0x0002	//this variable can be set/changed during game play
 
-typedef enum
+enum cvar_type
 {
 	CVAR_TYPE_INT,
 	CVAR_TYPE_FLOAT,
 	CVAR_TYPE_STRING,
 	CVAR_TYPE_NONE,
-} cvar_type;
+};
 
-typedef struct
+struct cvar_entry
 {
 	char *varname;
 	cvar_type type;
 	void *dest_variable;
 	int var_min,var_max;
 	short permissions;
-} cvar_entry;
+};
 
 extern bool Dedicated_server;
 
@@ -57,7 +57,6 @@ void SetCVar (char *cvar_string,int cvar_argument);
 
 // The accessor function that sets the value of a cvar...FLOAT only
 void SetCVar (char *cvar_string,float cvar_argument);
-
 
 // Starts a dedicated server and loads the server config file
 void StartDedicatedServer ();

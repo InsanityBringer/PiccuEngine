@@ -15,80 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/CFILE.H $
- * $Revision: 16 $
- * $Date: 10/18/99 1:27p $
- * $Author: Kevin $
- *
- * Functions for reading & writing files.  Includes code to read from libraries.
- *
- * $Log: /DescentIII/Main/lib/CFILE.H $
- * 
- * 16    10/18/99 1:27p Kevin
- * Added cf_IsFileInHog
- * 
- * 15    9/14/99 7:49p Jeff
- * added cf_OpenFileInLibrary() to force a file to be opened from a
- * specific library.  Added a way to get a crc of a file given it's CFILE
- * *.
- * 
- * 14    5/20/99 5:32p Matt
- * Store a lib handle, instead of a lib pointer, in the cfile struct.
- * This will keep us from using a pointer to lib that's already been
- * closed.
- * 
- * 13    3/22/99 6:26p Matt
- * Cleaned up error handling in cfile and editor level loads.
- * 
- * 12    1/07/99 10:51p Jeff
- * added psglob and support to do find in files for hog files
- * 
- * 11    11/16/98 3:49p Jason
- * changes for manage system
- * 
- * 10    11/11/98 2:58p Jeff
- * added cf_ClearAllSearchPaths() function
- * 
- * 9     10/22/98 10:48a Matt
- * Added code to keep the library file open all the time, which will
- * hopefully speed up file loads.
- * 
- * 8     8/14/98 6:31p Matt
- * Changed comment
- * 
- * 7     7/28/98 12:27p Kevin
- * Added CRC function
- * 
- * 6     7/09/98 8:33p Samir
- * Added cf_Rewind.
- * 
- * 5     3/19/98 3:18p Samir
- * enforce constant char* arguments when needed.  done in CFILE and bitmap
- * libraries as well as ddio.
- * 
- * 4     2/26/98 11:01a Jason
- * added cf_ChangeFileAttributes function
- * 
- * 3     2/15/98 7:44p Matt
- * Added groovy try/catch/throw error checking for cfile functions
- * 
- * 2     12/17/97 4:09p Jason
- * fixed compiler warning
- * 
- * 11    5/23/97 2:27p Matt
- * Text file newlines now handled internally.
- * Don't look in libs for files opened for writing.
- * Changed error message to print out errno.
- * 
- * 10    4/03/97 4:34p Jason
- * added CopyFileTime to the cfile, ddio libs
- * 
- * 9     3/03/97 6:21p Matt
- * Changed cfile functions to use D3 naming convention
- *
- * $NoKeywords: $
- */
 
 #ifndef CFILE_H
 #define CFILE_H
@@ -100,31 +26,32 @@
 struct library;
 
 //The structure for a CFILE
-typedef struct CFILE {
-	char	*name;				//pointer to filename
-	FILE 	*file;				//the file itself (on disk) or the HOG
+struct CFILE 
+{
+	char	*name;			//pointer to filename
+	FILE 	*file;			//the file itself (on disk) or the HOG
 	int	lib_handle;			//the handle of the library, or -1
-	int	size;					//length of this file
+	int	size;				//length of this file
 	int	lib_offset;			//offset into HOG of start of file, or 0 if on disk
 	int	position;			//current position in file
 	int	flags;				//see values below
-} CFILE;
+};
 
 //Defines for cfile_error
 #define CFE_READING		1
 #define CFE_WRITING		2
 
 //The structure thrown by a cfile error
-typedef struct {
+struct cfile_error
+{
 	int	read_write;		//reading or writing?  See defines.
-	char	*msg;				//the error message
-	CFILE	*file;			//the file that got the error
-} cfile_error;
+	char	*msg;		//the error message
+	CFILE	*file;		//the file that got the error
+};
 
 //Flags for CFILE struct
 #define CF_TEXT		1		//if this bit set, file is text
 #define CF_WRITING	2		//if bit set, file opened for writing
-
 
 //See if a file is in a hog
 bool cf_IsFileInHog(char *filename, char *hogname);

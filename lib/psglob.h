@@ -15,23 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/main/Lib/psglob.h $
-* $Revision: 2 $
-* $Date: 1/07/99 10:51p $
-* $Author: Jeff $
-*
-* string globbing function header
-*
-* $Log: /DescentIII/main/Lib/psglob.h $
- * 
- * 2     1/07/99 10:51p Jeff
- * added psglob and support to do find in files for hog files
- * 
- * 1     1/07/99 7:28p Jeff
-*
-* $NoKeywords: $
-*/
 
 #ifndef __PSGLOB_H_
 #define __PSGLOB_H_

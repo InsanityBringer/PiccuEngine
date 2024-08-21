@@ -15,54 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/application.h $
- * $Revision: 11 $
- * $Date: 7/28/99 3:29p $
- * $Author: Kevin $
- *
- *	Generic Application object.  Used to pass info to libraries
- *
- * $Log: /DescentIII/Main/lib/application.h $
- * 
- * 11    7/28/99 3:29p Kevin
- * Macintosh!
- * 
- * 10    4/15/99 1:44a Jeff
- * changes for linux compile
- * 
- * 9     10/08/98 7:26p Samir
- * changed the prototype for the defer handler callback.
- * 
- * 8     9/14/98 4:03p Samir
- * added console support.
- * 
- * 7     3/23/98 8:04p Samir
- * defer handler now returns a bool.
- * 
- * 6     2/26/98 1:00p Samir
- * Added application activation functions.
- * 
- * 5     2/23/98 4:30p Samir
- * added init function to oeApplication.
- * 
- * 4     10/16/97 2:30p Samir
- * Added Idle processing.
- * 
- * 3     9/16/97 1:04p Samir
- * Added delay function.
- * 
- * 2     7/28/97 3:46p Samir
- * Added OEAPP_TOPMOST flag.
- * 
- * 2     6/11/97 2:39p Samir
- * Added destructors.
- * 
- * 1     6/10/97 4:55p Samir
- * New App object.
- * 
- * $NoKeywords: $
- */
+
 #ifndef APP_H
 #define APP_H
 #include "pstypes.h"
@@ -107,15 +60,10 @@ public:
 	void activate() { m_AppActive = true; };
 	void deactivate() { m_AppActive = false; };
 };
-/*	This section includes the platform-specific header files 
-	Add a platform to this list once implemented:
-		Win32				Samir		Win32App.h			06/97
-*/
+
 #if defined(WIN32)
 #include "win\Win32App.h"
 #elif defined(__LINUX__)
 #include "linux/lnxapp.h"
-#elif defined(MACINTOSH)
-#include "macapp.h"
 #endif
 #endif

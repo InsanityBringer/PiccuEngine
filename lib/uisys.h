@@ -16,10 +16,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef UISYS_H
 #define UISYS_H
-
 
 /////////////////////////////////////////////////////////////////////////////
 //	DEFINITIONS
@@ -33,8 +31,8 @@
 #define UIKEY_CLICKED				3
 
 //	variables (OnMouseDown, etc)
-#define UILMSEBTN						1
-#define UIRMSEBTN						2
+#define UILMSEBTN					1
+#define UIRMSEBTN					2
 
 // mouse click properties
 #ifdef MACINTOSH
@@ -45,14 +43,13 @@
 #define UI_DBLCLICK_MSEDELTA		4
 
 
-typedef struct tUIInitInfo
+struct tUIInitInfo
 {
 	int window_font;									// default font for windows
 	int w, h;											// width and height of screen.
-}
-tUIInitInfo;
+};
 
-typedef struct tUIInput
+struct tUIInput
 {
 	int mx, my, last_mx, last_my;
 	int b1_status, b1_last_status;
@@ -63,8 +60,7 @@ typedef struct tUIInput
 
 	bool key_first_press;							// if the key was really pressed or just held down.
 	bool printscreen;
-}
-tUIInput;
+};
 
 //	user interface frame time
 extern float UIFrameTime;
@@ -136,7 +132,6 @@ inline float UI_TIME()
 	return UI_input.cur_time;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////
 //	FUNCTIONS
 
@@ -177,6 +172,5 @@ void ui_Flush();
 
 // does screen shot
 void ui_DoScreenshot();
-
 
 #endif

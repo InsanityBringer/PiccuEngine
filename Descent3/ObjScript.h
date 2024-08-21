@@ -20,12 +20,19 @@
 #define OBJSCRIPT_H
 
 #include "pstypes.h"
-#include "d3x_op.h"
 #include "vecmat.h"
 
 struct object;
 struct trigger;
 
+// Program map entry
+#define MAX_D3XID_NAME		32
+
+// Parameter types for scripts 
+#define PARMTYPE_NUMBER	0
+#define PARMTYPE_VECTOR	1
+#define PARMTYPE_REF	2
+#define PARMTYPE_STRREF	3
 
 //	assigns scripts for a level.
 void AssignScriptsForLevel();

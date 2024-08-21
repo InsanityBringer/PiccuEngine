@@ -15,29 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/lib/vecmat_external.h $
-* $Revision: 3 $
-* $Date: 2/19/99 4:26p $
-* $Author: Jason $
-*
-* Contains any header information that can/should be exported to DLLs
-*
-* $Log: /DescentIII/Main/lib/vecmat_external.h $
- * 
- * 3     2/19/99 4:26p Jason
- * more work on Katmai support
- * 
- * 2     1/21/99 11:15p Jeff
- * pulled out some structs and defines from header files and moved them
- * into seperate header files so that multiplayer dlls don't require major
- * game headers, just those new headers.  Side effect is a shorter build
- * time.  Also cleaned up some header file #includes that weren't needed.
- * This affected polymodel.h, object.h, player.h, vecmat.h, room.h,
- * manage.h and multi.h
-*
-* $NoKeywords: $
-*/
 
 #ifndef VECMAT_EXTERNAL_H
 #define VECMAT_EXTERNAL_H
@@ -46,39 +23,38 @@
 typedef unsigned short angle;	//make sure this matches up with fix.h
 
 
-typedef struct {
+struct angvec
+{
 	angle p,h,b;
-} angvec;
+};
 
 #define IDENTITY_MATRIX		{{1.0,0,0},{0,1.0,0},{0,0,1.0}}
 
-typedef struct
+struct vector
 {
 	float x, y, z;
-} vector;
+};
 
-typedef struct vector4
+struct vector4
 {	
 	float x,y,z,kat_pad;
-} vector4;
+};
 
 
-typedef struct
+struct vector_array
 {
 	float xyz[3];
-} vector_array;
+};
 
-typedef struct
+struct matrix
 { 
 	vector rvec,uvec,fvec;
-} matrix;
+};
 
-typedef struct
+struct matrix4
 { 
 	vector4 rvec,uvec,fvec;
-} matrix4;
-
-
+};
 
 // Zero's out a vector
 inline void vm_MakeZero(vector *v)
@@ -113,7 +89,6 @@ inline bool operator !=(vector a, vector b)
 
 	return equality;
 }
-
 
 // Adds 2 vectors
 inline vector operator +(vector a, vector b)

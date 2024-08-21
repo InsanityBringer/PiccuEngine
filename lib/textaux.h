@@ -15,32 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/lib/textaux.h $
-* $Revision: 4 $
-* $Date: 11/03/98 7:04p $
-* $Author: Samir $
-*
-* Auxillary Text functions (helper function, not necessarily belonging to grtext)
-*
-* $Log: /DescentIII/Main/lib/textaux.h $
- * 
- * 4     11/03/98 7:04p Samir
- * made Grtext_spacing global so word wrapper could access it.
- * 
- * 3     7/14/98 2:47p Jeff
- * added textaux_ClipString
- * 
- * 2     7/14/98 11:53a Samir
- * moved textaux to it's own libtary again.  
- * 
- * 1     7/13/98 4:41p Samir
- * 
- * 2     7/11/98 9:14p Jeff
- * initial creation (moved from TelCom)
-*
-* $NoKeywords: $
-*/
 
 #ifndef TEXTAUX_H
 #define TEXTAUX_H

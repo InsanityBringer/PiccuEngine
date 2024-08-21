@@ -53,11 +53,11 @@ struct CFILE;
 #define SAF_16BIT_M			(SAF_16BIT_MASK | SAF_MONO_MASK)		//0x01
 #define SAF_16BIT_S			(SAF_16BIT_MASK | SAF_STEREO_MASK)	//0x11
 //////////////////////////////////////////////////////////////////////////////
-typedef struct tOSFDigiHdr					// this struct belongs to OSF_DIGITAL_STRM
+struct tOSFDigiHdr					// this struct belongs to OSF_DIGITAL_STRM
 {
 	uint measure;
-}
-tOSFDigiHdr;
+};
+
 class OSFArchive
 {
 	CFILE *m_fp;
@@ -109,12 +109,14 @@ public:
 //	flags used to open stream.
 #define STRM_OPNF_ONETIME	0x1
 #define STRM_OPNF_GRADUAL	0x2
+
 /*	This class will handle streams for the music system.
 	Including allowing an interface to dynamically change the stream.
 */
 #define STRM_BUFF_USED				0x1	// allocated buffer with data
 #define STRM_BUFF_TERMINAL			0x2	// terminates on this buffer
 #define STRM_BUFF_LOOPEND			0x4	// marks last buffer in measure
+
 class AudioStream
 {
 	OSFArchive m_archive;					// audio stream archive object.
@@ -226,4 +228,3 @@ public:
 	friend int StreamGetSoundHandle(int handle);
 };
 #endif
-

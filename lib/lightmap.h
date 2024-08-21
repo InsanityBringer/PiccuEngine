@@ -20,20 +20,16 @@
 
 #include "pstypes.h"
 
-#ifdef MACINTOSH
-#define MAX_LIGHTMAPS (60000)
-#else
 #define MAX_LIGHTMAPS (65534)
-#endif
 #define BAD_LM_INDEX	65535
 
 // lightmap flags
-#define LF_CHANGED				1			// this bitmap has changed since last frame (useful for hardware cacheing)
-#define LF_LIMITS					2			// This lightmap has a specific area that has changed since last frame
-#define LF_WRAP					4			// This lightmap should be drawn with wrapping (not clamping)
-#define LF_BRAND_NEW				8			// This lightmap is brand new and hasn't been to the video card yet
+#define LF_CHANGED		1		// this bitmap has changed since last frame (useful for hardware cacheing)
+#define LF_LIMITS		2		// This lightmap has a specific area that has changed since last frame
+#define LF_WRAP			4		// This lightmap should be drawn with wrapping (not clamping)
+#define LF_BRAND_NEW	8		// This lightmap is brand new and hasn't been to the video card yet
 
-typedef struct
+struct bms_lightmap
 {
 	ubyte width,height;			// Width and height in pixels
 	ushort *data;					// 16bit data
@@ -43,7 +39,7 @@ typedef struct
 	short	cache_slot;				// for the renderers use
 	ubyte square_res;				// for renderers use
 	ubyte cx1,cy1,cx2,cy2;		// Change x and y coords 
-} bms_lightmap;
+};
 
 extern bms_lightmap GameLightmaps[MAX_LIGHTMAPS];
 
@@ -67,6 +63,5 @@ int lm_h (int handle);
 
 // returns a lightmaps data else NULL if something is wrong
 ushort *lm_data (int handle);
-
 
 #endif

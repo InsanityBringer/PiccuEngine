@@ -15,204 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/lib/findintersection.h $
-* $Revision: 51 $
-* $Date: 6/10/99 6:32p $
-* $Author: Chris $
-*
-* Find intersection header
-*
-* $Log: /DescentIII/Main/lib/findintersection.h $
- * 
- * 51    6/10/99 6:32p Chris
- * New Editor Support
- * 
- * 50    5/18/99 11:10a Matt
- * Added variable ceiling height.
- * 
- * 49    4/20/99 8:14p Chris
- * Added support for object's that hit the ceiling and for making the
- * level always check for the ceiling (inside and outside the mine)
- * 
- * 48    1/15/99 5:59p Chris
- * 
- * 47    1/13/99 2:29a Chris
- * Massive AI, OSIRIS update
- * 
- * 46    1/05/99 12:24p Chris
- * More OSIRIS improvements
- * 
- * 45    1/01/99 4:10p Chris
- * Added some const parameters, improved ray cast object collide/rejection
- * code
- * 
- * 44    11/23/98 11:07a Chris
- * Added another parameter to fvi_QuickDistObjectList
- * 
- * 43    10/29/98 5:20p Chris
- * Player ships collide smaller now
- * 
- * 42    10/22/98 10:25p Kevin
- * took out volatile
- * 
- * 41    10/21/98 9:41p Chris
- * Improved walking code!
- * 
- * 40    10/17/98 12:25p Chris
- * Fixed attached flares
- * 
- * 39    10/16/98 8:33p Chris
- * Fixed attached flare problem
- * 
- * 38    10/16/98 3:39p Chris
- * Improved the object linking system and AI and physics
- * 
- * 37    10/16/98 1:07p Chris
- * Lowered the max hits to 2 for now (we don't even use the info anyhow)  
- * 
- * 36    8/03/98 3:59p Chris
- * Added support for FQ_IGNORE_WEAPONS, added .000001 attach code, fix a
- * bug in polymodel collision detection
- * 
- * 35    7/23/98 12:46p Chris
- * Added a flag to ignore external rooms
- * 
- * 34    7/02/98 2:51p Chris
- * Added a fast line to bbox function
- * 
- * 33    6/15/98 7:01a Chris
- * Cleaned out DII stuff and added new PhysicsSim extern's
- * 
- * 32    6/03/98 6:42p Chris
- * Added multipoint collision detection an Assert on invalid (infinite
- * endpoint).
- * 
- * 31    5/22/98 4:44p Chris
- * Added better melee hit prediction
- * 
- * 30    5/05/98 5:23p Chris
- * Faster external room collisions with FQ_EXTERNAL_ROOMS_AS_SPHERE
- * 
- * 29    3/23/98 11:37a Chris
- * Added the f_lightmap_only parameter to fvi_QuickDistObjectList
- * 
- * 28    3/23/98 11:18a Chris
- * Added int fvi_QuickDistObjectList(vector *pos, int init_room_index,
- * float rad, short *object_index_list, int max_elements)
- * 
- * 
- * 27    3/17/98 11:33a Chris
- * Improved performance (AABB updates on poly-sphere collide)
- * 
- * 26    3/16/98 12:50p Chris
- * Speed up?
- * 
- * 25    3/16/98 9:43a Chris
- * Added FQ_NO_RELINK
- * 
- * 24    2/19/98 6:17p Chris
- * Added some debug info
- * 
- * 23    2/11/98 10:04p Chris
- * Added FQ_ONLY_DOOR_OBJ and fixed a bug with FQ_ONLY_PLAYER_OBJ
- * 
- * 22    2/04/98 6:09p Matt
- * Changed object room number to indicate a terrain cell via a flag.  Got
- * rid of the object flag which used to indicate terrain.
- * 
- * 21    1/30/98 4:34p Jason
- * FROM CHRIS: Changed COL_CELL size to 1
- * 
- * 20    1/20/98 11:35a Chris
- * Raised ceiling to MAX_TERRAIN_HEIGHT
- * 
- * 19    1/19/98 5:05p Chris
- * Added ceiling collisions for players and powerups
- * 
- * 18    12/16/97 6:11p Chris
- * Attempt to improve FVI for outside
- * 
- * 17    10/28/97 5:46p Chris
- * Added a quick cell list function
- * 
- * 16    10/28/97 12:20p Chris
- * Added support to ignore wall collisions
- * 
- * 15    10/22/97 12:41p Chris
- * Incremental BBOX stuff and added support for subobject hit returned
- * from fvi
- * 
- * 14    10/07/97 4:03p Chris
- * Added support for object backface checking
- * 
- * 13    10/06/97 10:52a Jason
- * added "FQ_IGNORE_NON_LIGHTMAP_OBJECTS" flag
- * 
- * 12    9/19/97 6:58p Chris
- * Fixed some bugs with the big object system and removed some annoying
- * mprintf's
- * 
- * 11    9/19/97 1:01p Chris
- * Added better large object support
- * 
- * 10    9/17/97 11:00a Chris
- * Removed dependance on segment.h
- * 
- * 9     9/15/97 6:24p Chris
- * Added a second chance check if no rooms are initialy found
- * 
- * 8     9/15/97 5:20a Chris
- * Added sphere2poly support.  Rearranged object collisions.
- * 
- * 7     9/12/97 6:36p Chris
- * Added collision terrain segment support
- * Added some LARGE OBJECT collision support
- * 
- * 6     9/11/97 3:08p Chris
- * Added support for weapons flying through holes in transparent textures.
- * 
- * 5     9/11/97 12:43p Chris
- * Added new support for face_physics_info from room.h.  Also, changed how
- * we detect portals.  Also added recorded faces.
- * 
- * 4     9/02/97 11:41a Chris
- * Added support the the quick face/room from distance function
- * 
- * 3     8/18/97 1:53a Chris
- * Added fvi_Relink
- * 
- * 2     8/04/97 5:35p Chris
- * Added support for back face collisions and new fvi code
- * 
- * 10    6/11/97 10:43a Chris
- * 
- * 9     6/10/97 5:34p Chris
- * 
- * 8     5/13/97 5:52p Chris
- * Added ability to exit and enter mine.  Also did some
- * incremental improvements.
- * 
- * 7     5/05/97 5:41a Chris
- * Added some better polygon collision code.  It is still rough though.
- * 
- * 6     4/17/97 3:10p Chris
- * Added edge of world object delete.  Also did some incremental
- * improvements.
- * 
- * 5     4/15/97 4:15p Chris
- * 
- * 4     3/24/97 12:18p Chris
- * 
- * 3     3/03/97 1:02p Chris
- * 
- * 2     3/03/97 5:52a Chris
- * Pre-alpha 0.01 -- just a starting point that compiles
- * 
- * 1     3/03/97 3:26a Chris
-*
-* $NoKeywords: $
-*/
 
 #ifndef _FVI_H
 #define _FVI_H
@@ -220,7 +22,6 @@
 #include "object.h"
 #include "vecmat.h"
 #include "terrain.h"
-//#include "room.h"
 #include "findintersection_external.h"
 
 extern float Ceiling_height;
@@ -322,7 +123,7 @@ inline bool FastVectorBBox(const float *min, const float *max, const float *orig
 }
 
 //this data structure gets filled in by find_vector_intersection()
-typedef struct fvi_info 
+struct fvi_info 
 {
 	vector hit_pnt;						// centerpoint when we hit
 	int hit_room;							// what room hit_pnt is in
@@ -353,10 +154,10 @@ typedef struct fvi_info
 	vector hit_subobj_fvec;
 	vector hit_subobj_uvec;
 	vector hit_subobj_pos;
-} fvi_info;
+};
 
 //this data contains the parms to fvi()
-typedef struct fvi_query 
+struct fvi_query 
 {
 	vector *p0,*p1;
 	int startroom;
@@ -373,7 +174,7 @@ typedef struct fvi_query
 	angle *o_turnroll;
 	vector *o_thrust;
 	float frametime;
-} fvi_query;
+};
 
 //Find out if a vector intersects with anything.
 //Fills in hit_data, an fvi_info structure (see above).
@@ -388,11 +189,11 @@ typedef struct fvi_query
 extern int fvi_FindIntersection(fvi_query *fq,fvi_info *hit_data,  bool no_subdivision = false);
 
 // Face/Room list for some fvi call(s)
-typedef struct fvi_face_room_list
+struct fvi_face_room_list
 {
 	ushort face_index;
 	ushort room_index;
-} fvi_face_room_list;
+};
 
 #define MAX_RECORDED_FACES 200
 
@@ -438,18 +239,17 @@ extern void InitFVI(void);
 
 // Types of supported collisions
 #ifdef NED_PHYSICS
-#define RESULT_NOTHING						0
+#define RESULT_NOTHING					0
 #define RESULT_CHECK_SPHERE_SPHERE		1
-#define RESULT_CHECK_SPHERE_POLY			2
-#define RESULT_CHECK_POLY_SPHERE			3
+#define RESULT_CHECK_SPHERE_POLY		2
+#define RESULT_CHECK_POLY_SPHERE		3
 #define RESULT_CHECK_BBOX_POLY			4
 #define RESULT_CHECK_POLY_BBOX			5
 #define RESULT_CHECK_BBOX_BBOX			6
-#define RESULT_CHECK_BBOX_SPHERE			7
-#define RESULT_CHECK_SPHERE_BBOX			8
-#define RESULT_CHECK_SPHERE_ROOM			9
+#define RESULT_CHECK_BBOX_SPHERE		7
+#define RESULT_CHECK_SPHERE_BBOX		8
+#define RESULT_CHECK_SPHERE_ROOM		9
 #define RESULT_CHECK_BBOX_ROOM			10
 #endif
 
 #endif
-

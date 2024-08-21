@@ -28,7 +28,6 @@
 #include "linux/linux_fix.h" //for strnicmp,etc.
 #endif
 
-
 #define LOCAL_TABLE "Table.loc"
 #define TEMP_LOCAL_TABLE "Tablr.loc"
 
@@ -57,15 +56,15 @@
 #define PAGETYPE_GENERIC	10
 
 
-typedef struct 
+struct mngs_Pagelock
 {
 	ubyte pagetype;						// of type PAGETYPE above
 	char name[PAGENAME_LEN];
 	char holder[PAGENAME_LEN];
-} mngs_Pagelock;
+};
 
-typedef struct
-{	
+struct mngs_track_lock
+{
 	ubyte used;
 	ubyte overlay;
 	ubyte pagetype;
@@ -73,19 +72,20 @@ typedef struct
 	int stack_filepos; // file position of this page in the tablefile (the value we are
 						// pushing, for addon tables)
 	char name[PAGENAME_LEN];
-} mngs_track_lock;
+};
 
 
 // For addon data
 #define MAX_ADDON_TRACKLOCKS	1000
 #define MAX_ADDON_TABLES	2
 
-typedef struct
+struct AddOnTablefile
 {
 	char AddOnTableFilename[TABLE_NAME_LEN];
 	int Num_addon_tracklocks;
 	mngs_track_lock *Addon_tracklocks;
-}AddOnTablefile;
+};
+
 extern AddOnTablefile AddOnDataTables[MAX_ADDON_TABLES];
 extern int Num_addon_tables;
 
@@ -170,8 +170,6 @@ void mng_ReadWriteDummyPage (CFILE *infile,CFILE *outfile,ubyte pagetype);
 
 // Function for writing out "undefined" page...useful for placeholding
 void mng_WriteUnknownPage (CFILE *outfile);
-
-
 
 // Lock functions
 //-----------------------------------------------

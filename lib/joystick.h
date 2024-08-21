@@ -15,63 +15,13 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/Lib/joystick.h $
- * $Revision: 11 $
- * $Date: 10/21/99 9:27p $
- * $Author: Jeff $
- *
- *	Joystick interface.
- *
- * $Log: /DescentIII/Main/Lib/joystick.h $
- * 
- * 11    10/21/99 9:27p Jeff
- * B.A. Macintosh code merge
- * 
- * 10    7/28/99 3:19p Kevin
- * Mac Stuff
- * 
- * 9     7/26/99 11:59a Samir
- * add code to get name of joystick
- * 
- * 8     7/16/99 11:14a Samir
- * multiple hat support and improved direct input support.
- * 
- * 7     4/09/99 12:02p Samir
- * joystick changes (Win32 DirectInput support)
- * 
- * 6     6/18/98 4:49p Samir
- * modified for better mouse support?
- * 
- * 5     6/02/98 4:37p Samir
- * multiple joysticks supported.
- * 
- * 4     6/01/98 4:27p Samir
- * pov may return multiple positions.
- * 
- * 3     12/05/97 12:49p Samir
- * New POV constants.
- * 
- * 2     12/03/97 7:33p Samir
- * Newer joystick library.
- * 
- * 1     11/24/97 3:27p Samir
- * Initial revision
- * 
- * $NoKeywords: $
- */
 
 #ifndef JOYSTICK_H
 #define JOYSTICK_H  
 
 //	joystick ids.  used to initialize a stick and get its position
-#ifdef MACINTOSH
-#define MAX_JOYSTICKS   1
-#define JOYPOV_NUM      1
-#else
 #define MAX_JOYSTICKS	8
 #define JOYPOV_NUM		4
-#endif
 
 //	these flags tell what axes these controllers control.
 #define JOYFLAG_XVALID			1
@@ -88,8 +38,8 @@
 //	set in joystate.pov
 #define JOYPOV_DIR				8
 #define JOYPOV_MAXVAL			0x100
-#define JOYPOV_UP					0
-#define JOYPOV_RIGHT				0x40
+#define JOYPOV_UP				0
+#define JOYPOV_RIGHT			0x40
 #define JOYPOV_DOWN				0x80
 #define JOYPOV_LEFT				0xc0
 #define JOYPOV_CENTER			0xff
@@ -108,7 +58,7 @@ typedef int tJoystick;
 #define JOYSTICK_8				7
 
 
-typedef struct tJoyInfo
+struct tJoyInfo
 {
 	char name[128];
 	unsigned axes_mask;
@@ -119,9 +69,7 @@ typedef struct tJoyInfo
 	int minr, maxr;
 	int minu, maxu;
 	int minv, maxv;
-}
-tJoyInfo;
-
+};
 
 //	shared between joystick remote server and local client.
 #define JOY_PORT		3192
@@ -131,14 +79,13 @@ tJoyInfo;
 #define JOY_INFO		"INFO"
 #define JOY_POLL		"POLL"
 
-typedef struct tJoyPacket
+struct tJoyPacket
 {
 	char coda[4];								// used to identify packet
 	char buf[128];
-}
-tJoyPacket;
+};
 
-typedef struct tJoyPos
+struct tJoyPos
 {
 	int x;
 	int y;
@@ -149,9 +96,7 @@ typedef struct tJoyPos
 	unsigned buttons;
 	unsigned btn;
 	unsigned pov[JOYPOV_NUM];
-}
-tJoyPos;
-
+};
 
 //	joystick system initialization
 bool joy_Init(bool emulation);
@@ -172,9 +117,4 @@ bool joy_IsValid(tJoystick joy);
 // run by ddio_Frame
 void ddio_InternalJoyFrame();
 
-//DAJ Added to support InSprocket
-#ifdef MACINTOSH
-void ddio_InternalJoySuspend(void);
-void ddio_InternalJoyResume(void);
-#endif
 #endif

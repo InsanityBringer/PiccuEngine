@@ -15,82 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/texture.h $
- * $Revision: 9 $
- * $Date: 5/05/98 3:02p $
- * $Author: Jason $
- *
- * Header for texture mapper library
- *
- * $Log: /DescentIII/Main/lib/texture.h $
- * 
- * 9     5/05/98 3:02p Jason
- * attempting to add different screen resolutions
- * 
- * 8     1/14/98 5:49p Jeff
- * tex_LFBLock stuff added (samir.)
- * 
- * 7     12/22/97 7:32p Samir
- * Took out include to gr.h
- * 
- * 6     12/19/97 5:22p Samir
- * Added more drawing primatives for software.
- * 
- * 5     12/19/97 12:20p Jason
- * changes for better 2d/3d system integration
- * 
- * 4     10/15/97 5:20p Jason
- * did a HUGE overhaul of the bitmap system
- * 
- * 3     9/16/97 4:09p Jason
- * implemented software zbuffer
- * 
- * 2     9/09/97 12:34p Jason
- * made software transparency work correctly with new alpha type
- * 
- * 2     6/24/97 7:45p Matt
- * Removed include of manage.h
- * 
- * 1     6/23/97 9:25p Samir
- * added because source safe sucks
- * 
- * 40    5/22/97 11:59a Jason
- * add a ScaleBitmap function to the abstracted render library
- * 
- * 39    5/19/97 5:10p Jason
- * changes for our new abstracted renderer code
- * 
- * 38    5/12/97 11:41a Jason
- * made game work (default) to 16bit no mip maps mode
- * Saves us alot of memory
- * 
- * 37    5/01/97 4:37p Jason
- * added alpha blending (slow)
- * 
- * 36    4/30/97 3:15p Jason
- * changes to support both 8bit and 16bit rendering in software
- * 
- * 35    4/11/97 4:20p Jason
- * implemented a general fog system
- * 
- * 34    3/25/97 2:33p Jason
- * added Software_renderer byte
- * 
- * 33    3/20/97 11:54a Jason
- * changes to support special triangle drawer
- * 
- * 32    3/14/97 4:33p Jason
- * added tex_SetMipState function
- * 
- * 31    3/13/97 6:19p Jason
- * implemented tex_GetRenderType function
- * 
- * 30    2/26/97 6:00p Matt
- * Renamed 3d lib structs for D3 naming convention
- *
- * $NoKeywords: $
- */
 
 #ifndef TEXTURE_H
 #define TEXTURE_H
@@ -101,7 +25,7 @@
 
 #define MAX_TEXTURE_SHADES 32
 
-typedef struct
+struct texs_texpoint
 {
 	int screenx,screeny;
 	float flscreenx,flscreeny;
@@ -111,11 +35,10 @@ typedef struct
 
 	fix monolight;
 	fix redlight,greenlight,bluelight;
-} texs_texpoint;
+};
 
 // For the following enum table: LIN=Linear, PER=Perspective, NON=No Transparency, LIT = Shaded, 
 //								 COLORED=Colored lighting, TRANS=Transparency ALPHA=Alpha renderer
-
 
 #define MAX_RENDER_TYPES 15
 

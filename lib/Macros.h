@@ -15,48 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/Lib/Macros.h $
- * $Revision: 11 $
- * $Date: 10/21/99 9:28p $
- * $Author: Jeff $
- *
- *	Macros.
- *
- * $Log: /DescentIII/Main/Lib/Macros.h $
- * 
- * 11    10/21/99 9:28p Jeff
- * B.A. Macintosh code merge
- * 
- * 10    7/28/99 5:18p Kevin
- * Mac merge fixes
- * 
- * 9     7/28/99 3:17p Kevin
- * Mac Changes
- * 
- * 8     12/16/98 1:57p Samir
- * Replaced CleanupString2 with CleanupStr
- * 
- * 7     12/02/98 11:44a Samir
- * added CHECK_FLAG macro
- * 
- * 6     8/10/98 5:53p Samir
- * macro to convert KB to bytes.
- * 
- * 5     7/14/98 11:52a Samir
- * added cleanup string 'macro'.
- * 
- * 4     5/15/98 3:13p Samir
- * added some ushort/byte macros.
- * 
- * 3     3/31/98 7:48p Samir
- * fixed horrible makeword macro bug.
- * 
- * 2     12/03/97 7:37p Samir
- * Added makeword, hiword and loword macros.
- * 
- * $NoKeywords: $
- */
+
 #ifndef _MACROS_H
 #define _MACROS_H
 #define SWAP(a,b) do { int _swap_var_=(a); (a)=(b); (b)=_swap_var_; } while (0)

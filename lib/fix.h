@@ -15,47 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/Lib/fix.h $
- * $Revision: 4 $
- * $Date: 10/21/99 9:27p $
- * $Author: Jeff $
- *
- *  Header for fixed-point math functions
- *
- * $Log: /DescentIII/Main/Lib/fix.h $
- * 
- * 4     10/21/99 9:27p Jeff
- * B.A. Macintosh code merge
- * 
- * 3     9/09/97 3:53p Chris
- * Added a #define PI to fix.h
- * 
- * 2     8/22/97 12:34p Jason
- * added FixCeil and FixFloor
- * 
- * 1     6/23/97 9:25p Samir
- * added because source safe sucks
- * 
- * 7     2/27/97 4:57p Samir
- * include fixwin32.h from win\fixwin32.h
- * 
- * 6     2/27/97 4:52 PM Jeremy
- * moved inline asm fixmul/div functions into separate header files for
- * mac and pc.
- * 
- * 5     2/12/97 5:27p Jason
- * implemented asin,acos,atan2
- * 
- * 4     2/10/97 1:57p Jason
- * changed FloatToFix back to what it originally was
- * 
- * 3     2/07/97 5:44p Matt
- * Moved fixed-point math funcs from vecmat to fix
- * Changed trig functions to use small table like D2
- *
- * $NoKeywords: $
- */
 
 #ifndef _FIX_H
 #define _FIX_H
@@ -101,7 +60,6 @@ float FixCosFast(angle a);
 fix FloatToFixFast(float num);
 
 //Conversion macros
-//??#define FloatToFix(num) Round((num) * FLOAT_SCALER)
 #define FloatToFix(num) ((fix)((num)*FLOAT_SCALER))
 #define IntToFix(num) ((num) << FIX_SHIFT)
 #define ShortToFix(num) (((long) (num)) << FIX_SHIFT)
@@ -110,9 +68,7 @@ fix FloatToFixFast(float num);
 #define FixToShort(num) ((short) ((num) >> FIX_SHIFT))
 
 //Fixed-point math functions in inline ASM form
-#if defined(MACINTOSH)
-	#include "fixmac.h"
-#elif defined(WIN32)
+#if defined(WIN32)
 	#include "win\fixwin32.h"
 #endif
 

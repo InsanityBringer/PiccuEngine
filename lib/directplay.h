@@ -15,31 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/directplay.h $
- * $Revision: 5 $
- * $Date: 9/02/98 6:54p $
- * $Author: Kevin $
- *	
- *	Directplay API header
- *
- * $Log: /DescentIII/Main/lib/directplay.h $
- * 
- * 5     9/02/98 6:54p Kevin
- * Fixed general directplay support up, and got modem-modem working
- * 
- * 4     8/24/98 10:55a Kevin
- * new directplay stuff
- * 
- * 3     8/14/98 4:54p Kevin
- * More directplay stuff
- * 
- * 2     8/13/98 6:32p Kevin
- * Initial implementation of directplay API
- * 
- * 1     8/13/98 6:25p Kevin
- * 
-*/
+
 #ifndef _OUTRAGE_DIRECTPLAY_HEADER
 #define _OUTRAGE_DIRECTPLAY_HEADER
 
@@ -47,10 +23,10 @@
 #include "dplay.h"
 #include "dplobby.h"
 
-typedef struct _modem_list
+struct modem_list
 {
 	char name[200];
-}modem_list;
+};
 
 
 #define MAX_MODEMS	15

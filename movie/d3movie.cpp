@@ -39,7 +39,6 @@
 
 
 #include "movie.h"
-#include "mvelibw.h"
 #include "pserror.h"
 #include "renderer.h"
 #include "application.h"

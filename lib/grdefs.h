@@ -24,15 +24,15 @@
 //	bit depth info
 #define BPP_TO_BYTESPP(x)    (((x)+7)>>3)
 
-#define BPP_DEFAULT	0					// default for current display 
-#define BPP_8			8					// 8-bit paletted.
-#define BPP_15			15					// 5-5-5 + chroma Hicolor
-#define BPP_16			16					// 5-6-5 Hicolor
-#define BPP_24			24					// 24 bit true color
-#define BPP_32			32					// 32 bit true color
+#define BPP_DEFAULT	0			// default for current display 
+#define BPP_8			8		// 8-bit paletted.
+#define BPP_15			15		// 5-5-5 + chroma Hicolor
+#define BPP_16			16		// 5-6-5 Hicolor
+#define BPP_24			24		// 24 bit true color
+#define BPP_32			32		// 32 bit true color
 
-#define FIXED_SCREEN_WIDTH				640
-#define FIXED_SCREEN_HEIGHT			480
+#define FIXED_SCREEN_WIDTH		640
+#define FIXED_SCREEN_HEIGHT		480
 		  
 //	transparent color constant here.
 #define OPAQUE_FLAG16	0x8000
@@ -44,14 +44,14 @@
 typedef uint ddgr_color;
 
 // Color constants
-const ddgr_color GR_NULL		= 0xffffffff,					// don't do a thing with this.
-					GR_BLACK			= 0x00000000,
-					GR_GREEN			= 0x0000ff00,
+const ddgr_color GR_NULL			= 0xffffffff,	// don't do a thing with this.
+					GR_BLACK		= 0x00000000,
+					GR_GREEN		= 0x0000ff00,
 					GR_RED			= 0x00ff0000,
 					GR_BLUE			= 0x000000ff,
 					GR_DARKGRAY		= 0x00404040,
 					GR_LIGHTGRAY	= 0x00c0c0c0,
-					GR_WHITE			= 0x00ffffff;
+					GR_WHITE		= 0x00ffffff;
 
 #define GR_COLOR_CHAR		1			// ASCII 1 and (r,g,b) changes current text color in string.
 
@@ -104,6 +104,5 @@ inline ddgr_color GR_16_TO_COLOR(ushort col)
 
 	return GR_RGB(r,g,b);
 }
-
 
 #endif

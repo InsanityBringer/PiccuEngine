@@ -15,21 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/lib/audio_encode.h $
-* $Revision: 1 $
-* $Date: 1/27/99 1:33a $
-* $Author: Jeff $
-*
-* Header file for audio compression library
-*
-* $Log: /DescentIII/Main/lib/audio_encode.h $
- * 
- * 1     1/27/99 1:33a Jeff
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef __AUDIO_ENCODE_H_
 #define __AUDIO_ENCODE_H_

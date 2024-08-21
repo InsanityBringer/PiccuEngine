@@ -15,92 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/lib/demofile.h $
- * $Revision: 25 $
- * $Date: 7/21/99 12:03p $
- * $Author: Kevin $
- *
- * 
- *
- * $Log: /DescentIII/main/lib/demofile.h $
- * 
- * 25    7/21/99 12:03p Kevin
- * Changed version numbers around
- * 
- * 24    4/25/99 10:19p Matt
- * Fixed multiplayer and demo problems will killing an object from script,
- * and cleaned up the death code a bit in the process.
- * 
- * 23    3/12/99 7:53p Jeff
- * save player rotating balls info, handle obj_observer with obj_player,
- * handle objects that use life left, handle 2d sound playing
- * 
- * 22    3/11/99 11:40a Kevin
- * New stuff for multi
- * 
- * 21    3/10/99 2:25p Kevin
- * Save/Load and Demo file fixes
- * 
- * 20    2/25/99 11:01a Matt
- * Added new explosion system.
- * 
- * 19    2/23/99 12:45a Jeff
- * added support for in-game-cinematics in demo system
- * 
- * 18    2/22/99 9:21p Kevin
- * Added DT_CINEMATICS
- * 
- * 17    2/08/99 7:05p Kevin
- * Trying to get demo system working with powerup scripts
- * 
- * 16    1/23/99 10:12p Kevin
- * Added the start of osiris support into the demo system
- * 
- * 15    11/24/98 3:57p Kevin
- * Demo system immprovements
- * 
- * 14    11/24/98 12:08p Kevin
- * 
- * 13    11/24/98 10:41a Kevin
- * Demo system
- * 
- * 12    11/23/98 4:52p Kevin
- * Demo system enhancments
- * 
- * 11    11/23/98 3:11p Kevin
- * Demo system
- * 
- * 10    11/19/98 5:40p Kevin
- * Demo system
- * 
- * 9     11/17/98 4:17p Kevin
- * Demo recording system
- * 
- * 8     11/11/98 2:46p Kevin
- * Demo recording system work
- * 
- * 7     11/09/98 4:12p Kevin
- * 
- * 6     11/05/98 5:54p Kevin
- * Demo system work
- * 
- * 5     10/08/98 12:00p Kevin
- * Demo system work
- * 
- * 4     10/06/98 5:46p Kevin
- * Added new configuration for demo
- * 
- * 3     10/05/98 12:09p Kevin
- * Converted projects to VC6 and demo file stuff added
- * 
- * 2     10/05/98 10:32a Kevin
- * Initial Version
- * 
- * 1     10/05/98 10:22a Kevin
- *
- * $NoKeywords: $
- */
 
 #ifndef _DEMO_FILE_HEADER_
 #define _DEMO_FILE_HEADER_
@@ -113,9 +27,10 @@ extern bool Demo_do_one_frame;
 extern bool Demo_restart;
 extern bool Demo_auto_play;
 extern float Demo_frame_ofs;
-#define DF_NONE		0
+
+#define DF_NONE			0
 #define DF_RECORDING	1
-#define DF_PLAYBACK	2
+#define DF_PLAYBACK		2
 
 #define D3_DEMO_SIG	"D3DEM"
 #define D3_DEMO_SIG_NEW	"D3DM1"
@@ -137,7 +52,7 @@ extern float Demo_frame_ofs;
 #define DT_UNATTACH			15			//Unattach some stuff
 #define DT_WEAP_FIRE_FLAG	16			//flags like spraying and on/off
 #define DT_PLAYER_INFO		17			//Player 1's info like energy/sheilds, etc.
-#define DT_MSAFE				18			//MSAFE data (ie script stuff)
+#define DT_MSAFE			18			//MSAFE data (ie script stuff)
 #define DT_POWERUP			19			//Powerups data
 #define DT_CINEMATICS		20			//Cinematic info
 #define DT_PERSISTANT_HUD	21			//Persistant hud message

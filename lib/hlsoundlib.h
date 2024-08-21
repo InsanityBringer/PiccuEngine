@@ -22,7 +22,6 @@
 #include "ssl_lib.h"
 #include "object.h"
 
-
 //////////////////////////////////////////////////////////////////////////
 
 #define MAX_SOUNDS_MIXED 40
@@ -62,8 +61,6 @@ public:
 		int object_handle;
 	} m_link_info;
 };
-
-
 
 class hlsSystem 
 {
@@ -220,6 +217,5 @@ extern hlsSystem Sound_system;
 #define ENVAUD_PRESET_DRUGGED				23
 #define ENVAUD_PRESET_DIZZY					24
 #define ENVAUD_PRESET_PSYCHOTIC				25
-
 
 #endif

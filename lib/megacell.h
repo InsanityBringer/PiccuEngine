@@ -30,7 +30,7 @@
 #define MAX_MEGACELL_WIDTH		8
 #define MAX_MEGACELL_HEIGHT		8
 
-typedef struct
+struct megacell
 {
 	char			name[PAGENAME_LEN];
 	sbyte			width;
@@ -39,7 +39,7 @@ typedef struct
 	short			texture_handles[MAX_MEGACELL_WIDTH*MAX_MEGACELL_HEIGHT];
 	int				flags;
 	ubyte			used;
-} megacell;
+};
 
 extern int Num_megacells;
 extern megacell Megacells[MAX_MEGACELLS];
@@ -63,8 +63,4 @@ int GetPrevMegacell (int n);
 // or index of MEGACELL with name
 int FindMegacellName (char *name);
 
-
-
 #endif
-
-

@@ -18,7 +18,6 @@
 #ifndef _TYPES_H
 #define _TYPES_H
 
-
 //define unsigned types;
 typedef unsigned char ubyte;
 typedef signed char sbyte;
@@ -59,4 +58,3 @@ typedef long long longlong;
 #endif
 
 #endif
-

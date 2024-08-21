@@ -15,69 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/lib/collide.h $
-* $Revision: 15 $
-* $Date: 6/10/99 6:41p $
-* $Author: Chris $
-*
-* Descent III collide code
-*
-* $Log: /DescentIII/Main/lib/collide.h $
- * 
- * 15    6/10/99 6:41p Chris
- * Added ned_physics support
- * 
- * 14    4/23/99 9:22p Matt
- * Changed weapons to keep going after breaking glass.
- * 
- * 13    4/14/99 3:59a Jeff
- * fixed case mismatches in #includes
- * 
- * 12    1/29/99 5:09p Chris
- * Made changes for ROCKS
- * 
- * 11    1/01/99 4:10p Chris
- * Added some const parameters, improved ray cast object collide/rejection
- * code
- * 
- * 10    10/09/98 7:47p Chris
- * Added ObjSetDeadFlag
- * 
- * 9     6/15/98 7:01a Chris
- * Cleaned out DII stuff and added new PhysicsSim extern's
- * 
- * 8     5/07/98 2:22p Chris
- * Hit die dot
- * 
- * 7     5/05/98 3:42p Chris
- * Code cleanup and fixed the collide_XXX_with_wall code.  The wall_normal
- * was know by fvi; so, it is passed to the function (instead of
- * generating it again)
- * 
- * 6     2/05/98 2:02p Chris
- * Fixed the hitseg and hitwall in collide_object_with_wall and
- * scrape_object_with_wall
- * 
- * 5     10/21/97 4:15p Chris
- * Incremental integration of the fvi/physics/collide code
- * 
- * 4     10/20/97 11:55a Chris
- * Added some support for the new collide system.
- * 
- * 3     9/17/97 10:59a Chris
- * Added a new way to compute radi
- * 
- * 2     9/15/97 5:17a Chris
- * Removed the Explosion Vclips since they do not play correctly in
- * Hardware
- * Added support for building collisons.  
- * working on SPhere to non-moving sphere collisions
- * 
- * 5     3/15/97 1:29p Chris
-*
-* $NoKeywords: $
-*/
 
 #ifndef _COLLIDE_H
 #define _COLLIDE_H
