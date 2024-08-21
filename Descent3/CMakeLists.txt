@@ -82,7 +82,6 @@ SET (MAIN_SOURCES
 		Descent3/multi_server.h
 		Descent3/multi_ui.h
 		Descent3/multi_world_state.h
-		Descent3/NewPyroGauges.h
 		Descent3/newrender.cpp
 		Descent3/newrender.h
 		Descent3/newui.h
@@ -114,7 +113,6 @@ SET (MAIN_SOURCES
 		Descent3/robotfire.h
 		Descent3/robotfirestruct.h
 		Descent3/robotfirestruct_external.h
-		Descent3/rocknride.h
 		Descent3/room.h
 		Descent3/room_external.h
 		Descent3/scorch.h
@@ -223,7 +221,6 @@ SET (MAIN_SOURCES
 		Descent3/multi_save_setting.cpp
 		Descent3/multi_server.cpp
 		Descent3/multi_ui.cpp
-		Descent3/NewPyroGauges.cpp
 		Descent3/newui.cpp
 		Descent3/newui_core.cpp
 		Descent3/newui_filedlg.cpp
@@ -244,7 +241,6 @@ SET (MAIN_SOURCES
 		Descent3/render.cpp
 		Descent3/renderobject.cpp
 		Descent3/robotfire.cpp
-		Descent3/rocknride.cpp
 		Descent3/room.cpp
 		Descent3/scorch.cpp
 		Descent3/screens.cpp

@@ -62,7 +62,6 @@
 #include "config.h"
 #include "osiris_dll.h"
 #include "gamesequence.h"
-#include "rocknride.h"
 #include "vibeinterface.h"
 
 player Players[MAX_PLAYERS];
@@ -1106,10 +1105,6 @@ void InitiatePlayerDeath(object* playerobj, bool melee, int fate)
 
 		//Start the death sequence
 		StartPlayerDeath(playerobj->id, -playerobj->shields, melee, fate);
-
-		//Send the Game status to the rock'n'ride chair
-		if (playerobj->id == Player_num)
-			RNR_UpdateGameStatus(RNRGSC_PLAYERDIES);
 	}
 }
 

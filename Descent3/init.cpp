@@ -89,7 +89,6 @@
 #include "marker.h"
 #include "gamecinematics.h"
 #include "debuggraph.h"
-#include "rocknride.h"
 #include "vibeinterface.h"
 #include "gamespy.h"
 
