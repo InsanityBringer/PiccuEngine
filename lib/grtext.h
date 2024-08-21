@@ -107,8 +107,8 @@
 #ifndef GRTEXT_H
 #define GRTEXT_H
 
+#include "grdefs.h"
 #include "pstypes.h"
-#include "ddvid.h"
 
 #define GRTEXT_BUFLEN				16384
 #define GRTEXT_FORMAT_CHAR			0x2

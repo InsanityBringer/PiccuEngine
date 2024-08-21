@@ -114,6 +114,11 @@ public:
 	void DrawIndexed(PrimitiveType mode, ElementRange range) const;
 
 	void Destroy();
+
+	//Special primitive controls
+
+	//Adds a rotated screen-aligned billboard to the mesh
+	void AddBitmapRotated(vector* origin, float angle, float width, float height, int color = 0xFFFFFF, float alpha = 1.0f);
 };
 
 class IndexBuffer

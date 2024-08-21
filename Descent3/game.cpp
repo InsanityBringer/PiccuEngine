@@ -17,7 +17,6 @@
 */
 
 #include "game.h"
-#include "ddvid.h"
 #include "ddio.h"
 #include "pserror.h"
 #include "program.h"
@@ -449,15 +448,6 @@ void SetScreenMode(int sm, bool force_res_change)
 		rend_width = rs.screen_width;
 		rend_height = rs.screen_height;
 
-		//	sets up the screen resolution for the system
-		if (!UseHardware)
-			ddvid_SetVideoMode(rend_width, rend_height, BPP_16, true);
-		else
-		{
-			if (PreferredRenderer == RENDERER_OPENGL)
-				ddvid_SetVideoMode(rend_width, rend_height, BPP_16, false);
-		}
-
 		//	chose font.
 		SelectHUDFont(rend_width);
 
@@ -520,18 +510,6 @@ void SetScreenMode(int sm, bool force_res_change)
 	}
 
 	mprintf((0, "NEW rend_width=%d height=%d\n", Max_window_w, Max_window_h));
-
-	//	mark res change as false.
-
-#ifdef EDITOR
-	extern unsigned hGameWnd;
-	//	HACK!!! In editor, to get things working fine, reassert window handle attached to game screen
-	//	is the topmost window, since in the editor, if we're fullscreen the parent window is still
-	//	the editor window, the screen would belong to the editor window.
-	tWin32AppInfo appinfo;
-	Descent->get_info(&appinfo);
-	ddvid_SetVideoHandle(hGameWnd);
-#endif
 }
 
 
@@ -698,12 +676,6 @@ void EndFrame()
 {
 	//@@Frame_inside = false;
 	rend_EndFrame();
-
-	//	for software renderers perform unlock on frame buffer.
-	if (Renderer_type == RENDERER_SOFTWARE_16BIT)
-	{
-		ddvid_UnlockFrameBuffer();
-	}
 
 	//pop off frame
 	int x1, x2, y1, y2;

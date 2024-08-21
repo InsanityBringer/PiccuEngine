@@ -125,9 +125,6 @@ void DeleteTempFiles(void);
 
 #define TEMPBUFFERSIZE	256
 
-//If there's a joystick, this is the stick number.  Else, this is -1
-char App_ddvid_subsystem[8];
-
 //	other info.
 static chunked_bitmap Title_bitmap;
 static bool Init_systems_init = false;
@@ -1039,14 +1036,6 @@ void InitGraphics(bool editor)
 	rend_Init (RENDERER_SOFTWARE_16BIT, Descent,NULL);
 	Desktop_surf = new grSurface(0,0,0, SURFTYPE_VIDEOSCREEN, 0);
 #else
-	strcpy(App_ddvid_subsystem,  "GDIX");
-
-	if (!Dedicated_server)
-	{
-		if (!ddvid_Init( Descent, App_ddvid_subsystem)) 
-			Error("Graphics initialization failed.\n");
-	}
-
 	INIT_MESSAGE("Loading fonts.");
 	LoadAllFonts();
 #endif
@@ -1718,7 +1707,6 @@ void ShutdownD3()
 	Init_old_screen_mode = GetScreenMode();
 	Init_old_ui_callback = GetUICallback();
 	SetScreenMode(SM_NULL);
-	ddvid_Close();
 
 // shutdown IO
 	ddio_Close();
@@ -1754,7 +1742,6 @@ void RestartD3()
 	}
 
 //	startup screen.
-	ddvid_Init(Descent, App_ddvid_subsystem); 
 	ddio_KeyFlush();
 	SetScreenMode(Init_old_screen_mode);
 	SetUICallback(Init_old_ui_callback);

@@ -44,7 +44,6 @@
 #include "renderer.h"
 #include "application.h"
 #include "ddio.h"
-#include "ddvid.h"
 #include "grtext.h"
 #include "mem.h"
 #include "bitmap.h"

@@ -167,7 +167,6 @@
 #include "UIlib.h"
 #include "application.h"
 #include "bitmap.h"
-#include "ddvid.h"
 #include "renderer.h"
 #include "psclass.h"
 #include "Macros.h"

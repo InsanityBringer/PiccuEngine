@@ -37,7 +37,6 @@
 #include "gameevent.h"
 #include "gametexture.h"
 #include "AIMain.h"
-#include "ddvid.h"
 #include "ddio.h"
 #include "hud.h"
 #include "terrain.h"
