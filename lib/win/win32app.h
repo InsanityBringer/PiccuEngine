@@ -26,7 +26,7 @@ typedef unsigned int HWnd;
 typedef unsigned int HInstance;
 
 //	This structure is used to retrieve and set 
-typedef struct tWin32AppInfo 
+struct tWin32AppInfo 
 {
 	unsigned flags;							// Application Flags
 	HWnd hwnd;									// Window Handle
@@ -34,7 +34,7 @@ typedef struct tWin32AppInfo
 	int wnd_x, wnd_y, wnd_w, wnd_h;		// Window dimensions
 };
 
-typedef enum tWin32OS 
+enum tWin32OS 
 {
 	NoWin32,
 	Win9x,

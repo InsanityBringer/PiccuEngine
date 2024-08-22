@@ -235,7 +235,7 @@ inline void MultiAddFloat (float element,ubyte *data,int *count)
 inline void MultiAddString (char *str,ubyte *data,int *count)
 {
 	size_t reallen = strlen(str) + 1;
-	ubyte len = reallen;
+	ubyte len = (ubyte)reallen;
 	if (reallen >= 256)
 	{
 		len = 255;
