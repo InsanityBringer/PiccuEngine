@@ -66,6 +66,10 @@
 #include "directplay.h"
 #endif
 
+//[ISB] Signature for Piccu engine connectors
+constexpr int PICCU_SIG = 0x55434950;
+constexpr int PICCU_CONNECT_API_VER = 1;
+
 void* callback = NULL;
 module MultiDLLHandle = { NULL };
 int SearchForLocalGamesTCP(unsigned int ask, ushort port);
@@ -77,22 +81,28 @@ extern void UpdateAndPackGameList(void);
 extern bool Multi_Gamelist_changed;
 int CheckMissionForScript(char* mission, char* script, int dedicated_server_num_teams);
 void ShowNetgameInfo(network_game* game);
+
 // The exported DLL function call prototypes
 #if defined(__LINUX__)
+typedef int DLLFUNCCALL(*DLLMultiGetPiccuAPIVer_fp)();
 typedef void DLLFUNCCALL(*DLLMultiCall_fp)(int eventnum);
 typedef void DLLFUNCCALL(*DLLMultiScoreCall_fp)(int eventnum, void* data);
 typedef void DLLFUNCCALL(*DLLMultiInit_fp)(int* api_fp);
 typedef void DLLFUNCCALL(*DLLMultiClose_fp)();
 #else
+typedef int(DLLFUNCCALL* DLLMultiGetPiccuAPIVer_fp)();
 typedef void(DLLFUNCCALL* DLLMultiCall_fp)(int eventnum);
 typedef void(DLLFUNCCALL* DLLMultiScoreCall_fp)(int eventnum, void* data);
 typedef void(DLLFUNCCALL* DLLMultiInit_fp)(int* api_fp);
 typedef void(DLLFUNCCALL* DLLMultiClose_fp)();
 #endif
-DLLMultiScoreCall_fp DLLMultiScoreCall = NULL;
-DLLMultiCall_fp DLLMultiCall = NULL;
-DLLMultiInit_fp DLLMultiInit = NULL;
-DLLMultiClose_fp DLLMultiClose = NULL;
+
+DLLMultiScoreCall_fp DLLMultiScoreCall = nullptr;
+DLLMultiCall_fp DLLMultiCall = nullptr;
+DLLMultiInit_fp DLLMultiInit = nullptr;
+DLLMultiClose_fp DLLMultiClose = nullptr;
+DLLMultiGetPiccuAPIVer_fp DLLMultiGetPiccuAPIVer = nullptr;
+
 //dllmultiiInfo DLLMultiInfo;
 //The DLL needs these too.
 #define MAXTEXTITEMS			100
@@ -105,6 +115,7 @@ DLLMultiClose_fp DLLMultiClose = NULL;
 #define MAXHOTSPOTS			20
 #define MAXCONSOLES			5
 #define MAXPARENTS		5
+
 NewUIMessageBox	messageb;
 //Stuff for the splash
 UITextItem ti_msg("", UICOL_TEXT_NORMAL);
@@ -114,10 +125,12 @@ UITextItem ti_cancel_off("", UICOL_HOTSPOT_LO);
 UIHotspot uih;
 UIHotspot uihcancel;
 UIText ti;
+
 extern char HelpText1[];
 extern char HelpText2[];
 extern char HelpText3[];
 extern char HelpText4[];
+
 char Auto_login_name[MAX_AUTO_LOGIN_STUFF_LEN];
 char Auto_login_pass[MAX_AUTO_LOGIN_STUFF_LEN];
 char Auto_login_addr[MAX_AUTO_LOGIN_STUFF_LEN];
@@ -125,6 +138,7 @@ char Auto_login_port[MAX_AUTO_LOGIN_STUFF_LEN];
 char Multi_conn_dll_name[_MAX_PATH * 2] = "";
 char PXO_hosted_lobby_name[100] = "global";
 bool Supports_score_api = false;
+
 #ifdef USE_DIRECTPLAY
 extern modem_list	Modems_found[MAX_MODEMS];
 extern int Num_modems_found;
@@ -342,7 +356,6 @@ void FreeMultiDLL()
 // Loads the Multi dll.  Returns 1 on success, else 0 on failure
 int LoadMultiDLL(char* name)
 {
-	static int first = 1;
 	char lib_name[_MAX_PATH * 2];
 	char dll_name[_MAX_PATH * 2];
 	char tmp_dll_name[_MAX_PATH * 2];
@@ -357,7 +370,7 @@ int LoadMultiDLL(char* name)
 	ddio_DeleteFile(dll_path_name);
 	//Make the hog filename
 	ddio_MakePath(lib_name, Base_directory, "online", name, NULL);
-	strcat(lib_name, ".d3c");
+	strcat(lib_name, ".piccucon");
 	//Make the dll filename
 #if defined (WIN32)
 	sprintf(dll_name, "%s.dll", name);
@@ -369,12 +382,12 @@ int LoadMultiDLL(char* name)
 	if (!cf_OpenLibrary(lib_name))
 	{
 		ddio_MakePath(tmp_dll_name, Base_directory, "online", name, NULL);
-		strcat(tmp_dll_name, ".d3c");
+		strcat(tmp_dll_name, ".piccucon");
 		Multi_conn_dll_name[0] = NULL;
 		goto loaddll;
 	}
 	//get a temp file name
-	if (!ddio_GetTempFileName(Descent3_temp_directory, "d3c", tmp_dll_name))
+	if (!ddio_GetTempFileName(Descent3_temp_directory, "piccucon", tmp_dll_name))
 	{
 		return 0;
 	}
@@ -392,6 +405,31 @@ loaddll:
 	{
 		int err = mod_GetLastError();
 		mprintf((0, "You are missing the DLL %s!\n", name));
+		return 0;
+	}
+
+	DLLMultiGetPiccuAPIVer = (DLLMultiGetPiccuAPIVer_fp)mod_GetSymbol(&MultiDLLHandle, "DLLMultiGetPiccuAPIVer", 0);
+	if (!DLLMultiGetPiccuAPIVer)
+	{
+		int err = mod_GetLastError();
+		mprintf((0, "Couldn't get a handle to the dll function DLLMultiInit!\n"));
+		Int3();
+		FreeMultiDLL();
+		return 0;
+	}
+
+	int expected_version = DLLMultiGetPiccuAPIVer();
+	if (expected_version != PICCU_CONNECT_API_VER)
+	{
+		FreeMultiDLL();
+		if (!Dedicated_server)
+		{
+			DoMessageBox("Connect error", "Connector is for an unsupported version!", MSGBOX_OK);
+		}
+		else
+		{
+			PrintDedicatedMessage("Specified connector is for an unsupported version!");
+		}
 		return 0;
 	}
 
@@ -423,16 +461,7 @@ loaddll:
 		return 0;
 	}
 
-	if (first)
-	{
-		//Jeff: Linux dies if you try to free a DLL/so during atexit
-		//for some reason.  The dll/so should be freed during
-		//game sequencing anyway.
-		//atexit (FreeMultiDLL);
-		first = 0;
-	}
-	void* api_fp;
-	api_fp = (void*)GetMultiAPI;
+	void* api_fp = (void*)GetMultiAPI;
 
 	if (Auto_login_name[0])
 	{

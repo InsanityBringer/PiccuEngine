@@ -88,9 +88,16 @@ extern int MTAVersionCheck(unsigned int oldver, char *URL);
 // from a CPP file.
 extern "C"
 {
+	DLLEXPORT int DLLFUNCCALL DLLMultiGetPiccuAPIVer();
 	DLLEXPORT void DLLFUNCCALL DLLMultiInit (int *api_func);
 	DLLEXPORT void DLLFUNCCALL DLLMultiCall (int eventnum);
 	DLLEXPORT void DLLFUNCCALL DLLMultiClose ();
+}
+
+
+int DLLFUNCCALL DLLMultiGetPiccuAPIVer()
+{
+	return 1;
 }
 
 static bool All_ok = true;

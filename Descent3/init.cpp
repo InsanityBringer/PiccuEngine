@@ -667,7 +667,8 @@ tTempFileInfo temp_file_wildcards[] =
 	{"d3o*.tmp"},
 	{"d3c*.tmp"},
 	{"d3t*.tmp"},
-	{"d3i*.tmp"}
+	{"d3i*.tmp"},
+	{"piccucon*.tmp"}
 };
 int num_temp_file_wildcards = sizeof(temp_file_wildcards)/sizeof(tTempFileInfo);
 

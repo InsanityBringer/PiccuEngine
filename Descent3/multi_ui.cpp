@@ -156,7 +156,7 @@ int MainMultiplayerMenu()
 	char buffer[_MAX_PATH], fname[_MAX_PATH], fext[_MAX_PATH], fdir[_MAX_PATH];
 	char search[256];
 
-	ddio_MakePath(search, Base_directory, "online", "*.d3c", NULL);
+	ddio_MakePath(search, Base_directory, "online", "*.piccucon", NULL);
 
 	int dftidx = -1;
 	dllcount = 0;
@@ -486,7 +486,7 @@ int AutoConnectLANIP()
 			Auto_login_port[0] = NULL;
 	}
 	//ddio_MakePath(seldll,Base_directory,"online","Direct TCP~IP Game.d3c",NULL);
-	if (LoadMultiDLL("Direct TCP~IP"))
+	if (LoadMultiDLL("TCP-IP"))
 		CallMultiDLL(MT_AUTO_LOGIN);
 	
 	return MultiDLLGameStarting;
