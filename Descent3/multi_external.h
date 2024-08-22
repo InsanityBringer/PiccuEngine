@@ -235,18 +235,21 @@ inline void MultiAddFloat (float element,ubyte *data,int *count)
 inline void MultiAddString (char *str,ubyte *data,int *count)
 {
 	size_t reallen = strlen(str) + 1;
-
-	if (reallen < 256)
+	ubyte len = reallen;
+	if (reallen >= 256)
 	{
-		ubyte len = (ubyte)reallen;
+		len = 255;
 
 		MultiAddByte(len, data, count);
 		memcpy(&data[*count], str, len);
 		*count += len;
+		data[*count - 1] = '\0';
 	}
 	else
 	{
-		Error("MultiAddString: Tried to send string that is too long (%u chars)!", reallen);
+		MultiAddByte(len, data, count);
+		memcpy(&data[*count], str, len);
+		*count += len;
 	}
 }
 

@@ -52,7 +52,7 @@
 #define EVT_CLIENT_GAMEPLAYEREXPLODED			0x609	//called in game script when a player explodes
 #define EVT_CLIENT_GAMECOLLIDE					0x60A	//called in game script when 2 object collide (one of the two must be player or robot)
 #define EVT_CLIENT_GAMEPLAYERCHANGESEG			0x60B	//called when a player changes rooms or 'large' terrain cell (8x8 terrain cell block)
-#define EVT_CLIENT_GAMEPLAYERENTERSGAME			00x60C	//called when a player enters the game
+#define EVT_CLIENT_GAMEPLAYERENTERSGAME			0x60C	//called when a player enters the game
 #define EVT_CLIENT_GAMEPLAYERDISCONNECT			0x60D	//called when a player disconnects from the game
 #define EVT_CLIENT_GAMECREATED					0x60E	// called when a multiplayer game is created
 #define EVT_CLIENT_GAMELEVELCHANGE				0x60F	// called when the server changes a level
