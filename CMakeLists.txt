@@ -63,7 +63,7 @@ IF (WIN32)
 	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL /FD /EHsc /MT /W3 /nologo /c /Zi /errorReport:prompt")
 	
 	SET(CMAKE_MODULE_LINKER_FLAGS "/SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
-	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DMONO -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
+	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
 
 	SET(PLATFORM_INCLUDES "lib/win/directx" "lib/win" "thirdparty/OpenAL/include" )
 	
@@ -79,6 +79,21 @@ ENDIF ()
 MESSAGE("Install will copy files to ${D3_GAMEDIR}")
 
 include_directories("lib" "Descent3" "netcon/includes" ${PLATFORM_INCLUDES})
+
+IF (WIN32)
+	SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib wininet.lib
+		${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${OPENAL_LIBRARY})
+	SET (MIN_PLATFORM_LIBS wsock32.lib wininet.lib)
+ENDIF()
+IF (UNIX AND NOT APPLE)
+	SET (PLATFORM_LIBS ${SDL_LIBRARY} caca asound audio esd aa directfb m dl GLU)
+	SET (MIN_PLATFORM_LIBS ${PLATFORM_LIBS}) #todo
+ENDIF()
+IF (APPLE)
+	SET (PLATFORM_LIBS ${SDL_LIBRARY} ncurses )
+	SET (MIN_PLATFORM_LIBS ${PLATFORM_LIBS}) #todo
+ENDIF()
+
 
 #Hogdir stuff
 add_subdirectory(tools)
@@ -128,12 +143,11 @@ ADD_SUBDIRECTORY (libacm)
 ADD_SUBDIRECTORY (netgames)
 ADD_SUBDIRECTORY (Descent3)
 ADD_SUBDIRECTORY (netcon/inetfile)
+#dependent on above
+ADD_SUBDIRECTORY (netcon)
 
-# For now we don't need to build the scripts under windows, so we'll only include
-# the directory when building for linux/osx. In the future we may want to to fix bugs, etc.
 #[ISB] TODO: Needs fixing for new build system
 #IF(UNIX)
-#ADD_SUBDIRECTORY (netcon)
 #ADD_SUBDIRECTORY (scripts)
 #ENDIF()
 
@@ -197,32 +211,27 @@ ENDIF()
 add_executable(PiccuEngine ${DESCENT3_SOURCES})
 	
 IF (WIN32)
-SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib wininet.lib
-	${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${OPENAL_LIBRARY})
 	target_link_options(PiccuEngine PUBLIC /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC)
 ENDIF()
 
 IF (UNIX AND NOT APPLE)
-	SET (PLATFORM_LIBS ${SDL_LIBRARY} caca asound audio esd aa directfb m dl GLU)
 	target_link_options(PiccuEngine PUBLIC /usr/lib/libpulse-simple.so.0)
 ENDIF()
 	
 IF (APPLE)
-	SET (PLATFORM_LIBS ${SDL_LIBRARY} ncurses )
 	target_link_options(PiccuEngine PUBLIC -framework IOKit -framework Cocoa -framework OpenGL -framework Carbon)
 ENDIF()
 
-target_link_libraries(PiccuEngine 
-	${PLATFORM_LIBS})
+target_link_libraries(PiccuEngine ${PLATFORM_LIBS})
 	
-target_compile_definitions(PiccuEngine PUBLIC "$<$<CONFIG:RELEASE>:RELEASE>")
-target_compile_definitions(PiccuEngine PUBLIC "$<$<CONFIG:MINSIZEREL>:RELEASE>")
-target_compile_definitions(PiccuEngine PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
+target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:RELEASE>:RELEASE>")
+target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:MINSIZEREL>:RELEASE>")
+target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
 
 add_library(dmfc SHARED ${DMFC_SOURCES})
 target_compile_definitions(dmfc PUBLIC -DOUTRAGE_VERSION -DDMFC_DLL)
 target_include_directories(dmfc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/netgames/includes")
-add_dependencies(PiccuEngine revision_check piccuengine_hog)
+add_dependencies(PiccuEngine revision_check piccuengine_hog TCP-IP)
 	
 install(TARGETS PiccuEngine DESTINATION ${D3_GAMEDIR})
 
@@ -250,6 +259,9 @@ source_group("movie" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/movie/.+")
 source_group("music" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/music/.+")
 source_group("mve" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/mve/.+")
 source_group("networking" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/networking/.+")
+source_group("netcon" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netcon/.+")
+source_group("netcon/inetfile" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netcon/inetfile/.+")
+source_group("netcon/lanclient" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netcon/lanclient/.+")
 source_group("netgames" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netgames/.+")
 source_group("netgames/dmfc" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netgames/dmfc/.+")
 source_group("physics" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/physics/.+")
