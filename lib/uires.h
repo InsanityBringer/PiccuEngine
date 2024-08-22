@@ -23,14 +23,14 @@
 #include "bitmap.h"
 
 
-typedef enum tUIResClass 
+enum tUIResClass 
 {
 	uiItem, 
 	uiTextItem,
 	uiBitmapItem
 };
 
-typedef enum tUIDrawClass 
+enum tUIDrawClass 
 {
 	uiDrawNormal,
 	uiDrawAlphaSaturate,
