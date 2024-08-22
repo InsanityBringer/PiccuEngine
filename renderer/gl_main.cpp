@@ -675,33 +675,33 @@ float opengl_GetAlphaMultiplier(void)
 	switch (OpenGL_state.cur_alpha_type)
 	{
 	case AT_ALWAYS:
-		return 1.0;
+		return 255;
 	case AT_CONSTANT:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_TEXTURE:
-		return 1.0;
+		return 255;
 	case AT_CONSTANT_TEXTURE:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_VERTEX:
-		return 1.0;
+		return 255;
 	case AT_CONSTANT_TEXTURE_VERTEX:
 	case AT_CONSTANT_VERTEX:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_TEXTURE_VERTEX:
-		return 1.0;
+		return 255;
 	case AT_LIGHTMAP_BLEND:
 	case AT_LIGHTMAP_BLEND_SATURATE:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_SATURATE_TEXTURE:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_SATURATE_VERTEX:
-		return 1.0;
+		return 255;
 	case AT_SATURATE_CONSTANT_VERTEX:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_SATURATE_TEXTURE_VERTEX:
-		return 1.0;
+		return 255;
 	case AT_SPECULAR:
-		return 1.0;
+		return 255;
 	default:
 		//Int3();		// no type defined,get jason
 		return 0;
