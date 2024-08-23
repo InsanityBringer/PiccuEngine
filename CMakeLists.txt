@@ -231,7 +231,7 @@ target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:RELWITHDEBINFO>
 add_library(dmfc SHARED ${DMFC_SOURCES})
 target_compile_definitions(dmfc PUBLIC -DOUTRAGE_VERSION -DDMFC_DLL)
 target_include_directories(dmfc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/netgames/includes")
-add_dependencies(PiccuEngine revision_check piccuengine_hog TCP-IP)
+add_dependencies(PiccuEngine revision_check piccuengine_hog TCP-IP Tracker)
 	
 install(TARGETS PiccuEngine DESTINATION ${D3_GAMEDIR})
 

@@ -15,143 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/lib/mdllinit.h $
-* $Revision: 1.1.1.1 $
-* $Date: 2003/08/26 03:58:12 $
-* $Author: kevinb $
-*
-* Multiplayer DLL function pointer init
-*
-* $Log: mdllinit.h,v $
-* Revision 1.1.1.1  2003/08/26 03:58:12  kevinb
-* initial 1.5 import
-*
- * 
- * 40    10/03/01 1:06a Kevin
- * pxo bandwidth reduction and nat fix
- * 
- * 39    3/26/00 10:30p Kevin
- * MOD Downloader for 1.4 patch.
- * 
- * 38    7/12/99 4:15p Kevin
- * Changed the way we determine if we should report stats or not in PXO
- * 
- * 37    7/06/99 5:52p Kevin
- * PXO & multiplayer fixes for the patch
- * 
- * 36    4/25/99 12:11a Kevin
- * game info dialog stuff
- * 
- * 35    4/23/99 3:33p Kevin
- * mission file/multiplayer mod keyword system
- * 
- * 34    4/19/99 3:57a Jeff
- * got compiling for Linux
- * 
- * 33    4/18/99 3:13p Jeff
- * got working with linux
- * 
- * 32    4/16/99 3:17p Kevin
- * More mouselook support
- * 
- * 31    4/08/99 4:54p Kevin
- * Display level warp dialog for multiplayer
- * 
- * 30    4/08/99 3:42p Kevin
- * Added some stuff for the scoring API. Not functional yet.
- * 
- * 29    3/25/99 3:26p Kevin
- * Made PXO games be based on your chat channel
- * 
- * 28    3/17/99 4:08p Kevin
- * Changed the way games appear and timeout in the game list.
- * 
- * 27    2/15/99 7:48p Jeff
- * new pilot file class and read/write system checked in...should be more
- * robust than old
- * 
- * 26    1/11/99 12:29p Jeff
- * changes made not to call the module library directly
- * 
- * 25    1/07/99 11:51a Kevin
- * Added support for joining servers on alternate ports and hosting behind
- * a proxy/firewall
- * 
- * 24    12/30/98 3:49p Kevin
- * Moved multiplayer options out of DLL and into main app
- * 
- * 23    12/30/98 12:16p Kevin
- * Auto Mission Download system
- * 
- * 22    12/23/98 6:38p Kevin
- * All UDP data (except gamespy) now uses one (registered) port number
- * 
- * 21    10/01/98 11:37a Kevin
- * UI fixes and stuff
- * 
- * 20    9/23/98 2:55p Kevin
- * Saved multi config and changed UI to conform
- * 
- * 19    9/22/98 2:29p Kevin
- * moved ships allowed code out of dll and into main app. Also added
- * powerup exclusions
- * 
- * 18    9/21/98 11:19a Kevin
- * check protocol before entering multiplayer screens
- * 
- * 17    9/16/98 8:06p Jason
- * got mastertracker working with the dedicated server
- * 
- * 16    9/04/98 1:51p Kevin
- * implemented asyncronous gethostbyname
- * 
- * 15    9/02/98 6:54p Kevin
- * Fixed general directplay support up, and got modem-modem working
- * 
- * 14    8/27/98 5:03p Kevin
- * Prettied up multiplayer screens and fixed some bugs.
- * 
- * 13    8/25/98 6:33p Kevin
- * pxo
- * 
- * 12    8/24/98 5:04p Kevin
- * Made msn files have the option to not be playable in multiplayer
- * 
- * 11    8/24/98 10:42a Kevin
- * Updated DLL for directplay and PXO background
- * 
- * 10    8/19/98 11:50a Kevin
- * Got DirectPlay IPX working, and localized connection DLLs
- * 
- * 9     8/07/98 12:39p Jeff
- * added "allowed ships" to multiplayer options
- * 
- * 8     7/21/98 1:49p Kevin
- * IPX support and peer-peer option for multi
- * 
- * 7     7/20/98 2:34p Kevin
- * Re-wrote the DLL wrapper, to allow for better expandability
- * 
- * 6     7/10/98 10:47a Kevin
- * Added command line connecting to games
- * 
- * 5     6/24/98 6:40p Kevin
- * Added help to main dll menu
- * 
- * 4     6/24/98 3:24p Kevin
- * Updated PXO screens with chat, etc.
- * 
- * 3     6/18/98 4:49p Kevin
- * Updated multiplayer menus
- * 
- * 2     6/01/98 10:10a Kevin
- * Added DLL connection interface and auto update DLL
- * 
- * 1     5/18/98 2:26p Kevin
-*
-* $NoKeywords: $
-*/
 
 	DLLGetMultiAPI=(GetMultiAPI_fp)api_func;
 	DLLGetMultiAPI (&API);
@@ -270,6 +133,7 @@
 	DLLShowNetgameInfo = (ShowNetgameInfo_fp)API.fp[108];
 	//API.fp[109]; // Not used
 	DLLCheckGetD3M = (CheckGetD3M_fp)API.fp[110];
+	DLLddio_GetTempFileName = (ddio_GetTempFileName_fp)API.fp[111];
 
 	DLLMPlayers = (player *)API.players;
 	DLLNetgame = (netgame_info *)API.netgame;
@@ -313,5 +177,6 @@
 	DLLPXO_hosted_lobby_name = (char *)API.vp[30];
 	DLLSupports_score_api = (bool *)API.vp[31];
 	//DLLPXOPort = (bool *)API.vp[32];	// only defined for mtclient because I'm lazy...
+	DLLDescent3_temp_directory = (char*)API.vp[33];
 
 	*DLLSupports_score_api = false;

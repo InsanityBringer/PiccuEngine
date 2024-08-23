@@ -707,6 +707,9 @@ ShowNetgameInfo_fp DLLShowNetgameInfo;
 typedef int (*CheckGetD3M_fp)(char *d3m);
 CheckGetD3M_fp DLLCheckGetD3M;
 
+typedef bool (*ddio_GetTempFileName_fp)(char* basedir, char* prefix, char* filename);
+ddio_GetTempFileName_fp DLLddio_GetTempFileName;
+
 int DLLUIClass_CurrID = 0xD0;
 
 #define MAX_NET_GAMES	100
@@ -729,7 +732,7 @@ extern int MTAVersionCheck(unsigned int oldver, char *URL);
 #pragma pack(push,pxo)
 #endif
 #pragma pack(1)
-typedef struct vmt_descent3_struct {
+struct vmt_descent3_struct {
 	char tracker_id[TRACKER_ID_LEN];
 	char pilot_name[PILOT_NAME_LEN];
 	int rank;
@@ -746,7 +749,7 @@ typedef struct vmt_descent3_struct {
 	unsigned int sliding_pct;	//Percentage of the time you were sliding
 	unsigned long checksum;			//This value needs to be equal to whatever the checksum is once the packet is decoded
 	unsigned long pad;			//just to provide room for out 4 byte encryption boundry only needed on the client side for now
-} vmt_descent3_struct;
+};
 #define DESCENT3_BLOCK_SIZE (sizeof(vmt_descent3_struct)-4)
 #ifdef WIN32
 #pragma pack(pop,pxo)
@@ -796,6 +799,7 @@ bool * DLLMulti_Gamelist_changed;
 bool * DLLSupports_score_api;
 //bool * DLLMulti_no_stats_saved;
 unsigned short DLLnw_ListenPort;
+char* DLLDescent3_temp_directory;
 
 
 char szloginid[LOGIN_LEN] = "";

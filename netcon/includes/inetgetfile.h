@@ -165,20 +165,20 @@ bool inet_LoadThreadLib(void);
 #define INET_ERROR_CANT_PARSE_URL	3
 #define INET_ERROR_BAD_FILE_OR_DIR	4
 #define INET_ERROR_HOST_NOT_FOUND	5
-#define INET_ERROR_UNKNOWN_ERROR		6
+#define INET_ERROR_UNKNOWN_ERROR	6
 #define INET_ERROR_NO_MEMORY        7
 
 #define INET_STATE_CONNECTING		1
 #define INET_STATE_ERROR			2
 #define INET_STATE_RECEIVING		3
-#define INET_STATE_GOT_FILE		4
+#define INET_STATE_GOT_FILE			4
 
 
 class InetGetFile
 {
 public:
-	InetGetFile(char *URL,char *localfile);
-	InetGetFile(char *URL,char *localfile,char *proxyip,short proxyport);
+	InetGetFile(const char *URL,const char *localfile);
+	InetGetFile(const char *URL,const char *localfile,char *proxyip,short proxyport);
 	~InetGetFile();
 	BOOL IsFileReceived();
 	BOOL IsFileError();

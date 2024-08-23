@@ -91,7 +91,7 @@ void ChttpGet::AbortGet()
 #endif
 }
 
-ChttpGet::ChttpGet(char *URL,char *localfile,char *proxyip,unsigned short proxyport)
+ChttpGet::ChttpGet(const char *URL, const char *localfile, char *proxyip, unsigned short proxyport)
 {
 	m_ProxyEnabled = true;
 	m_ProxyIP = proxyip;
@@ -99,13 +99,13 @@ ChttpGet::ChttpGet(char *URL,char *localfile,char *proxyip,unsigned short proxyp
 	GetFile(URL,localfile);
 }
 
-ChttpGet::ChttpGet(char *URL,char *localfile)
+ChttpGet::ChttpGet(const char *URL, const char *localfile)
 {
 	m_ProxyEnabled = false;
 	GetFile(URL,localfile);
 }
 
-void ChttpGet::PrepSocket(char *URL)
+void ChttpGet::PrepSocket(const char *URL)
 {
 
 	m_DataSock = socket(AF_INET, SOCK_STREAM, 0);
@@ -123,8 +123,8 @@ void ChttpGet::PrepSocket(char *URL)
 	ioctl( m_DataSock, FIONBIO, &arg );
 #endif
 
-	char *pURL = URL;
-	if(strnicmp(URL,"http:",5)==0)
+	const char *pURL = URL;
+	if(strnicmp(URL,"http:",5) == 0)
 	{
 		pURL +=5;
 		while(*pURL == '/')
@@ -132,6 +132,15 @@ void ChttpGet::PrepSocket(char *URL)
 			pURL++;
 		}
 	}
+	else if (strnicmp(URL, "https:", 6) == 0)
+	{
+		pURL += 6;
+		while (*pURL == '/')
+		{
+			pURL++;
+		}
+	}
+
 	//There shouldn't be any : in this string
 	if(strchr(pURL,':'))
 	{
@@ -141,8 +150,8 @@ void ChttpGet::PrepSocket(char *URL)
 	//read the filename by searching backwards for a /
 	//then keep reading until you find the first /
 	//when you found it, you have the host and dir
-	char *filestart = NULL;
-	char *dirstart;
+	const char *filestart = NULL;
+	const char *dirstart;
 	for(int i = strlen(pURL);i>=0;i--)
 	{
 		if(pURL[i]== '/')
@@ -175,7 +184,7 @@ void ChttpGet::PrepSocket(char *URL)
 }
 
 
-void ChttpGet::GetFile(char *URL,char *localfile)
+void ChttpGet::GetFile(const char *URL,const char *localfile)
 {
 	m_DataSock = INVALID_SOCKET;
 	m_iBytesIn = 0;

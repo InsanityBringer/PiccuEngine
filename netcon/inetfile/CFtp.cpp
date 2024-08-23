@@ -15,52 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/inetfile/CFtp.cpp $
-* $Revision: 1.3 $
-* $Date: 2001/01/13 21:48:46 $
-* $Author: icculus $
-*
-* FTP Client class (get only)
-*
-* $Log: CFtp.cpp,v $
-* Revision 1.3  2001/01/13 21:48:46  icculus
-* patched to (re)compile on win32.
-*
-* Revision 1.2  2000/06/03 14:30:21  icculus
-* 1.4 code merge and pthread->SDL thread conversion.
-*
-* Revision 1.1.1.1  2000/04/18 00:00:38  icculus
-* initial checkin
-*
- * 
- * 8     10/21/99 9:27p Jeff
- * B.A. Macintosh code merge
- * 
- * 7     9/08/99 6:37p Jeff
- * fixed http/ftp downloading for Linux, should all work fine now.
- * 
- * 6     8/22/99 12:32a Jeff
- * fixed select calls for Linux.  Ported Kevin's new http stuff to Linux
- * 
- * 5     8/21/99 6:48a Jeff
- * Linux port
- * 
- * 4     4/14/99 1:20a Jeff
- * fixed case mismatched #includes
- * 
- * 3     7/31/98 11:40a Kevin
- * 
- * 2     6/01/98 10:10a Kevin
- * Added DLL connection interface and auto update DLL
- * 
- * 1     5/27/98 9:52a Kevin
- * 
- * 1     5/25/98 5:31p Kevin
- * Initial version
-*
-* $NoKeywords: $
-*/
 
 #ifdef WIN32
 #include <windows.h>
@@ -104,7 +58,7 @@ void CFtpGet::AbortGet()
 	fclose(LOCALFILE);
 }
 
-CFtpGet::CFtpGet(char *URL,char *localfile,char *Username,char *Password)
+CFtpGet::CFtpGet(const char *URL, const char *localfile, const char *Username,const char *Password)
 {
 	SOCKADDR_IN listensockaddr;
 	m_State = FTP_STATE_STARTUP;
@@ -179,7 +133,7 @@ CFtpGet::CFtpGet(char *URL,char *localfile,char *Username,char *Password)
 	}
 	//Parse the URL
 	//Get rid of any extra ftp:// stuff
-	char *pURL = URL;
+	const char *pURL = URL;
 	if(strnicmp(URL,"ftp:",4)==0)
 	{
 		pURL +=4;
@@ -197,8 +151,8 @@ CFtpGet::CFtpGet(char *URL,char *localfile,char *Username,char *Password)
 	//read the filename by searching backwards for a /
 	//then keep reading until you find the first /
 	//when you found it, you have the host and dir
-	char *filestart = NULL;
-	char *dirstart;
+	const char *filestart = NULL;
+	const char *dirstart;
 	for(int i = strlen(pURL);i>=0;i--)
 	{
 		if(pURL[i]== '/')

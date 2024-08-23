@@ -285,6 +285,7 @@ void GetMultiAPI(multi_api* api)
 	api->fp[108] = (int*)ShowNetgameInfo;
 	api->fp[109] = (int*)GetRankIndex;
 	api->fp[110] = (int*)CheckGetD3M;
+	api->fp[111] = (int*)ddio_GetTempFileName;
 
 	// Variable pointers
 	api->vp[0] = (int*)&Player_num;
@@ -329,7 +330,8 @@ void GetMultiAPI(multi_api* api)
 	api->vp[29] = (int*)&Multi_Gamelist_changed;
 	api->vp[30] = (int*)PXO_hosted_lobby_name;
 	api->vp[31] = (int*)&Supports_score_api;
-	api->vp[32] = (int*)PXOPort;
+	api->vp[32] = (int*)PXOPort; 
+	api->vp[33] = (int*)Descent3_temp_directory;
 	//Jeff: Linux dies if you try to free a DLL/so on 
 	//atexit, these should be freed during game sequencing
 	//anyway.
