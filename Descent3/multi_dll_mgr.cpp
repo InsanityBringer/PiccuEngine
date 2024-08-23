@@ -148,6 +148,17 @@ extern int Num_modems_found;
 extern unsigned short nw_ListenPort;
 extern ushort PXOPort;
 
+extern int gspy_GetGamePort(unsigned int ipv4adr, int portnum);
+//Given a tracker address, this will try to query that address for tracker info.
+//If successful, it will search for games at the server's indicated host port. 
+void SearchForTrackedGame(unsigned int address, int port)
+{
+	int hostport = gspy_GetGamePort(address, port);
+	if (hostport >= 0)
+	{
+		SearchForLocalGamesTCP(address, hostport);
+	}
+}
 
 void GetMultiAPI(multi_api* api)
 {
@@ -286,6 +297,7 @@ void GetMultiAPI(multi_api* api)
 	api->fp[109] = (int*)GetRankIndex;
 	api->fp[110] = (int*)CheckGetD3M;
 	api->fp[111] = (int*)ddio_GetTempFileName;
+	api->fp[112] = (int*)SearchForTrackedGame;
 
 	// Variable pointers
 	api->vp[0] = (int*)&Player_num;

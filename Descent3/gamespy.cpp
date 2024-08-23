@@ -15,32 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/mac/MACGAMESPY.CPP $
- * $Revision: 1.1.1.1 $
- * $Date: 2003/08/26 03:58:15 $
- * $Author: kevinb $
- *
- * Gamespy client code
- * This library knows about the game and is responsible for telling the
- * gamespy client and server about everything it wants to know
- *
- *
- * $Log: MACGAMESPY.CPP,v $
- * Revision 1.1.1.1  2003/08/26 03:58:15  kevinb
- * initial 1.5 import
- *
- *
- * 2     10/21/99 1:55p Kevin
- * Mac Merge!
- *
- * 1     7/28/99 2:31p Kevin
- * Mac only stuff
- *
- *
- *
- * $NoKeywords: $
-*/
+
 #include "pstypes.h"
 #include "pserror.h"
 #include "player.h"
@@ -58,10 +33,12 @@
 
 extern short Multi_kills[MAX_NET_PLAYERS];
 extern short Multi_deaths[MAX_NET_PLAYERS];
+
 //Secret code... encrypted using some really high tech method...
 char gspy_d3_secret[10];// = "feWh2G";
 const char origstring[] = {(const char)0x50,(const char)0xf8,(const char)0xa4,(const char)0xba,(const char)0xc7,(const char)0x7c};
 char gspy_cfgfilename[_MAX_PATH];
+
 #define MAX_GAMESPY_SERVERS	5
 #define MAX_GAMESPY_BUFFER	1400
 #define MAX_HOSTNAMELEN	300
@@ -76,6 +53,7 @@ char gspy_cfgfilename[_MAX_PATH];
 #else
 #define THISGAMEVER	"Retail"
 #endif
+
 SOCKET gspy_socket;
 SOCKADDR_IN	gspy_server[MAX_GAMESPY_SERVERS];
 extern ushort Gameport;
@@ -94,11 +72,13 @@ void gspy_StartGame(char *name)
 	gspy_last_heartbeat = timer_GetTime()-GSPY_HEARBEAT_INTERVAL;
 	gspy_game_running = true;
 }
+
 // Let the servers know that the game is over
 void gspy_EndGame()
 {
 	gspy_game_running = false;
 }
+
 //Initialize gamespy with the info we need to talk to the servers
 int gspy_Init(void)
 {
@@ -121,6 +101,7 @@ int gspy_Init(void)
 		gspy_server[a].sin_port = htons(GAMESPY_PORT);
 		gspy_server[a].sin_family = AF_INET;
 	}
+
 	unsigned char keychars[] = {0x36,0x9d,0xf3,0xd2,0xf5,0x3b,0x42,0xcc,0x58};
 	for(int i=0;i<6;i++)
 	{
@@ -133,7 +114,7 @@ int gspy_Init(void)
 	//Read the config, resolve the name if needed and setup the server addresses
 	ddio_MakePath(cfgpath,Base_directory,gspy_cfgfilename,NULL);
 
-	gspy_socket = socket( AF_INET, SOCK_DGRAM,IPPROTO_UDP);;
+	gspy_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if(SOCKET_ERROR == gspy_socket)
 	{
 		int lerror = WSAGetLastError();
@@ -144,29 +125,27 @@ int gspy_Init(void)
 	memset(&sock_addr,0,sizeof(SOCKADDR_IN));
 	sock_addr.sin_family = AF_INET;
 
-	unsigned int my_ip;
+	unsigned int my_ip = nw_GetThisIP();
+	memcpy(&sock_addr.sin_addr.s_addr, &my_ip, sizeof(uint));
 
-	my_ip = nw_GetThisIP();
-	memcpy(&sock_addr.sin_addr.s_addr,&my_ip,sizeof(uint));
 	int portarg = FindArg("-gamespyport");
 	if(portarg)
-	{
 		gspy_listenport = htons(atoi(GameArgs[portarg+1]));
-	}
 	else
-	{
 		gspy_listenport = htons(GAMESPY_LISTENPORT);
-	}
-	mprintf((0,"Using port %d for gamespy requests.\n",GAMESPY_LISTENPORT));
+
+	mprintf((0, "Using port %d for gamespy requests.\n", GAMESPY_LISTENPORT));
 	sock_addr.sin_port = gspy_listenport;
-	if ( bind(gspy_socket, (SOCKADDR*)&sock_addr, sizeof (sock_addr)) == SOCKET_ERROR)
+
+	if (bind(gspy_socket, (SOCKADDR*)&sock_addr, sizeof(sock_addr)) == SOCKET_ERROR)
 	{
-		mprintf((0,"Couldn't bind gamespy socket (%d)!\n", WSAGetLastError() ));
+		mprintf((0, "Couldn't bind gamespy socket (%d)!\n", WSAGetLastError()));
 		return 0;
 	}
+
 	int error;
-	unsigned long arg;
-	arg = TRUE;
+	unsigned long arg = TRUE;
+
 	//make the socket non blocking
 #ifdef WIN32
 	error = ioctlsocket( gspy_socket, FIONBIO, &arg );
@@ -179,12 +158,10 @@ int gspy_Init(void)
 		mprintf((0,"Found a gamespy config file!\n"));
 		char hostn[MAX_HOSTNAMELEN];
 
-
-		for(int i=0;i<MAX_GAMESPY_SERVERS;i++)
+		for (int i = 0; i < MAX_GAMESPY_SERVERS; i++)
 		{
-
 			//First in the config file is the region, which is a number from 0-12 (currently)
-			if(cf_ReadString(hostn,MAX_HOSTNAMELEN-1,cfp))
+			if (cf_ReadString(hostn, MAX_HOSTNAMELEN - 1, cfp))
 			{
 				gspy_region = atoi(hostn);
 			}
@@ -197,10 +174,10 @@ int gspy_Init(void)
 			//master02.gamespy.com
 			//192.168.1.100
 
-			if(cf_ReadString(hostn,MAX_HOSTNAMELEN-1,cfp))
+			if (cf_ReadString(hostn, MAX_HOSTNAMELEN - 1, cfp))
 			{
-				char *port = strstr(hostn,":");
-				if(port)
+				char* port = strstr(hostn, ":");
+				if (port)
 				{
 					//terminate the hostname
 					*port = NULL;
@@ -209,41 +186,41 @@ int gspy_Init(void)
 					//get the port number
 					gspy_server[i].sin_port = htons(atoi(port));
 				}
-				if(INADDR_NONE==inet_addr(hostn))
+				if (INADDR_NONE == inet_addr(hostn))
 				{
 					//This is a name we must resolve
 					HOSTENT *he;
 					mprintf((0,"Resolving hostname for gamespy: %s\n",hostn));
 					he = gethostbyname(hostn);
-					if(!he)
+					if (!he)
 					{
 						mprintf((0,"Unable to resolve %s\n",hostn));
 						//gspy_server[i].sin_addr.S_un.S_addr = INADDR_NONE;
-						INADDR_SET_SUN_SADDR(&gspy_server[i].sin_addr,INADDR_NONE);
+						INADDR_SET_SUN_SADDR(&gspy_server[i].sin_addr, INADDR_NONE);
 					}
 					else
 					{
 						//memcpy(&gspy_server[i].sin_addr.S_un.S_addr,he->h_addr_list[0],sizeof(unsigned int));
-						memcpy(&gspy_server[i].sin_addr,he->h_addr_list[0],sizeof(unsigned int));
+						memcpy(&gspy_server[i].sin_addr, he->h_addr_list[0], sizeof(unsigned int));
 					}
 				}
 				else
 				{
 					//This is just a number
 					//gspy_server[i].sin_addr.S_un.S_addr = inet_addr(hostn);
-					INADDR_SET_SUN_SADDR(&gspy_server[i].sin_addr,inet_addr(hostn));
+					INADDR_SET_SUN_SADDR(&gspy_server[i].sin_addr, inet_addr(hostn));
 					//break;
 				}
 			}
 			#if defined(WIN32)
-			if(gspy_server[i].sin_addr.S_un.S_addr != INADDR_NONE)
+			if (gspy_server[i].sin_addr.S_un.S_addr != INADDR_NONE)
 			{
-				mprintf((0,"Sending gamespy heartbeats to %s:%d\n",inet_ntoa(gspy_server[i].sin_addr),htons(gspy_server[i].sin_port)));
+				mprintf((0, "Sending gamespy heartbeats to %s:%d\n", inet_ntoa(gspy_server[i].sin_addr), htons(gspy_server[i].sin_port)));
 			}
 			#elif defined(__LINUX__)
-			if(gspy_server[i].sin_addr.s_addr != INADDR_NONE)
+			if (gspy_server[i].sin_addr.s_addr != INADDR_NONE)
 			{
-				mprintf((0,"Sending gamespy heartbeats to %s:%d\n",inet_ntoa(gspy_server[i].sin_addr),htons(gspy_server[i].sin_port)));
+				mprintf((0, "Sending gamespy heartbeats to %s:%d\n", inet_ntoa(gspy_server[i].sin_addr), htons(gspy_server[i].sin_port)));
 			}
 			#endif
 		}
@@ -251,6 +228,7 @@ int gspy_Init(void)
 #endif
 	return 1;
 }
+
 //Takes a gspy response and puts the appropriate validation code to the end
 //Of the string. If crypt is something besides NULL, create and tack the proper
 //response to the end
@@ -273,6 +251,7 @@ bool gpsy_ValidateString(char *str,char *crypt)
 	strcat(str,keyvalue);
 	return false;
 }
+
 //Check the socket for data, and respond properly if needed
 //Also send heartbeat when needed
 void gspy_DoFrame()
@@ -283,9 +262,9 @@ void gspy_DoFrame()
 	int fromsize = sizeof(SOCKADDR_IN);
 	char inbuffer[MAX_GAMESPY_BUFFER];
 
-
 	if(!gspy_game_running)
 		return;
+
 	//If it's time, send the heartbeat
 	if((timer_GetTime()-gspy_last_heartbeat)>GSPY_HEARBEAT_INTERVAL)
 	{
@@ -328,6 +307,7 @@ void gspy_DoFrame()
 	}while(bytesin > 0);
 #endif
 }
+
 //Sends the packet out to whoever it is that we are sending to
 int gspy_SendPacket(SOCKADDR_IN *addr)
 {
@@ -347,6 +327,7 @@ int gspy_SendPacket(SOCKADDR_IN *addr)
 	*gspy_outgoingbuffer = NULL;
 	return 0;
 }
+
 //Adds some values\keys to the send buffer and sends the packet if it overflows
 int gspy_AddToBuffer(SOCKADDR_IN *addr,char *addstr)
 {
@@ -362,6 +343,7 @@ int gspy_AddToBuffer(SOCKADDR_IN *addr,char *addstr)
 	}
 	return 1;
 }
+
 //Looks for the secure key in the request and returns it if there is. If there isn't, it returns a NULL
 char * gspy_GetSecure(char * req)
 {
@@ -388,6 +370,7 @@ char * gspy_GetSecure(char * req)
 	}
 	return NULL;
 }
+
 int gspy_ContainsKey(char *buffer,char *key)
 {
 	char str[MAX_GAMESPY_BUFFER];
@@ -398,10 +381,15 @@ int gspy_ContainsKey(char *buffer,char *key)
 	//If it's an empty string return 0
 	if(*buffer=='\0')
 		return 0;
-	for(i=0;i<len;i++) tolower(str[i]);
+
+	for(i=0;i<len;i++) 
+		tolower(str[i]);
+
 	strcpy(lowkey,key);
 	len = strlen(str);
-	for(i=0;i<len;i++) tolower(lowkey[i]);
+	for(i=0;i<len;i++) 
+		tolower(lowkey[i]);
+
 	if(strstr(str,lowkey))
 	{
 		return 1;
@@ -411,6 +399,7 @@ int gspy_ContainsKey(char *buffer,char *key)
 		return 0;
 	}
 }
+
 int gspy_ParseReq(char *buffer,SOCKADDR_IN *addr)
 {
 	gspy_packetnumber=0;
@@ -458,6 +447,7 @@ int gspy_ParseReq(char *buffer,SOCKADDR_IN *addr)
 	gspy_SendPacket(addr);
 	return 0;
 }
+
 int gspy_DoEcho(SOCKADDR_IN *addr,char *msg)
 {
 	char buf[MAX_GAMESPY_BUFFER];
@@ -476,6 +466,7 @@ int gspy_DoEcho(SOCKADDR_IN *addr,char *msg)
 	gspy_AddToBuffer(addr,p);
 	return 0;
 }
+
 int gspy_DoBasic(SOCKADDR_IN *addr)
 {
 	char buf[MAX_GAMESPY_BUFFER];
@@ -490,6 +481,7 @@ int gspy_DoBasic(SOCKADDR_IN *addr)
 
 	return 0;
 }
+
 int gspy_DoStatus(SOCKADDR_IN *addr)
 {
 	gspy_DoBasic(addr);
@@ -498,6 +490,7 @@ int gspy_DoStatus(SOCKADDR_IN *addr)
 	gspy_DoPlayers(addr);
 	return 0;
 }
+
 int gspy_DoRules(SOCKADDR_IN *addr)
 {
 	char buf[MAX_GAMESPY_BUFFER];
@@ -524,6 +517,7 @@ int gspy_DoRules(SOCKADDR_IN *addr)
 	gspy_AddToBuffer(addr,buf);
 	return 0;
 }
+
 //Send the player list to whoever wants it.
 int gspy_DoPlayers(SOCKADDR_IN *addr)
 {
@@ -549,6 +543,7 @@ int gspy_DoPlayers(SOCKADDR_IN *addr)
 	}
 	return 0;
 }
+
 int gspy_DoGameInfo(SOCKADDR_IN *addr)
 {
 	char buf[MAX_GAMESPY_BUFFER];
@@ -576,6 +571,7 @@ int gspy_DoGameInfo(SOCKADDR_IN *addr)
 	gspy_AddToBuffer(addr,buf);
 	return 0;
 }
+
 int gspy_DoHeartbeat(SOCKADDR_IN *addr)
 {
 	char buf[MAX_GAMESPY_BUFFER];
@@ -583,4 +579,101 @@ int gspy_DoHeartbeat(SOCKADDR_IN *addr)
 	mprintf((0,"GSPYOUT:%s\n",buf));
 	sendto(gspy_socket,buf,strlen(buf)+1,0,(SOCKADDR *)addr,sizeof(SOCKADDR_IN));
 	return 0;
+}
+
+//Given a ip address and a port for a Gamespy tracking instance, returns the port that the game is running under.
+//Trackers tend to return the addresses of the tracking instances they get, not the game server itself, so this must be inferred.
+int gspy_GetGamePort(unsigned int ipv4adr, int portnum)
+{
+	SOCKET tempsocket;
+	//Check if the currently running socket can be reused
+	if (portnum == gspy_listenport)
+	{
+		tempsocket = gspy_socket;
+	}
+	else
+	{
+		//Need to set up a temporary socket to listen on
+		tempsocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+		if (tempsocket == INVALID_SOCKET)
+			return -1;
+
+		sockaddr_in localAddressIn = {};
+		localAddressIn.sin_family = AF_INET;
+		localAddressIn.sin_addr.s_addr = INADDR_ANY;
+		localAddressIn.sin_port = portnum;
+
+		unsigned long arg = 1;
+		//make the socket non blocking
+#ifdef WIN32
+		int error = ioctlsocket(gspy_socket, FIONBIO, &arg);
+#elif defined(__LINUX__)
+		int error = ioctl(gspy_socket, FIONBIO, &arg);
+#endif
+		if (error)
+		{
+			closesocket(tempsocket);
+			return -1;
+		}
+
+		if (bind(tempsocket, (sockaddr*)&localAddressIn, sizeof(localAddressIn)))
+		{
+			closesocket(tempsocket);
+			return -1;
+		}
+	}
+
+	//Should be ready to send and recieve
+	sockaddr_in addr = {};
+	int addrSize = sizeof(addr);
+
+	//Prepare the request
+	addr.sin_family = AF_INET;
+
+	addr.sin_port = portnum;
+	addr.sin_addr.s_addr = ipv4adr;
+
+	char buffer[MAX_GAMESPY_BUFFER];
+	const char* bufferend = buffer + sizeof(buffer);
+	sprintf(buffer, "\\info\\");
+	size_t buffersize = strlen(buffer);
+
+	sendto(tempsocket, buffer, (int)buffersize, 0, (sockaddr*)&addr, addrSize);
+
+	int retval = -1;
+
+	//Watch for a little bit
+	float end = timer_GetTime() + .3f;
+
+	int recvsize = -1;
+	while (recvsize == -1 && timer_GetTime() < end)
+	{
+		recvsize = recvfrom(tempsocket, buffer, sizeof(buffer), 0, (sockaddr*)&addr, &addrSize);
+		if (recvsize != -1)
+		{
+			//ensure it's null terminated
+			buffer[sizeof(buffer) - 1] = '\0';
+			char* location = strstr(buffer, "\\hostport\\");
+			if (location != nullptr)
+			{
+				location += strlen("\\hostport\\");
+				char* numend = location;
+				while (*numend != '\\' && *numend != '\0')
+				{
+					numend++;
+				}
+
+				//should be safe to atoi here since I've ensured the buffer is null terminated
+				*numend = '\0';
+				retval = htons(atoi(location));
+			}
+		}
+	}
+
+	if (portnum != gspy_listenport)
+	{
+		closesocket(tempsocket);
+	}
+
+	return retval;
 }

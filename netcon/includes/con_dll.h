@@ -710,6 +710,9 @@ CheckGetD3M_fp DLLCheckGetD3M;
 typedef bool (*ddio_GetTempFileName_fp)(char* basedir, char* prefix, char* filename);
 ddio_GetTempFileName_fp DLLddio_GetTempFileName;
 
+typedef void (*SearchForTrackedGame_fp)(unsigned int address, int port);
+SearchForTrackedGame_fp DLLSearchForTrackedGame;
+
 int DLLUIClass_CurrID = 0xD0;
 
 #define MAX_NET_GAMES	100

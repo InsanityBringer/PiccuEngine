@@ -76,7 +76,7 @@ using namespace lanclient;
 #define JEFF_RED		GR_RGB(255,40,40)
 #define JEFF_BLUE		GR_RGB(40,40,255)
 #define JEFF_GREEN	GR_RGB(40,255,40)
-#define NETPOLLINTERVAL	10.0
+#define NETPOLLINTERVAL	(60.0 * 5)
 
 /////////////////////////////
 // Defines
@@ -281,7 +281,7 @@ namespace lanclient
 		unsigned int iaddr = inet_addr(ipbuf);
 		DLLmprintf((0, "Local inet_addr %x\n", iaddr));
 		if (iaddr && (INADDR_NONE != iaddr))
-			DLLSearchForLocalGamesTCP(iaddr, htons(iport));
+			DLLSearchForTrackedGame(iaddr, htons(iport));
 		else
 			DLLmprintf((0, "Invalid IP for local search\n"));
 	}
@@ -356,7 +356,8 @@ int MainMultiplayerMenu ()
 	void * selti = NULL;
 	
 	float lastpoll = DLLtimer_GetTime();
-	DLLSearchForLocalGamesTCP(0xffffffffl,htons(DEFAULT_GAME_PORT));
+	GetTrackerList();
+	PingTrackerList();
 	// Menu loop
 	while (!exit_menu) 
 	{
