@@ -18,6 +18,9 @@
 
 #include <vector>
 #include <string>
+#include <queue>
+#include <vector>
+#include <mutex>
 
 #include "ui.h"
 #include "newui.h"
@@ -76,7 +79,11 @@ using namespace lanclient;
 #define JEFF_RED		GR_RGB(255,40,40)
 #define JEFF_BLUE		GR_RGB(40,40,255)
 #define JEFF_GREEN	GR_RGB(40,255,40)
-#define NETPOLLINTERVAL	(60.0 * 5)
+
+//Re-ping games in this interval so that Descent 3 keeps them alive, but I don't have to hammer the trackers
+constexpr double KEEPALIVEINTERVAL = 30.0;
+//Ping the tracker less frequently
+constexpr double TRACKERPOLLINTERVAL = 60.0 * 3;
 
 /////////////////////////////
 // Defines
@@ -174,13 +181,37 @@ void DLLFUNCCALL DLLMultiCall (int eventnum)
 
 namespace lanclient 
 {
+	struct iplistentry
+	{
+		unsigned int ipv4adr;
+		int port;
+	};
 	char temp_filename[_MAX_PATH];
-	const char* tracker_url = "https://api.tsetsefly.de/?format=linebyline&template=simpleServerList&get=gameServerList";
-	std::vector<std::string> iplist;
+	const char* tracker_url = "https://api.tsetsefly.de/?format=linebyline&template=simpleServerList&get=gameServerList&filter=gameName[d3]";
+	std::queue<std::string> ipqueue;
+
+	std::mutex pingcandidatesmutex;
+	std::queue<iplistentry> pingcandidates;
+
+	std::thread trackthread;
+	//when true, all children threads need to cease activities as soon as they can
+	bool bailoutnow = false;
+
+	//If the dll wasn't unloaded, some state may be dirty. Make sure it's not.
+	//Perhaps this state should be on stack instead?
+	void SetupInitialState()
+	{
+		while (!ipqueue.empty())
+			ipqueue.pop();
+
+		while (!pingcandidates.empty())
+			pingcandidates.pop();
+
+		bailoutnow = false;
+	}
 
 	void ParseTrackerList(const std::string& data)
 	{
-		iplist.clear();
 		auto cursor = data.begin();
 		auto end = data.end();
 
@@ -202,13 +233,79 @@ namespace lanclient
 			if (len == 0)
 				break; //probably hit eof
 
-			iplist.emplace_back(ipstart, ipend);
+			//iplist.emplace_back(ipstart, ipend);
+			ipqueue.emplace(ipstart, ipend);
 			cursor += len + 1;
 		}
 	}
 
-	void GetTrackerList()
+	constexpr unsigned short GAMESPY_LISTENPORT = 20142;
+	int PingOneGame(const std::string& str, unsigned int& outadr)
 	{
+		char ipbuf[16];
+		unsigned short iport = GAMESPY_LISTENPORT;
+
+		const char* chars = str.c_str();
+
+		const char* pport = strchr(chars, ':');
+		if (pport)
+		{
+			iport = atoi(pport + 1);
+			size_t count = pport - chars;
+			if (count > 15)
+				return -2; //something's not quite right here..
+
+			strncpy(ipbuf, chars, count);
+			ipbuf[count] = '\0';
+		}
+		else
+		{
+			strncpy(ipbuf, chars, 15);
+			ipbuf[15] = '\0';
+		}
+
+		unsigned int iaddr = inet_addr(ipbuf);
+		outadr = iaddr;
+		if (iaddr && (INADDR_NONE != iaddr))
+			return DLLgspy_GetGamePort(iaddr, htons(iport));
+		//else
+		//	DLLmprintf((0, "Invalid IP for local search\n"));
+
+		return -2;
+	}
+
+	void TrackingThread()
+	{
+		while (!ipqueue.empty())
+		{
+			if (bailoutnow)
+				return;
+
+			std::string adr = ipqueue.front(); ipqueue.pop();
+			unsigned int adrnum;
+			int hostport = PingOneGame(adr, adrnum);
+			if (hostport >= 0)
+			{
+				std::unique_lock<std::mutex> lock(pingcandidatesmutex);
+				iplistentry entry =
+				{
+					adrnum,
+					hostport
+				};
+				pingcandidates.push(entry);
+			}
+		}
+	}
+
+	int StartTrackingThread()
+	{
+		//If a tracker thread is still executing (it really shouldn't be), give up and try again next loop. 
+		if (!ipqueue.empty())
+			return 0; 
+
+		if (trackthread.joinable())
+			trackthread.join();
+
 		if (strlen(temp_filename) == 0)
 		{
 			DLLddio_GetTempFileName(DLLDescent3_temp_directory, "piccucon", temp_filename);
@@ -231,13 +328,14 @@ namespace lanclient
 			}
 		}
 		
+		//If something fails here, there should be a smaller delay on refreshing
 		if (failed)
-			return;
+			return 1;
 
 		std::string filecontents;
 		FILE* fp = fopen(temp_filename, "rb");
 		if (!fp)
-			return;
+			return 1;
 
 		fseek(fp, 0, SEEK_END);
 		long lengthhack = ftell(fp);
@@ -247,51 +345,15 @@ namespace lanclient
 		if (fread((void*)filecontents.data(), 1, lengthhack, fp) != lengthhack)
 		{
 			fclose(fp);
-			return;
+			return 1;
 		}
 
 		fclose(fp);
 		ParseTrackerList(filecontents);
-	}
 
-	void PingOneGame(const std::string& str)
-	{
-		char ipbuf[16];
-		unsigned short iport = DEFAULT_GAME_PORT;
+		trackthread = std::thread(TrackingThread);
 
-		const char* chars = str.c_str();
-
-		const char* pport = strchr(chars, ':');
-		if (pport)
-		{
-			iport = atoi(pport+1);
-			size_t count = pport - chars;
-			if (count > 15)
-				return; //something's not quite right here..
-
-			strncpy(ipbuf, chars, count);
-			ipbuf[count] = '\0';
-		}
-		else
-		{
-			strncpy(ipbuf, chars, 15);
-			ipbuf[15] = '\0';
-		}
-
-		unsigned int iaddr = inet_addr(ipbuf);
-		DLLmprintf((0, "Local inet_addr %x\n", iaddr));
-		if (iaddr && (INADDR_NONE != iaddr))
-			DLLSearchForTrackedGame(iaddr, htons(iport));
-		else
-			DLLmprintf((0, "Invalid IP for local search\n"));
-	}
-
-	void PingTrackerList()
-	{
-		for (const std::string& str : iplist)
-		{
-			PingOneGame(str);
-		}
+		return 2;
 	}
 
 #define GET_INFO_ID	50
@@ -354,16 +416,35 @@ int MainMultiplayerMenu ()
 	int itemp;
 	int looklocal = 1;
 	void * selti = NULL;
+	SetupInitialState();
+
+	std::vector<iplistentry> knowngames;
 	
 	float lastpoll = DLLtimer_GetTime();
-	GetTrackerList();
-	PingTrackerList();
+	float lastping = DLLtimer_GetTime();
+	StartTrackingThread();
 	// Menu loop
 	while (!exit_menu) 
 	{
 		int res;
 		int selno;
 		DLLUpdateAndPackGameList();
+
+		//check if I have a game available to check
+		{
+			std::unique_lock<std::mutex> lock(pingcandidatesmutex);
+			if (!pingcandidates.empty())
+			{
+				iplistentry entry = pingcandidates.front(); pingcandidates.pop();
+				lock.unlock(); //no need to guard any longer
+
+				//DLLmprintf((0, "Local inet_addr %x\n", entry.ipv4adr));
+				//Add to the keepalive list
+				knowngames.push_back(entry);
+
+				DLLSearchForLocalGamesTCP(entry.ipv4adr, entry.port);
+			}
+		}
 
 		if(((itemp = DLLSearchForLocalGamesTCP(0,0))!=0) || (*DLLMulti_Gamelist_changed) )
 		{	
@@ -433,27 +514,36 @@ int MainMultiplayerMenu ()
 				}
 			}
 		}
-		if((looklocal)&&((DLLtimer_GetTime() - lastpoll)>NETPOLLINTERVAL))
+		if (DLLtimer_GetTime() - lastping > KEEPALIVEINTERVAL)
 		{
-			GetTrackerList();
-			lastpoll = DLLtimer_GetTime();
+			for (iplistentry& entry : knowngames)
+				DLLSearchForLocalGamesTCP(entry.ipv4adr, entry.port);
+
+			lastping = DLLtimer_GetTime();
+
 			selno = DLLListGetSelectedIndex(main_list);
 			if (selno >= 0)
 				strcpy(selgame, DLLNetwork_games[selno].name);
 			else
 				selgame[0] = NULL;
+		}
 
-			PingTrackerList();
-			/*DLLSearchForLocalGamesTCP(0xffffffffl,htons(DEFAULT_GAME_PORT));
-			//*DLLNum_network_games_known = 0;
-			//DLLListRemoveAll(main_list);
-			lastgamesfound = 0;
-			lastpoll = DLLtimer_GetTime();
+		if (DLLtimer_GetTime() - lastpoll > TRACKERPOLLINTERVAL)
+		{
+			int added = StartTrackingThread();
+			if (added == 1)
+				lastpoll = DLLtimer_GetTime() + TRACKERPOLLINTERVAL - 15; //try again in 15 seconds?
+			else if (added == 2)
+			{
+				lastpoll = DLLtimer_GetTime(); //try again in the usual refresh interval
+				knowngames.clear();
+			}
+
 			selno = DLLListGetSelectedIndex(main_list);
-			if(selno>=0)
-				strcpy(selgame,DLLNetwork_games[selno].name);
+			if (selno >= 0)
+				strcpy(selgame, DLLNetwork_games[selno].name);
 			else
-				selgame[0]=NULL;*/
+				selgame[0] = NULL;
 		}
 		res = DLLPollUI();
 
@@ -611,11 +701,14 @@ int MainMultiplayerMenu ()
 	DLLRemoveUITextItem(srch_off_text);
 	DLLRemoveUITextItem(scan_on_text);
 	DLLRemoveUITextItem(scan_off_text);
+
+	bailoutnow = true;
+	if (trackthread.joinable())
+		trackthread.join();
+
 	return ret;
 
 }
-
-
 
 void AutoLoginAndJoinGame(void)
 {

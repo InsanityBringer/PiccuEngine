@@ -134,7 +134,7 @@
 	//API.fp[109]; // Not used
 	DLLCheckGetD3M = (CheckGetD3M_fp)API.fp[110];
 	DLLddio_GetTempFileName = (ddio_GetTempFileName_fp)API.fp[111];
-	DLLSearchForTrackedGame = (SearchForTrackedGame_fp)API.fp[112];
+	DLLgspy_GetGamePort = (gspy_GetGamePort_fp)API.fp[112];
 
 	DLLMPlayers = (player *)API.players;
 	DLLNetgame = (netgame_info *)API.netgame;

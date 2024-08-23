@@ -149,16 +149,6 @@ extern unsigned short nw_ListenPort;
 extern ushort PXOPort;
 
 extern int gspy_GetGamePort(unsigned int ipv4adr, int portnum);
-//Given a tracker address, this will try to query that address for tracker info.
-//If successful, it will search for games at the server's indicated host port. 
-void SearchForTrackedGame(unsigned int address, int port)
-{
-	int hostport = gspy_GetGamePort(address, port);
-	if (hostport >= 0)
-	{
-		SearchForLocalGamesTCP(address, hostport);
-	}
-}
 
 void GetMultiAPI(multi_api* api)
 {
@@ -207,7 +197,7 @@ void GetMultiAPI(multi_api* api)
 	api->fp[30] = (int*)timer_GetTime;
 	api->fp[31] = (int*)TryToJoinServer;
 	api->fp[32] = (int*)MultiStartClient;
-	api->fp[33] = (int*)rend_DLLGetRenderState;
+	api->fp[33] = (int*)rend_GetRenderState;
 	api->fp[34] = (int*)LoadMission;
 	api->fp[35] = (int*)ddio_MakePath;
 	api->fp[36] = (int*)ddio_FindFileStart;
@@ -297,7 +287,7 @@ void GetMultiAPI(multi_api* api)
 	api->fp[109] = (int*)GetRankIndex;
 	api->fp[110] = (int*)CheckGetD3M;
 	api->fp[111] = (int*)ddio_GetTempFileName;
-	api->fp[112] = (int*)SearchForTrackedGame;
+	api->fp[112] = (int*)gspy_GetGamePort;
 
 	// Variable pointers
 	api->vp[0] = (int*)&Player_num;

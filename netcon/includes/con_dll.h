@@ -710,8 +710,8 @@ CheckGetD3M_fp DLLCheckGetD3M;
 typedef bool (*ddio_GetTempFileName_fp)(char* basedir, char* prefix, char* filename);
 ddio_GetTempFileName_fp DLLddio_GetTempFileName;
 
-typedef void (*SearchForTrackedGame_fp)(unsigned int address, int port);
-SearchForTrackedGame_fp DLLSearchForTrackedGame;
+typedef int (*gspy_GetGamePort_fp)(unsigned int ipv4adr, int portnum);
+gspy_GetGamePort_fp DLLgspy_GetGamePort;
 
 int DLLUIClass_CurrID = 0xD0;
 

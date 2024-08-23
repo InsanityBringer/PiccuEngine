@@ -126,7 +126,7 @@ InetGetFile::InetGetFile(const char *URL, const char *localfile, char *proxyip, 
 	{
 		m_HardError = INET_ERROR_CANT_PARSE_URL;
 	}
-	Sleep(1000);
+	Sleep(10);
 }
 
 InetGetFile::InetGetFile(const char *URL, const char *localfile)
@@ -164,7 +164,7 @@ InetGetFile::InetGetFile(const char *URL, const char *localfile)
 	{
 		m_HardError = INET_ERROR_CANT_PARSE_URL;
 	}
-	Sleep(1000);
+	Sleep(10);
 }
 
 InetGetFile::~InetGetFile()

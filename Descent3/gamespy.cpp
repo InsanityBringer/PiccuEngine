@@ -606,9 +606,9 @@ int gspy_GetGamePort(unsigned int ipv4adr, int portnum)
 		unsigned long arg = 1;
 		//make the socket non blocking
 #ifdef WIN32
-		int error = ioctlsocket(gspy_socket, FIONBIO, &arg);
+		int error = ioctlsocket(tempsocket, FIONBIO, &arg);
 #elif defined(__LINUX__)
-		int error = ioctl(gspy_socket, FIONBIO, &arg);
+		int error = ioctl(tempsocket, FIONBIO, &arg);
 #endif
 		if (error)
 		{
@@ -643,10 +643,10 @@ int gspy_GetGamePort(unsigned int ipv4adr, int portnum)
 	int retval = -1;
 
 	//Watch for a little bit
-	float end = timer_GetTime() + .3f;
+	float end = timer_GetTime() + 3.f;
 
 	int recvsize = -1;
-	while (recvsize == -1 && timer_GetTime() < end)
+	while (timer_GetTime() < end)
 	{
 		recvsize = recvfrom(tempsocket, buffer, sizeof(buffer), 0, (sockaddr*)&addr, &addrSize);
 		if (recvsize != -1)
@@ -667,6 +667,8 @@ int gspy_GetGamePort(unsigned int ipv4adr, int portnum)
 				*numend = '\0';
 				retval = htons(atoi(location));
 			}
+
+			break;
 		}
 	}
 
