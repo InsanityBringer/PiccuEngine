@@ -499,8 +499,8 @@ int MainMultiplayerMenu ()
 						net_game_txt_items[k] = DLLCreateNewUITextItem(fmtline,GR_LIGHTGRAY);
 					}
 
-					selgame[20] = NULL;
-					if(strncmp(selgame,DLLNetwork_games[k].name,19)==0)
+					selgame[31] = NULL;
+					if(strncmp(selgame,DLLNetwork_games[k].name,31)==0)
 					{
 						selti = net_game_txt_items[k];
 						DLLmprintf((0,"Found previously selected game in list, reselecting...\n"));
