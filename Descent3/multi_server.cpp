@@ -205,8 +205,8 @@ void MultiStartServer(int playing, char* scriptname, int dedicated_server_num_te
 
 	gspy_StartGame(Netgame.name);
 	//We use this to identify clients....
-	ps_srand(timer_GetTime());
-	Secret_net_id = ps_rand() * ps_rand();
+	PSRand prand(timer_GetMSTime());
+	Secret_net_id = prand() * prand();
 	LastPacketReceived = timer_GetTime();
 
 	// At this point we have a level checksum, so add the ships into the mix

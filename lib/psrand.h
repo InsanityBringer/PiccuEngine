@@ -35,6 +35,11 @@ public:
 		state = 1;
 	}
 
+	PSRand(unsigned int newseed)
+	{
+		state = newseed;
+	}
+
 	void seed(unsigned int newseed)
 	{
 		state = newseed;
