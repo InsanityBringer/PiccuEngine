@@ -65,9 +65,9 @@ protected:
 
 	char m_szUserName[100];
 	char m_szPassword[100];
-	char m_szHost[200];
-	char m_szDir[200];
-	char m_szFilename[100];
+	char m_szHost[_MAX_PATH];
+	char m_szDir[_MAX_PATH];
+	char m_szFilename[_MAX_PATH];
 	
 	bool m_Aborting;
 

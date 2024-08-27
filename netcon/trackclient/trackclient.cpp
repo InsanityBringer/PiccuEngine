@@ -187,7 +187,8 @@ namespace lanclient
 		int port;
 	};
 	char temp_filename[_MAX_PATH];
-	const char* tracker_url = "https://api.tsetsefly.de/?format=linebyline&template=simpleServerList&get=gameServerList&filter=gameName[d3]";
+	const char* gamespy_tracker_url = "https://api.tsetsefly.de/?format=linebyline&template=simpleServerList&get=gameServerList&filter=gameName[d3]";
+	const char* direct_tracker_url = "https://api.tsetsefly.de/?format=linebyline&template=simpleServerList&get=gameServerList&filter=gameName[d3];network[directip];&request=hp";
 	std::queue<std::string> ipqueue;
 
 	std::mutex pingcandidatesmutex;
@@ -311,7 +312,7 @@ namespace lanclient
 			DLLddio_GetTempFileName(DLLDescent3_temp_directory, "piccucon", temp_filename);
 		}
 
-		InetGetFile getfile(tracker_url, temp_filename);
+		InetGetFile getfile(gamespy_tracker_url, temp_filename);
 
 		bool failed = false;
 
@@ -352,6 +353,111 @@ namespace lanclient
 		ParseTrackerList(filecontents);
 
 		trackthread = std::thread(TrackingThread);
+
+		return 2;
+	}
+
+	void DirectTrackingThread()
+	{
+		while (!ipqueue.empty())
+		{
+			if (bailoutnow)
+				return;
+
+			std::string adr = ipqueue.front(); ipqueue.pop();
+
+			char ipbuf[16];
+			unsigned short iport = 0;
+
+			const char* chars = adr.c_str();
+
+			const char* pport = strchr(chars, ':');
+			if (pport)
+			{
+				iport = atoi(pport + 1);
+				size_t count = pport - chars;
+				if (count > 15)
+					continue; //something's not quite right here..
+
+				strncpy(ipbuf, chars, count);
+				ipbuf[count] = '\0';
+			}
+			else
+			{
+				strncpy(ipbuf, chars, 15);
+				ipbuf[15] = '\0';
+			}
+
+			unsigned int iaddr = inet_addr(ipbuf);
+
+			if (iport > 0)
+			{
+				std::unique_lock<std::mutex> lock(pingcandidatesmutex);
+				iplistentry entry =
+				{
+					iaddr,
+					htons(iport) //nw_send calls htons, SearchForLocalGamesTCP calls htons, so we gotta call htons to cancel out the canceled out htons calls. heh. 
+				};
+				pingcandidates.push(entry);
+			}
+		}
+	}
+
+	int StartDirectTracking()
+	{
+		//If a tracker thread is still executing (it really shouldn't be), give up and try again next loop. 
+		if (!ipqueue.empty())
+			return 0;
+
+		if (trackthread.joinable())
+			trackthread.join();
+
+		if (strlen(temp_filename) == 0)
+		{
+			DLLddio_GetTempFileName(DLLDescent3_temp_directory, "piccucon", temp_filename);
+		}
+
+		InetGetFile getfile(direct_tracker_url, temp_filename);
+
+		bool failed = false;
+
+		while (true)
+		{
+			if (getfile.IsFileReceived())
+			{
+				break;
+			}
+			else if (getfile.IsFileError())
+			{
+				failed = true;
+				break;
+			}
+		}
+
+		//If something fails here, there should be a smaller delay on refreshing
+		if (failed)
+			return 1;
+
+		std::string filecontents;
+		FILE* fp = fopen(temp_filename, "rb");
+		if (!fp)
+			return 1;
+
+		fseek(fp, 0, SEEK_END);
+		long lengthhack = ftell(fp);
+		filecontents.resize(lengthhack);
+		fseek(fp, 0, SEEK_SET);
+
+		if (fread((void*)filecontents.data(), 1, lengthhack, fp) != lengthhack)
+		{
+			fclose(fp);
+			return 1;
+		}
+
+		fclose(fp);
+		ParseTrackerList(filecontents);
+
+		trackthread = std::thread(DirectTrackingThread);
 
 		return 2;
 	}
@@ -422,7 +528,8 @@ int MainMultiplayerMenu ()
 	
 	float lastpoll = DLLtimer_GetTime();
 	float lastping = DLLtimer_GetTime();
-	StartTrackingThread();
+	StartDirectTracking();
+
 	// Menu loop
 	while (!exit_menu) 
 	{
@@ -530,7 +637,7 @@ int MainMultiplayerMenu ()
 
 		if (DLLtimer_GetTime() - lastpoll > TRACKERPOLLINTERVAL)
 		{
-			int added = StartTrackingThread();
+			int added = StartDirectTracking();
 			if (added == 1)
 				lastpoll = DLLtimer_GetTime() + TRACKERPOLLINTERVAL - 15; //try again in 15 seconds?
 			else if (added == 2)
