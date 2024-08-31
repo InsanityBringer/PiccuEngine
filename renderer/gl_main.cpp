@@ -419,30 +419,33 @@ void rend_SetFogState(sbyte state)
 		return;
 
 	OpenGL_state.cur_fog_state = state;
-	if (state == 1)
-	{
-		//TODO
-		//glEnable(GL_FOG);
-	}
-	else
-	{
-		//glDisable(GL_FOG);
-	}
 }
 
 // Sets the near and far plane of fog
 void rend_SetFogBorders(float nearz, float farz)
 {
 	// Sets the near and far plane of fog
-	float fogStart = nearz;
-	float fogEnd = farz;
+	float fog_start = std::max(0.f, std::min(1.0f, 1.0f - (1.0f / nearz)));
+	float fog_end = std::max(0.f, std::min(1.0f, 1.0f - (1.0f / farz)));
 
-	OpenGL_state.cur_fog_start = fogStart;
-	OpenGL_state.cur_fog_end = fogEnd;
+	OpenGL_state.cur_fog_start = fog_start;
+	OpenGL_state.cur_fog_end = fog_end;
+}
 
-	//glFogi(GL_FOG_MODE, GL_LINEAR);
-	//glFogf(GL_FOG_START, fogStart);
-	//glFogf(GL_FOG_END, fogEnd);
+// Sets the color of fog
+void rend_SetFogColor(ddgr_color color)
+{
+	float fc[4];
+	fc[0] = GR_COLOR_RED(color);
+	fc[1] = GR_COLOR_GREEN(color);
+	fc[2] = GR_COLOR_BLUE(color);
+	fc[3] = 1;
+
+	fc[0] /= 255.0f;
+	fc[1] /= 255.0f;
+	fc[2] /= 255.0f;
+
+	rend_UpdateTerrainFog(fc, OpenGL_state.cur_fog_start, OpenGL_state.cur_fog_end);
 }
 
 void rend_SetLighting(light_state state)
@@ -611,26 +614,6 @@ void rend_ResetCache(void)
 {
 	mprintf((0, "Resetting texture cache!\n"));
 	opengl_ResetCache();
-}
-
-// Sets the color of fog
-void rend_SetFogColor(ddgr_color color)
-{
-	if (color == OpenGL_state.cur_fog_color)
-		return;
-
-	float fc[4];
-	fc[0] = GR_COLOR_RED(color);
-	fc[1] = GR_COLOR_GREEN(color);
-	fc[2] = GR_COLOR_BLUE(color);
-	fc[3] = 1;
-
-	fc[0] /= 255.0f;
-	fc[1] /= 255.0f;
-	fc[2] /= 255.0f;
-
-	//TODO:
-	//glFogfv(GL_FOG_COLOR, fc);
 }
 
 // Sets the lighting state of opengl

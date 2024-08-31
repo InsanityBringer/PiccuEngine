@@ -60,7 +60,7 @@ bool OpenGL_blending_on = true;
 static GLuint drawbuffer;
 //The next committed vertex is where to start writing vertex data to the buffer
 static GLuint nextcommittedvertex; 
-static ShaderProgram drawshaders[4];
+static ShaderProgram drawshaders[8];
 static int lastdrawshader = -1;
 
 static GLuint drawvao;
@@ -94,18 +94,50 @@ int GL_CopyVertices(int numvertices)
 void opengl_SetDrawDefaults(void)
 {
 	//Init shaders
-	extern const char* genericVertexBody;
-	extern const char* genericFragBody;
+	CFILE* cf = cfopen("generic.vert", "rb");
+	if (!cf)
+		Error("opengl_SetDrawDefaults: Couldn't open shader source file generic.vert!");
+	int len = cfilelength(cf);
+	char* genericVertexBody = new char[len + 1];
+	if (cf_ReadBytes((ubyte*)genericVertexBody, len, cf) != len)
+		Error("opengl_SetDrawDefaults: Failure reading generic.vert!");
+	genericVertexBody[len] = '\0';
+	cfclose(cf);
+	
+	cf = cfopen("generic.frag", "rb");
+	if (!cf)
+		Error("opengl_SetDrawDefaults: Couldn't open shader source file generic.frag!");
+	len = cfilelength(cf);
+	char* genericFragBody = new char[len + 1];
+	if (cf_ReadBytes((ubyte*)genericFragBody, len, cf) != len)
+		Error("opengl_SetDrawDefaults: Failure reading generic.frag!");
+	genericFragBody[len] = '\0';
+	cfclose(cf);
+
+	//Without fog
 	//No texturing
-	drawshaders[0].AttachSourcePreprocess(genericVertexBody, genericFragBody, false, false, false);
+	drawshaders[0].AttachSourcePreprocess(genericVertexBody, genericFragBody, false, false, false, false);
 	//Textured
-	drawshaders[1].AttachSourcePreprocess(genericVertexBody, genericFragBody, true, false, false);
+	drawshaders[1].AttachSourcePreprocess(genericVertexBody, genericFragBody, true, false, false, false);
 	//Textured and lightmapped
-	drawshaders[2].AttachSourcePreprocess(genericVertexBody, genericFragBody, true, true, false);
+	drawshaders[2].AttachSourcePreprocess(genericVertexBody, genericFragBody, true, true, false, false);
 	//Specular. 
-	drawshaders[3].AttachSourcePreprocess(genericVertexBody, genericFragBody, true, false, true);
+	drawshaders[3].AttachSourcePreprocess(genericVertexBody, genericFragBody, true, false, true, false);
+
+	//With fog
+	//No texturing
+	drawshaders[4].AttachSourcePreprocess(genericVertexBody, genericFragBody, false, false, false, true);
+	//Textured
+	drawshaders[5].AttachSourcePreprocess(genericVertexBody, genericFragBody, true, false, false, true);
+	//Textured and lightmapped
+	drawshaders[6].AttachSourcePreprocess(genericVertexBody, genericFragBody, true, true, false, true);
+	//Specular. 
+	drawshaders[7].AttachSourcePreprocess(genericVertexBody, genericFragBody, true, false, true, true);
 
 	lastdrawshader = -1;
+
+	delete[] genericVertexBody;
+	delete[] genericFragBody;
 
 	//Init draw buffers
 	glGenBuffers(1, &drawbuffer);
@@ -144,16 +176,34 @@ void GL_SelectDrawShader()
 {
 	//TODO: This will bind excessively because I don't know if the previous shader was overridden by something.
 	//This should probably be cleaned up
-	if (OpenGL_state.cur_alpha_type == AT_SPECULAR)
-		drawshaders[3].Use();
-	else if (OpenGL_state.cur_texture_quality == 0)
-		drawshaders[0].Use();
-	else if (OpenGL_state.cur_texture_quality != 0)
+
+	if (OpenGL_state.cur_fog_state)
 	{
-		if (Overlay_type != OT_NONE)
-			drawshaders[2].Use();
-		else
-			drawshaders[1].Use();
+		if (OpenGL_state.cur_alpha_type == AT_SPECULAR)
+			drawshaders[7].Use();
+		else if (OpenGL_state.cur_texture_quality == 0)
+			drawshaders[4].Use();
+		else if (OpenGL_state.cur_texture_quality != 0)
+		{
+			if (Overlay_type != OT_NONE)
+				drawshaders[6].Use();
+			else
+				drawshaders[5].Use();
+		}
+	}
+	else
+	{
+		if (OpenGL_state.cur_alpha_type == AT_SPECULAR)
+			drawshaders[3].Use();
+		else if (OpenGL_state.cur_texture_quality == 0)
+			drawshaders[0].Use();
+		else if (OpenGL_state.cur_texture_quality != 0)
+		{
+			if (Overlay_type != OT_NONE)
+				drawshaders[2].Use();
+			else
+				drawshaders[1].Use();
+		}
 	}
 }
 

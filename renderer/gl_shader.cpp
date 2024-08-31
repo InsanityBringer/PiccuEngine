@@ -23,10 +23,14 @@
 #include "pserror.h"
 #include "renderer.h"
 
+constexpr int TERRAIN_FOG_COUNTER_MAX = 100;
+
 GLuint commonbuffername;
 GLuint legacycommonbuffername;
 GLuint fogbuffername;
 GLuint specularbuffername;
+GLuint terrainfogbuffername;
+int terrainfogcounter = 0;
 
 ShaderProgram* lastshaderprog = nullptr;
 
@@ -34,6 +38,7 @@ constexpr int COMMON_BINDING = 0;
 constexpr int LEGACY_BINDING = 1;
 constexpr int SPECULAR_BINDING = 2;
 constexpr int ROOM_BINDING = 3;
+constexpr int TERRAIN_FOG_BINDING = 4;
 
 //Shader pipeline system.
 //Contains a table of all shader definitions used by newrender. Renderer will request shader handles by name.
@@ -92,6 +97,16 @@ void opengl_InitShaders(void)
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+
+	glGenBuffers(1, &terrainfogbuffername);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, terrainfogbuffername);
+	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(TerrainFogBlock) * TERRAIN_FOG_COUNTER_MAX, nullptr, GL_DYNAMIC_READ);
+	glBindBufferBase(GL_UNIFORM_BUFFER, TERRAIN_FOG_BINDING, terrainfogbuffername);
+
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+	terrainfogcounter = 0;
 
 	//Init shader pipelines
 	for (int i = 0; i < NUM_SHADERDEFS; i++)
@@ -164,6 +179,25 @@ void rend_SetCurrentRoomNum(int roomblocknum)
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+}
+
+void rend_UpdateTerrainFog(float color[4], float start, float end)
+{
+	TerrainFogBlock block;
+	memcpy(block.color, color, sizeof(float) * 3);
+	block.start_dist = start;
+	block.end_dist = end;
+
+	glBindBuffer(GL_COPY_WRITE_BUFFER, terrainfogbuffername);
+	terrainfogcounter++;
+	if (terrainfogcounter == TERRAIN_FOG_COUNTER_MAX)
+	{
+		glBufferData(GL_COPY_WRITE_BUFFER, sizeof(TerrainFogBlock) * TERRAIN_FOG_COUNTER_MAX, nullptr, GL_DYNAMIC_READ);
+		terrainfogcounter = 0;
+	}
+	
+	glBufferSubData(GL_COPY_WRITE_BUFFER, terrainfogcounter * sizeof(TerrainFogBlock), sizeof(TerrainFogBlock), &block);
+	glBindBufferRange(GL_UNIFORM_BUFFER, TERRAIN_FOG_BINDING, terrainfogbuffername, terrainfogcounter * sizeof(TerrainFogBlock), sizeof(TerrainFogBlock));
 }
 
 void GL_UpdateLegacyBlock(float* projection, float* modelview)
@@ -270,6 +304,13 @@ void ShaderProgram::CreateCommonBindings(int bindindex)
 		glUniformBlockBinding(m_name, uboindex, ROOM_BINDING);
 	}
 
+	//Find RoomBlock
+	uboindex = glGetUniformBlockIndex(m_name, "TerrainFogBlock");
+	if (uboindex != GL_INVALID_INDEX)
+	{
+		glUniformBlockBinding(m_name, uboindex, TERRAIN_FOG_BINDING);
+	}
+
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
@@ -333,7 +374,7 @@ void ShaderProgram::AttachSourceFromDefiniton(ShaderDefinition& def)
 	CreateCommonBindings(COMMON_BINDING);
 }
 
-void ShaderProgram::AttachSourcePreprocess(const char* vertexsource, const char* fragsource, bool textured, bool lightmapped, bool speculared)
+void ShaderProgram::AttachSourcePreprocess(const char* vertexsource, const char* fragsource, bool textured, bool lightmapped, bool speculared, bool fogged)
 {
 	const char* vertexstrs[3];
 	GLint vertexlens[3];
@@ -350,6 +391,8 @@ void ShaderProgram::AttachSourcePreprocess(const char* vertexsource, const char*
 		preprocessorstr.append("#define USE_LIGHTMAP\n");
 	if (speculared)
 		preprocessorstr.append("#define USE_SPECULAR\n");
+	if (fogged)
+		preprocessorstr.append("#define USE_FOG\n");
 
 	vertexstrs[1] = fragstrs[1] = preprocessorstr.c_str();
 	vertexlens[1] = fraglens[1] = preprocessorstr.size();

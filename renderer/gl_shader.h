@@ -58,7 +58,7 @@ public:
 	//Defines USE_TEXTURING if textured is true.
 	//Defines USE_LIGHTMAP if lightmapped is true.
 	//Defines USE_SPECULAR if speculared is true. 
-	void AttachSourcePreprocess(const char* vertexsource, const char* fragsource, bool textured, bool lightmapped, bool speculared);
+	void AttachSourcePreprocess(const char* vertexsource, const char* fragsource, bool textured, bool lightmapped, bool speculared, bool fogged);
 	GLint FindUniform(const char* uniform);
 	void Destroy();
 
