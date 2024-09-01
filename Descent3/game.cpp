@@ -649,8 +649,10 @@ void StartFrame(int x, int y, int x2, int y2, bool clear, bool push_on_stack)
 	}
 
 	int clear_flags = RF_CLEAR_ZBUFFER;
+#ifndef NDEBUG //[ISB] temp hack to work around a problem in Vamped, blarg. 
 	if (clear)
 		clear_flags |= RF_CLEAR_COLOR;
+#endif
 	rend_StartFrame(x, y, x2, y2, clear_flags);
 	
 	grtext_SetParameters(0, 0, (x2 - x), (y2 - y));
