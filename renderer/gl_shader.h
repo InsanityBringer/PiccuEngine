@@ -22,6 +22,7 @@ struct CommonBlock
 {
 	float projection[16];
 	float modelview[16];
+	float pad[32];
 };
 
 //Shader definition nonsense
