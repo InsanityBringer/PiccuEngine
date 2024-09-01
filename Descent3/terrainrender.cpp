@@ -305,13 +305,16 @@ void MeshTerrainCell(MeshBuilder& mesh, int x, int z)
 		mesh.SetVertices(4, verts);
 	}
 
-	//All vertices are created, so finalize the mesh.
-	mesh.EndVertices();
-	TerrainDrawElement element;
-	element.texturenum = lasttexhandle;
-	element.lmhandle = lastlmhandle;
-	element.range = mesh.EndIndices();
-	drawcell.elements.push_back(element);
+	if (!firsttime)
+	{
+		//All vertices are created, so finalize the mesh.
+		mesh.EndVertices();
+		TerrainDrawElement element;
+		element.texturenum = lasttexhandle;
+		element.lmhandle = lastlmhandle;
+		element.range = mesh.EndIndices();
+		drawcell.elements.push_back(element);
+	}
 }
 
 void MeshTerrain()
