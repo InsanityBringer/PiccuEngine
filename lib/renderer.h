@@ -525,7 +525,7 @@ struct TerrainFogBlock
 	float color[4];
 	float start_dist;
 	float end_dist;
-	float pad[2];
+	float pad[58];
 };
 
 //Updates specular components

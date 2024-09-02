@@ -198,6 +198,9 @@ void rend_UpdateTerrainFog(float color[4], float start, float end)
 	
 	glBufferSubData(GL_COPY_WRITE_BUFFER, terrainfogcounter * sizeof(TerrainFogBlock), sizeof(TerrainFogBlock), &block);
 	glBindBufferRange(GL_UNIFORM_BUFFER, TERRAIN_FOG_BINDING, terrainfogbuffername, terrainfogcounter * sizeof(TerrainFogBlock), sizeof(TerrainFogBlock));
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
 }
 
 void GL_UpdateLegacyBlock(float* projection, float* modelview)
