@@ -15,254 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/Lib/ui.h $
- * $Revision: 75 $
- * $Date: 5/17/99 5:19p $
- * $Author: Samir $
- *
- *	UI system
- *
- * $Log: /DescentIII/Main/Lib/ui.h $
- * 
- * 75    5/17/99 5:19p Samir
- * added ability for edit box to autoselect when hitting the max number of
- * characters typable.
- * 
- * 74    5/02/99 2:08a Samir
- * added Enable and Disable and only accept locking of button if mouse is
- * inside the button.
- * 
- * 73    4/29/99 2:21a Samir
- * added flag for gadgets.
- * 
- * 72    4/28/99 1:54a Samir
- * visual tweaks to text
- * 
- * 71    4/26/99 7:46p Samir
- * you can get flags from a window now.
- * 
- * 70    4/16/99 4:02a Jeff
- * include linux_fix.h for linxu builds...reduces errors
- * 
- * 69    4/15/99 1:45a Jeff
- * changes for linux compile
- * 
- * 68    4/03/99 9:26p Jeff
- * changed dialogs that weren't using UID_OK and UID_CANCEL to use and
- * handle them properly
- * 
- * 67    3/23/99 9:02p Samir
- * up accelerator count for windows to 48.
- * 
- * 66    2/28/99 3:25a Samir
- * added flag to input only numbers.
- * 
- * 65    2/26/99 2:12a Samir
- * added window accelrators
- * 
- * 64    2/22/99 8:13p Samir
- * added slave gadget system that only uses mouse input from window, but
- * defers keys to its master.
- * 
- * 63    2/21/99 6:36p Samir
- * focusing changes and key input changes to ui.,
- * 
- * 62    2/17/99 8:32p Samir
- * fixed bugs in remove gadget, added callbacks for attaching and
- * detaching gadgets.
- * 
- * 61    2/16/99 12:08p Samir
- * added gadget notification system.
- * 
- * 60    1/18/99 5:08a Jeff
- * added some flags related to sorted listboxes
- * 
- * 59    12/30/98 12:16p Kevin
- * Auto Mission Download system
- * 
- * 58    11/03/98 7:05p Samir
- * added word wrapping console.
- * 
- * 57    10/20/98 12:14p Jeff
- * added color to the UIGroup
- * 
- * 56    10/19/98 6:30p Jeff
- * changes made for detail variables.  Put in preset values.  Preset
- * options.  Removed terrain_cast from detail.  Put new callbacks in
- * UIListBox and UISlider
- * 
- * 55    10/19/98 12:18p Samir
- * made tabbing between edit controls possible.
- * 
- * 54    10/17/98 11:26a Samir
- * fixed some edit box scrolling issues.
- * 
- * 53    10/16/98 1:42p Jeff
- * updated UIGroup
- * 
- * 52    10/07/98 11:25a Jeff
- * created UIGroup
- * 
- * 51    9/30/98 4:34p Samir
- * added enable function.
- * 
- * 50    9/22/98 3:57p Samir
- * listbox prob fixed again.
- * 
- * 49    9/14/98 11:22a Samir
- * enhanced editboxes
- * 
- * 48    9/02/98 6:50p Samir
- * added new combo box.
- * 
- * 47    8/27/98 5:03p Kevin
- * Prettied up multiplayer screens and fixed some bugs.
- * 
- * 46    8/27/98 2:52p Samir
- * changing window system to work in two modes.
- * 
- * 45    8/26/98 12:25p Samir
- * fixed the whole editbox, keyboard access mess.
- * 
- * 44    8/25/98 7:08p Samir
- * select how keys are sent to a gadget.
- * 
- * 43    8/25/98 5:27p Samir
- * new focusing rules for keyboard.
- * 
- * 42    8/24/98 3:12p Samir
- * fixed text clipping
- * 
- * 41    8/11/98 11:38a Samir
- * fixed listbox probs yet again. arrows on side this time.
- * 
- * 40    7/29/98 3:26p Samir
- * fixed some listbox mouse problems.
- * 
- * 39    6/23/98 5:05p Samir
- * console supports color per line ONLY.
- * 
- * 38    6/22/98 7:31p Samir
- * added UIEdit::Activate, which activates an edit box manually.
- * 
- * 37    6/22/98 2:15p Samir
- * added UIConsoleGadget.
- * 
- * 36    6/05/98 5:58p Jeff
- * Added a way to change the items for the states of a HotSpot
- * 
- * 35    6/05/98 5:35p Samir
- * massive improvement in UI keyboard interface.
- * 
- * 34    5/22/98 5:02p Jeff
- * Added a flag for radio buttons so the button part won't be drawn (just
- * the text)
- * 
- * 33    5/08/98 3:58p Samir
- * added ability to move a UI object.
- * 
- * 32    4/29/98 1:04p Jeff
- * fixed up the UIListBox a bit (color control and scroll buttons)
- * 
- * 31    4/29/98 11:55a Samir
- * allow user to change color of selected listbox item.
- * 
- * 30    4/24/98 2:42a Samir
- * added UICheckBox
- * 
- * 29    4/13/98 7:02p Samir
- * made some things protected.
- * 
- * 28    3/13/98 5:18p Jeff
- * Added 2 flags for new UIListBox for scrolling and some member vars for
- * UIListBox
- * 
- * 27    3/10/98 7:25p Samir
- * Changes to UISlider
- * 
- * 26    3/10/98 12:48p Samir
- * Fixed flags for UIWindow so centering is supported.
- * 
- * 25    3/09/98 5:05p Samir
- * Added callback to selection change function.
- * 
- * 24    3/09/98 3:43p Samir
- * Made some window flag changes.
- * 
- * 23    3/06/98 10:48a Samir
- * Check if button is active.
- * 
- * 22    3/05/98 6:40p Samir
- * Implemented radio buttons.
- * 
- * 21    3/04/98 12:08p Samir
- * Slider fixed.
- * 
- * 20    2/26/98 2:50p Samir
- * Did some stuff with UISlider.
- * 
- * 19    2/15/98 7:07p Samir
- * Revamped way keys like up and down are handled in window system.
- * 
- * 18    2/13/98 6:34p Samir
- * Added UIStatic class.
- * 
- * 17    2/10/98 4:55p Samir
- * Added radio buttons.
- * 
- * 16    2/02/98 7:36p Samir
- * Added UIObject::Destroy.
- * 
- * 15    1/30/98 7:03p Samir
- * Added UIConsole.
- * 
- * 14    1/23/98 5:45p Samir
- * Added OnUserProcess to UIWindow class.
- * 
- * 13    1/18/98 4:22p Samir
- * Implemented new UIItem system.
- * 
- * 12    1/13/98 6:59p Jeff
- * (Samir) moved defines from UIlib.h to ui.h.
- * 
- * 11    1/13/98 4:32p Samir
- * Made tUIInput a shared structure to be used by ui_DoFrame to return UI
- * input values.
- * 
- * 10    1/13/98 4:28p Samir
- * Added sliders.
- * 
- * 9     1/09/98 12:01p Samir
- * Added prototypes for sliders, listboxes, and scrollbars.
- * 
- * 8     1/08/98 12:17p Samir
- * Added TitledWindow and modified the UI interface for polling.
- * 
- * 7     1/05/98 4:55p Samir
- * Took out m_Flags from child classes of UIGadget
- * 
- * 6     1/05/98 4:36p Samir
- * Moved centering and fittext control flags to UIGadget class.
- * 
- * 5     1/05/98 4:19p Samir
- * UIGadget has fewer pure virtuals.
- * 
- * 4     1/05/98 3:48p Jason
- * added SetAllText function for buttons
- * 
- * 3     1/05/98 3:18p Samir
- * Added some button flags.
- * 
- * 2     1/02/98 12:49p Samir
- * Edit control and static control added.
- * 
- * 1     12/30/97 4:37p Samir
- * Initial revision
- * 
- * $NoKeywords: $
- */
-
 
 #ifndef UI_H
 #define UI_H
@@ -353,25 +105,25 @@ public:
 // flags
 #define UIF_CENTER				0x01
 #define UIF_FIT					0x02
-#define UIF_BORDER				0x04					// for certain gadgets specifies that the border be drawn.
-#define UIF_SLAVE					0x10					// gadget never gets focus from ui system directly (child gadgets).
-#define UIF_NOTIFYMASTERSEL	0x20					// when slave gadget is selected, the master will know.
-#define UIF_PROCESS_MENU		0x40					// use this to create a 'menu style' window (Options menu)
+#define UIF_BORDER				0x04				// for certain gadgets specifies that the border be drawn.
+#define UIF_SLAVE				0x10				// gadget never gets focus from ui system directly (child gadgets).
+#define UIF_NOTIFYMASTERSEL		0x20				// when slave gadget is selected, the master will know.
+#define UIF_PROCESS_MENU		0x40				// use this to create a 'menu style' window (Options menu)
 #define UIF_PROCESS_ALL			UIF_PROCESS_MENU	// to maintain compatibility with older code.
-#define UIF_GROUP_START			0x80					// starts a group of gadgets that use the up and down arrows to move between
-#define UIF_GROUP_END			0x100					// ends a group
+#define UIF_GROUP_START			0x80				// starts a group of gadgets that use the up and down arrows to move between
+#define UIF_GROUP_END			0x100				// ends a group
 
-#define UIF_CUSTOMF				0x200					// use this flag and any higher for custom gadget flags, a list of predefs below
+#define UIF_CUSTOMF				0x200				// use this flag and any higher for custom gadget flags, a list of predefs below
 
-#define UILB_NOSCROLL			0x800					//turns off automatic scroll buttons on UIListBox
+#define UILB_NOSCROLL			0x800				//turns off automatic scroll buttons on UIListBox
 #define UILB_AUTOSELECT			0x1000				//turns on automatic change of SelectedIndex if scrolled out of view
 #define UILB_NOSORT				0x2000				//disables sorting in a listbox
 #define UILB_CASESENSITIVE		0x4000				//only if !UILB_NOSORT. Makes the sorting case sensitive
 
-#define UIRB_NOBUTTON			0x800					//disables the drawing of the button on the left of the text of a radio button
+#define UIRB_NOBUTTON			0x800				//disables the drawing of the button on the left of the text of a radio button
 
-#define UIED_PASSWORD			0x800					// special password masking for edit box text (*)
-#define UIED_NUMBERS				0x1000				// only accept numbers for input!
+#define UIED_PASSWORD			0x800				// special password masking for edit box text (*)
+#define UIED_NUMBERS			0x1000				// only accept numbers for input!
 #define UIED_AUTOSELECT			0x2000				// selects when input reaches buffer length.
 
 
@@ -1266,8 +1018,6 @@ inline bool UIGadget::HasFocus() const
 { 
 	return ((m_Wnd->GetFocus()==this) ? true : false); 
 };
-
-
 
 #include "uisys.h"
 #include "uidraw.h"

@@ -89,8 +89,8 @@
 #include "marker.h"
 #include "gamecinematics.h"
 #include "debuggraph.h"
-#include "rocknride.h"
 #include "vibeinterface.h"
+#include "gamespy.h"
 
 
 //Uncomment this to allow all languages
@@ -100,7 +100,6 @@
 	#include "editor\HFile.h"
 	#include "editor\d3edit.h"
 	#include "slew.h"
-	#include "gr.h"
 	#define INIT_MESSAGE(c) SplashMessage c	
 #else
 	void IntroScreen();
@@ -123,9 +122,6 @@ void DeleteTempFiles(void);
 
 
 #define TEMPBUFFERSIZE	256
-
-//If there's a joystick, this is the stick number.  Else, this is -1
-char App_ddvid_subsystem[8];
 
 //	other info.
 static chunked_bitmap Title_bitmap;
@@ -360,6 +356,7 @@ void SaveGameSettings()
 
 	sprintf(tempbuffer,"%f",Detail_settings.Terrain_render_distance/((float)TERRAIN_SIZE));
 	Database->write("RS_terraindist",tempbuffer,strlen(tempbuffer)+1);
+	Database->write("RS_antialiased", Render_preferred_state.antialised);
 
 	Database->write("Dynamic_Lighting",Detail_settings.Dynamic_lighting);
 
@@ -553,6 +550,7 @@ void LoadGameSettings()
 	Database->read_int("RS_color_model",&Render_state.cur_color_model);
 	Database->read_int("RS_light",&Render_state.cur_light_state);
 	Database->read_int("RS_texture_quality",&Render_state.cur_texture_quality);
+	Database->read("RS_antialiased", &Render_preferred_state.antialised);
 	// force feedback stuff
 	Database->read("EnableJoystickFF",&D3Use_force_feedback);
 	Database->read("ForceFeedbackAutoCenter",&D3Force_auto_center);
@@ -669,7 +667,8 @@ tTempFileInfo temp_file_wildcards[] =
 	{"d3o*.tmp"},
 	{"d3c*.tmp"},
 	{"d3t*.tmp"},
-	{"d3i*.tmp"}
+	{"d3i*.tmp"},
+	{"pic*.tmp"}
 };
 int num_temp_file_wildcards = sizeof(temp_file_wildcards)/sizeof(tTempFileInfo);
 
@@ -749,6 +748,8 @@ void InitIOSystems(bool editor)
 	ddio_init_info io_info;
 	int dirlen = _MAX_PATH;
 
+	char Working_directory[_MAX_PATH];
+	ddio_GetWorkingDir(Working_directory, sizeof(Working_directory));
 	
 	//Dedicated server is always portable on Windows, not the most ideal but it will make admin's lives easier.
 	if (FindArg("-portable") != 0 || Dedicated_server)
@@ -864,19 +865,6 @@ void InitIOSystems(bool editor)
 		ddio_MouseSetCallbackFn(ShouldCaptureMouse);
 	}
 
-	int rocknride_arg = FindArg("-rocknride");
-	if(rocknride_arg)
-	{
-		int comm_port = atoi(GameArgs[rocknride_arg+1]);
-		if(!RNR_Initialize(comm_port))
-		{
-			mprintf((0,"Rock'n'Ride Init failed!\n"));
-		}else
-		{
-			mprintf((0,"Rock'n'Ride Init success!\n"));
-		}
-	}
-
 	rtp_Init();
 	RTP_ENABLEFLAGS(RTI_FRAMETIME|RTI_RENDERFRAMETIME|RTI_MULTIFRAMETIME|RTI_MUSICFRAMETIME|RTI_AMBSOUNDFRAMETIME);
 	RTP_ENABLEFLAGS(RTI_WEATHERFRAMETIME|RTI_PLAYERFRAMETIME|RTI_DOORFRAMETIME|RTI_LEVELGOALTIME|RTI_MATCENFRAMETIME);
@@ -908,6 +896,13 @@ void InitIOSystems(bool editor)
 	//Init hogfiles
 	int d3_hid=-1,extra_hid=-1,extra1_hid=-1,merc_hid=-1,sys_hid=-1,extra13_hid=-1;
 	char fullname[_MAX_PATH];
+
+	ddio_MakePath(fullname, Working_directory, "piccuengine.hog", nullptr);
+	int piccu_hid = cf_OpenLibrary(fullname);
+	if (piccu_hid == 0)
+	{
+		Error("Cannot find piccuengine.hog file!");
+	}
 	
 	#ifdef DEMO
 //DAJ	d3_hid = cf_OpenLibrary("d3demo.hog");
@@ -985,15 +980,15 @@ void InitIOSystems(bool editor)
 	//	initialize all the OSIRIS systems
 	//	extract from extra.hog first, so it's dll files are listed ahead of d3.hog's
 	Osiris_InitModuleLoader();	
-	if(extra13_hid!=-1)
+	if(extra13_hid != 0)
 		Osiris_ExtractScriptsFromHog(extra13_hid,false);
-	if (extra1_hid != -1)
+	if (extra1_hid != 0)
 		Osiris_ExtractScriptsFromHog(extra1_hid, false);
-	if(extra_hid!=-1)
+	if(extra_hid != 0)
 		Osiris_ExtractScriptsFromHog(extra_hid,false);
-	if(merc_hid!=-1)
+	if(merc_hid != 0)
 		Osiris_ExtractScriptsFromHog(merc_hid,false);
-	if(sys_hid!=-1)
+	if(sys_hid != 0)
 		Osiris_ExtractScriptsFromHog(sys_hid,false);
 	Osiris_ExtractScriptsFromHog(d3_hid,false);	
 }
@@ -1029,28 +1024,9 @@ void InitGraphics(bool editor)
 	if (!InitTextures())
 		Error("Failed to initialize texture system.");
 
-#ifdef EDITOR
-	char *driver = "GDIX";
-	
-	if (!ddgr_Init(Descent, driver, editor ? false: true)) 
-		Error("DDGR graphic system init failed.");
-
-// Init our renderer
-	grSurface::init_system();
-	rend_Init (RENDERER_SOFTWARE_16BIT, Descent,NULL);
-	Desktop_surf = new grSurface(0,0,0, SURFTYPE_VIDEOSCREEN, 0);
-#else
-	strcpy(App_ddvid_subsystem,  "GDIX");
-
-	if (!Dedicated_server)
-	{
-		if (!ddvid_Init( Descent, App_ddvid_subsystem)) 
-			Error("Graphics initialization failed.\n");
-	}
-
 	INIT_MESSAGE("Loading fonts.");
 	LoadAllFonts();
-#endif
+
 	Graphics_init = true;
 }
 
@@ -1276,7 +1252,8 @@ void InitD3Systems1(bool editor)
 #if defined (RELEASE) || defined (MACINTOSH)
 	SetDebugBreakHandlers(NULL, NULL);
 #else
-	SetDebugBreakHandlers(D3DebugStopHandler, D3DebugResumeHandler);
+	SetDebugBreakHandlers(nullptr, nullptr); //[ISB] these debug handlers really aren't needed in currentyear, I feel. 
+	//SetDebugBreakHandlers(D3DebugStopHandler, D3DebugResumeHandler);
 #endif
 
 	Init_in_editor = editor;
@@ -1407,6 +1384,8 @@ bool CheckCdForValidity(int cd);
 		ServerTimeout = atoi(GameArgs[timeoutarg+1]);
 		LastPacketReceived = timer_GetTime();
 	}
+
+	gspy_Init();
 
 // Sound initialization
 	int soundres = Sound_system.InitSoundLib(Descent, Sound_mixer, Sound_quality, false);
@@ -1716,7 +1695,6 @@ void ShutdownD3()
 	Init_old_screen_mode = GetScreenMode();
 	Init_old_ui_callback = GetUICallback();
 	SetScreenMode(SM_NULL);
-	ddvid_Close();
 
 // shutdown IO
 	ddio_Close();
@@ -1752,7 +1730,6 @@ void RestartD3()
 	}
 
 //	startup screen.
-	ddvid_Init(Descent, App_ddvid_subsystem); 
 	ddio_KeyFlush();
 	SetScreenMode(Init_old_screen_mode);
 	SetUICallback(Init_old_ui_callback);

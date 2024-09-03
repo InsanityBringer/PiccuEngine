@@ -60,6 +60,7 @@
 #include "polymodel.h"
 #include "init.h"
 #include "../md5/md5.h"
+#include "gamespy.h"
 
 void MultiProcessShipChecksum(MD5* md5, int ship_index);
 
@@ -202,10 +203,10 @@ void MultiStartServer(int playing, char* scriptname, int dedicated_server_num_te
 	dp_StartGame(Netgame.name);
 #endif
 
-	//gspy_StartGame(Netgame.name);
+	gspy_StartGame(Netgame.name);
 	//We use this to identify clients....
-	ps_srand(timer_GetTime());
-	Secret_net_id = ps_rand() * ps_rand();
+	PSRand prand(timer_GetMSTime());
+	Secret_net_id = prand() * prand();
 	LastPacketReceived = timer_GetTime();
 
 	// At this point we have a level checksum, so add the ships into the mix
@@ -2522,7 +2523,7 @@ void MultiResetSettings()
 	strcpy(Netgame.mission, "fury.mn3");
 	strcpy(Netgame.name, "Generic D3 Game");
 
-	Netgame.packets_per_second = 10;
+	Netgame.packets_per_second = 30;
 	Netgame.respawn_time = 60;
 	Netgame.flags = NF_RANDOMIZE_RESPAWN;
 	Netgame.max_players = 8;

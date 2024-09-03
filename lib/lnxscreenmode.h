@@ -15,38 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/renderer/lnxscreenmode.h $
- * $Revision: 1.3 $
- * $Date: 2004/02/09 04:14:52 $
- * $Author: kevinb $
- *
- * 
- *
- * $Log: lnxscreenmode.h,v $
- * Revision 1.3  2004/02/09 04:14:52  kevinb
- * Added newlines to all headers to reduce number of warnings printed
- *
- * Made some small changes to get everything compiling.
- *
- * All Ready to merge the 1.5 tree.
- *
- * Revision 1.2  2000/04/28 20:25:51  icculus
- * Updates, cleanups, and SDLification.
- *
- * Revision 1.1.1.1  2000/04/18 00:00:49  icculus
- * initial checkin
- *
- * 
- * 3     9/06/99 9:21p Jeff
- * lock video mode switching, don't set viewport when restoring (causing a
- * bunch of screen garbage)
- * 
- * 2     9/05/99 9:41p Jeff
- * first checkin of Linux Screen manager
- *
- * $NoKeywords: $
- */
 
 #ifndef __LNXVIDEOMODE_H__
 #define __LNXVIDEOMODE_H__

@@ -603,6 +603,10 @@ bool llsOpenAL::SetGlobalReverbProperties(const EAX2Reverb* reverb)
 
 	LastReverb = reverb;
 
+	//This happens after LastReverb is set so I can be sure that it's always the most recent environment. 
+	if (!ReverbEnabled)
+		return true;
+
 	//Make the aux effect slot use the effect
 	dalAuxiliaryEffectSloti(AuxEffectSlot, AL_EFFECTSLOT_EFFECT, 0);
 	ALErrorCheck("Setting aux effect slot");
@@ -679,13 +683,28 @@ void llsOpenAL::GetEnvironmentValues(t3dEnvironmentValues* env)
 
 void llsOpenAL::SetEnvironmentToggles(const t3dEnvironmentToggles* env)
 {
+	ReverbEnabled = env->reverb;
+	if (!ReverbEnabled)
+	{
+		dalAuxiliaryEffectSloti(AuxEffectSlot, AL_EFFECTSLOT_EFFECT, 0);
+		ALErrorCheck("Setting aux effect slot");
+	}
+	else if (LastReverb != nullptr)
+	{
+		//LastReverb should be maintained so I can get the correct environment immediately.
+		SetGlobalReverbProperties(LastReverb);
+	}
+
+	DopplerEnabled = env->doppler;
+	if (!DopplerEnabled)
+		SoundDopplerMult = 0;
+	else
+		SoundDopplerMult = .6f;
 }
 
 void llsOpenAL::GetEnvironmentToggles(t3dEnvironmentToggles* env)
 {
-	env->doppler = true;
-	env->geometry = false;
-	env->flags = ENV3DVALF_DOPPLER;
+	env->flags = ENV3DVALF_DOPPLER | ENV3dVALF_REVERBS;
 }
 
 void llsOpenAL::InitMovieBuffer(bool is16bit, int samplerate, bool stereo, llsMovieCallback callback)

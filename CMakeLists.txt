@@ -6,6 +6,27 @@ SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 
 PROJECT(Descent3)
 
+function(add_hog_file HOG_NAME HOG_SRC_DIR)
+	string( REPLACE "." "_" HOG_TARGET ${HOG_NAME} )
+	
+	#message(${HOG_SRC_DIR})
+	
+	#Iterate all the files in the hog source dir, for usage in a target.
+	file(GLOB_RECURSE HOG_SOURCES ${HOG_SRC_DIR}/*)
+	
+	#Create the command that actually invokes hogdir to build the hogfile.
+	add_custom_command( OUTPUT ${CMAKE_BINARY_DIR}/${HOG_NAME}
+		COMMAND hogdir ${CMAKE_BINARY_DIR}/${HOG_NAME} ${HOG_SRC_DIR}
+		DEPENDS hogdir )
+		
+	#Create the target that uses this command to build the hogfile.
+	#From GZDoom: Touch the hogdir binary to ensure that this rule always rebuilds
+	add_custom_target( ${HOG_TARGET} ALL
+		COMMAND ${CMAKE_COMMAND} -E touch $<TARGET_FILE:hogdir>
+		DEPENDS ${CMAKE_BINARY_DIR}/${HOG_NAME}
+		SOURCES ${HOG_SOURCES})
+endfunction()
+
 IF (UNIX)
 SET (D3_GAMEDIR "~/Descent3/")
 
@@ -38,30 +59,45 @@ ENDIF()
 IF (WIN32)
 	SET(D3_GAMEDIR "c:/games/Descent3/")	
 	set (CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "lib/win" "lib/win/directx" "thirdparty/OpenAL/libs/Win32") 
-	SET(CMAKE_CXX_FLAGS_DEBUG "/Od /EHsc /RTC1 /MTd /MP /W3 /nologo /c /ZI /TP /errorReport:prompt")
-	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL /FD /EHsc /MT /W3 /nologo /c /Zi /TP /errorReport:prompt")
+	SET(CMAKE_CXX_FLAGS_DEBUG "/Od /EHsc /RTC1 /MTd /MP /W3 /nologo /c /Zi /errorReport:prompt")
+	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL /FD /EHsc /MT /W3 /nologo /c /Zi /errorReport:prompt")
 	
-	
-	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
 	SET(CMAKE_MODULE_LINKER_FLAGS "/SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
-	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DMONO -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
+	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
 
 	SET(PLATFORM_INCLUDES "lib/win/directx" "lib/win" "thirdparty/OpenAL/include" )
 	
 	SET(CMAKE_FIND_LIBRARY_PREFIXES "")
 	SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
 	
-	FIND_LIBRARY(DSOUND_LIBRARY NAMES dsound "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
 	FIND_LIBRARY(DINPUT_LIBRARY NAMES dinput "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
 	FIND_LIBRARY(DXGUID_LIBRARY NAMES dxguid "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
-	FIND_LIBRARY(DDRAW_LIBRARY NAMES ddraw "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
 	#TODO: May need to find OpenAL64 eventually
 	FIND_LIBRARY(OPENAL_LIBRARY NAMES openal32 "${CMAKE_SOURCE_DIR}/thirdparty/OpenAL/libs" "${CMAKE_SOURCE_DIR}/thirdparty/OpenAL/libs/Win32")
 ENDIF ()
 
 MESSAGE("Install will copy files to ${D3_GAMEDIR}")
 
-include_directories("lib" "Descent3" ${PLATFORM_INCLUDES})
+include_directories("lib" "Descent3" "netcon/includes" ${PLATFORM_INCLUDES})
+
+IF (WIN32)
+	SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib wininet.lib xinput.lib
+		${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${OPENAL_LIBRARY})
+	SET (MIN_PLATFORM_LIBS wsock32.lib wininet.lib)
+ENDIF()
+IF (UNIX AND NOT APPLE)
+	SET (PLATFORM_LIBS ${SDL_LIBRARY} caca asound audio esd aa directfb m dl GLU)
+	SET (MIN_PLATFORM_LIBS ${PLATFORM_LIBS}) #todo
+ENDIF()
+IF (APPLE)
+	SET (PLATFORM_LIBS ${SDL_LIBRARY} ncurses )
+	SET (MIN_PLATFORM_LIBS ${PLATFORM_LIBS}) #todo
+ENDIF()
+
+
+#Hogdir stuff
+add_subdirectory(tools)
+add_subdirectory(hogfiles)
 
 ADD_SUBDIRECTORY (AudioEncode)
 ADD_SUBDIRECTORY (bitmap)
@@ -69,8 +105,6 @@ ADD_SUBDIRECTORY (cfile)
 ADD_SUBDIRECTORY (d3music)
 
 IF (WIN32)
-ADD_SUBDIRECTORY (dd_grwin32)
-ADD_SUBDIRECTORY (dd_vidwin32)
 ADD_SUBDIRECTORY (ddio_win)
 ADD_SUBDIRECTORY (win32)
 ADD_SUBDIRECTORY (dd_sndlib)
@@ -79,7 +113,6 @@ ENDIF()
 IF (UNIX)
 ADD_SUBDIRECTORY(linux)
 ADD_SUBDIRECTORY(dd_lnxsound)
-ADD_SUBDIRECTORY(ddvid_lnx)
 ADD_SUBDIRECTORY(lnxcontroller)
 ADD_SUBDIRECTORY(ddio_lnx)
 ENDIF()
@@ -109,12 +142,12 @@ ADD_SUBDIRECTORY (md5)
 ADD_SUBDIRECTORY (libacm)
 ADD_SUBDIRECTORY (netgames)
 ADD_SUBDIRECTORY (Descent3)
+ADD_SUBDIRECTORY (netcon/inetfile)
+#dependent on above
+ADD_SUBDIRECTORY (netcon)
 
-# For now we don't need to build the scripts under windows, so we'll only include
-# the directory when building for linux/osx. In the future we may want to to fix bugs, etc.
 #[ISB] TODO: Needs fixing for new build system
 #IF(UNIX)
-#ADD_SUBDIRECTORY (netcon)
 #ADD_SUBDIRECTORY (scripts)
 #ENDIF()
 
@@ -155,13 +188,12 @@ SET (DESCENT3_SOURCES
 		${VECMAT_SOURCES}
 		${MD5_SOURCES}
 		${LIBACM_SOURCES}
+		${INETFILE_SOURCES}
 		${MAIN_SOURCES})
 		
 IF (WIN32)
 SET (DESCENT3_SOURCES
 	${DESCENT3_SOURCES}
-	${DD_GRWIN32_SOURCES}
-	${DD_VIDWIN32_SOURCES}
 	${DDIO_WIN_SOURCES}
 	${WIN32_SOURCES}
 	${DD_SNDLIB_SOURCES}
@@ -172,39 +204,34 @@ IF (UNIX)
 SET (DESCENT3_SOURCES
 	${DESCENT3_SOURCES}
 	${LINUX_SOURCES}
-	${DDVID_LNX_SOURCES}
 	${DD_LNXSOUND_SOURCES}
 	${DDIO_SOURCES})
-ENDIF()		
-
-IF (WIN32)
-SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib xinput.lib
-	${DSOUND_LIBRARY} ${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${DDRAW_LIBRARY} ${OPENAL_LIBRARY})
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
-ENDIF()
-
-IF (UNIX AND NOT APPLE)
-SET (PLATFORM_LIBS ${SDL_LIBRARY} caca asound audio esd aa directfb m dl GLU)
-SET(CMAKE_EXE_LINKER_FLAGS "/usr/lib/libpulse-simple.so.0")
-ENDIF()
-	
-IF (APPLE)
-SET (PLATFORM_LIBS ${SDL_LIBRARY} ncurses )
-SET(CMAKE_EXE_LINKER_FLAGS "-framework IOKit -framework Cocoa -framework OpenGL -framework Carbon")
 ENDIF()
 
 add_executable(PiccuEngine ${DESCENT3_SOURCES})
-target_link_libraries(PiccuEngine 
-	${PLATFORM_LIBS})
 	
-target_compile_definitions(PiccuEngine PUBLIC "$<$<CONFIG:RELEASE>:RELEASE>")
-target_compile_definitions(PiccuEngine PUBLIC "$<$<CONFIG:MINSIZEREL>:RELEASE>")
-target_compile_definitions(PiccuEngine PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
+IF (WIN32)
+	target_link_options(PiccuEngine PUBLIC /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC)
+ENDIF()
+
+IF (UNIX AND NOT APPLE)
+	target_link_options(PiccuEngine PUBLIC /usr/lib/libpulse-simple.so.0)
+ENDIF()
+	
+IF (APPLE)
+	target_link_options(PiccuEngine PUBLIC -framework IOKit -framework Cocoa -framework OpenGL -framework Carbon)
+ENDIF()
+
+target_link_libraries(PiccuEngine ${PLATFORM_LIBS})
+	
+target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:RELEASE>:RELEASE>")
+target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:MINSIZEREL>:RELEASE>")
+target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
 
 add_library(dmfc SHARED ${DMFC_SOURCES})
 target_compile_definitions(dmfc PUBLIC -DOUTRAGE_VERSION -DDMFC_DLL)
 target_include_directories(dmfc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/netgames/includes")
-add_dependencies(PiccuEngine revision_check)
+add_dependencies(PiccuEngine revision_check piccuengine_hog TCP-IP Tracker)
 	
 install(TARGETS PiccuEngine DESTINATION ${D3_GAMEDIR})
 
@@ -212,14 +239,11 @@ source_group("AudioEncode" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/Audio
 source_group("bitmap" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/bitmap/.+")
 source_group("cfile" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/cfile/.+")
 source_group("d3music" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/d3music/.+")
-source_group("dd_grwin32" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_grwin32/.+")
 source_group("dd_lnxsound" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_lnxsound/.+")
 source_group("dd_sndlib" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_sndlib/.+")
-source_group("dd_vidwin32" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_vidwin32/.+")
 source_group("ddio_common" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_common/.+")
 source_group("ddio_lnx" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_lnx/.+")
 source_group("ddio_win" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_win/.+")
-source_group("ddvid_lnx" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddvid_lnx/.+")
 source_group("main" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/Descent3/.+")
 source_group("fix" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/fix/.+")
 source_group("grtext" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/grtext/.+")
@@ -235,6 +259,9 @@ source_group("movie" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/movie/.+")
 source_group("music" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/music/.+")
 source_group("mve" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/mve/.+")
 source_group("networking" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/networking/.+")
+source_group("netcon" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netcon/.+")
+source_group("netcon/inetfile" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netcon/inetfile/.+")
+source_group("netcon/lanclient" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netcon/lanclient/.+")
 source_group("netgames" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netgames/.+")
 source_group("netgames/dmfc" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netgames/dmfc/.+")
 source_group("physics" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/physics/.+")

@@ -15,10 +15,10 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include "DDAccess.h"
 #include "Application.h"
 #include "AppConsole.h"
-#include "TaskSystem.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include "pstring.h"

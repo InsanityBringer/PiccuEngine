@@ -24,6 +24,7 @@
 #endif
 #include <algorithm>
 #include <glad/gl.h>
+#include "wglext.h"
 #define DD_ACCESS_RING //need direct access to some stuff
 #include "application.h"
 #include "3d.h"
@@ -38,8 +39,10 @@
 
 #define CHECK_ERROR(n) //need to decide what it does. 
 
+#define GL_DEBUG
+
 #ifdef WIN32
-typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int interval);
+//typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int interval);
 extern PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
 
 extern HWND hOpenGLWnd;
@@ -48,6 +51,7 @@ extern HDC hOpenGLDC;
 
 //gl_init.cpp
 extern bool OpenGL_packed_pixels;
+extern bool OpenGL_debugging_enabled;
 int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state);
 void opengl_Close();
 
@@ -106,16 +110,23 @@ void rend_SetMipState(sbyte mipstate);
 void opengl_DrawMultitexturePolygon3D(int handle, g3Point** p, int nv, int map_type);
 void opengl_SetMultitextureBlendMode(bool state);
 void opengl_DrawFlatPolygon3D(g3Point** p, int nv);
+//Call to ensure that the draw VAO is always ready to go when changing VAOs.
+void GL_UseDrawVAO(void);
 
 //gl_framebuffer.cpp
 class Framebuffer
 {
-	GLuint		m_name;
-	GLuint		m_colorname, m_depthname;
+	GLuint		m_name, m_subname;
+	GLuint		m_colorname, m_subcolorname, m_depthname;
 	uint32_t	m_width, m_height;
+	bool		m_msaa;
+
+	//Used when multisampling is enabled. Blits the multisample framebuffer to the non-multisample sub framebuffer
+	//Leaves the sub framebuffer bound for reading to finish the blit. 
+	void SubColorBlit();
 public:
 	Framebuffer();
-	void Update(int width, int height);
+	void Update(int width, int height, bool msaa);
 	void Destroy();
 	//Blits to the target framebuffer using glBlitFramebuffer.
 	//Will set current read framebuffer to m_name.
@@ -133,3 +144,5 @@ public:
 //temporary
 void GL_InitFramebufferVAO(void);
 void GL_DestroyFramebufferVAO(void);
+
+void GL_UpdateLegacyBlock(float* projection, float* modelview);

@@ -19,6 +19,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include <stdint.h>
 #include "pstypes.h"
 #include "grdefs.h"
 
@@ -57,12 +58,12 @@ extern renderer_type Renderer_type;
 #define RF_CLEAR_COLOR		2
 
 // Overlay texture settings
-#define OT_NONE			0			// No overlay
-#define OT_BLEND			1			// Draw a lightmap texture afterwards
-#define OT_REPLACE		2			// Draw a tmap2 style texture afterwards
-#define OT_FLAT_BLEND	3			// Draw a gouraud shaded polygon afterwards
-#define OT_BLEND_VERTEX	4			// Like OT_BLEND, but take constant alpha into account
-#define OT_BUMPMAP		5			// Draw a saturated bumpmap afterwards
+#define OT_NONE				0		// No overlay
+#define OT_BLEND			1		// Draw a lightmap texture afterwards
+#define OT_REPLACE			2		// Draw a tmap2 style texture afterwards
+#define OT_FLAT_BLEND		3		// Draw a gouraud shaded polygon afterwards
+#define OT_BLEND_VERTEX		4		// Like OT_BLEND, but take constant alpha into account
+#define OT_BUMPMAP			5		// Draw a saturated bumpmap afterwards
 #define OT_BLEND_SATURATE	6		// Add a lightmap in
 
 
@@ -75,9 +76,6 @@ extern bool StateLimited;
 extern bool NoLightmaps;
 extern bool UseMultitexture;
 extern bool UseWBuffer;
-extern bool UseMipmap;	//DAJ
-extern bool ATIRagePro;	//DAJ
-extern bool Formac;	//DAJ
 
 // various state setting functions
 //------------------------------------
@@ -93,10 +91,10 @@ void rend_SetRendererType (renderer_type state);
 // lighting state
 enum light_state
 {
-	LS_NONE,				// no lighting, fully lit rendering
+	LS_NONE,			// no lighting, fully lit rendering
 	LS_GOURAUD,			// Gouraud shading
 	LS_PHONG,			// Phong shading
-	LS_FLAT_GOURAUD	 // Take color from flat color
+	LS_FLAT_GOURAUD		// Take color from flat color
 };
 
 void rend_SetLighting(light_state);
@@ -116,33 +114,34 @@ enum texture_type
 	TT_LINEAR,					// textured linearly
 	TT_PERSPECTIVE,				// texture perspectively
 	TT_LINEAR_SPECIAL,			// A textured polygon drawn as a flat color
-	TT_PERSPECTIVE_SPECIAL,			// A textured polygon drawn as a flat color
+	TT_PERSPECTIVE_SPECIAL,		// A textured polygon drawn as a flat color
 };
 
 // Alpha type flags - used to decide what type of alpha blending to use
-#define ATF_CONSTANT		1		// Take constant alpha into account
+#define ATF_CONSTANT	1		// Take constant alpha into account
 #define ATF_TEXTURE		2		// Take texture alpha into account
 #define ATF_VERTEX		4		// Take vertex alpha into account
+#define ATF_SATURATE	8		// Use additive blending
 
 // Alpha types
-#define	AT_ALWAYS				0				// Alpha is always 255 (1.0)					
-#define	AT_CONSTANT				1				// constant alpha across the whole image
-#define	AT_TEXTURE				2				// Only uses texture alpha
-#define	AT_CONSTANT_TEXTURE  3				// Use texture * constant alpha
-#define	AT_VERTEX				4				// Use vertex alpha only
-#define	AT_CONSTANT_VERTEX	5				// Use vertex * constant alpha
-#define	AT_TEXTURE_VERTEX		6				// Use texture * vertex alpha
-#define	AT_CONSTANT_TEXTURE_VERTEX	7		// Use all three (texture constant vertex)
-#define	AT_LIGHTMAP_BLEND		8				// dest*src colors
-#define  AT_SATURATE_TEXTURE	9				// Saturate up to white when blending
-#define  AT_FLAT_BLEND			10				// Like lightmap blend, but uses gouraud shaded flat polygon
-#define  AT_ANTIALIAS			11				// Draws an antialiased polygon
-#define  AT_SATURATE_VERTEX	12				// Saturation with vertices
-#define  AT_SATURATE_CONSTANT_VERTEX	13  // Constant*vertex saturation
+#define	AT_ALWAYS						0	// Alpha is always 255 (1.0)					
+#define	AT_CONSTANT						1	// constant alpha across the whole image
+#define	AT_TEXTURE						2	// Only uses texture alpha
+#define	AT_CONSTANT_TEXTURE				3	// Use texture * constant alpha
+#define	AT_VERTEX						4	// Use vertex alpha only
+#define	AT_CONSTANT_VERTEX				5	// Use vertex * constant alpha
+#define	AT_TEXTURE_VERTEX				6	// Use texture * vertex alpha
+#define	AT_CONSTANT_TEXTURE_VERTEX		7	// Use all three (texture constant vertex)
+#define	AT_LIGHTMAP_BLEND				8	// dest*src colors
+#define AT_SATURATE_TEXTURE				9	// Saturate up to white when blending
+#define AT_FLAT_BLEND					10	// Like lightmap blend, but uses gouraud shaded flat polygon
+#define AT_ANTIALIAS					11	// Draws an antialiased polygon
+#define AT_SATURATE_VERTEX				12	// Saturation with vertices
+#define AT_SATURATE_CONSTANT_VERTEX		13  // Constant*vertex saturation
 #define	AT_SATURATE_TEXTURE_VERTEX		14	// Texture * vertex saturation
-#define	AT_LIGHTMAP_BLEND_VERTEX		15	//	Like AT_LIGHTMAP_BLEND, but take vertex alpha into account
+#define	AT_LIGHTMAP_BLEND_VERTEX		15	// Like AT_LIGHTMAP_BLEND, but take vertex alpha into account
 #define	AT_LIGHTMAP_BLEND_CONSTANT		16	// Like AT_LIGHTMAP_BLEND, but take constant alpha into account
-#define	AT_SPECULAR							32	
+#define	AT_SPECULAR						32	// Forces texturing on, but replaces color with diffuse color. Alpha is texture * vertex
 #define	AT_LIGHTMAP_BLEND_SATURATE		33	// Light lightmap blend, but add instead of multiply
 
 #define	LFB_LOCK_READ		0
@@ -164,15 +163,16 @@ struct rendering_state
 	sbyte cur_fog_state;
 	sbyte cur_mip_state;
 
-	texture_type cur_texture_type;
-	color_model	cur_color_model;
-	light_state cur_light_state;
+	texture_type	cur_texture_type;
+	color_model		cur_color_model;
+	light_state		cur_light_state;
 	sbyte			cur_alpha_type;
 
-	wrap_type	cur_wrap_type;
+	wrap_type		cur_wrap_type;
 
 	float cur_fog_start,cur_fog_end;
 	float cur_near_z,cur_far_z;
+	float depth_const_a, depth_const_b;
 	float gamma_value;
 
 	int			cur_alpha;
@@ -184,6 +184,37 @@ struct rendering_state
 	int clip_x1,clip_x2,clip_y1,clip_y2;
 	int screen_width,screen_height;
 	int view_width, view_height;
+};
+
+// [ISB] Legacy compatible rendering_state for dlls. 
+struct DLLrendering_state
+{
+	sbyte initted;
+
+	sbyte cur_bilinear_state;
+	sbyte cur_zbuffer_state;
+	sbyte cur_fog_state;
+	sbyte cur_mip_state;
+
+	texture_type cur_texture_type;
+	color_model	cur_color_model;
+	light_state cur_light_state;
+	sbyte			cur_alpha_type;
+
+	wrap_type	cur_wrap_type;
+
+	float cur_fog_start, cur_fog_end;
+	float cur_near_z, cur_far_z;
+	float gamma_value;
+
+	int			cur_alpha;
+	ddgr_color	cur_color;
+	ddgr_color	cur_fog_color;
+
+	sbyte cur_texture_quality;		// 0-none, 1-linear, 2-perspective
+
+	int clip_x1, clip_x2, clip_y1, clip_y2;
+	int screen_width, screen_height;
 
 };
 
@@ -191,12 +222,15 @@ struct renderer_preferred_state
 {
 	ubyte mipping;
 	ubyte filtering;
-	float gamma;
+	bool antialised;
 	ubyte bit_depth;
+
+	float gamma;
 	int width, height;
+	int window_width, window_height; //Size of the game window, may != width/height. 
+
 	ubyte vsync_on;
 	bool fullscreen; //Informs the window system that fullscreen should be used. 
-	int window_width, window_height; //Size of the game window, may != width/height. 
 };
 
 struct renderer_lfb
@@ -369,6 +403,10 @@ void rend_SetGammaValue (float val);
 // Fills in the passed in pointer with the current rendering state
 void rend_GetRenderState (rendering_state *rstate);
 
+// Fills in the passed in pointer with the current rendering state
+// Uses legacy structure for compatibiltity with current DLLs. 
+void rend_DLLGetRenderState(DLLrendering_state* rstate);
+
 // Draws a simple bitmap at the specified x,y location
 void rend_DrawSimpleBitmap (int bm_handle,int x,int y);
 
@@ -417,19 +455,92 @@ void rend_CopyBitmapToFramebuffer (int bm_handle,int x,int y);
 // Gets a renderer ready for a framebuffer copy, or stops a framebuffer copy
 void rend_SetFrameBufferCopyState (bool state);
 
+void rend_UpdateCommon(float* projection, float* modelview, int depth = 0);
+void rend_SetCommonDepth(int depth);
+
+//These are temporary, used to test shader code.
+//Use the test shader.
+void rend_UseShaderTest(void);
+
+//Revert to non-shader rendering
+void rend_EndShaderTest(void);
+
+void rend_SetCullFace(bool state);
+
+//Shader API 
+//Eventually I would like to remove this and make ALL world rendering part of renderer, instead of having main handle it.
+//Rather than abstract specific features like this, it would let the game abstract rendering to let specific backends handle it optimally. 
+
+//Gets a handle to a shader by name
+uint32_t rend_GetPipelineByName(const char* name);
+
+//Given a handle from rend_GetShaderByName, binds that particular pipeline object
+void rend_BindPipeline(uint32_t handle);
+
+constexpr int MAX_SPECULARS = 4; //Limit isn't enforced by Descent 3 normally, but errors would occur if there were more. 
+
+//Block used to represent all dynamic data per room
+struct RoomBlock
+{
+	//Color of the room's fog
+	float fog_color[4];
+	//Distance where the fog will reach full density, in map units.
+	float fog_distance;
+	//Brightness multiplier applied to all vertex light values.
+	float brightness;
+	//Set to !0 if not in this room, will use the plane for fog
+	int not_in_room;
+	int pad;
+	float fog_plane[4];
+};
+
+//A single light used for specular reflections.
+struct SpecularDef
+{
+	//Position of the reflected light
+	float bright_center[4];
+	//Color of the reflected lights
+	float color[4];
+};
+
+//Block used to represent specular reflections on a surface.
+//The current implementation is a little inefficient, being updated before drawing every surface.
+struct SpecularBlock
+{
+	//The count of light sources affecting this surface.
+	int num_speculars;
+	//Exponent used to control sharpness of reflection.
+	int exponent;
+	//Strength modifier applied to lighting calculation
+	float strength;
+	//padding for std140
+	int pad; 
+
+	//All light sources. 
+	SpecularDef speculars[MAX_SPECULARS];
+};
+
+struct TerrainFogBlock
+{
+	float color[4];
+	float start_dist;
+	float end_dist;
+	float pad[58];
+};
+
+//Updates specular components
+void rend_UpdateSpecular(SpecularBlock* specularstate);
+
+//Updates brightness/fog components
+void rend_UpdateFogBrightness(RoomBlock* roomstate, int numrooms);
+void rend_SetCurrentRoomNum(int roomblocknum);
+void rend_UpdateTerrainFog(float color[4], float start, float end);
+
 #if defined(DD_ACCESS_RING) 
 #if defined(WIN32)
 // returns the direct draw object 
 void *rend_RetrieveDirectDrawObj(void **frontsurf, void **backsurf);
 #endif
-#endif
-
-///////////////////////////////////////////////////////////////
-#include "../renderer/RendererConfig.h"
-#ifdef USE_SOFTWARE_TNL
-#include "IMeshBuilder.h"
-
-RZ::Renderer::IMeshBuilder *rend_CreateMeshBuilder(void);
 #endif
 
 #endif

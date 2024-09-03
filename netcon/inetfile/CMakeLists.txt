@@ -1,9 +1,6 @@
-SET (HEADERS )
-
-SET (CPPS 
-  CFtp.cpp
-  Chttpget.cpp
-  inetgetfile.cpp
+SET (INETFILE_SOURCES
+  netcon/inetfile/CFtp.cpp
+  netcon/inetfile/Chttpget.cpp
+  netcon/inetfile/inetgetfile.cpp
+  PARENT_SCOPE
 )
-
-ADD_LIBRARY(inetfile STATIC ${HEADERS} ${CPPS})

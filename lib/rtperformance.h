@@ -23,7 +23,7 @@
 #define USE_RTP
 #endif
 
-#if defined(__LINUX__) || defined(MACINTOSH)
+#if defined(__LINUX__)
 //#if defined(__LINUX__)
 	#ifdef USE_RTP
 		#undef USE_RTP	//no rtp for now
@@ -32,7 +32,7 @@
 
 // use INT64 for 64bit integers
 #ifdef USE_RTP
-	#if defined(__LINUX__) || defined(MACINTOSH)
+	#if defined(__LINUX__)
 		#define INT64	long long
 	#else
 		#define INT64	signed __int64
@@ -47,7 +47,8 @@
 
 //		struct of information to be saved per frame (note: use INT64 for timer info)
 // -----------------------------------------------------------------------------------
-typedef struct{
+struct tRTFrameInfo
+{
 	INT64 frame_num;							//the frame number, used internally
 	INT64 renderframe_time;
 	INT64 multiframe_time;
@@ -85,7 +86,7 @@ typedef struct{
 	int polys_drawn;
 	int fvi_calls;
 	float frame_time;							//how long the frame took.  A float because it's already calc'd so we might as well save it
-}tRTFrameInfo;
+};
 
 //		Flags for Runtime Performance Counters (these are 64 bit)
 // --------------------------------------------------------------------
@@ -268,13 +269,5 @@ void rtp_WriteBufferLog
 	Writes the buffer of frames to file...
 */
 void rtp_WriteBufferLog(void);
-
-
-
-
-
-
-
-
 
 #endif

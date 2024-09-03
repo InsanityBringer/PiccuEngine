@@ -50,6 +50,8 @@ SET (MAIN_SOURCES
 		Descent3/gamepath.h
 		Descent3/gamesave.h
 		Descent3/gamesequence.h
+		Descent3/gamespy.h
+		Descent3/gamespyutils.h
 		Descent3/gametexture.h
 		Descent3/gauges.h
 		Descent3/help.h
@@ -80,7 +82,8 @@ SET (MAIN_SOURCES
 		Descent3/multi_server.h
 		Descent3/multi_ui.h
 		Descent3/multi_world_state.h
-		Descent3/NewPyroGauges.h
+		Descent3/newrender.cpp
+		Descent3/newrender.h
 		Descent3/newui.h
 		Descent3/newui_core.h
 		Descent3/object.h
@@ -110,7 +113,6 @@ SET (MAIN_SOURCES
 		Descent3/robotfire.h
 		Descent3/robotfirestruct.h
 		Descent3/robotfirestruct_external.h
-		Descent3/rocknride.h
 		Descent3/room.h
 		Descent3/room_external.h
 		Descent3/scorch.h
@@ -184,6 +186,8 @@ SET (MAIN_SOURCES
 		Descent3/gamepath.cpp
 		Descent3/gamesave.cpp
 		Descent3/gamesequence.cpp
+		Descent3/gamespy.cpp
+		Descent3/gamespyutils.cpp
 		Descent3/gametexture.cpp
 		Descent3/gauges.cpp
 		Descent3/help.cpp
@@ -217,7 +221,6 @@ SET (MAIN_SOURCES
 		Descent3/multi_save_setting.cpp
 		Descent3/multi_server.cpp
 		Descent3/multi_ui.cpp
-		Descent3/NewPyroGauges.cpp
 		Descent3/newui.cpp
 		Descent3/newui_core.cpp
 		Descent3/newui_filedlg.cpp
@@ -238,7 +241,6 @@ SET (MAIN_SOURCES
 		Descent3/render.cpp
 		Descent3/renderobject.cpp
 		Descent3/robotfire.cpp
-		Descent3/rocknride.cpp
 		Descent3/room.cpp
 		Descent3/scorch.cpp
 		Descent3/screens.cpp

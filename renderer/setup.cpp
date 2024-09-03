@@ -43,63 +43,58 @@ void g3_SetAspectRatio(float aspect)
 	sAspect = aspect;
 }
 
-void g3_GetViewPortMatrix( float *viewMat )
-{
-	// extract the viewport data from the renderer
-	int viewportWidth, viewportHeight;
-	int viewportX, viewportY;
-	rend_GetProjectionScreenParameters( viewportX, viewportY, viewportWidth, viewportHeight );
-
-	float viewportWidthOverTwo  =  ((float)viewportWidth) * 0.5f;
-	float viewportHeightOverTwo = ((float)viewportHeight) * 0.5f;
-
-	// setup the matrix
-	memset( viewMat, 0, sizeof(float) * 16 );
-	viewMat[0]  = viewportWidthOverTwo;
-	viewMat[5]  = -viewportHeightOverTwo;
-	viewMat[12] = viewportWidthOverTwo + (float)viewportX;
-	viewMat[13] = viewportHeightOverTwo + (float)viewportY;	
-	viewMat[10] = viewMat[15] = 1.0f;
-}
-
 void g3_GetProjectionMatrix( float zoom, float *projMat )
 {
 	// get window size
 	int viewportWidth, viewportHeight;
 	rend_GetProjectionParameters( &viewportWidth, &viewportHeight );
 
-	// compute aspect ratio for this ViewPort
-	float screenAspect = rend_GetAspectRatio();
-	if( sAspect != 0.0f )
-	{
-		//check for user override
-		screenAspect = screenAspect * 4.0f / 3.0f / sAspect;
-	}
-	//float s = screenAspect * ((float)viewportWidth) / ((float)viewportHeight);
-	float s = 4.f / 3;
+	float s = ((float)viewportWidth / viewportHeight);
 
 	// setup the matrix
 	memset( projMat, 0, sizeof(float) * 16 );
 
 	// calculate 1/tan(fov)
+	//Convert zoom into vertical FOV for my convenience, since I'm locking the Y FOV when the screen gets wider. 
+	zoom *= 3.f / 4.f;
+
 	float oOT = 1.0f / zoom;
 
+	float znear = 1.0f;
+	float zfar = 10000.f; //debug
+
+	float C = -((zfar + znear) / (zfar - znear));
+	float D = -((2 * zfar * znear) / (zfar - znear));
+
 	// fill in the matrix
-	projMat[0]  = oOT;
-	projMat[5] = oOT * s;
-	projMat[10] =  1.0f;
+	if (s <= 1.0f)
+	{
+		projMat[0] = oOT;
+		projMat[5] = oOT * s;
+	}
+	else
+	{
+		projMat[0] = oOT / s;
+		projMat[5] = oOT;
+	}
+	projMat[10] = C;
+	projMat[11] = -1;
+	projMat[14] = D;
+	/*projMat[10] =  1.0f;
 	projMat[11] =  1.0f;
-	projMat[14] = -1.0f;
+	projMat[14] = -1.0f;*/
 }
 
 //start the frame
 void g3_StartFrame(vector *view_pos,matrix *view_matrix,float zoom)
 {
 	// initialize the viewport transform
-	g3_GetViewPortMatrix( (float*)gTransformViewPort );
-	g3_GetProjectionMatrix( zoom, (float*)gTransformProjection );
-	g3_GetModelViewMatrix( view_pos, view_matrix, (float*)gTransformModelView );
+	g3_GetProjectionMatrix( zoom, gTransformProjection );
+	g3_GetModelViewMatrix( view_pos, view_matrix, gTransformModelView );
 	g3_UpdateFullTransform();
+
+	//[ISB] Update the common uniform block for all 3D shaders. 
+	rend_UpdateCommon(gTransformProjection, gTransformModelView);
 
 	// get window size
 	rend_GetProjectionParameters( &Window_width, &Window_height );
@@ -108,13 +103,6 @@ void g3_StartFrame(vector *view_pos,matrix *view_matrix,float zoom)
 	Window_w2 = ((float)Window_width)  * 0.5f;
 	Window_h2 = ((float)Window_height) * 0.5f;
 
-	//Compute aspect ratio for this window
-	float screen_aspect = rend_GetAspectRatio();
-	if( sAspect != 0.0f )
-	{
-		//check for user override
-		screen_aspect = screen_aspect * 4.0f / 3.0f / sAspect;
-	}
 	//float s = screen_aspect * (float) Window_height / (float) Window_width;
 	//[ISB] Just use the aspect of the window, the screen aspect is not important since pixels are all square
 	float s = ((float)Window_width / Window_height);// / (4.f / 3.f);
@@ -141,19 +129,11 @@ void g3_StartFrame(vector *view_pos,matrix *view_matrix,float zoom)
 	View_zoom       =  zoom;
 	Unscaled_matrix = *view_matrix;
 
-	//Compute matrix scale for zoom and aspect ratio
-	if( View_zoom <= 1.0f )
-	{
-		//zoom in by scaling z
-		Matrix_scale.z = Matrix_scale.z * View_zoom;
-	}
-	else
-	{
-		//zoom out by scaling x and y
-		float oOZ = 1.0f / View_zoom;
-		Matrix_scale.x = Matrix_scale.x * oOZ;
-		Matrix_scale.y = Matrix_scale.y * oOZ;
-	}
+	//zoom by scaling x and y
+	//[ISB] This no longer will scale Z to apply FOV, since it causes problems with the depth ranges. 
+	float oOZ = 1.0f / View_zoom;
+	Matrix_scale.x = Matrix_scale.x * oOZ;
+	Matrix_scale.y = Matrix_scale.y * oOZ;
 
 	//Scale the matrix elements
 	View_matrix.rvec = Unscaled_matrix.rvec * Matrix_scale.x;

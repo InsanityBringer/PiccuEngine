@@ -16,6 +16,9 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
+#include <vector>
+
 #ifdef NEWEDITOR
 #include "neweditor\globals.h"
 void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain, bool render_all, bool outline, bool flat, prim* prim);
@@ -52,6 +55,7 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain, b
 #include "Macros.h"
 #include "psrand.h"
 #include "player.h"
+#include "../renderer/gl_mesh.h"
 
 #define TERRAIN_PERSPECTIVE_TEXTURE_DEPTH 1*TERRAIN_SIZE
 #define LOD_ROW_SIZE	(MAX_LOD_SIZE+1)
@@ -62,7 +66,6 @@ void DrawTerrainLightmapsHardware(int index, int upper_left, int lower_right);
 void DrawSky(vector* veye, matrix* vorient);
 
 function_mode View_mode;
-int ManageFramerate = 0;
 int MinAllowableFramerate = 15;
 ubyte Fast_terrain = 1;
 float Far_fog_border;
@@ -91,6 +94,246 @@ float Clip_scale_left, Clip_scale_top, Clip_scale_right, Clip_scale_bot;
 #ifdef NEWEDITOR
 bool Rendering_main_view = true;
 #endif
+
+VertexBuffer Terrain_vertexbuffer;
+IndexBuffer Terrain_indexbuffer;
+
+struct TerrainDrawElement
+{
+	int texturenum;
+	int lmhandle;
+	ElementRange range;
+};
+
+struct TerrainDrawCell
+{
+	std::vector<TerrainDrawElement> elements;
+
+	//Draws all elements for this cell. Assumes Terrain_vertexbuffer and Terrain_indexbuffer have been called. 
+	void DrawAll()
+	{
+		for (TerrainDrawElement& element : elements)
+		{
+			//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
+			Terrain_vertexbuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
+			Terrain_vertexbuffer.BindLightmap(element.lmhandle);
+
+			//And draw
+			Terrain_vertexbuffer.DrawIndexed(PrimitiveType::Triangles, element.range);
+		}
+	}
+};
+
+//Terrain meshes
+//Terrain is meshed at the same size as the occlusion cells, for easier rendering. 
+TerrainDrawCell TerrainMeshes[OCCLUSION_SIZE * OCCLUSION_SIZE];
+
+struct SortableCell
+{
+	int x, z;
+	short texturehandle;
+	short lmhandle;
+
+	friend bool operator<(const SortableCell& l, const SortableCell& r)
+	{
+		uint lh = l.texturehandle | l.lmhandle << 16;
+		uint rh = r.texturehandle | r.lmhandle << 16;
+
+		return lh < rh;
+	}
+};
+
+void GenerateVertex(RendVertex& vert, int x, float y, int z, int basex, int basez, terrain_segment& basecell, bool altnormal)
+{
+	vert.position.x = x * TERRAIN_SIZE;
+	vert.position.y = y;
+	vert.position.z = z * TERRAIN_SIZE;
+
+	//Normals always from LOD 0. 
+	if (altnormal)
+		vert.normal = TerrainNormals[MAX_TERRAIN_LOD - 1][x * TERRAIN_WIDTH + z].normal2;
+	else
+		vert.normal = TerrainNormals[MAX_TERRAIN_LOD - 1][x * TERRAIN_WIDTH + z].normal1;
+	vert.r = vert.g = vert.b = vert.a = 255;
+
+	//Figure out the rotation of the UVs
+	int rotation = Terrain_tex_seg[basecell.texseg_index].rotation;
+	int texmode = rotation & 3;
+	int tile = rotation >> 4;
+	switch (texmode)
+	{
+	case 0: //This seems wrong, but the coordinate system of the new renderer pipeline is different (depth down -Z as per OpenGL) and this has the right results. 
+		vert.u1 = tile * (1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH)));
+		vert.v1 = tile * (1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH)));
+		break;
+	case 1:
+		vert.u1 = tile * (1.f - (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH)));
+		vert.v1 = tile * (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
+		break;
+	case 2:
+		vert.u1 = tile * (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH));
+		vert.v1 = tile * (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
+		break;
+	case 3:
+		vert.u1 = tile * (z * ((float)TERRAIN_TEX_DEPTH / TERRAIN_DEPTH));
+		vert.v1 = tile * (1.f - (x * ((float)TERRAIN_TEX_WIDTH / TERRAIN_WIDTH)));
+		break;
+	}
+
+	//further adjustment for -Z depth
+	vert.u1 = 1.f -vert.u1;
+
+	//TODO: Probably should just use a single 256x256 lightmap page. 
+	
+	//Handle lightmap texture borders to calculate the correct UV
+	if (x % 128 == 0 && x != basex)
+		vert.u2 = 1;
+	else
+		vert.u2 = (x % 128) / 128.f;
+
+	if (z % 128 == 0 && z != basez)
+		vert.v2 = 0;
+	else
+		vert.v2 = 1.f - ((z % 128) / 128.f);
+}
+
+//Blarg. The terrain is 256x256 cells, but there's only 256x256 vertices. Why.
+//This will look up height and ensure it never falls out of bounds
+static float GetYClamped(unsigned int x, unsigned int z)
+{
+	if (z * TERRAIN_WIDTH + x > (TERRAIN_WIDTH * TERRAIN_DEPTH))
+		return 255.f;
+
+	return Terrain_seg[z * TERRAIN_WIDTH + x].y;
+}
+
+//Meshes a OCCLUSION_SIZE * OCCLUSION_SIZE sized terrain cell. 
+//x and z are specified in terms of these cells, not absolute. 
+void MeshTerrainCell(MeshBuilder& mesh, int x, int z)
+{
+	//MeshBuilder& mesh = TerrainMeshes[z * OCCLUSION_SIZE + x];
+	TerrainDrawCell& drawcell = TerrainMeshes[z * OCCLUSION_SIZE + x];
+	std::vector<SortableCell> sortcells(OCCLUSION_SIZE * OCCLUSION_SIZE);
+	//sortcells.reserve(OCCLUSION_SIZE * OCCLUSION_SIZE);
+
+	//Gather all the cells for this region
+	int xstart = x * OCCLUSION_SIZE; int xend = xstart + OCCLUSION_SIZE;
+	int zstart = z * OCCLUSION_SIZE; int zend = zstart + OCCLUSION_SIZE;
+	int offset = 0;
+	for (int xcell = xstart; xcell < xend; xcell++)
+	{
+		for (int zcell = zstart; zcell < zend; zcell++)
+		{
+			SortableCell& cell = sortcells[offset];
+			cell.x = xcell;
+			cell.z = zcell;
+			cell.texturehandle = Terrain_tex_seg[Terrain_seg[zcell * TERRAIN_WIDTH + xcell].texseg_index].tex_index;
+			cell.lmhandle = TerrainLightmaps[Terrain_seg[zcell * TERRAIN_WIDTH + xcell].lm_quad];
+			offset++;
+		}
+	}
+
+	drawcell.elements.clear();
+	if (sortcells.size() == 0)
+	{
+		return;
+	}
+
+	//Sort all the cells by their texture index
+	std::sort(sortcells.begin(), sortcells.end());
+
+	int lasttexhandle = -1, lastlmhandle = -1;
+	bool firsttime = true;
+	//Iterate over every cell. When a new texture is encountered, start a pass for it.
+	for (SortableCell& cell : sortcells)
+	{
+		//Don't mesh the strip of terrain at cell 255 on either edge. 
+		//I don't know why they chose to do this and not have 257 vertices but
+		if (cell.z == (TERRAIN_WIDTH - 1) || cell.x == (TERRAIN_WIDTH - 1))
+			continue;
+
+		//I really appreciate the decision to make the terrain 256x256 quads but only store 256x256 vertices. 
+		int tl = cell.z * TERRAIN_WIDTH + cell.x;
+
+		ASSERT(tl < TERRAIN_WIDTH * TERRAIN_DEPTH); //This assert should never trip
+		terrain_segment& seg = Terrain_seg[cell.z * TERRAIN_WIDTH + cell.x];
+
+		//hole in the terrain?
+		if (seg.flags & TF_INVISIBLE)
+			continue;
+
+		if (cell.texturehandle != lasttexhandle)
+		{
+			if (!firsttime)
+			{
+				//Potential optimizations here if this adds lots of stress to LoadLevel. 
+				mesh.EndVertices();
+				TerrainDrawElement element;
+				element.texturenum = lasttexhandle;
+				element.lmhandle = lastlmhandle;
+				element.range = mesh.EndIndices();
+				drawcell.elements.push_back(element);
+			}
+			else
+				firsttime = false;
+
+			//assumption: LMs cover 128x128 cells so there won't ever be more than one LM handle at the moment.
+			mesh.BeginVertices();
+			mesh.BeginIndices();
+			lasttexhandle = cell.texturehandle;
+			lastlmhandle = cell.lmhandle;
+		}
+
+		//In theory I wouldn't need to have unique rend verts per cell, but the rotation can cause different UVs
+		RendVertex verts[4] = {};
+
+		//Generate tl
+		GenerateVertex(verts[0], cell.x, seg.y, cell.z, cell.x, cell.z, seg, false);
+		//Generate tr
+		GenerateVertex(verts[1], cell.x + 1, GetYClamped(cell.x + 1, cell.z), cell.z, cell.x, cell.z, seg, true);
+		//Generate br
+		GenerateVertex(verts[2], cell.x + 1, GetYClamped(cell.x + 1, cell.z + 1), cell.z + 1, cell.x, cell.z, seg, false);
+		//Generate bl
+		GenerateVertex(verts[3], cell.x , GetYClamped(cell.x, cell.z + 1), cell.z + 1, cell.x, cell.z, seg, false);
+		
+		//Generate indicies
+		int firstvert = mesh.NumVertices();
+		int indicies[6] = { firstvert + 0, firstvert + 3, firstvert + 2, firstvert + 0, firstvert + 2, firstvert + 1 };
+
+		//And add both
+		mesh.SetIndicies(6, indicies);
+		mesh.SetVertices(4, verts);
+	}
+
+	if (!firsttime)
+	{
+		//All vertices are created, so finalize the mesh.
+		mesh.EndVertices();
+		TerrainDrawElement element;
+		element.texturenum = lasttexhandle;
+		element.lmhandle = lastlmhandle;
+		element.range = mesh.EndIndices();
+		drawcell.elements.push_back(element);
+	}
+}
+
+void MeshTerrain()
+{
+	MeshBuilder builder;
+	Terrain_vertexbuffer.Destroy();
+	Terrain_indexbuffer.Destroy();
+	//Generate meshes for every 16x16 occlusion cell.
+	for (int z = 0; z < OCCLUSION_SIZE; z++)
+	{
+		for (int x = 0; x < OCCLUSION_SIZE; x++)
+		{
+			MeshTerrainCell(builder, x, z);
+		}
+	}
+
+	builder.BuildVertices(Terrain_vertexbuffer);
+	builder.BuildIndicies(Terrain_indexbuffer);
+}
 
 void InitTerrainRenderSpeedups()
 {
@@ -454,21 +697,11 @@ void RenderAllTerrainObjects()
 				continue;
 		}
 
-		if (UseHardware)
+		if (Num_postrenders < MAX_POSTRENDERS)
 		{
-			if (Num_postrenders < MAX_POSTRENDERS)
-			{
-				Postrender_list[Num_postrenders].type = PRT_OBJECT;
-				Postrender_list[Num_postrenders].z = zdist;
-				Postrender_list[Num_postrenders++].objnum = obj - Objects;
-			}
-		}
-		else
-		{
-			objs_to_render[obj_count].vis_effect = 0;
-			objs_to_render[obj_count].objnum = obj - Objects;
-			objs_to_render[obj_count].dist = zdist;
-			obj_count++;
+			Postrender_list[Num_postrenders].type = PRT_OBJECT;
+			Postrender_list[Num_postrenders].z = zdist;
+			Postrender_list[Num_postrenders++].objnum = obj - Objects;
 		}
 	}
 #ifndef NEWEDITOR
@@ -494,21 +727,12 @@ void RenderAllTerrainObjects()
 			{
 				if (vis->flags & VF_WINDSHIELD_EFFECT)
 					zdist = 0;
-				if (UseHardware)
+
+				if (Num_postrenders < MAX_POSTRENDERS)
 				{
-					if (Num_postrenders < MAX_POSTRENDERS)
-					{
-						Postrender_list[Num_postrenders].type = PRT_VISEFFECT;
-						Postrender_list[Num_postrenders].z = zdist;
-						Postrender_list[Num_postrenders++].objnum = vis - VisEffects;
-					}
-				}
-				else
-				{
-					objs_to_render[obj_count].vis_effect = 1;
-					objs_to_render[obj_count].objnum = vis - VisEffects;
-					objs_to_render[obj_count].dist = zdist;
-					obj_count++;
+					Postrender_list[Num_postrenders].type = PRT_VISEFFECT;
+					Postrender_list[Num_postrenders].z = zdist;
+					Postrender_list[Num_postrenders++].objnum = vis - VisEffects;
 				}
 			}
 		}
@@ -633,13 +857,9 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 		// If the portal takes up more than 50% the screen space then we don't check against it
 		float threshold = (render_width * render_height) * 0.5f;
 		if (w * h > threshold)
-		{
 			Check_terrain_portal = 0;
-		}
 		else
-		{
 			Check_terrain_portal = 1;
-		}
 	}
 
 	if (top < 0)
@@ -655,37 +875,13 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 	Clip_scale_top = top;
 	Clip_scale_bot = bot;
 	if (!Terrain_sky.textured)
-	{
 		rend_FillRect(Terrain_sky.sky_color, left, top, right + 1, bot + 1);
-	}
 
 	rend_SetFlatColor(Terrain_sky.sky_color);
 	View_mode = GetFunctionMode();
 
 	// Set this so we don't do reentrant rendering between terrain/mine
 	Terrain_from_mine = from_mine;
-
-#ifndef NEWEDITOR
-	// See if we're supposed change the fog plane distance based on our framerate
-	if (View_mode != EDITOR_MODE && ManageFramerate)
-	{
-		float fps = GetFPS();
-		if (fps < MinAllowableFramerate)
-		{
-			if (Detail_settings.Terrain_render_distance > TERRAIN_SIZE)
-			{
-				Detail_settings.Terrain_render_distance -= (float)(TERRAIN_SIZE / 4);
-			}
-		}
-		else if (fps > MinAllowableFramerate + 1)
-		{
-			if (Detail_settings.Terrain_render_distance < 60 * TERRAIN_SIZE)
-			{
-				Detail_settings.Terrain_render_distance += (float)(TERRAIN_SIZE / 4);
-			}
-		}
-	}
-#endif
 
 #ifndef NEWEDITOR
 	const float kTerrainRenderDistance = Detail_settings.Terrain_render_distance;
@@ -717,10 +913,10 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 	//// Set up our z wall
 	rend_SetZBufferState(1);
 	rend_SetZBufferWriteMask(1);
-	g3_SetFarClipZ(VisibleTerrainZ);
+   	g3_SetFarClipZ(VisibleTerrainZ);
 
 #ifndef NEWEDITOR
-	if ((Terrain_sky.flags & TF_FOG) && (UseHardware || (!UseHardware && Lighting_on)))
+	if ((Terrain_sky.flags & TF_FOG))
 	{
 		rend_SetZValues(0, VisibleTerrainZ);
 		rend_SetFogState(1);
@@ -733,20 +929,42 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 		rend_SetZValues(0, 5000);
 	}
 
-	// And display!
-	if (nt > 0)
+	if (Render_use_newrender)
 	{
-		DisplayTerrainList(nt);
+		//mesh test
+		rend_UseShaderTest();
+		rend_SetColorModel(CM_RGB);
+		rend_SetTextureType(TT_LINEAR);
+		rend_SetAlphaType(ATF_CONSTANT + ATF_TEXTURE);
+		rend_SetLighting(LS_NONE);
+		rend_SetWrapType(WT_WRAP); //Should this be clamp? Requires smarter logic for the UV calculations to handle discontinuities. 
+
+		Terrain_vertexbuffer.Bind();
+		Terrain_indexbuffer.Bind();
+
+		for (TerrainDrawCell& drawcell : TerrainMeshes)
+		{
+			drawcell.DrawAll();
+		}
+
+		rendTEMP_UnbindVertexBuffer();
+
+		rend_EndShaderTest();
+	}
+	else
+	{
+		// And display!
+		if (nt > 0)
+		{
+			DisplayTerrainList(nt);
+		}
 	}
 
 	// Draw rooms
 	RenderTerrainRooms();
 
 	// Show objects
-	if (nt < 1 || UseHardware)
-	{
-		RenderAllTerrainObjects();
-	}
+	RenderAllTerrainObjects();
 
 	mprintf_at((2, 5, 0, "Objs Drawn=%5d", Terrain_objects_drawn));
 	Last_terrain_render_time = Gametime;
@@ -800,6 +1018,7 @@ void DrawLightningSegment(vector* from, vector* to)
 // Draws an entire strip of lightning
 void DrawLightning(void)
 {
+	static PSRand lightning_rand;
 	angvec player_angs;
 	matrix mat;
 	vector froms[50];
@@ -809,17 +1028,17 @@ void DrawLightning(void)
 	int cur_splits = 0;
 	int new_heading;
 	float scalar;
-	scalar = ((ps_rand() % 1000) - 500) / 500.0;
+	scalar = ((lightning_rand() % 1000) - 500) / 500.0;
 	scalar *= 15000;
 	vm_ExtractAnglesFromMatrix(&player_angs, &Viewer_object->orient);
 	new_heading = (player_angs.h + (int)scalar) % 65536;
 	vm_AnglesToMatrix(&mat, 0, new_heading, 0);
 	// Put the starting point way up in the air
-	float ylimit = (-(Viewer_object->pos.y * 2)) + (ps_rand() % 400);
+	float ylimit = (-(Viewer_object->pos.y * 2)) + (lightning_rand() % 400);
 	vector cur_from = Viewer_object->pos + (mat.fvec * 4000);
 	vector new_vec;
 	cur_from.y += 800.0f;
-	cur_from.y += (ps_rand() % 100);
+	cur_from.y += (lightning_rand() % 100);
 	// Set some states
 
 	rend_SetAlphaType(AT_SATURATE_TEXTURE);
@@ -828,15 +1047,15 @@ void DrawLightning(void)
 	int bm_handle;
 
 	// See if we should drawn an origin bitmap
-	if (ps_rand() % 3)
+	if (lightning_rand() % 3)
 	{
 		// Pick an origin bitmap
-		if (ps_rand() % 2)
+		if (lightning_rand() % 2)
 			bm_handle = Fireballs[LIGHTNING_ORIGIN_INDEXA].bm_handle;
 		else
 			bm_handle = Fireballs[LIGHTNING_ORIGIN_INDEXB].bm_handle;
 		//Draw the origin bitmap
-		int size = 300 + (ps_rand() % 200);
+		int size = 300 + (lightning_rand() % 200);
 		g3_DrawRotatedBitmap(&cur_from, 0, size, (size * bm_h(bm_handle, 0)) / bm_w(bm_handle, 0), bm_handle);
 	}
 	PUSH_LIGHTNING_TREE(cur_from, 0, 0)
@@ -844,8 +1063,8 @@ void DrawLightning(void)
 		{
 			POP_LIGHTNING_TREE()
 				ASSERT(level < 50);
-			float x_adjust = ((ps_rand() % 200) - 100) / 100.0;
-			float y_adjust = .3 + ((ps_rand() % 100) / 100.0);
+			float x_adjust = ((lightning_rand() % 200) - 100) / 100.0;
+			float y_adjust = .3 + ((lightning_rand() % 100) / 100.0);
 
 			new_vec = cur_from;
 			new_vec += x_adjust * (mat.rvec * 70);
@@ -854,7 +1073,7 @@ void DrawLightning(void)
 			if (cur_from.y < ylimit) // We're close to the ground, so just bail!
 				continue;
 
-			if ((ps_rand() % ((level * level * 20) + 8)) == 0 && cur_splits < 2)
+			if ((lightning_rand() % ((level * level * 20) + 8)) == 0 && cur_splits < 2)
 			{
 				// Make this branch split
 				PUSH_LIGHTNING_TREE(new_vec, level, cur_splits + 1)
@@ -1075,10 +1294,10 @@ void DrawTexturedSky(void)
 			{
 				TSearch_seg = t;
 				TSearch_found_type = TSEARCH_FOUND_SKY_DOME;
-			}
 		}
-#endif
 	}
+#endif
+}
 
 	// Draw bottom part
 	for (int i = 1; i < 4; i++)
@@ -1134,7 +1353,7 @@ void DrawTexturedSky(void)
 				{
 					TSearch_seg = t;
 					TSearch_found_type = TSEARCH_FOUND_SKY_DOME;
-				}
+			}
 			}
 #endif
 		}
@@ -1522,14 +1741,11 @@ void DrawSky(vector* veye, matrix* vorient)
 			g3_SetTriangulationTest(0);
 
 			// Draw atmosphere blend
-			if (UseHardware)
+			if (Terrain_sky.satellite_flags[i] & TSF_ATMOSPHERE)
 			{
-				if (Terrain_sky.satellite_flags[i] & TSF_ATMOSPHERE)
-				{
-					angvec angs;
-					vm_ExtractAnglesFromMatrix(&angs, vorient);
-					DrawAtmosphereBlend(&tempvec, angs.b, size, (size * bm_h(bm_handle, 0)) / bm_w(bm_handle, 0), bm_handle, sr, sg, sb);
-				}
+				angvec angs;
+				vm_ExtractAnglesFromMatrix(&angs, vorient);
+				DrawAtmosphereBlend(&tempvec, angs.b, size, (size * bm_h(bm_handle, 0)) / bm_w(bm_handle, 0), bm_handle, sr, sg, sb);
 			}
 
 #if (defined(EDITOR) || defined(NEWEDITOR))
@@ -1646,7 +1862,7 @@ __inline void DrawTerrainOutline(int tcell, int nverts, g3Point** pointlist)
 		for (i = 0; i < nverts - 1; i++)
 			g3_DrawLine(GR_RGB(255, 255, 255), tpnt_list[i], tpnt_list[i + 1]);
 		g3_DrawLine(GR_RGB(255, 255, 255), tpnt_list[i], tpnt_list[0]);
-	}
+}
 	else
 #endif
 	{
@@ -1656,40 +1872,6 @@ __inline void DrawTerrainOutline(int tcell, int nverts, g3Point** pointlist)
 	}
 }
 #endif
-
-int TerrainSortingFunction(const terrain_render_info* a, terrain_render_info* b)
-{
-	return b->z - a->z;
-}
-
-void SortTerrainList(int cellcount)
-{
-	int i, t, k;
-	int lod, simplemul;
-	int n[4];
-
-	for (i = 0; i < cellcount; i++)
-	{
-		t = Terrain_list[i].segment;
-		lod = Terrain_list[i].lod;
-#if (!defined(RELEASE) || defined(NEWEDITOR))
-		Terrain_seg_render_objs[t] = -1;
-#endif
-
-		simplemul = 1 << ((MAX_TERRAIN_LOD - 1) - lod);
-		Terrain_list[i].z = 0.0f;
-		n[0] = t;
-		n[1] = t + (TERRAIN_WIDTH * simplemul);
-		n[2] = t + (TERRAIN_WIDTH * simplemul) + simplemul;
-		n[3] = t + simplemul;
-		for (k = 0; k < 4; k++)
-			if (n[k] <= 65535)
-				Terrain_list[i].z += World_point_buffer[n[k]].p3_vec.z;
-		Terrain_list[i].z /= 4;
-	}
-	//Sort the faces
-	qsort(Terrain_list, cellcount, sizeof(*Terrain_list), (int (*)(const void*, const void*)) TerrainSortingFunction);
-}
 
 // Returns the number of points to rotate, plus the actual numbers of the points
 // are returned in the "n" array
@@ -1903,6 +2085,7 @@ int BuildEdgeLists(int* n, int tlist_index)
 vector Terrain_alter_vec = { 19,-19,19 };
 void RotateTerrainList(int cellcount, bool from_automap)
 {
+	static PSRand legacy_jitter_rand;
 	int lod, simplemul, edgecount;
 	int i, n[200], t, k, cx, cz;
 	vector camlight = Terrain_sky.lightsource;
@@ -1967,7 +2150,7 @@ void RotateTerrainList(int cellcount, bool from_automap)
 
 				if (Viewer_object->effect_info && (Viewer_object->effect_info->type_flags & EF_DEFORM))
 				{
-					float val = (((ps_rand() % 1000) - 500.0f) / 500.0f) * Viewer_object->effect_info->deform_time;
+					float val = (((legacy_jitter_rand() % 1000) - 500.0f) / 500.0f) * Viewer_object->effect_info->deform_time;
 					vector jitterVec = Terrain_alter_vec * (Viewer_object->effect_info->deform_range * val);
 					World_point_buffer[n[k]].p3_vec += jitterVec;
 					World_point_buffer[n[k]].p3_vecPreRot += jitterVec;
@@ -2030,24 +2213,15 @@ void DisplayTerrainList(int cellcount, bool from_automap)
 	int obj_to_draw;
 	Terrain_objects_drawn = 0;
 	rend_SetWrapType(WT_WRAP);
-	if (!UseHardware)
-		rend_SetColorModel(CM_MONO);
-	else
-	{
-		rend_SetColorModel(CM_RGB);
-		rend_SetTextureType(TT_LINEAR);
-		rend_SetAlphaType(ATF_CONSTANT + ATF_TEXTURE);
-		rend_SetLighting(LS_NONE);
-		if (!StateLimited || UseMultitexture)
-			draw_lightmap = true;
-	}
+
+	rend_SetColorModel(CM_RGB);
+	rend_SetTextureType(TT_LINEAR);
+	rend_SetAlphaType(ATF_CONSTANT + ATF_TEXTURE);
+	rend_SetLighting(LS_NONE);
+	if (!StateLimited || UseMultitexture)
+		draw_lightmap = true;
 
 	RotateTerrainList(cellcount, from_automap);
-	if (!UseHardware)
-	{
-		SortTerrainList(cellcount);
-		SortTerrainObjectsForRendering(cellcount);
-	}
 
 	// If state limited, sort by texture
 	if (StateLimited || from_automap)
@@ -2088,34 +2262,15 @@ void DisplayTerrainList(int cellcount, bool from_automap)
 
 			bm_handle = GetTextureBitmap(Terrain_tex_seg[Terrain_seg[t].texseg_index].tex_index, 0);
 
-			if (UseHardware)
-			{
-				if (draw_lightmap)
-					on = DrawTerrainTrianglesHardware(seg_to_render, bm_handle, ul, lr);
-				else
-					on = DrawTerrainTrianglesHardwareNoLight(seg_to_render, bm_handle, ul, lr);
-
-			}
+			if (draw_lightmap)
+				on = DrawTerrainTrianglesHardware(seg_to_render, bm_handle, ul, lr);
 			else
-				on = DrawTerrainTrianglesSoftware(seg_to_render, bm_handle, ul, lr);
+				on = DrawTerrainTrianglesHardwareNoLight(seg_to_render, bm_handle, ul, lr);
 		}
 
 	draw_objects:;
 		// Now draw any objects in this segment
 #if (!defined(RELEASE) || defined(NEWEDITOR))
-		if (!UseHardware)
-		{
-			obj_to_draw = Terrain_seg_render_objs[t];
-
-			while (obj_to_draw != -1)
-			{
-
-				if (Objects[obj_to_draw].type != OBJ_ROOM)
-					RenderObject(&Objects[obj_to_draw]);
-				obj_to_draw = render_next[obj_to_draw];
-			}
-			Terrain_seg_render_objs[t] = -1;
-		}
 #endif
 	}
 #if (defined(EDITOR) || defined(NEWEDITOR))
@@ -2136,13 +2291,13 @@ void DisplayTerrainList(int cellcount, bool from_automap)
 				t = Terrain_list[i].segment;
 				if (TerrainSelected[t] && Terrain_rotate_list[t] == TS_FrameCount)
 					TerrainDrawCurrentVert(t);
-			}
 		}
 	}
+}
 #endif
 
 	// Draw lightmaps if this is state limited
-	if ((UseHardware && !draw_lightmap) || from_automap)
+	if (!draw_lightmap || from_automap)
 	{
 		if (from_automap)
 		{
@@ -2186,185 +2341,6 @@ static g3Point* slist[256];
 // Draws the 2 triangles of the Terrainlist[index] (software)
 int DrawTerrainTrianglesSoftware(int index, int bm_handle, int upper_left, int lower_right)
 {
-	/*
-	#ifndef __LINUX__
-		int i,tlist[4],close=0,lit=0;
-		float closest_z=9999;
-		int color;
-		int n=Terrain_list[index].segment;
-		int lod=Terrain_list[index].lod;
-
-		terrain_segment *tseg=&Terrain_seg[n];
-		terrain_tex_segment *texseg=&Terrain_tex_seg[tseg->texseg_index];
-		int rotation=texseg->rotation & 0x0F;
-		int tile=texseg->rotation >> 4;
-		int simplemul=1<<((MAX_TERRAIN_LOD-1)-lod);
-		int cx,cz,smul_x,smul_z;
-		#if (defined(EDITOR) || defined(NEWEDITOR))
-			ddgr_color oldcolor;
-		#endif
-		cx=n%TERRAIN_WIDTH;
-		cz=n/TERRAIN_WIDTH;
-		int subx=cx % MAX_LOD_SIZE;
-		int subz=(MAX_LOD_SIZE-1)-((cz+(simplemul-1)) % MAX_LOD_SIZE);
-		if (cx+simplemul==TERRAIN_WIDTH)
-			smul_x=simplemul-1;
-		else
-			smul_x=simplemul;
-		if (cz+simplemul==TERRAIN_DEPTH)
-			smul_z=simplemul-1;
-		else
-			smul_z=simplemul;
-
-		// Note - this is upper left and proceeds lockwise
-		tlist[0]=n+(TERRAIN_WIDTH*smul_z);
-		tlist[1]=n+(TERRAIN_WIDTH*smul_z)+(smul_x);
-		tlist[2]=n+(smul_x);
-		tlist[3]=n;
-		rend_SetOverlayType (OT_NONE);
-		for (close=0,i=0;i<4;i++)
-		{
-			base[i]=*((g3Point *)&World_point_buffer[tlist[i]]);
-			base[i].p3_flags|=(PF_L|PF_RGBA);
-			base[i].p3_l=Ubyte_to_float[Terrain_seg[tlist[i]].l];
-
-			// only do perspective if all the points are inside our range
-			if (!UseHardware)
-			{
-				if (base[i].p3_vec.z<TERRAIN_PERSPECTIVE_TEXTURE_DEPTH)
-					close=1;
-				if (base[i].p3_vec.z<closest_z)
-					closest_z=base[i].p3_vec.z;
-			}
-		}
-		base[0].p3_u=TerrainUSpeedup[rotation][subz*LOD_ROW_SIZE+subx]*tile;
-		base[0].p3_v=TerrainVSpeedup[rotation][subz*LOD_ROW_SIZE+subx]*tile;
-		base[1].p3_u=TerrainUSpeedup[rotation][subz*LOD_ROW_SIZE+subx+simplemul]*tile;
-		base[1].p3_v=TerrainVSpeedup[rotation][subz*LOD_ROW_SIZE+subx+simplemul]*tile;
-		base[2].p3_u=TerrainUSpeedup[rotation][((subz+simplemul)*LOD_ROW_SIZE)+subx+simplemul]*tile;
-		base[2].p3_v=TerrainVSpeedup[rotation][((subz+simplemul)*LOD_ROW_SIZE)+subx+simplemul]*tile;
-		base[3].p3_u=TerrainUSpeedup[rotation][((subz+simplemul)*LOD_ROW_SIZE)+subx]*tile;
-		base[3].p3_v=TerrainVSpeedup[rotation][((subz+simplemul)*LOD_ROW_SIZE)+subx]*tile;
-
-		rend_SetLighting (Lighting_on?LS_GOURAUD:LS_NONE);
-
-		#if (defined(EDITOR) || defined(NEWEDITOR))
-			if (TSearch_on)
-			{
-				rend_SetPixel(GR_RGB(0,255,0),TSearch_x,TSearch_y);
-				oldcolor = rend_GetPixel(TSearch_x,TSearch_y);			//will be different in 15/16-bit color
-			}
-		#endif
-
-		// Make sure the triangle faces us and if so draw
-		// Upper left triangle
-		if (!upper_left)
-			goto draw_lower_right;
-		src[0]=0;
-		src[1]=1;
-		src[2]=3;
-
-		for (lit=0,i=0;i<3;i++)
-		{
-			if (base[src[i]].p3_z<=Far_fog_border)
-				lit=1;
-
-			slist[i]=&base[src[i]];
-		}
-
-		if (!lit && Lighting_on)
-		{
-			rend_SetTextureType(TT_FLAT);
-			rend_SetFlatColor (0);
-			g3_DrawPoly(3,slist,0);
-		}
-		else
-		{
-			// If we're past our texturing distance, flat shade!
-			if (closest_z>Terrain_texture_distance)
-			{
-				rend_SetTextureType (TT_FLAT);
-				int lightval=Ubyte_to_float [tseg->l]*(MAX_TEXTURE_SHADES-1);
-				int pix=*bm_data(bm_handle,0);
-				int fadepixel=(TexShadeTable16[lightval][pix>>8])+TexShadeTable8[lightval][pix & 0xFF];
-				color=GR_16_TO_COLOR (fadepixel);
-				rend_SetFlatColor (color);
-				g3_DrawPoly(3,slist,0);
-			}
-			else
-			{
-				if (close)
-					rend_SetTextureType (TT_PERSPECTIVE);
-				else
-					rend_SetTextureType (TT_LINEAR);
-
-				g3_DrawPoly(3,slist,bm_handle);
-			}
-		}
-	#if (!defined(RELEASE) || defined(NEWEDITOR))
-			if (OUTLINE_ON(OM_TERRAIN))
-				DrawTerrainOutline(n,3, slist);
-	#endif
-		// Now do lower right triangle
-		draw_lower_right:
-		if (!lower_right)
-			return 0;
-		src[0]=3;
-		src[1]=1;
-		src[2]=2;
-		for (lit=0,i=0;i<3;i++)
-		{
-			if (base[src[i]].p3_z<=Far_fog_border)
-				lit=1;
-
-			slist[i]=&base[src[i]];
-		}
-		if (!lit && Lighting_on)
-		{
-			rend_SetTextureType(TT_FLAT);
-			rend_SetFlatColor (0);
-			g3_DrawPoly(3,slist,0);
-		}
-		else
-		{
-			// If we're past our texturing distance, flat shade!
-			if (closest_z>Terrain_texture_distance)
-			{
-				rend_SetTextureType (TT_FLAT);
-				int lightval=Ubyte_to_float[tseg->l]*(MAX_TEXTURE_SHADES-1);
-				int pix=*bm_data(bm_handle,0);
-				int fadepixel=(TexShadeTable16[lightval][pix>>8])+TexShadeTable8[lightval][pix & 0xFF];
-				color=GR_16_TO_COLOR (fadepixel);
-				rend_SetFlatColor (color);
-				g3_DrawPoly(3,slist,0);
-			}
-			else
-			{
-				if (close)
-					rend_SetTextureType (TT_PERSPECTIVE);
-				else
-					rend_SetTextureType (TT_LINEAR);
-			}
-
-			g3_DrawPoly(3,slist,bm_handle);
-		}
-
-		#if (!defined(RELEASE) || defined(NEWEDITOR))
-		if (OUTLINE_ON(OM_TERRAIN))
-			DrawTerrainOutline(n,3, slist);
-		#endif
-		#if (defined(EDITOR) || defined(NEWEDITOR))
-			if (TSearch_on)
-			{
-				if (rend_GetPixel(TSearch_x,TSearch_y) != oldcolor)
-				{
-					TSearch_seg = n;
-					TSearch_found_type=TSEARCH_FOUND_TERRAIN;
-				}
-			}
-		#endif
-	#endif//__LINUX__
-		*/
 	return 0;
 }
 
@@ -2890,15 +2866,15 @@ draw_lower_right:
 		{
 			TSearch_seg = n;
 			TSearch_found_type = TSEARCH_FOUND_TERRAIN;
+			}
 		}
-	}
 #endif
 #if (!defined(RELEASE) || defined(NEWEDITOR))
 	if (OUTLINE_ON(OM_TERRAIN))
 		DrawTerrainOutline(n, points_this_triangle, slist);
 #endif
 	return 0;
-}
+	}
 
 // Draws the 2 triangles of the Terrainlist[index] (hardware)
 void DrawTerrainLightmapsHardware(int index, int upper_left, int lower_right)

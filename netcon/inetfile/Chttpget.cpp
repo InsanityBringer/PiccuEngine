@@ -15,123 +15,22 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/inetfile/Chttpget.cpp $
-* $Revision: 1.4 $
-* $Date: 2001/01/13 21:48:46 $
-* $Author: icculus $
-*
-* HTTP Client class (get only)
-*
-* $Log: Chttpget.cpp,v $
-* Revision 1.4  2001/01/13 21:48:46  icculus
-* patched to (re)compile on win32.
-*
-* Revision 1.3  2000/06/29 06:41:23  icculus
-* mad commits.
-*
-* Revision 1.2  2000/06/03 14:30:21  icculus
-* 1.4 code merge and pthread->SDL thread conversion.
-*
-* Revision 1.1.1.1  2000/04/18 00:00:38  icculus
-* initial checkin
-*
- * 
- * 26    10/22/99 3:40p Kevin
- * mac merge fixes
- * 
- * 25    10/21/99 9:28p Jeff
- * B.A. Macintosh code merge
- * 
- * 24    9/08/99 6:37p Jeff
- * fixed http/ftp downloading for Linux, should all work fine now.
- * 
- * 23    8/22/99 12:32a Jeff
- * fixed select calls for Linux.  Ported Kevin's new http stuff to Linux
- * 
- * 22    8/21/99 9:14p Kevin
- * Added support for redirection
- * 
- * 21    8/21/99 6:33p Kevin
- * Fixed Proxy Stuff
- * 
- * 20    8/21/99 6:48a Jeff
- * Linux port
- * 
- * 19    8/20/99 3:01p Kevin
- * Added support for Proxies (I hope!)
- * 
- * 18    8/15/99 6:38p Jeff
- * fixed compile error
- * 
- * 17    8/15/99 6:26p Kevin
- * 
- * 16    4/14/99 1:20a Jeff
- * fixed case mismatched #includes
- * 
- * 15    3/03/99 12:28a Nate
- * sped up something or other when the connection is done
- * 
- * 14    2/03/99 4:20p Kevin
- * Got multiplayer working with .mn3 files, and setup autodownloading
- * 
- * 13    1/27/99 5:49p Kevin
- * 
- * 12    1/27/99 5:38p Kevin
- * 
- * 11    12/30/98 12:15p Kevin
- * Auto Mission Download system
- * 
- * 10    10/12/98 4:59p Kevin
- * Added delay to thread when cancelled...
- * 
- * 9     10/12/98 4:49p Nate
- * More fixes
- * 
- * 8     10/12/98 1:54p Nate
- * Fixed bug
- * 
- * 7     10/12/98 11:30a Kevin
- * More memory stuff
- * 
- * 6     10/08/98 12:59p Nate
- * fixed cancel
- * 
- * 5     10/08/98 9:57a Kevin
- * made transfer cancellable
- * 
- * 4     7/31/98 12:19p Nate
- * Fixed http abort problem.
- * 
- * 3     7/31/98 11:57a Kevin
- * Added new functions for getting state
- * 
- * 2     6/01/98 10:10a Kevin
- * Added DLL connection interface and auto update DLL
- * 
- * 1     5/27/98 9:52a Kevin
- * 
- * 1     5/25/98 5:31p Kevin
- * Initial version
-*
-* $NoKeywords: $
-*/
 
 #ifdef WIN32
 #include <windows.h>
 #include <process.h>
 #endif
 
-#ifdef MACINTOSH
-#include "macsock.h"
-#endif
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef WIN32
+#include <wininet.h>
+#endif
 
 #include "inetgetfile.h"
 #include "Chttpget.h"
+#include "mono.h"
 
 #ifndef WIN32
 #include "mem.h"
@@ -192,7 +91,7 @@ void ChttpGet::AbortGet()
 #endif
 }
 
-ChttpGet::ChttpGet(char *URL,char *localfile,char *proxyip,unsigned short proxyport)
+ChttpGet::ChttpGet(const char *URL, const char *localfile, char *proxyip, unsigned short proxyport)
 {
 	m_ProxyEnabled = true;
 	m_ProxyIP = proxyip;
@@ -200,13 +99,13 @@ ChttpGet::ChttpGet(char *URL,char *localfile,char *proxyip,unsigned short proxyp
 	GetFile(URL,localfile);
 }
 
-ChttpGet::ChttpGet(char *URL,char *localfile)
+ChttpGet::ChttpGet(const char *URL, const char *localfile)
 {
 	m_ProxyEnabled = false;
 	GetFile(URL,localfile);
 }
 
-void ChttpGet::PrepSocket(char *URL)
+void ChttpGet::PrepSocket(const char *URL)
 {
 
 	m_DataSock = socket(AF_INET, SOCK_STREAM, 0);
@@ -224,8 +123,8 @@ void ChttpGet::PrepSocket(char *URL)
 	ioctl( m_DataSock, FIONBIO, &arg );
 #endif
 
-	char *pURL = URL;
-	if(strnicmp(URL,"http:",5)==0)
+	const char *pURL = URL;
+	if(strnicmp(URL,"http:",5) == 0)
 	{
 		pURL +=5;
 		while(*pURL == '/')
@@ -233,6 +132,15 @@ void ChttpGet::PrepSocket(char *URL)
 			pURL++;
 		}
 	}
+	else if (strnicmp(URL, "https:", 6) == 0)
+	{
+		pURL += 6;
+		while (*pURL == '/')
+		{
+			pURL++;
+		}
+	}
+
 	//There shouldn't be any : in this string
 	if(strchr(pURL,':'))
 	{
@@ -242,8 +150,8 @@ void ChttpGet::PrepSocket(char *URL)
 	//read the filename by searching backwards for a /
 	//then keep reading until you find the first /
 	//when you found it, you have the host and dir
-	char *filestart = NULL;
-	char *dirstart;
+	const char *filestart = NULL;
+	const char *dirstart;
 	for(int i = strlen(pURL);i>=0;i--)
 	{
 		if(pURL[i]== '/')
@@ -276,7 +184,7 @@ void ChttpGet::PrepSocket(char *URL)
 }
 
 
-void ChttpGet::GetFile(char *URL,char *localfile)
+void ChttpGet::GetFile(const char *URL,const char *localfile)
 {
 	m_DataSock = INVALID_SOCKET;
 	m_iBytesIn = 0;
@@ -352,9 +260,94 @@ unsigned int ChttpGet::GetTotalBytes()
 	return m_iBytesTotal;
 }
 
-
 void ChttpGet::WorkerThread()
 {
+#ifdef WIN32
+	HINTERNET hInternetSession;
+	HINTERNET hURL;
+	BOOL bResult;
+	DWORD dwBytesRead = 1;
+	char buf[1024];
+
+	hInternetSession = InternetOpen("Descent3", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+	if (!hInternetSession)
+	{
+		m_State = HTTP_STATE_UNKNOWN_ERROR;
+		fclose(LOCALFILE);
+		return;
+	}
+
+	hURL = InternetOpenUrl(hInternetSession, m_URL, NULL, 0, 0, 0);
+	if (!hURL)
+	{
+		DWORD err = GetLastError();
+		m_State = err == ERROR_INTERNET_NAME_NOT_RESOLVED ? HTTP_STATE_HOST_NOT_FOUND :
+			err == ERROR_INTERNET_CANNOT_CONNECT ? HTTP_STATE_CANT_CONNECT :
+			err == ERROR_FILE_NOT_FOUND ? HTTP_STATE_FILE_NOT_FOUND : HTTP_STATE_UNKNOWN_ERROR;
+		InternetCloseHandle(hInternetSession);
+		fclose(LOCALFILE);
+		return;
+	}
+
+
+	DWORD dwStatusCode;
+	DWORD dwStatusCodeSize = sizeof(dwStatusCode);
+	if (!HttpQueryInfo(hURL, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatusCode, &dwStatusCodeSize, NULL))
+	{
+		DWORD err = GetLastError();
+		m_State = HTTP_STATE_UNKNOWN_ERROR;
+		InternetCloseHandle(hURL);
+		InternetCloseHandle(hInternetSession);
+		fclose(LOCALFILE);
+		return;
+	}
+
+	if (dwStatusCode != 200)
+	{
+		m_State = dwStatusCode == 404 ? HTTP_STATE_FILE_NOT_FOUND : HTTP_STATE_UNKNOWN_ERROR;
+		InternetCloseHandle(hURL);
+		InternetCloseHandle(hInternetSession);
+		fclose(LOCALFILE);
+		return;
+	}
+
+	DWORD dwContentLength;
+	DWORD dwContentLengthSize = sizeof(dwContentLength);
+	if (HttpQueryInfo(hURL, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER,
+		&dwContentLength, &dwContentLengthSize, NULL))
+	{
+		m_iBytesTotal = dwContentLength;
+	}
+
+	for (; dwBytesRead > 0;)
+	{
+		if (!InternetReadFile(hURL, buf, (DWORD)sizeof(buf), &dwBytesRead))
+		{
+			DWORD err = GetLastError();
+			mprintf((0,"InternetReadFile error %d\n", err));
+			m_State = HTTP_STATE_RECV_FAILED;
+			InternetCloseHandle(hURL);
+			InternetCloseHandle(hInternetSession);
+			fclose(LOCALFILE);
+			return;
+		}
+		if (fwrite(buf, 1, dwBytesRead, LOCALFILE) != dwBytesRead)
+		{
+			m_State = HTTP_STATE_CANT_WRITE_FILE;
+			InternetCloseHandle(hURL);
+			InternetCloseHandle(hInternetSession);
+			fclose(LOCALFILE);
+			return;
+		}
+		m_iBytesIn += dwBytesRead;
+	}
+
+	InternetCloseHandle(hURL);
+	InternetCloseHandle(hInternetSession);
+
+	m_State = HTTP_STATE_FILE_RECEIVED;
+	fclose(LOCALFILE);
+#else
 	char szCommand[1000];
 	char *p;
 	int irsp = 0;
@@ -488,6 +481,7 @@ void ChttpGet::WorkerThread()
 		fclose(LOCALFILE);
 		return;
 	}
+#endif
 }
 
 int ChttpGet::ConnectSocket()

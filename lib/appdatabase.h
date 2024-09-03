@@ -15,37 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/appdatabase.h $
- * $Revision: 6 $
- * $Date: 5/13/99 5:04p $
- * $Author: Ardussi $
- *
- *	Application Database
- *
- * $Log: /DescentIII/Main/lib/appdatabase.h $
- * 
- * 6     5/13/99 5:04p Ardussi
- * changes for compiling on the Mac
- * 
- * 5     5/10/99 10:53p Ardussi
- * changes to compile on Mac
- * 
- * 4     4/15/99 1:44a Jeff
- * changes for linux compile
- * 
- * 3     7/24/97 3:06p Matt
- * Added functions to read & write bools & variable-length integers, and
- * fixed a few small bugs.
- * 
- * 2     6/11/97 1:09p Samir
- * Virtual destructors.
- * 
- * 1     6/10/97 4:55p Samir
- * Old osDatabase code merged into AppDatabase.
- * 
- * $NoKeywords: $
- */
 
 #ifndef APPDATABASE
 #define APPDATABASE
@@ -94,20 +63,10 @@ public:
 //Macro to write a string
 #define write_string(label,varp) write(label,varp,strlen(varp))
 
-/*	This section includes the platform-specific header files 
-	Add a platform to this list once implemented:
-
-		Win32				Samir		Win32Database.h			06/97
-*/
-
 #if defined(WIN32)
 #include "win\Win32Database.h"
 #elif defined(__LINUX__)
 #include "linux/lnxdatabase.h"
-#elif defined(MACINTOSH)
-#include "macdatabase.h"
 #endif
-
-
 
 #endif

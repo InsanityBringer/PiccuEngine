@@ -16,7 +16,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef DDIO_COMMON_H
 #define DDIO_COMMON_H
 
@@ -348,6 +347,3 @@ extern volatile ubyte DDIO_key_state[];
 #define KEY_CMD			0xE0 //DAJ mac command key
 
 #endif
-
-
-

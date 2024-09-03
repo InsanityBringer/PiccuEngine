@@ -279,7 +279,7 @@ void MultiDoConnectionAccepted(ubyte* data)
 		Netgame.flags = flags;
 
 		// Do Client smoothing hack
-		if (FindArg("-usesmoothing"))
+		if (!FindArg("-nosmoothing"))
 			Netgame.flags |= NF_USE_SMOOTHING;
 
 		MultiSendGreetings(secret_code);

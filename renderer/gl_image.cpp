@@ -83,7 +83,7 @@ int opengl_MakeTextureObject(int tn)
 
 	if (UseMultitexture && Last_texel_unit_set != tn)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + tn);
+		glActiveTexture(GL_TEXTURE0 + tn);
 		Last_texel_unit_set = tn;
 	}
 
@@ -137,7 +137,7 @@ int opengl_MakeBitmapCurrent(int handle, int map_type, int tn)
 		if (OpenGL_lightmap_remap[handle] == 65535)
 		{
 			texnum = opengl_MakeTextureObject(tn);
-			SET_WRAP_STATE(OpenGL_lightmap_states[handle], 1);
+			SET_WRAP_STATE(OpenGL_lightmap_states[handle], WT_WRAP);
 			SET_FILTER_STATE(OpenGL_lightmap_states[handle], 0);
 			OpenGL_lightmap_remap[handle] = texnum;
 			opengl_TranslateBitmapToOpenGL(texnum, handle, map_type, 0, tn);
@@ -154,7 +154,7 @@ int opengl_MakeBitmapCurrent(int handle, int map_type, int tn)
 		if (OpenGL_bitmap_remap[handle] == 65535)
 		{
 			texnum = opengl_MakeTextureObject(tn);
-			SET_WRAP_STATE(OpenGL_bitmap_states[handle], 1);
+			SET_WRAP_STATE(OpenGL_bitmap_states[handle], WT_WRAP);
 			SET_FILTER_STATE(OpenGL_bitmap_states[handle], 0);
 			OpenGL_bitmap_remap[handle] = texnum;
 			opengl_TranslateBitmapToOpenGL(texnum, handle, map_type, 0, tn);
@@ -173,7 +173,7 @@ int opengl_MakeBitmapCurrent(int handle, int map_type, int tn)
 	{
 		if (UseMultitexture && Last_texel_unit_set != tn)
 		{
-			glActiveTextureARB(GL_TEXTURE0_ARB + tn);
+			glActiveTexture(GL_TEXTURE0 + tn);
 			Last_texel_unit_set = tn;
 		}
 
@@ -204,24 +204,24 @@ void opengl_MakeWrapTypeCurrent(int handle, int map_type, int tn)
 
 	if (uwrap == dest_wrap)
 		return;
-
+	
 	if (UseMultitexture && Last_texel_unit_set != tn)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + tn);
+		glActiveTexture(GL_TEXTURE0 + tn);
 		Last_texel_unit_set = tn;
 	}
 
 	OpenGL_sets_this_frame[1]++;
 
-	if (OpenGL_state.cur_wrap_type == WT_CLAMP)
+	if (dest_wrap == WT_CLAMP)
 	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	}
-	else if (OpenGL_state.cur_wrap_type == WT_WRAP_V)
+	else if (dest_wrap == WT_WRAP_V)
 	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	}
 	else
@@ -271,7 +271,7 @@ void opengl_MakeFilterTypeCurrent(int handle, int map_type, int tn)
 		return;
 	if (UseMultitexture && Last_texel_unit_set != tn)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + tn);
+		glActiveTexture(GL_TEXTURE0 + tn);
 		Last_texel_unit_set = tn;
 	}
 
@@ -337,14 +337,14 @@ int opengl_InitCache(void)
 		GameLightmaps[i].flags |= LF_CHANGED | LF_BRAND_NEW;
 	}
 
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	/*glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 	if (UseMultitexture)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + 1);
+		glActiveTexture(GL_TEXTURE0 + 1);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glActiveTextureARB(GL_TEXTURE0_ARB + 0);
-	}
+		glActiveTexture(GL_TEXTURE0 + 0);
+	}*/
 
 	CHECK_ERROR(3);
 
@@ -553,7 +553,7 @@ void opengl_TranslateBitmapToOpenGL(int texnum, int bm_handle, int map_type, int
 
 	if (UseMultitexture && Last_texel_unit_set != tn)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + tn);
+		glActiveTexture(GL_TEXTURE0 + tn);
 		Last_texel_unit_set = tn;
 	}
 

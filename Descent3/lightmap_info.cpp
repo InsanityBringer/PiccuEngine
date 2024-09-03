@@ -21,7 +21,6 @@
 #include "lightmap_info.h"
 #include "lightmap.h"
 #include "mono.h"
-#include "Ddgr.h"
 #include "grdefs.h"
 #include "renderer.h"
 #include <stdlib.h>
@@ -70,21 +69,6 @@ void InitLightmapInfo(int nummaps)
 			Free_lmi_list[i] = i;
 		}
 	}
-	/* //DAJ this did not work! the lm_FreeLightmap() is refcount-- not a free()
-			else {
-			LightmapInfo=(lightmap_info *)mem_malloc (nummaps*sizeof(lightmap_info));
-			ASSERT (LightmapInfo);
-			Free_lmi_list=(ushort *)mem_malloc (nummaps*sizeof(ushort));
-			ASSERT (Free_lmi_list);
-
-
-			for (i=0;i<nummaps;i++)
-			{
-				LightmapInfo[i].used=0;
-				Free_lmi_list[i]=i;
-			}
-		}
-	*/
 	Num_of_lightmap_info = 0;
 	atexit(CloseLightmapInfos);
 }

@@ -15,74 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/main/lib/uires.h $
- * $Revision: 19 $
- * $Date: 10/21/99 1:53p $
- * $Author: Kevin $
- *
- *	Resources
- *
- * $Log: /DescentIII/main/lib/uires.h $
- * 
- * 19    10/21/99 1:53p Kevin
- * Mac Merge
- * 
- * 18    7/06/99 5:52p Kevin
- * PXO & multiplayer fixes for the patch
- * 
- * 17    5/20/99 10:50p Samir
- * changed way memory was allocated for strings in text items, empty
- * strings all point to same empty buffer for efficiency.
- * 
- * 16    5/10/99 10:53p Ardussi
- * changes to compile on Mac
- * 
- * 15    9/30/98 4:32p Samir
- * added snazzy text.
- * 
- * 14    9/23/98 11:46a Samir
- * added static text saturation.
- * 
- * 13    8/20/98 6:45p Samir
- * use const char for UITextItem create.
- * 
- * 12    5/25/98 8:18p Samir
- * added function to get text pointer to text item.
- * 
- * 11    5/01/98 6:24p Samir
- * added draw class field to draw for each resource.
- * 
- * 10    3/13/98 11:51a Samir
- * default text color is black.
- * 
- * 9     3/10/98 7:26p Samir
- * Fixed UIBitmapItem::get_chunked_bitmap.
- * 
- * 8     3/05/98 6:40p Samir
- * Virtualized a lot of functions.
- * 
- * 7     2/13/98 6:34p Samir
- * Added UIStatic class.
- * 
- * 6     2/10/98 4:55p Samir
- * Added radio buttons.
- * 
- * 5     1/30/98 7:04p Samir
- * Moved from ui.h and uilib.h.
- * 
- * 4     1/18/98 4:22p Samir
- * Implemented new UIItem system.
- * 
- * 3     1/02/98 12:50p Samir
- * Added font caps to UITextItem.
- * 
- * 2     12/30/97 5:13p Samir
- * INitial revision
- * 
- * $NoKeywords: $
- */
-
 
 #ifndef UIRES_H
 #define UIRES_H
@@ -91,19 +23,19 @@
 #include "bitmap.h"
 
 
-typedef enum tUIResClass {
+enum tUIResClass 
+{
 	uiItem, 
 	uiTextItem,
 	uiBitmapItem
-}
-tUIResClass;
+};
 
-typedef enum tUIDrawClass {
+enum tUIDrawClass 
+{
 	uiDrawNormal,
 	uiDrawAlphaSaturate,
 	uiDrawFaded
-}
-tUIDrawClass;
+};
 
 
 //	UIItem
@@ -359,6 +291,4 @@ public:
 	virtual bool draw(int x, int y, int w, int h);
 };
 
-
 #endif
-

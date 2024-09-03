@@ -15,66 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/Lib/Win/win32app.h $
- * $Revision: 15 $
- * $Date: 5/02/99 3:06p $
- * $Author: Samir $
- *
- *	Application object for Win32
- *
- * $Log: /DescentIII/Main/Lib/Win/win32app.h $
- * 
- * 15    5/02/99 3:06p Samir
- * added handling for power management messages.
- * 
- * 14    4/27/99 2:06p Samir
- * added function to get system info.
- * 
- * 13    4/06/99 8:30p Samir
- * organized defer code so delay procedure doesn't stall on idle.
- * 
- * 12    10/16/98 11:07a Samir
- * new OS version check stuff.
- * 
- * 11    10/08/98 7:26p Samir
- * changed the prototype for the defer handler callback.
- * 
- * 10    6/29/98 6:45p Samir
- * callback system repaired.
- * 
- * 9     3/23/98 8:04p Samir
- * defer handler now returns a bool.
- * 
- * 8     2/23/98 5:07p Samir
- * Modified init somewhat.
- * 
- * 7     2/23/98 4:30p Samir
- * added init function to oeApplication.
- * 
- * 6     11/17/97 4:57p Samir
- * Fixed up winapp data structures.
- * 
- * 5     10/16/97 2:30p Samir
- * Added Idle processing.
- * 
- * 4     9/16/97 1:04p Samir
- * Added delay function.
- * 
- * 3     8/01/97 7:30p Samir
- * Better messaging support and NT support.
- * 
- * 2     7/28/97 3:46p Samir
- * Added Topmost window optional support and NT detection.
- * 
- * 2     6/11/97 2:39p Samir
- * Added destructors.
- * 
- * 1     6/10/97 4:54p Samir
- * Win32 Application object conversion from old osWinObject.
- * 
- * $NoKeywords: $
- */
 
 #ifndef WIN32APP_H
 #define WIN32APP_H
@@ -86,19 +26,21 @@ typedef unsigned int HWnd;
 typedef unsigned int HInstance;
 
 //	This structure is used to retrieve and set 
-typedef struct tWin32AppInfo {
+struct tWin32AppInfo 
+{
 	unsigned flags;							// Application Flags
 	HWnd hwnd;									// Window Handle
 	HInstance hinst;							// Window Instance
 	int wnd_x, wnd_y, wnd_w, wnd_h;		// Window dimensions
-} tWin32AppInfo;
+};
 
-typedef enum tWin32OS {
+enum tWin32OS 
+{
 	NoWin32,
 	Win9x,
 	WinNT,
 	WinCE
-} tWin32OS;
+};
 
 /*	Win32 Application Object
 		This object entails initialization and cleanup of all operating system

@@ -95,6 +95,7 @@ struct terrain_segment
 	ubyte ypos;					// this is so we don't have to constantly convert
 								// floats to ints when traversing the terrain
 								// it's the integer version of pos.y
+
 	ubyte pad;					// for alignment
 };
 
@@ -272,6 +273,11 @@ extern void ResetTerrain(int force=0);
 extern int GetVisibleTerrain(vector *,matrix *);
 extern void DisplayTerrainList (int,bool from_automap=0);
 extern int CheckToRenderSky (int);
+
+// [ISB] New terrain rendering!
+
+//Called after loading terrain. Will delete all cell meshes and then build new meshes. 
+void MeshTerrain();
 
 
 //left,top,right,bot are optional parameters.  Omiting them (or setting them to -1) will

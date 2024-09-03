@@ -15,40 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/psclass.h $
- * $Revision: 8 $
- * $Date: 4/16/99 4:26a $
- * $Author: Jeff $
- *
- * New Class Library
- *
- * $Log: /DescentIII/Main/lib/psclass.h $
- * 
- * 8     4/16/99 4:26a Jeff
- * removed ifdef of linux since new compiler compiles it
- * 
- * 7     4/15/99 1:44a Jeff
- * changes for linux compile
- * 
- * 6     12/16/98 1:57p Samir
- * Replaced CleanupString2 with CleanupStr
- * 
- * 5     10/02/98 11:16a Jeff
- * removed 'struct' from the template, generates an error in VC6 that
- * keeps it from compiling
- * 
- * 4     9/17/98 7:05p Samir
- * added string token class.
- * 
- * 3     7/28/98 5:42p Samir
- * added queue class.
- * 
- * 2     7/23/98 11:36a Samir
- * Added class library header.
- *
- * $NoKeywords: $
- */
 
 #ifndef PSCLASS_H
 #define PSCLASS_H

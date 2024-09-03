@@ -15,25 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/lib/pstring.h $
-* $Revision: 3 $
-* $Date: 12/16/98 1:57p $
-* $Author: Samir $
-*
-* Safe string manipulation and creation functions
-*
-* $Log: /DescentIII/Main/lib/pstring.h $
- * 
- * 3     12/16/98 1:57p Samir
- * Replaced CleanupString2 with CleanupStr
- * 
- * 2     11/01/98 1:56a Jeff
- * added pstring.cpp/.h
-*
-* $NoKeywords: $
-*/
-
 
 #ifndef _PSTRING_H_
 #define _PSTRING_H_

@@ -18,9 +18,35 @@
 #pragma once
 #include <glad/gl.h>
 
+struct CommonBlock
+{
+	float projection[16];
+	float modelview[16];
+	float pad[32];
+};
+
+//Shader definition nonsense
+constexpr int SF_HASCOMMON = 1; //Shader will use the common block
+constexpr int SF_HASROOM = 2; //Shader will use the room (fog, brightness) block
+constexpr int SF_HASSPECULAR = 4; //Shader will use the specular block
+
+struct ShaderDefinition
+{
+	const char* name;
+	int flags; //see SF_ flags above
+	const char* vertex_filename;
+	const char* fragment_filename;
+};
+
+void opengl_InitShaders(void);
+
 class ShaderProgram
 {
 	GLuint m_name;
+	//CreateCommonBindings will find common uniforms and set their default bindings.
+	//This includes the common block, which must be named "common",
+	//and sampler2Ds named "colortexture", "lightmaptexture", and others later.
+	void CreateCommonBindings(int bindindex);
 public:
 	ShaderProgram()
 	{
@@ -28,13 +54,16 @@ public:
 	}
 
 	void AttachSource(const char* vertexsource, const char* fragsource);
+	void AttachSourceFromDefiniton(ShaderDefinition& def);
+	//Attaches strings with some preprocessor statements. 
+	//Defines USE_TEXTURING if textured is true.
+	//Defines USE_LIGHTMAP if lightmapped is true.
+	//Defines USE_SPECULAR if speculared is true. 
+	void AttachSourcePreprocess(const char* vertexsource, const char* fragsource, bool textured, bool lightmapped, bool speculared, bool fogged);
 	GLint FindUniform(const char* uniform);
 	void Destroy();
 
-	void Use()
-	{
-		glUseProgram(m_name);
-	}
+	void Use();
 
 	GLuint Handle() const
 	{

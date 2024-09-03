@@ -41,7 +41,16 @@ int framebuffer_current_draw;
 unsigned int framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h;
 
 ShaderProgram blitshader;
+//Temp shader to test the shader systems. 
+ShaderProgram testshader;
 GLint blitshader_gamma = -1;
+
+static float mat4_identity[16] =
+{ 1, 0, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 1 };
+
 
 // Init our renderer
 int rend_Init(renderer_type state, oeApplication* app, renderer_preferred_state* pref_state)
@@ -75,6 +84,11 @@ int rend_Init(renderer_type state, oeApplication* app, renderer_preferred_state*
 	if (blitshader_gamma == -1)
 		Error("rend_Init: Failed to find gamma uniform!");
 
+	//Simple shader for testing, before everything is made to use shaders. 
+	extern const char* testVertexSrc;
+	extern const char* testFragmentSrc;
+	testshader.AttachSource(testVertexSrc, testFragmentSrc);
+
 	//[ISB] moved here.. stupid. 
 	opengl_SetGammaValue(OpenGL_preferred_state.gamma);
 
@@ -94,6 +108,22 @@ void rend_Close(void)
 	opengl_Close();
 
 	Renderer_initted = false;
+}
+
+void GL_Ortho(float* mat, float left, float right, float bottom, float top, float znear, float zfar)
+{
+	memset(mat, 0, sizeof(float[16]));
+	mat[0] = 2 / (right - left);
+	mat[5] = 2 / (top - bottom);
+	mat[10] = -2 / (zfar - znear);
+	mat[12] = -((right + left) / (right - left));
+	mat[13] = -((top + bottom) / (top - bottom));
+	mat[14] = -((zfar + znear) / (zfar - znear));
+	mat[15] = 1;
+	/*		2 / (right - left), 0, 0, 0,
+		0, 2 / (top - bottom), 0, 0,
+		0, 0, -2 / (zfar - znear), 0,
+		-((right + left) / (right - left)), -((top + bottom) / (top - bottom)), -((zfar + znear) / (zfar - znear)), 1*/
 }
 
 void opengl_UpdateWindow()
@@ -155,16 +185,27 @@ void opengl_SetViewport()
 	//[ISB] the hardware t&l code is AWFUL and the software t&l code won't compile. 
 	// Reverting it back to only ever using passthrough. 
 	// Projection
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho((GLfloat)0.0f, (GLfloat)(OpenGL_preferred_state.width), (GLfloat)(OpenGL_preferred_state.height), (GLfloat)0.0f, 0.0f, 1.0f);
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
+	//glOrtho((GLfloat)0.0f, (GLfloat)(OpenGL_preferred_state.width), (GLfloat)(OpenGL_preferred_state.height), (GLfloat)0.0f, 0.0f, 1.0f);
 
+	float left = 0;
+	float right = OpenGL_preferred_state.width;
+	float bottom = OpenGL_preferred_state.height;
+	float top = 0;
+	float znear = 0;
+	float zfar = 1;
+
+	float projection[16];
+	GL_Ortho(projection, left, right, bottom, top, znear, zfar);
+
+	GL_UpdateLegacyBlock(projection, mat4_identity);
 	// Viewport
 	glViewport(0, 0, OpenGL_preferred_state.width, OpenGL_preferred_state.height);
 
 	// ModelView
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
 }
 
 // Sets some global preferences for the renderer
@@ -195,7 +236,7 @@ int rend_SetPreferredState(renderer_preferred_state* pref_state)
 
 		if (pref_state->width != OpenGL_state.screen_width || pref_state->height != OpenGL_state.screen_height
 			|| pref_state->window_width != OpenGL_state.view_width || pref_state->window_height != OpenGL_state.view_height
-			|| pref_state->fullscreen != old_state.fullscreen)
+			|| pref_state->fullscreen != old_state.fullscreen || pref_state->antialised != old_state.antialised)
 		{
 			opengl_UpdateWindow();
 			opengl_SetViewport();
@@ -228,14 +269,32 @@ int rend_SetPreferredState(renderer_preferred_state* pref_state)
 
 void rend_StartFrame(int x1, int y1, int x2, int y2, int clear_flags)
 {
+	GLenum glclearflags = 0;
 	if (clear_flags & RF_CLEAR_ZBUFFER)
+		glclearflags |= GL_DEPTH_BUFFER_BIT;
+	
+	if (clear_flags & RF_CLEAR_COLOR)
 	{
-		glClear(GL_DEPTH_BUFFER_BIT);
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glclearflags |= GL_COLOR_BUFFER_BIT;
 	}
+
+	if (glclearflags != 0)
+		glClear(glclearflags);
+
 	OpenGL_state.clip_x1 = x1;
 	OpenGL_state.clip_y1 = y1;
 	OpenGL_state.clip_x2 = x2;
 	OpenGL_state.clip_y2 = y2;
+
+	//[ISB] Use the viewport to constrain the clipping window so that the new hardware code 
+	//can work with the legacy code.
+	float projection[16];
+	GL_Ortho(projection, 0, x2 - x1, y2 - y1, 0, 0, 1);
+
+	GL_UpdateLegacyBlock(projection, mat4_identity);
+
+	glViewport(x1, OpenGL_state.screen_height - y2, x2 - x1, y2 - y1);
 }
 
 static int OpenGL_last_frame_polys_drawn = 0;
@@ -327,17 +386,13 @@ void rend_EndFrame(void)
 // returns true if the passed in extension name is supported
 bool opengl_CheckExtension(char* extName)
 {
-	char* p = (char*)glGetString(GL_EXTENSIONS);
-	int extNameLen = strlen(extName);
-	char* end = p + strlen(p);
-
-	while (p < end)
+	GLint extcount;
+	glGetIntegerv(GL_NUM_EXTENSIONS, &extcount);
+	for (int i = 0; i < extcount; i++)
 	{
-		int n = strcspn(p, " ");
-		if ((extNameLen == n) && (strncmp(extName, p, n) == 0))
+		const GLubyte* extname = glGetStringi(GL_EXTENSIONS, i);
+		if (!stricmp((const char*)extname, extName))
 			return true;
-
-		p += (n + 1);
 	}
 
 	return false;
@@ -364,29 +419,33 @@ void rend_SetFogState(sbyte state)
 		return;
 
 	OpenGL_state.cur_fog_state = state;
-	if (state == 1)
-	{
-		glEnable(GL_FOG);
-	}
-	else
-	{
-		glDisable(GL_FOG);
-	}
 }
 
 // Sets the near and far plane of fog
 void rend_SetFogBorders(float nearz, float farz)
 {
 	// Sets the near and far plane of fog
-	float fogStart = nearz;
-	float fogEnd = farz;
+	float fog_start = std::max(0.f, std::min(1.0f, 1.0f - (1.0f / nearz)));
+	float fog_end = std::max(0.f, std::min(1.0f, 1.0f - (1.0f / farz)));
 
-	OpenGL_state.cur_fog_start = fogStart;
-	OpenGL_state.cur_fog_end = fogEnd;
+	OpenGL_state.cur_fog_start = fog_start;
+	OpenGL_state.cur_fog_end = fog_end;
+}
 
-	glFogi(GL_FOG_MODE, GL_LINEAR);
-	glFogf(GL_FOG_START, fogStart);
-	glFogf(GL_FOG_END, fogEnd);
+// Sets the color of fog
+void rend_SetFogColor(ddgr_color color)
+{
+	float fc[4];
+	fc[0] = GR_COLOR_RED(color);
+	fc[1] = GR_COLOR_GREEN(color);
+	fc[2] = GR_COLOR_BLUE(color);
+	fc[3] = 1;
+
+	fc[0] /= 255.0f;
+	fc[1] /= 255.0f;
+	fc[2] /= 255.0f;
+
+	rend_UpdateTerrainFog(fc, OpenGL_state.cur_fog_start, OpenGL_state.cur_fog_end);
 }
 
 void rend_SetLighting(light_state state)
@@ -395,7 +454,7 @@ void rend_SetLighting(light_state state)
 		return;	// No redundant state setting
 	if (UseMultitexture && Last_texel_unit_set != 0)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + 0);
+		glActiveTexture(GL_TEXTURE0 + 0);
 		Last_texel_unit_set = 0;
 	}
 
@@ -404,16 +463,16 @@ void rend_SetLighting(light_state state)
 	switch (state)
 	{
 	case LS_NONE:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_NONE;
 		break;
 	case LS_FLAT_GOURAUD:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_FLAT_GOURAUD;
 		break;
 	case LS_GOURAUD:
 	case LS_PHONG:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_GOURAUD;
 		break;
 	default:
@@ -452,7 +511,7 @@ void rend_SetTextureType(texture_type state)
 		return;	// No redundant state setting
 	if (UseMultitexture && Last_texel_unit_set != 0)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + 0);
+		glActiveTexture(GL_TEXTURE0 + 0);
 		Last_texel_unit_set = 0;
 	}
 	OpenGL_sets_this_frame[3]++;
@@ -460,14 +519,12 @@ void rend_SetTextureType(texture_type state)
 	switch (state)
 	{
 	case TT_FLAT:
-		glDisable(GL_TEXTURE_2D);
 		OpenGL_state.cur_texture_quality = 0;
 		break;
 	case TT_LINEAR:
 	case TT_LINEAR_SPECIAL:
 	case TT_PERSPECTIVE:
 	case TT_PERSPECTIVE_SPECIAL:
-		glEnable(GL_TEXTURE_2D);
 		OpenGL_state.cur_texture_quality = 2;
 		break;
 	default:
@@ -559,25 +616,6 @@ void rend_ResetCache(void)
 	opengl_ResetCache();
 }
 
-// Sets the color of fog
-void rend_SetFogColor(ddgr_color color)
-{
-	if (color == OpenGL_state.cur_fog_color)
-		return;
-
-	float fc[4];
-	fc[0] = GR_COLOR_RED(color);
-	fc[1] = GR_COLOR_GREEN(color);
-	fc[2] = GR_COLOR_BLUE(color);
-	fc[3] = 1;
-
-	fc[0] /= 255.0f;
-	fc[1] /= 255.0f;
-	fc[2] /= 255.0f;
-
-	glFogfv(GL_FOG_COLOR, fc);
-}
-
 // Sets the lighting state of opengl
 void rend_SetLightingState(light_state state)
 {
@@ -586,7 +624,7 @@ void rend_SetLightingState(light_state state)
 
 	if (UseMultitexture && Last_texel_unit_set != 0)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + 0);
+		glActiveTexture(GL_TEXTURE0 + 0);
 		Last_texel_unit_set = 0;
 	}
 
@@ -595,16 +633,16 @@ void rend_SetLightingState(light_state state)
 	switch (state)
 	{
 	case LS_NONE:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_NONE;
 		break;
 	case LS_FLAT_GOURAUD:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_FLAT_GOURAUD;
 		break;
 	case LS_GOURAUD:
 	case LS_PHONG:
-		glShadeModel(GL_SMOOTH);
+		//glShadeModel(GL_SMOOTH);
 		OpenGL_state.cur_light_state = LS_GOURAUD;
 		break;
 	default:
@@ -620,33 +658,33 @@ float opengl_GetAlphaMultiplier(void)
 	switch (OpenGL_state.cur_alpha_type)
 	{
 	case AT_ALWAYS:
-		return 1.0;
+		return 255;
 	case AT_CONSTANT:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_TEXTURE:
-		return 1.0;
+		return 255;
 	case AT_CONSTANT_TEXTURE:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_VERTEX:
-		return 1.0;
+		return 255;
 	case AT_CONSTANT_TEXTURE_VERTEX:
 	case AT_CONSTANT_VERTEX:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_TEXTURE_VERTEX:
-		return 1.0;
+		return 255;
 	case AT_LIGHTMAP_BLEND:
 	case AT_LIGHTMAP_BLEND_SATURATE:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_SATURATE_TEXTURE:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_SATURATE_VERTEX:
-		return 1.0;
+		return 255;
 	case AT_SATURATE_CONSTANT_VERTEX:
-		return OpenGL_state.cur_alpha / 255.0;
+		return OpenGL_state.cur_alpha;
 	case AT_SATURATE_TEXTURE_VERTEX:
-		return 1.0;
+		return 255;
 	case AT_SPECULAR:
-		return 1.0;
+		return 255;
 	default:
 		//Int3();		// no type defined,get jason
 		return 0;
@@ -659,13 +697,13 @@ void opengl_SetAlwaysAlpha(bool state)
 	if (state && OpenGL_blending_on)
 	{
 		glDisable(GL_BLEND);
-		glDisable(GL_ALPHA_TEST);
+		//glDisable(GL_ALPHA_TEST);
 		OpenGL_blending_on = false;
 	}
 	else if (!state)
 	{
 		glEnable(GL_BLEND);
-		glEnable(GL_ALPHA_TEST);
+		//glEnable(GL_ALPHA_TEST);
 		OpenGL_blending_on = true;
 	}
 }
@@ -676,17 +714,11 @@ void rend_SetAlphaType(sbyte atype)
 		return;		// don't set it redundantly
 	if (UseMultitexture && Last_texel_unit_set != 0)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB + 0);
+		glActiveTexture(GL_TEXTURE0 + 0);
 		Last_texel_unit_set = 0;
 
 	}
 	OpenGL_sets_this_frame[6]++;
-
-	OpenGL_blending_on = true;
-	opengl_SetAlwaysAlpha(true);
-	glBlendFunc(GL_ONE, GL_ZERO);
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 
 	switch (atype)
 	{
@@ -694,104 +726,58 @@ void rend_SetAlphaType(sbyte atype)
 		rend_SetAlphaValue(255);
 		opengl_SetAlwaysAlpha(true);
 		glBlendFunc(GL_ONE, GL_ZERO);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_CONSTANT:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_TEXTURE:
 		rend_SetAlphaValue(255);
 		opengl_SetAlwaysAlpha(true);
 		glBlendFunc(GL_ONE, GL_ZERO);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
 		break;
 	case AT_CONSTANT_TEXTURE:
 	case AT_CONSTANT_TEXTURE_VERTEX:
-		opengl_SetAlwaysAlpha(false);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
-		break;
 	case AT_TEXTURE_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
-		//I'm not sure why this works? The terminal switches in level 1 use a alpha texture and it works fine in D3D. 
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PRIMARY_COLOR);
 		break;
 	case AT_CONSTANT_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_LIGHTMAP_BLEND:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_DST_COLOR, GL_ZERO);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_SATURATE_TEXTURE:
 	case AT_LIGHTMAP_BLEND_SATURATE:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_SATURATE_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_SATURATE_CONSTANT_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_SATURATE_TEXTURE_VERTEX:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
 		break;
 	case AT_SPECULAR:
 		opengl_SetAlwaysAlpha(false);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
 		//hack
-		glEnable(GL_TEXTURE_2D);
 		OpenGL_state.cur_texture_quality = 2;
 		OpenGL_state.cur_texture_type = TT_PERSPECTIVE;
-
-		glGetError();
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PRIMARY_COLOR);
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);
-		if (glGetError() != GL_NO_ERROR)
-			Int3();
 
 		break;
 	default:
@@ -960,26 +946,41 @@ void rend_SetMipState(sbyte mipstate)
 	OpenGL_state.cur_mip_state = mipstate;
 }
 
-void rend_TransformSetToPassthru(void)
-{
-}
-
-void rend_TransformSetViewport(int lx, int ty, int width, int height)
-{
-}
-
-void rend_TransformSetProjection(float trans[4][4])
-{
-}
-
-void rend_TransformSetModelView(float trans[4][4])
-{
-}
-
 // Fills in the passed in pointer with the current rendering state
 void rend_GetRenderState(rendering_state* rstate)
 {
 	memcpy(rstate, &OpenGL_state, sizeof(rendering_state));
+}
+
+void rend_DLLGetRenderState(DLLrendering_state* rstate)
+{
+#define COPY_ELEMENT(element) rstate->element = OpenGL_state.element;
+	COPY_ELEMENT(initted);
+	COPY_ELEMENT(cur_bilinear_state);
+	COPY_ELEMENT(cur_zbuffer_state);
+	COPY_ELEMENT(cur_fog_state);
+	COPY_ELEMENT(cur_mip_state);
+	COPY_ELEMENT(cur_texture_type);
+	COPY_ELEMENT(cur_color_model);
+	COPY_ELEMENT(cur_light_state);
+	COPY_ELEMENT(cur_alpha_type);
+	COPY_ELEMENT(cur_wrap_type);
+	COPY_ELEMENT(cur_fog_start);
+	COPY_ELEMENT(cur_fog_end);
+	COPY_ELEMENT(cur_near_z);
+	COPY_ELEMENT(cur_far_z);
+	COPY_ELEMENT(gamma_value);
+	COPY_ELEMENT(cur_alpha);
+	COPY_ELEMENT(cur_color);
+	COPY_ELEMENT(cur_fog_color);
+	COPY_ELEMENT(cur_texture_quality);
+	COPY_ELEMENT(clip_x1);
+	COPY_ELEMENT(clip_x2);
+	COPY_ELEMENT(clip_y1);
+	COPY_ELEMENT(clip_y2);
+	COPY_ELEMENT(screen_width);
+	COPY_ELEMENT(screen_height);
+#undef COPY_ELEMENT
 }
 
 // Takes a screenshot of the current frame and puts it into the handle passed
@@ -1024,7 +1025,7 @@ void opengl_UpdateFramebuffer(void)
 {
 	for (int i = 0; i < NUM_FBOS; i++)
 	{
-		framebuffers[i].Update(OpenGL_state.screen_width, OpenGL_state.screen_height);
+		framebuffers[i].Update(OpenGL_state.screen_width, OpenGL_state.screen_height, OpenGL_preferred_state.antialised);
 	}
 
 	framebuffer_current_draw = 0;
@@ -1045,4 +1046,23 @@ void opengl_CloseFramebuffer(void)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	GL_DestroyFramebufferVAO();
+}
+
+//shader test
+void rend_UseShaderTest(void)
+{
+	testshader.Use();
+}
+
+void rend_EndShaderTest(void)
+{
+	//glUseProgram(0);
+}
+
+void rend_SetCullFace(bool state)
+{
+	if (state)
+		glEnable(GL_CULL_FACE);
+	else
+		glDisable(GL_CULL_FACE);
 }

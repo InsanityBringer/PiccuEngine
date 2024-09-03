@@ -15,26 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/Lib/unzip.h $
-* $Revision: 3 $
-* $Date: 8/15/99 8:07p $
-* $Author: Jeff $
-*
-* Unzip class
-*
-* $Log: /DescentIII/Main/Lib/unzip.h $
- * 
- * 3     8/15/99 8:07p Jeff
- * handle disk write errors when extracting
- * 
- * 2     8/13/99 8:01p Jeff
- * initial creation of zip class
-*
-* $NoKeywords: $
-*/
-
-
 
 #ifndef __UNZIP_H
 #define __UNZIP_H
@@ -42,7 +22,7 @@
 #include <stdio.h>
 #include "pstypes.h"
 
-typedef struct
+struct zipentry
 {
 	uint	cent_file_header_sig;
 	ubyte	version_made_by;
@@ -64,7 +44,7 @@ typedef struct
 	uint	external_file_attrib;
 	uint	offset_lcl_hdr_frm_frst_disk;
 	char*   name;
-}zipentry;
+};
 
 class ZIP
 {

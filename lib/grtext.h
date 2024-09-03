@@ -15,107 +15,19 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/Lib/grtext.h $
- * $Revision: 25 $
- * $Date: 11/16/99 3:18p $
- * $Author: Samir $
- *
- *	
- *
- * $Log: /DescentIII/Main/Lib/grtext.h $
- * 
- * 25    11/16/99 3:18p Samir
- * added new data to font file and kept compatibility with D3 fonts:
- * tracking value.
- * 
- * 24    4/17/99 6:16p Samir
- * added kerning and 4444 alphaed font support.
- * 
- * 23    4/02/99 3:49p Kevin
- * Added profanity filter code
- * 
- * 22    4/01/99 5:23p Samir
- * Added function to get character info.
- * 
- * 21    3/02/99 6:26p Samir
- * added font template width and height functions.
- * 
- * 20    2/21/99 6:39p Samir
- * added function to get ascii value of font character.
- * 
- * 19    1/20/99 3:43a Jeff
- * added function to get clipping parameters
- * 
- * 18    11/03/98 7:04p Samir
- * made Grtext_spacing global so word wrapper could access it.
- * 
- * 17    10/22/98 2:41p Samir
- * made grtext_Puts public.
- * 
- * 16    10/21/98 11:50p Samir
- * added prototype for advanced grtext get char info function.
- * 
- * 15    10/16/98 1:54p Kevin
- * Changes for Demo Beta 4
- * 
- * 14    9/24/98 2:56p Samir
- * added ability to format strings inside string.
- * 
- * 13    9/08/98 10:27a Samir
- * added function to get text height.
- * 
- * 12    6/23/98 5:04p Samir
- * added grtext_GetColor
- * 
- * 11    4/27/98 3:46p Samir
- * scaling fonts.
- * 
- * 10    4/18/98 2:08a Samir
- * extended text buffer.
- * 
- * 9     2/13/98 6:37p Samir
- * Fixed tabs.
- * 
- * 8     2/03/98 12:13p Samir
- * Font shadowing support added.
- * 
- * 7     1/30/98 2:15p Samir
- * Allow for text saturation.
- * 
- * 6     1/23/98 6:53p Samir
- * Added grtext_PutChar.
- * 
- * 5     1/12/98 5:24p Samir
- * Fixed font reading and created font spew test function.
- * 
- * 4     1/08/98 12:16p Samir
- * GetLineWidth now takes a const char *
- * 
- * 3     12/30/97 5:23p Samir
- * More stuff.
- * 
- * 2     12/29/97 5:50p Samir
- * Added ability to set text window.
- * 
- * 1     12/29/97 3:24p Samir
- * Initial revision
- * 
- * $NoKeywords: $
- */
 
 #ifndef GRTEXT_H
 #define GRTEXT_H
 
+#include "grdefs.h"
 #include "pstypes.h"
-#include "ddvid.h"
 
-#define GRTEXT_BUFLEN				16384
-#define GRTEXT_FORMAT_CHAR			0x2
-#define GRTEXT_FORMAT_SCALAR		4					// value mulitplied to formatting value in string.
+#define GRTEXT_BUFLEN			16384
+#define GRTEXT_FORMAT_CHAR		0x2
+#define GRTEXT_FORMAT_SCALAR	4					// value mulitplied to formatting value in string.
 
 #define GRTEXTFLAG_SATURATE		1
-#define GRTEXTFLAG_SHADOW			2
+#define GRTEXTFLAG_SHADOW		2
 
 struct tFontTemplate;
 
@@ -198,7 +110,7 @@ void grtext_Render();
 //		x is the old x before call and the new potential adjusted x after the call.
 //		newline if it's a newline.
 //		line start x;
-typedef struct tGetCharInfo
+struct tGetCharInfo
 {
 	int sx;										// this will not be modified. the initial x on the same line as the string
 
@@ -207,8 +119,7 @@ typedef struct tGetCharInfo
 	bool newline;								// reached a newline?
 	bool font_char;							// character exists in font?
 	char ch;
-}
-tGetCharInfo;
+};
 
 const char *grtext_GetChar(const char *str, tGetCharInfo *ci);
 
@@ -217,7 +128,7 @@ const char *grtext_GetChar(const char *str, tGetCharInfo *ci);
 //	font functions!
 
 // we can load a font template into this structure.  call grfont_FreeTemplate(tFontTemplate) to free memory here.
-typedef struct tFontTemplate
+struct tFontTemplate
 {
 	ushort min_ascii, max_ascii;
 	ubyte *ch_widths;
@@ -232,8 +143,7 @@ typedef struct tFontTemplate
 
 // ffi2 style (font file info 2)
 	sbyte ch_tracking;								// global tracking for font.
-}
-tFontTemplate;
+};
 
 
 //	clears out font buffer.
@@ -296,15 +206,14 @@ void grtext_Init(void);
 void grfont_Spew(int font, int x, int y);
 #endif
 
-typedef struct tFontFileInfo2		// to maintain compatibility with older fonts (64 bytes long)
+struct tFontFileInfo2		// to maintain compatibility with older fonts (64 bytes long)
 {
 	short tracking;
 	char reserved[62];
-}
-tFontFileInfo2;
+};
 
 //	font data structure internal to library but available for font editors
-typedef struct tFontFileInfo 
+struct tFontFileInfo 
 {
 	short width, height;				// width of widest character and height of longest char
 	short flags;						// flags used by the character renderer
@@ -322,8 +231,7 @@ typedef struct tFontFileInfo
 
 //	misc.
 	float brightness;					// this IS NOT in the file, but a part of the baseline element. (upper 8bits)
-} tFontFileInfo;
-
+};
 
 #define FT_COLOR				1
 #define FT_PROPORTIONAL		2

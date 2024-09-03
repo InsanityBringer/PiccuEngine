@@ -15,37 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/win/win32database.h $
- * $Revision: 6 $
- * $Date: 5/11/99 12:12a $
- * $Author: Ardussi $
- *
- *	Application Database for Win32 version
- *
- * $Log: /DescentIII/Main/lib/win/win32database.h $
- * 
- * 6     5/11/99 12:12a Ardussi
- * changes to compile on Mac
- * 
- * 5     4/24/99 5:47p Samir
- * added functions to set current win32 resource dll or exe.
- * 
- * 4     7/27/97 11:07p Matt
- * Added write_string() macro
- * 
- * 3     7/24/97 3:06p Matt
- * Added functions to read & write bools & variable-length integers, and
- * fixed a few small bugs.
- * 
- * 2     6/11/97 2:41p Samir
- * fixed class declaration.
- * 
- * 1     6/10/97 4:53p Samir
- * Database control for Win32 systems
- * 
- * $NoKeywords: $
- */
 
 #ifndef WIN32DATABASE
 #define WIN32DATABASE
@@ -94,6 +63,5 @@ bool win32_SetResourceDLL(const char *libname);
 
 // returns a string from the current resource
 bool win32_GetStringResource(int txt_id, char *buffer, int buflen);
-
 
 #endif

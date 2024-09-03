@@ -15,132 +15,13 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/lib/streamaudio.h $
-* $Revision: 1.2 $
-* $Date: 2004/02/09 04:14:51 $
-* $Author: kevinb $
-*
-* Interface for streaming audio, compressed or not
-*
-* $Log: streamaudio.h,v $
-* Revision 1.2  2004/02/09 04:14:51  kevinb
-* Added newlines to all headers to reduce number of warnings printed
-*
-* Made some small changes to get everything compiling.
-*
-* All Ready to merge the 1.5 tree.
-*
-* Revision 1.1.1.1  2000/04/18 00:00:38  icculus
-* initial checkin
-*
- * 
- * 30    10/25/99 6:00p Jeff
- * fixed adecode.h include for Linux
- * 
- * 29    10/21/99 1:52p Kevin
- * Mac Merge!
- *
- * 28    9/30/99 4:35p Jeff
- * fixed linux typo
- * 
- * 27    9/30/99 4:29p Jeff
- * Linux compile
- * 
- * 26    7/28/99 3:04p Kevin
- * Macintosh!
- * 
- * 25    5/17/99 1:50p Ardussi
- * changed to compile on Mac
- * 
- * 24    5/13/99 5:04p Ardussi
- * changes for compiling on the Mac
- * 
- * 23    5/10/99 9:22p Samir
- * added code to allow for certain streams to be specified to start on
- * next sound frame.
- * 
- * 22    4/15/99 1:44a Jeff
- * changes for linux compile
- * 
- * 21    4/10/99 5:09p Samir
- * beginning to add prioritization of sounds code.  currently non
- * functional, but allows me to change all calls to Play3dSound so that I
- * can test later.
- * 
- * 20    3/04/99 6:38p Samir
- * Saved stream state per frame.
- * 
- * 19    3/03/99 5:08p Samir
- * added slew of debug code: hopefully the library will be revamped after
- * OEM.
- * 
- * 18    2/28/99 5:11p Nate
- * added playcount.
- * 
- * 17    2/27/99 6:52p Samir
- * added function to get current loop count
- * 
- * 16    2/26/99 5:26p Samir
- * fixes to streaming audio to reflect fix in direct sound mixer.
- * 
- * 15    1/13/99 6:48a Jeff
- * made linux friendly with some #ifdef's
- * 
- * 14    12/13/98 6:50p Samir
- * fixed problems with looping and next.switching sync.
- * 
- * 13    12/11/98 3:27p Samir
- * add debug code.
- * 
- * 12    12/10/98 7:12p Samir
- * fixed some bugs in file/playback buffer sequencing with new system.
- * 
- * 11    12/10/98 10:11a Samir
- * newer streaming audio library.
- * 
- * 8     11/20/98 5:20p Samir
- * correcting a lot of errors in AudioStream::Next
- * 
- * 7     11/13/98 2:25p Samir
- * added 'next' stream processing.
- * 
- * 7     11/13/98 10:48a Samir
- * added 'next' stream capability.
- * 
- * 6     10/23/98 7:05p Samir
- * added pause and resume
- * 
- * 5     8/10/98 5:54p Samir
- * added looping streams and soft measure stopping.
- * 
- * 4     7/24/98 5:19p Samir
- * added osfarchive class,
- * 
- * 3     7/09/98 8:36p Samir
- * fully implemented redo of Stream interface.
- * 
- * 2     7/08/98 6:27p Samir
- * stream library integrated with highlevel sound system.
- * 
- * 1     7/08/98 6:22p Samir
- * moved from man.
- * 
- * 3     6/19/98 6:07p Jeff
- * added a function to return a handle to the sound
- * 
- * 2     6/18/98 5:17p Jeff
- * Initial creation, support should be pretty much complete
-*
-* $NoKeywords: $
-*/
+
 #ifndef  __STREAMAUDIO_H_
 #define  __STREAMAUDIO_H_
 
 #include "Adecode.h"
 
 #include "ssl_lib.h"
-#include "TaskSystem.h"
 
 void *AudioStreamCB(void *user_data, int handle, int *size);
 int ADecodeFileRead(void *data, void *buf, unsigned int qty);
@@ -172,11 +53,11 @@ struct CFILE;
 #define SAF_16BIT_M			(SAF_16BIT_MASK | SAF_MONO_MASK)		//0x01
 #define SAF_16BIT_S			(SAF_16BIT_MASK | SAF_STEREO_MASK)	//0x11
 //////////////////////////////////////////////////////////////////////////////
-typedef struct tOSFDigiHdr					// this struct belongs to OSF_DIGITAL_STRM
+struct tOSFDigiHdr					// this struct belongs to OSF_DIGITAL_STRM
 {
 	uint measure;
-}
-tOSFDigiHdr;
+};
+
 class OSFArchive
 {
 	CFILE *m_fp;
@@ -216,11 +97,7 @@ public:
 };
 //////////////////////////////////////////////////////////////////////////////
 //	streamaudio constants.
-#ifdef MACINTOSH
-#define STRM_BUFCOUNT		2				// MUST be a power of 2.
-#else
 #define STRM_BUFCOUNT		4
-#endif
 #define STRM_BUFSIZE			STREAM_BUFFER_SIZE
 #define STRM_LIMIT			4
 #define STRM_STOPPED			0x0
@@ -232,20 +109,18 @@ public:
 //	flags used to open stream.
 #define STRM_OPNF_ONETIME	0x1
 #define STRM_OPNF_GRADUAL	0x2
+
 /*	This class will handle streams for the music system.
 	Including allowing an interface to dynamically change the stream.
 */
 #define STRM_BUFF_USED				0x1	// allocated buffer with data
 #define STRM_BUFF_TERMINAL			0x2	// terminates on this buffer
 #define STRM_BUFF_LOOPEND			0x4	// marks last buffer in measure
+
 class AudioStream
 {
 	OSFArchive m_archive;					// audio stream archive object.
 	AudioDecoder::IAudioDecoder* m_decoder; // audio codec object
-#ifdef MACINTOSH
-	SndDoubleBufferHeader		doubleHeader;
-	SndChannelPtr				strm_channel;
-#endif
 	struct {										// mixing buffers
 		ubyte *data;
 		int nbytes;								// number of bytes of valid data.
@@ -276,7 +151,6 @@ class AudioStream
 	int m_playbytesleft, m_playbytestotal;
 	int m_curid;									// stream's id #
 	int *m_stopflag;							// location of stop flag used in stop function
-	osMutex m_loopmutex;						// stop flag is manipulated by caller and stream thread.
 	bool m_loop;								// are we looping?
 	bool m_stopnextmeasure;					// stop on next measure.
 	bool m_start_on_frame;					// we will play this stream on the next ::Frame call.
@@ -311,11 +185,6 @@ public:
 // called to pause all streams.
 	static void PauseAll();
 	static void ResumeAll();
-#ifdef MACINTOSH
-	bool IsPlaying(void);
-	int PlayStream(play_information *play_info);
-	void * MyDoubleBackStart (SndChannelPtr channel, SndDoubleBufferPtr doubleBuffer);
-#endif
 public:
 	AudioStream();
 	~AudioStream();
@@ -359,4 +228,3 @@ public:
 	friend int StreamGetSoundHandle(int handle);
 };
 #endif
-

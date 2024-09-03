@@ -15,154 +15,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/streamaudio/streamaudio.cpp $
- * $Revision: 1.1.1.1 $
- * $Date: 2000/04/18 00:00:49 $
- * $Author: icculus $
- *
- * Interface for streaming audio, compressed or not
- *
- * $Log: streamaudio.cpp,v $
- * Revision 1.1.1.1  2000/04/18 00:00:49  icculus
- * initial checkin
- *
- * 
- * 44    9/29/99 5:13p Jeff
- * Linux now has real stream audio
- * 
- * 43    7/28/99 2:04p Kevin
- * Macintosh Changes
- * 
- * 41    5/17/99 1:56p Ardussi
- * changed to compile on Mac
- * 
- * 40    5/10/99 9:22p Samir
- * added code to allow for certain streams to be specified to start on
- * next sound frame.
- * 
- * 39    4/29/99 3:03p Samir
- * took out mprintfs and if we're opening an opened stream, close it and
- * continue.
- * 
- * 38    4/17/99 5:58a Jeff
- * Changes for linux
- * 
- * 37    4/14/99 1:48a Jeff
- * fixed case mismatched #includes
- * 
- * 36    4/10/99 5:09p Samir
- * beginning to add prioritization of sounds code.  currently non
- * functional, but allows me to change all calls to Play3dSound so that I
- * can test later.
- * 
- * 35    3/22/99 5:12p Samir
- * on shutdown, CLOSE any open streams.
- * 
- * 34    3/17/99 4:22p Samir
- * made pause and resume for streams work.
- * 
- * 33    3/09/99 6:40p Jeff
- * put try/catch around StreamPlay
- * 
- * 32    3/04/99 6:38p Samir
- * Saved stream state per frame.
- * 
- * 31    3/03/99 5:08p Samir
- * added slew of debug code: hopefully the library will be revamped after
- * OEM.
- * 
- * 30    3/01/99 8:11p Samir
- * fixed bug when audio stream was playing while sound system shutdown.
- * 
- * 29    2/28/99 6:35p Samir
- * fixed streaming bugs for very small samples.
- * 
- * 28    2/28/99 5:11p Nate
- * added playcount.
- * 
- * 27    2/27/99 6:52p Samir
- * added function to get current loop count
- * 
- * 26    2/26/99 8:34p Samir
- * may have fixed problem with really small streams.
- * 
- * 25    2/26/99 5:31p Samir
- * 
- * 24    2/25/99 9:20p Kevin
- * Semi fix for music in DS
- * 
- * 23    2/17/99 8:35p Samir
- * use m_streamdone to determine whether play should reset the stream or
- * not.
- * 
- * 22    12/13/98 6:50p Samir
- * fixed problems with looping and next.switching sync.
- * 															     
- * 21    12/11/98 5:25p Samir
- * took out debug messages.
- * 
- * 20    12/11/98 5:20p Samir
- * perhaps prevent unused buffers from playing.
- * 
- * 19    12/11/98 3:27p Samir
- * add debug code.
- * 
- * 18    12/10/98 7:12p Samir
- * fixed some bugs in file/playback buffer sequencing with new system.
- * 
- * 17    12/10/98 10:11a Samir
- * newer streaming audio library.
- * 
- * 11    11/20/98 5:20p Samir
- * correcting a lot of errors in AudioStream::Next
- * 
- * 10    11/13/98 4:03p Nate
- * took out volume stuff from high level sound lib
- * 
- * 9     11/13/98 2:25p Samir
- * added 'next' stream processing.
- * 
- * 9     11/13/98 10:48a Samir
- * added 'next' stream capability.
- * 
- * 8     10/23/98 7:04p Samir
- * 
- * 7     10/23/98 6:45p Matt
- * Scale the streaming audio volume by the master volume.
- * 
- * 6     8/10/98 5:54p Samir
- * added looping streams and soft measure stopping.
- * 
- * 5     7/30/98 4:35p Dan
- * more error checking.
- * 
- * 4     7/30/98 10:57a Sean
- * if no sound, then don't do anything.
- * 
- * 3     7/24/98 5:18p Samir
- * use OSFArchive for stream file operations now.
- * 
- * 2     7/09/98 8:36p Samir
- * fully implemented redo of Stream interface.
- * 
- * 1     7/09/98 6:48p Samir
- * 
- * MOVED FROM MAIN PROJECT
- * 
- * 10    6/29/98 4:15p Chris
- * Streaming audio works
- * 
- * 9     6/24/98 5:00p Jeff
- * set filehandle to null on close, short circuit read data if file handle
- * is NULL
- * 
- * 8     6/24/98 4:41p Jeff
- * will kill the stream is the sound is killed
- * 
- *
- * $NoKeywords: $
- */
+
 #include "streamaudio.h"
 #include "pserror.h"
 #include "CFILE.H"
@@ -171,15 +24,8 @@
 #include "ddio.h"
 #include <stdlib.h>
 #include <string.h>
-//#include "samirlog.h"
 #define LOGFILE(_s)
-#if defined(MACINTOSH)
-typedef unsigned ReadFunction(void *data, void *buf, unsigned qty);
-AudioDecoder *Create_AudioDecoder(ReadFunction *reader, void *data,unsigned *pChannels, unsigned *pSampleRate,long *pSampleCount);
-unsigned AudioDecoder_Read(AudioDecoder *ad, void *buf, unsigned qty);
-void AudioDecoder_Close(AudioDecoder *ad);
-void AudioDecoder_MallocFree(MemoryAllocFunc *fn_malloc, MemoryFreeFunc *fn_free);
-#endif 
+
 //	this stream is for everyone (used by the StreamPlay interface)
 static AudioStream User_audio_stream;
 llsSystem *AudioStream::m_ll_sndsys = NULL;
@@ -415,7 +261,6 @@ bool AudioStream::Open(const char *filename,int open_flags)
 		if (!AudioStream::ReopenDigitalStream(0, nbufs)) {
 			return false;
 		}
-		m_loopmutex.Create();
 		AudioStream::SetLoopCount(1);
 		m_laststate = m_state;
 		m_state = STRM_STOPPED;
@@ -431,7 +276,6 @@ void AudioStream::Close()
 	// stop the stream, close the archive, close the decoder.
 		AudioStream::Stop();
 		m_archive.Close();
-		m_loopmutex.Destroy();
 		m_curid = -1;
 	// free streaming buffers and decoder if we need to.
 		for (i = 0; i < STRM_BUFCOUNT; i++)

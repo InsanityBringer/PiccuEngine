@@ -2615,7 +2615,6 @@ bool PltSelectShip(pilot* Pilot)
 		goto ship_id_err;
 
 	bool found_ship;
-	bool shipoktoadd;
 
 	found_ship = false;
 	count = 0;
@@ -2631,17 +2630,10 @@ bool PltSelectShip(pilot* Pilot)
 			if (strcmpi(Ships[i].name, DEFAULT_SHIP) == 0)
 			{
 #endif
-				// Non-Windows versions don't have to check
-				if (!stricmp(Ships[i].name, "Black Pyro") && !MercInstalled())
-				{
-					shipoktoadd = false;
-				}
-				else
-				{
-					shipoktoadd = true;
-				}
-				if (shipoktoadd)
-					ship_list->AddItem(Ships[i].name);
+				//[ISB] Removed the check for Mercenary on the black pyro.
+				//You could also enable it by simply hex editing your pilot file, or using black pyro justice.
+				//The needed content is already present in any 1.4 installation, so I don't consider it worth having the check. 
+				ship_list->AddItem(Ships[i].name);
 #ifdef DEMO
 			}
 #endif

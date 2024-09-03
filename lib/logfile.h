@@ -22,7 +22,6 @@
 void log_Enable(bool enable);
 void log_Disable();
 
-
 class logfile
 {
 	void *fp;
@@ -40,6 +39,3 @@ public:
 };
 
 #endif
-
-
-

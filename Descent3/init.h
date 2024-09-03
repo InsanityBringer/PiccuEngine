@@ -22,9 +22,6 @@
 //	Universal globals for game
 //	---------------------------------------------------------------------------
 
-//	name of ddvideo subsystem to use for game.
-extern char App_ddvid_subsystem[];
-
 extern int ServerTimeout;
 extern float LastPacketReceived;
 

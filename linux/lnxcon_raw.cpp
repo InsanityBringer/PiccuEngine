@@ -1,30 +1,24 @@
-/*
-* $Logfile: /DescentIII/Main/linux/lnxcon_raw.cpp $
-* $Revision: 1.2 $
-* $Date: 2004/02/25 00:04:06 $
-* $Author: ryan $
+/* 
+* Descent 3 
+* Copyright (C) 2024 Parallax Software
 *
-* stdout console driver
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
 *
-* $Log: lnxcon_raw.cpp,v $
-* Revision 1.2  2004/02/25 00:04:06  ryan
-* Removed loki_utils dependency and ported to MacOS X (runs, but incomplete).
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
 *
-* Revision 1.1.1.1  2000/04/18 00:00:39  icculus
-* initial checkin
-*
- * 
- * 2     7/19/99 12:54p Jeff
- * created lnxcon_raw.cpp so ncurses is now only used for SVGALib, cuts
- * down on redraw
-*
-* $NoKeywords: $
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "DDAccess.h"
 #include "application.h"
 #include "AppConsole.h"
-#include "TaskSystem.h"
 #include "mono.h"
 //#include "local_malloc.h"
 #include "pstring.h"

@@ -267,21 +267,21 @@ inline void INADDR_GET_SUN_SUNB(struct in_addr* st,unsigned char *s_b1,unsigned 
 #define NF_CHECKSUM	1
 #define NF_NOSEQINC	2
 
-typedef enum
+enum network_protocol
 {
 	NP_NONE,
 	NP_TCP,
 	NP_IPX,
 	NP_DIRECTPLAY
-} network_protocol;
+};
 
-typedef struct 
+struct network_address
 {
 	ubyte address[6];
 	ushort port;
 	ubyte net_id[4];
 	network_protocol connection_type;			// IPX, IP, modem, etc.
-} network_address;
+};
 
 extern BOOL DP_active;	
 extern BOOL TCP_active;
@@ -420,7 +420,7 @@ int nw_Uncompress(void *compdata,void *uncompdata,int count);
 #define NW_AGHBN_LOOKUP		2
 #define NW_AGHBN_READ		3
 
-typedef struct _async_dns_lookup
+struct async_dns_lookup
 {
 	unsigned int ip;	//resolved host. Write only to worker thread.
 	char * host;//host name to resolve. read only to worker thread
@@ -432,7 +432,7 @@ typedef struct _async_dns_lookup
     #ifdef __LINUX__
         SDL_Thread *threadId;
     #endif
-}async_dns_lookup;
+};
 
 #ifdef WIN32
 #define CDECLCALL	__cdecl
@@ -461,7 +461,7 @@ void nw_HandleUnreliableData(ubyte *data,int len,network_address *from_addr);
 void nw_ReliableResend(void);
 int nw_CheckReliableSocket(int socknum);
 
-typedef struct
+struct tNetworkStatus
 {
 	// TCP/IP Status lines
 	int udp_total_packets_sent;              // total number of packets sent out on the network (unreliable)
@@ -488,12 +488,10 @@ typedef struct
 	int spx_total_bytes_rec;                 // total number of bytes recieved (reliable)
 	int spx_total_packets_resent;            // total number of packets resent (reliable)
 	int spx_total_bytes_resent;              // total number of bytes resent (reliable)
-}tNetworkStatus;	// network status information
+};	// network status information
 
 // fills in the buffer with network stats
 // pass NULL to reset the stats
 void nw_GetNetworkStats(tNetworkStatus *stats);
 
 #endif
-
-

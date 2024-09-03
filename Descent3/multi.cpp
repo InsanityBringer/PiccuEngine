@@ -74,6 +74,7 @@
 #include "osiris_share.h"
 #include "cockpit.h"
 #include "hud.h"
+#include "gamespy.h"
 
 
 #include <string.h>
@@ -2040,7 +2041,7 @@ void MultiLeaveGame ()
 	SetFunctionMode(MENU_MODE); 
 	if(Netgame.local_role==LR_SERVER)
 	{
-//		gspy_EndGame();
+		gspy_EndGame();
 	}
 	
 	
@@ -9268,8 +9269,9 @@ void MultiProcessData (ubyte *data,int len,int slot,network_address *from_addr)
 			MultiDoStripPlayer(slot,data);
 			break;
 		case MP_REJECTED_CHECKSUM:
-			ACCEPT_CONDITION (-1,-1);
+			//[ISB] You'll have a positive netseq when this packet comes so always handle it. 
 			MultiDoServerRejectedChecksum(data);
+			break;
 		default:
 			mprintf ((0,"Invalid packet type %d!\n",type));
 			Int3();	// Invalid packet type!!!!

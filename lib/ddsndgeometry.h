@@ -15,29 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Source: $
- * $Revision: 5 $
- * $Author: Samir $
- * $Date: 8/13/99 2:00p $
- *
- * Hardware occlusion and reflection sound support.
- *
- * $Log: /DescentIII/Main/Lib/ddsndgeometry.h $
- * 
- * 5     8/13/99 2:00p Samir
- * more aureal and geometry fixes.
- * 
- * 4     8/11/99 3:12p Samir
- * fixes for aureal support.
- * 
- * 3     4/06/99 8:30p Samir
- * added reflection support.
- * 
- * 2     3/29/99 10:52a Samir
- * occlusion support almost complete.
- * 
- */
 
 #ifndef DDSNDGEOMETRY_H
 #define DDSNDGEOMETRY_H
@@ -50,9 +27,9 @@ typedef int tSoundMaterial;					// value returned by geometry system.
 // a list of predefined sound materials.
 const int SNDGEO_MATERIAL_COUNT = 8;
 const tSoundMaterial	SNDGEO_MATERIAL_NONE	= -1,
-					SNDGEO_MATERIAL_ROCK	= 0,
-					SNDGEO_MATERIAL_WATER = 1,
-					SNDGEO_MATERIAL_METAL = 2;
+						SNDGEO_MATERIAL_ROCK	= 0,
+						SNDGEO_MATERIAL_WATER = 1,
+						SNDGEO_MATERIAL_METAL = 2;
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -103,6 +80,5 @@ private:
 private:												// sound material list.
 	void *m_snd_materials[SNDGEO_MATERIAL_COUNT];
 };
-
 
 #endif

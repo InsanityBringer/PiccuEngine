@@ -249,19 +249,16 @@ void DrawScorches(int roomnum,int facenum)
 	int roomface = ROOMFACE(roomnum,facenum);
 
 	//Set alpha, transparency, & lighting for this face
-	if (!StateLimited)
-	{
-		rend_SetAlphaType(AT_LIGHTMAP_BLEND);
-		rend_SetAlphaValue(255);
-		rend_SetLighting(LS_NONE);
-		rend_SetColorModel(CM_MONO);
-		rend_SetOverlayType(OT_NONE);
-		rend_SetZBias (-.5);
-		rend_SetZBufferWriteMask (0);
+	rend_SetAlphaType(AT_LIGHTMAP_BLEND);
+	rend_SetAlphaValue(255);
+	rend_SetLighting(LS_NONE);
+	rend_SetColorModel(CM_MONO);
+	rend_SetOverlayType(OT_NONE);
+	rend_SetZBias (-.5);
+	rend_SetZBufferWriteMask (0);
 			
-		//Select texture type
-		rend_SetTextureType(TT_LINEAR);
-	}
+	//Select texture type
+	rend_SetTextureType(TT_LINEAR);
 
 	ASSERT(Scorch_end != -1);
 
@@ -332,9 +329,6 @@ skip_draw:;
 	}
 
 	//Reset rendering states
-	if (!StateLimited)
-	{
-		rend_SetZBias (0);
-		rend_SetZBufferWriteMask (1);
-	}
+	rend_SetZBias (0);
+	rend_SetZBufferWriteMask (1);
 }

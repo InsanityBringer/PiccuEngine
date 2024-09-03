@@ -337,8 +337,7 @@ bool ProcessCommandLine()
 			tokp = strtok(NULL, "/");
 			Auto_login_port[0] = NULL;
 			strcpy(Auto_login_addr, tokp);
-			//			char seldll[_MAX_PATH*2];
-						//ddio_MakePath(seldll,Base_directory,"online","Direct TCP~IP Game.d3c",NULL);
+
 			if (LoadMultiDLL("Direct TCP~IP"))
 			{
 				CallMultiDLL(MT_AUTO_LOGIN);

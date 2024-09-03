@@ -79,7 +79,6 @@
 
 #include "UIlib.h"
 #include "bitmap.h"
-#include "ddvid.h"
 #include "renderer.h"
 #include "grtext.h"
 #include "3d.h"
@@ -104,16 +103,6 @@ static int m_UITextFlags=0;
 
 void ui_StartDraw(int left, int top, int right, int bottom)
 {
-	//	for software renderers perform frame buffer lock.
-	if (Renderer_type == RENDERER_SOFTWARE_16BIT) {
-		int w, h, color_depth, pitch;
-		ubyte *data;
-
-		ddvid_GetVideoProperties(&w, &h, &color_depth);
-		ddvid_LockFrameBuffer(&data, &pitch);
-		rend_SetSoftwareParameters(ddvid_GetAspectRatio(), w, h, pitch, data);
-	}
-
 	m_UIDrawLeft = left;
 	m_UIDrawTop = top;
 	m_UIDrawRight = right;
@@ -129,11 +118,6 @@ void ui_EndDraw()
 {
 	grtext_Flush();
 	rend_EndFrame();
-
-//	for software renderers perform unlock on frame buffer.
-	if (Renderer_type == RENDERER_SOFTWARE_16BIT) {
-		ddvid_UnlockFrameBuffer();
-	}
 }
 
 

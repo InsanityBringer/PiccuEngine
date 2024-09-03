@@ -16,9 +16,13 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdlib.h>
+#include <math.h>
+#include <memory.h>
+#include <algorithm>
+
 #include "procedurals.h"
 #include "bitmap.h"
-#include "gr.h"
 #include "gametexture.h"
 #include "vclip.h"
 #include "game.h"
@@ -26,9 +30,6 @@
 #include "mem.h"
 #include "ddio.h"
 #include "config.h"
-#include <stdlib.h>
-#include <math.h>
-#include <memory.h>
 #include "psrand.h"
 
 #define BRIGHT_COLOR	254
@@ -179,8 +180,8 @@ void InitProcedurals()
 	for (i = 0; i < (NUM_WATER_SHADES); i++)
 	{
 		float norm = ((float)i / (float)(NUM_WATER_SHADES - 1));
-		float lo_norm = min((norm / .5) * 1.0, 1.0);
-		float hi_norm = max(((norm - .5) / .5) * 1.0, 0);
+		float lo_norm = std::min((norm / .5) * 1.0, 1.0);
+		float hi_norm = std::max(((norm - .5) / .5) * 1.0, 0.);
 
 		for (int rcount = 0; rcount < 32; rcount++)
 		{
@@ -192,7 +193,7 @@ void InitProcedurals()
 
 				float fr = r;
 
-				r = min(fr * lo_norm + (31.0 * hi_norm), 31);
+				r = std::min(fr * lo_norm + (31.0 * hi_norm), 31.);
 
 				WaterProcTableHi[i][index] = OPAQUE_FLAG | (r << 10);
 			}
@@ -205,7 +206,7 @@ void InitProcedurals()
 				int index = gcount * 32 + bcount;
 
 				float fb = b;
-				b = min(fb * lo_norm + (31.0 * hi_norm), 31);
+				b = std::min(fb * lo_norm + (31.0 * hi_norm), 31.);
 
 				WaterProcTableLo[i][index] = b;
 			}
@@ -215,7 +216,7 @@ void InitProcedurals()
 		for (gcount = 0; gcount < 8; gcount++)
 		{
 			float fg = gcount;
-			int g = min((fg * lo_norm) + (7.0 * hi_norm), 7);
+			int g = std::min((fg * lo_norm) + (7.0 * hi_norm), 7.);
 			for (t = 0; t < 32; t++)
 			{
 				int index = gcount * 32 + t;
@@ -225,7 +226,7 @@ void InitProcedurals()
 		for (gcount = 0; gcount < 4; gcount++)
 		{
 			float fg = gcount * 8;
-			int g = min((fg * lo_norm) + (24.0 * hi_norm), 24);
+			int g = std::min((fg * lo_norm) + (24.0 * hi_norm), 24.);
 
 			for (t = 0; t < 32; t++)
 			{
@@ -285,6 +286,7 @@ int ProcElementFree(int index)
 	return 1;
 }
 
+#define SWAP(a,b) do { int _swap_var_=(a); (a)=(b); (b)=_swap_var_; } while (0)
 // Draws a line into the passed in bitmap
 void DrawProceduralLine(int x1, int y1, int x2, int y2, ubyte color)
 {
@@ -1231,7 +1233,7 @@ void AddProcRaindrops(static_proc_element* proc, int handle)
 	ubyte y1 = proc->y1;
 	proc->frequency = 0;
 	proc->size = (ps_rand() % 3) + 1;
-	proc->speed = max(0, proc_speed + ((ps_rand() % 10) - 5));
+	proc->speed = std::max(0, proc_speed + ((ps_rand() % 10) - 5));
 	proc->x1 = x1 + (ps_rand() % (proc_size * 2)) - (proc_size);
 	proc->y1 = y1 + (ps_rand() % (proc_size * 2)) - (proc_size);
 	AddProcHeightBlob(proc, handle);
@@ -1254,7 +1256,7 @@ void AddProcBlobdrops(static_proc_element* proc, int handle)
 	ubyte y1 = proc->y1;
 	proc->frequency = 0;
 	proc->size = (ps_rand() % 6) + 4;
-	proc->speed = max(0, proc_speed + ((ps_rand() % 50) - 25));
+	proc->speed = std::max(0, proc_speed + ((ps_rand() % 50) - 25));
 	proc->x1 = x1 + (ps_rand() % (proc_size * 2)) - (proc_size);
 	proc->y1 = y1 + (ps_rand() % (proc_size * 2)) - (proc_size);
 	AddProcHeightBlob(proc, handle);

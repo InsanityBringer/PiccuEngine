@@ -124,12 +124,18 @@ int bm_tga_read_outrage_compressed16(CFILE* infile, int n, int num_mips, int typ
 
 		int total = height * width;
 		int count = 0;
+		bool mipwarning = false;
 
 		dest_data = (ushort*)bm_data(n, m);
 
 		while (count != total)
 		{
-			ASSERT(count < total);
+			if (count >= total && !mipwarning)
+			{
+				//This condition doesn't abort, but it will stop reading data. This is so that the correct amount of data is read. 
+				mprintf((1, "Bad pixel data in image %s: count %d exceeds total %d!\n", infile->name, total, count));
+				mipwarning = true;
+			}
 
 			ubyte command = tga_read_byte();
 
@@ -157,9 +163,12 @@ int bm_tga_read_outrage_compressed16(CFILE* infile, int n, int num_mips, int typ
 					}
 				}
 
-				int i = count / width;
-				int t = count % width;
-				dest_data[i * width + t] = pixel;
+				if (count < total)
+				{
+					int i = count / width;
+					int t = count % width;
+					dest_data[i * width + t] = pixel;
+				}
 				count++;
 			}
 			else if (command >= 2 && command <= 250)	// next pixel is run of pixels

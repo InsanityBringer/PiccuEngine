@@ -84,7 +84,7 @@ class CFtpGet
 {
 
 public:
-	CFtpGet(char *URL,char *localfile,char *Username = NULL,char *Password = NULL);
+	CFtpGet(const char *URL,const char *localfile,const char *Username = NULL,const char *Password = NULL);
 	~CFtpGet();
 	int GetStatus();
 	unsigned int GetBytesIn();

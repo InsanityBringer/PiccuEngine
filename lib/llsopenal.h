@@ -15,6 +15,9 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#pragma once
+
 #include <stdint.h>
 #include <string.h>
 #include "ssl_lib.h"
@@ -22,7 +25,6 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
-
 
 //OpenAL LLS system implementation
 
@@ -69,6 +71,7 @@ class llsOpenAL : public llsSystem
 
 	bool Initalized;
 	bool LoopPointsSupported, EffectsSupported;
+	bool ReverbEnabled, DopplerEnabled;
 	char Quality;
 
 	int NumSoundChannels;
@@ -83,7 +86,7 @@ class llsOpenAL : public llsSystem
 	ALuint AuxEffectSlot, EffectSlot;
 
 	const EAX2Reverb* LastReverb;
-
+	t3dEnvironmentToggles EnvToggles;
 
 	//Movie stuff
 	int MovieSampleRate;
@@ -124,12 +127,17 @@ public:
 
 		AuxEffectSlot = EffectSlot = 0;
 		LastReverb = nullptr;
+		ReverbEnabled = false;
+		DopplerEnabled = false;
 
 		MovieSampleRate = 0;
 		MovieSourceName = 0;
 		MovieBufferName = 0;
 		MovieSoundFormat = 0;
 		MovieStarted = false;
+
+		EnvToggles = {};
+		GetEnvironmentToggles(&EnvToggles);
 	}
 
 	~llsOpenAL() override

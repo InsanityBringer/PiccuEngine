@@ -15,71 +15,12 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/lib/mem.h $
- * $Revision: 18 $
- * $Date: 3/20/00 12:26p $
- * $Author: Matt $
- *
- * Memory header.
- *
- * $Log: /DescentIII/Main/lib/mem.h $
- * 
- * 18    3/20/00 12:26p Matt
- * Merge of Duane's post-1.3 changes.
- * Added declaration
- * 
- * 17    10/21/99 9:27p Jeff
- * B.A. Macintosh code merge
- * 
- * 16    8/10/99 5:12p Jeff
- * added a debug function to dump the current state of the mem library to
- * file
- * 
- * 15    3/15/99 11:24a Kevin
- * Improved memory leak detection for mem_strdup and turned on debugging
- * 
- * 14    10/13/98 3:42p Kevin
- * bug fixes
- * 
- * 13    10/13/98 9:25a Kevin
- * 
- * 12    10/12/98 8:39p Kevin
- * removed mprintf's and fixed some smallish bugs
- * 
- * 11    10/12/98 11:54a Kevin
- * 
- * 10    10/12/98 10:55a Kevin
- * Don't use memory lib for editor currently
- * 
- * 9     10/12/98 10:22a Samir
- * made mem_strdup take a const char pointer.
- * 
- * 8     10/09/98 3:32p Kevin
- * New memory library
- * 
- * 7     10/08/98 4:24p Kevin
- * Changed code to comply with memory library usage. Always use mem_malloc
- * , mem_free and mem_strdup
- * 
- * 6     10/08/98 2:40p Kevin
- * 
- * 5     7/31/98 5:44p Samir
- * improved memory debugging.
- *
- * $NoKeywords: $
- */
 
 #ifndef MEM_H
 #define MEM_H
 
 
 //#define MEM_USE_RTL	1
-
-#ifdef MACINTOSH
-#undef MEM_USE_RTL
-#endif
-
 
 #ifdef MEM_USE_RTL
 #define mem_malloc(d)	malloc(d)								//Use this if your going to run BoundsChecker

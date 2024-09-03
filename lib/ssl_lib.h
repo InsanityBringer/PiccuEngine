@@ -35,22 +35,22 @@ class oeApplication;									// reference to oeApplication class.
 #define STREAM_BUFFER_SIZE 4096	//(4 * 1024)
 
 //object information needed by the sound code.  Calling code should copy data into here & pass to sound
-typedef struct
+struct pos_state
 {
 	vector *position;						// Where in the world is this object
 	matrix *orient;			
 	vector *velocity;
 	int roomnum;
-} pos_state;
+};
 
 //#define MAX_EFFECT_OFFSETS 5
 
 //	sound priority values.
-#define SND_PRIORITY_CRITICAL		5	// usually streams have this priority, bumps off any other sounds.
-#define SND_PRIORITY_HIGHEST		4
-#define SND_PRIORITY_HIGH			3
+#define SND_PRIORITY_CRITICAL	5	// usually streams have this priority, bumps off any other sounds.
+#define SND_PRIORITY_HIGHEST	4
+#define SND_PRIORITY_HIGH		3
 #define SND_PRIORITY_NORMAL		2
-#define SND_PRIORITY_LOW			1
+#define SND_PRIORITY_LOW		1
 #define SND_PRIORITY_LOWEST		0
 
 struct EAX2Reverb
@@ -80,47 +80,44 @@ struct EAX2Reverb
 	bool decay_hf_limit;
 };
 
-typedef struct
+struct play_information
 {
 
 	void     	*(*m_stream_cback)(void *user_data, int handle, int *size);  // Streaming callback
-	void    	*m_stream_data;					// passed in
-	int			m_stream_size;					// passed in
-	int			m_stream_handle;				// passed in
-	int			m_stream_bufsize;				// passed in
-	void		*user_data;						// this is passed to the stream callback by the caller that defined this.
+	void    	*m_stream_data;				// passed in
+	int			m_stream_size;				// passed in
+	int			m_stream_handle;			// passed in
+	int			m_stream_bufsize;			// passed in
+	void		*user_data;					// this is passed to the stream callback by the caller that defined this.
 
 	ubyte		sample_skip_interval;		// Allows us to skip samples (i.e. simulate lower sampling rates)
-	ubyte		priority;						// priority of sound.
-	ushort		m_stream_format;				// passed in
+	ubyte		priority;					// priority of sound.
+	ushort		m_stream_format;			// passed in
 
 //	internal data.
 	int		m_samples_played;	
-
-#ifndef MACINTOSH			
+	
 	float		samples_per_22khz_sample;	// passed in
 	float		left_volume;					
 	float		right_volume;					
 
-	float		m_ticks;	
-#endif					// Always incrementing counter (current sample position if no looping)
-} play_information;
+	float		m_ticks;					// Always incrementing counter (current sample position if no looping)
+};
 
-typedef struct sound_file_info 
+struct sound_file_info
 {
-	char				name[PAGENAME_LEN];	
+	char			name[PAGENAME_LEN];
 	char				used;
 	int				use_count;				// how many buffers does this sound take up.
 
-	unsigned char *sample_8bit;			// 8bit sound data
-	short *			sample_16bit;			// 16bit sound data
+	unsigned char* sample_8bit;			// 8bit sound data
+	short* sample_16bit;			// 16bit sound data
 
 	int				sample_length;			// Length of sound in samples
 	int				np_sample_length;		// non-padded
+};
 
-} sound_file_info;
-
-typedef struct sound_info 
+struct sound_info 
 {
 	char				name[PAGENAME_LEN];
 	char				used;
@@ -136,47 +133,42 @@ typedef struct sound_info
 	int	         outer_cone_angle;	// Angle in which sound is at its lowest base volume
 	float				outer_cone_volume;// A sounds lowest base volume level
 	float				import_volume;		// Volume multiplier
-} sound_info;
+};
 
 // Supported sound mixers
-#define SOUND_MIXER_SOFTWARE_16	0
+#define SOUND_MIXER_SOFTWARE_16		0
 #define SOUND_MIXER_DS_16			1
 #define SOUND_MIXER_DS_8			2
-#define SOUND_MIXER_DS3D_16		3
+#define SOUND_MIXER_DS3D_16			3
 #define SOUND_MIXER_AUREAL			4
 #define SOUND_MIXER_CREATIVE_EAX	6	// switched because launcher uses 5 as NONE.
 #define SOUND_MIXER_NONE			5
 
 // Support sound qualities
-#ifdef MACINTOSH
-#define SQT_LOW							0
-#define SQT_NORMAL						1
-#define SQT_HIGH						2
-#else
 #define SQT_NORMAL						0
 #define SQT_HIGH						1
-#endif
+
 // Parameters of the sound library
-#define SLF_USE_3D			1		// Use 3d effects
-#define SLF_DELTA_FREQ		2		// Use frequency shifts (i.e. water effects)
-#define SLF_USE_16_BIT		4		// Use 16bit samples (else 8bit)
-#define SLF_USE_22_KHZ		8		// Use 22khz (else 44khz)
-#define SLF_PAUSED			16		// Sound library is currently paused
-#define SLF_FULL_3D			32		// Full 3d hardware support
-#define SLF_MOST_3D			64		// No fully static 3d -- i.e. cockpit type stuff (use 2d instead)
-#define SLF_LIGHT_3D			128	// Dynamically updating 3d sounds if sound is longer than a given threshold
+#define SLF_USE_3D			1	// Use 3d effects
+#define SLF_DELTA_FREQ		2	// Use frequency shifts (i.e. water effects)
+#define SLF_USE_16_BIT		4	// Use 16bit samples (else 8bit)
+#define SLF_USE_22_KHZ		8	// Use 22khz (else 44khz)
+#define SLF_PAUSED			16	// Sound library is currently paused
+#define SLF_FULL_3D			32	// Full 3d hardware support
+#define SLF_MOST_3D			64	// No fully static 3d -- i.e. cockpit type stuff (use 2d instead)
+#define SLF_LIGHT_3D		128	// Dynamically updating 3d sounds if sound is longer than a given threshold
 #define SLF_GOOD_2D			256	// all linked sounds update position
-#define SLF_OK_2D				512	// if a sound is longer than a threshold, it updates
+#define SLF_OK_2D			512	// if a sound is longer than a threshold, it updates
 
 // Sound Properties Flags
-#define SPF_LOOPED				1		// Sound is looped
-#define SPF_FIXED_FREQ			2		// No doppler shift
-#define SPF_OBJ_UPDATE			4		// Sound updates with attached object movements
-#define SPF_FOREVER				8		// Always plays in high-level, this flag should be ignored in low-level
-#define SPF_PLAYS_EXCLUSIVELY 16
+#define SPF_LOOPED				1	// Sound is looped
+#define SPF_FIXED_FREQ			2	// No doppler shift
+#define SPF_OBJ_UPDATE			4	// Sound updates with attached object movements
+#define SPF_FOREVER				8	// Always plays in high-level, this flag should be ignored in low-level
+#define SPF_PLAYS_EXCLUSIVELY	16
 #define SPF_PLAYS_ONCE			32
-#define SPF_USE_CONE				64
-#define SPF_LISTENER_UPDATE	128	// Sound updates with listener movements 
+#define SPF_USE_CONE			64
+#define SPF_LISTENER_UPDATE		128	// Sound updates with listener movements 
 #define SPF_ONCE_PER_OBJ		256
 
 // Sound Instance flags (Move this out of here)
@@ -186,56 +178,56 @@ typedef struct sound_info
 #define SIF_OBJ_UPDATE			4
 #define SIF_TOO_FAR				8		// We will play it, but it currently too far away(stop sound in low-level)		
 #define SIF_NO_3D_EFFECTS		16
-#define SIF_LOOPING           32
+#define SIF_LOOPING				32
 #define SIF_STREAMING_8_M		64
 #define SIF_STREAMING_16_M		128
 #define SIF_STREAMING_8_S		256
-#define SIF_STREAMING_16_S    512
-#define SIF_STREAMING         (64 | 128 | 256 | 512)
+#define SIF_STREAMING_16_S		512
+#define SIF_STREAMING			(64 | 128 | 256 | 512)
 
 // What is the sound cone linked to (and mask to make it else to look at the important bits)
 #define SPFT_CONE_LINK_MASK		0x00000300
-#define SPFT_CONE_LINK_OBJECT		0x00000000
+#define SPFT_CONE_LINK_OBJECT	0x00000000
 #define SPFT_CONE_LINK_TURRET1	0x00000100
-#define SPFT_CONE_LINK_TURRET2   0x00000200
-#define SPFT_CONE_LINK_TURRET3   0x00000300
+#define SPFT_CONE_LINK_TURRET2  0x00000200
+#define SPFT_CONE_LINK_TURRET3  0x00000300
 
 // Direction of the sound cone relative to its link (and mask to make it else to look at the important bits)
-#define SPFT_CONE_DIR_MASK			0x00000C00
+#define SPFT_CONE_DIR_MASK		0x00000C00
 #define SPFT_CONE_DIR_FORWARD    0x00000000
 #define SPFT_CONE_DIR_BACKWARD   0x00000400
 #define SPFT_CONE_DIR_UPWARD     0x00000800
 #define SPFT_CONE_DIR_DOWNWARD   0x00000C00
 
 // Sound kill types
-#define SKT_STOP_AFTER_LOOP	0		// Allows a looping sample to play until the end of the sample
-#define SKT_STOP_IMMEDIATELY	1		// Stops and cleans up after a sound (For StopAllSounds)
-#define SKT_HOLD_UNTIL_STOP	2		// Hold until sound stops.
+#define SKT_STOP_AFTER_LOOP		0	// Allows a looping sample to play until the end of the sample
+#define SKT_STOP_IMMEDIATELY	1	// Stops and cleans up after a sound (For StopAllSounds)
+#define SKT_HOLD_UNTIL_STOP		2	// Hold until sound stops.
 
 // Sound Library Internal Error Codes
-#define SSL_OK								0
+#define SSL_OK					0
 
 // structure to get and set environment values
 #define ENV3DVALF_DOPPLER		1
 #define ENV3DVALF_GEOMETRY		2
+#define ENV3dVALF_REVERBS		4
 
-typedef struct t3dEnvironmentValues
+struct t3dEnvironmentValues
 {
 	int flags;								// use flags above
 
 	float doppler_scalar;				// values from 0.0f to ???? (1.0f = normal)
-}
-t3dEnvironmentValues;
+};
 
-typedef struct t3dEnvironmentToggles
+struct t3dEnvironmentToggles
 {
 	int flags;								// use flags above
 	int supported;							// returns flag values to inform caller of supported features (doppler, ie.)
 
 	bool doppler;							// state of doppler effects
+	bool reverb;							// state of reverb effects
 	bool geometry;							// support hardware geometry
-}
-t3dEnvironmentToggles;
+};
 
 typedef int (*llsMovieCallback)(void* userptr, void* sampledata, int numbytes);
 
@@ -341,9 +333,7 @@ public:
 	virtual llsGeometry *GetGeometryInterface() {
 		return m_geometry;
 	};
-#ifdef MACINTOSH
-	virtual void SetNumChannels(ubyte num_chan) = 0;
-#endif
+	
 /////////////////////////////////////////////////////////////////////////////////
 	// set auxillary 3d sound properties
 	virtual bool SoundPropertySupport() const { return false; };
@@ -364,13 +354,10 @@ public:
 //	HIGH LEVEL SYSTEM - Samir
 
 #ifndef NEWEDITOR 
-	#ifdef MACINTOSH
-		#define MAX_SOUNDS			750
-		#define MAX_SOUND_FILES		750
-	#else
-		#define MAX_SOUNDS			1000
-		#define MAX_SOUND_FILES		1000
-	#endif
+
+	#define MAX_SOUNDS			1000
+	#define MAX_SOUND_FILES		1000
+	
 	extern sound_info Sounds[MAX_SOUNDS];
 	extern sound_file_info SoundFiles[MAX_SOUND_FILES];
 #else

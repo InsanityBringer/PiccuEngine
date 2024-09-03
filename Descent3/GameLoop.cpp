@@ -37,7 +37,6 @@
 #include "gameevent.h"
 #include "gametexture.h"
 #include "AIMain.h"
-#include "ddvid.h"
 #include "ddio.h"
 #include "hud.h"
 #include "terrain.h"
@@ -93,6 +92,7 @@
 #include "gamefont.h"
 #include "renderobject.h"
 #include "vibeinterface.h"
+#include "gamespy.h"
 
 #ifdef EDITOR
 #include "editor\d3edit.h"
@@ -1048,7 +1048,7 @@ void ProcessTestKeys(int key)
 		Render_portals = 1 - Render_portals;
 		break;
 
-	case KEY_N:
+	case KEY_N + KEY_SHIFTED:
 		if (Current_level && Current_level->filename) {
 			vector player_pos = Player_object->pos;
 			matrix player_orient = Player_object->orient;
@@ -1060,6 +1060,14 @@ void ProcessTestKeys(int key)
 			//Restore player position
 			ObjSetPos(Player_object, &player_pos, player_roomnum, &player_orient, true);
 		}
+		break;
+
+	case KEY_N:
+		Render_use_newrender = !Render_use_newrender;
+		if (Render_use_newrender)
+			AddHUDMessage("Using newrender.");
+		else
+			AddHUDMessage("Using legacy render");
 		break;
 
 	case KEY_O:
@@ -1874,7 +1882,7 @@ void GameDrawMainView()
 	DebugBlockPrint("SR");
 
 	//Start rendering
-	StartFrame(false);
+	StartFrame(true);
 
 	// Set guided view
 	if (!Cinematic_inuse && Players[Player_num].guided_obj != NULL && !Guided_missile_smallview)
@@ -2518,7 +2526,7 @@ void GameFrame(void)
 	RTP_tENDTIME(multiframe_time, curr_time);
 
 	//Do Gamespy stuff
-//	gspy_DoFrame();
+	gspy_DoFrame();
 
 	// Do our fourth quaterframe of IntelliVIBE
 	VIBE_DoQuaterFrame(false);
@@ -2546,7 +2554,7 @@ void GameFrame(void)
 
 		//[ISB] Flip right before timing.
 		//This seems to be a huge step in reducing stuttering, I'm not actually sure why..
-		if (!Skip_render_game_frame)
+		if (!Skip_render_game_frame && !Dedicated_server)
 		{
 			if (Game_interface_mode == GAME_INTERFACE && !Menu_interface_mode)
 				rend_Flip();
@@ -2564,10 +2572,13 @@ void GameFrame(void)
 			{
 				unsigned int sleeptime = (Min_allowed_frametime - (current_timer - last_timer)) * 1000;
 				//mprintf((0,"Sleeping for %d ms\n",sleeptime));
-				//[ISB] It's more CPU muscle, but at high refresh rates just consume the CPU to be precise.
-				//Stuttering was reported without this. 
-				if (sleeptime > 10)
+				if (Dedicated_server)
+				{
+					Sleep(sleeptime);
+				}
+				else if (sleeptime > 2)
 					Sleep(sleeptime - 2);
+				
 			}
 			while (timer_GetTime64() < target_time) {} //[ISB] Sleeping isn't precise enough, poll for next update
 		}

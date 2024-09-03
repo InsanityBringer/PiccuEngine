@@ -44,6 +44,8 @@ extern bool Render_inside_only;
 #endif
 extern short use_opengl_1555_format;				//DAJ
 
+extern bool Render_use_newrender;
+
 #ifndef RELEASE
 extern int Mine_depth;
 #endif
@@ -82,10 +84,6 @@ extern fog_portal_data Fog_portal_data[];
 
 extern int Num_fogged_rooms_this_frame;
 
-// Sets fogzone start and end points
-void SetFogZoneStart(float z);
-void SetFogZoneEnd (float z);
-
 struct room;
 
 // For sorting our textures in state limited environments
@@ -99,11 +97,6 @@ struct state_limited_element
 extern state_limited_element State_elements[MAX_STATE_ELEMENTS];
 
 extern g3Point SolidFogPoints[],AlphaFogPoints[];
-
-// Takes a face and adds the appropriate vertices for drawing in the fog zone
-// Returns number of points in new polygon
-// New polygon points are in FogPoints array
-int FogBlendFace (g3Point **src,int nv,int *num_solid,int *num_alpha);
 
 //Draws the mine, starting at a the specified room
 //The rendering surface must be set up, and g3_StartFrame() must have been called
@@ -169,6 +162,9 @@ void RenderFogFaces(room *rp);
 
 // Builds a list of mirror faces for each room and allocs memory accordingly
 void ConsolidateMineMirrors();
+
+//Builds static meshes for all level geometry
+void MeshRooms();
 
 extern int Num_specular_faces_to_render,Num_fog_faces_to_render;
 
