@@ -2535,15 +2535,12 @@ void GameFrame(void)
 	RTP_GETCLOCK(curr_time);	//update the current time, since something has happened since ENDFTIME
 #endif
 
-	if (!is_game_idle)
-	{
-		RTP_tSTARTTIME(renderframe_time, curr_time);
-		if (!Skip_render_game_frame)
-			//Render the frame
-			GameRenderFrame();
+	RTP_tSTARTTIME(renderframe_time, curr_time);
+	if (!Skip_render_game_frame)
+		//Render the frame
+		GameRenderFrame();
 
-		RTP_tENDTIME(renderframe_time, curr_time);
-	}
+	RTP_tENDTIME(renderframe_time, curr_time);
 
 	if (!Game_paused)
 	{

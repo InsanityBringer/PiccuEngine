@@ -1517,6 +1517,16 @@ void ClearDynamicLightmaps()
 			continue;		// this face was killed last frame.  This can happen with objects
 
 		int dynamic_handle = LightmapInfo[Dynamic_face_list[i].lmi_handle].dynamic;
+
+		//[ISB] This would happen if you alt tabbed during multiplayer level changes, when the level changed with dynamic lights in it.
+		//Changing the defer handler to not skip rendering seemed to have fixed that, but I suspect there's a more dangerous cause underlying this.
+		//Need a better way to reset ALL game state on level change. 
+		if (dynamic_handle > MAX_DYNAMIC_LIGHTMAPS)
+		{
+			Int3();
+			continue;
+		}
+
 		int lmi_handle = Dynamic_face_list[i].lmi_handle;
 		int lm_handle = LightmapInfo[lmi_handle].lm_handle;
 		lightmap_info* lmi_ptr = &LightmapInfo[lmi_handle];

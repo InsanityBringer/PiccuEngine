@@ -432,17 +432,7 @@ void D3DeferHandler(bool is_active)
 	// perform any needed io system processing in the background
 		ddio_Frame();
 	}
-	else 
-	{
-	//JEFF - If the game is in idle loop and we are in multiplayer game
-	//then process the game frame so we stay alive in the game.  
-		if(Game_mode&GM_MULTI) 
-		{
-			Skip_render_game_frame = true;
-			GameFrame();
-			Skip_render_game_frame = false;
-		}
-	}
+	//[ISB] This doesn't need to run GameFrame anymore, since the game never suspends on an alt-tab. 
 
 	//JEFF - Commented out due to new idle processing
 	nw_DoNetworkIdle();
