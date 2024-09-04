@@ -139,6 +139,8 @@ extern double Min_allowed_frametime;
 extern bool Mem_low_memory_mode;
 extern bool Render_powerup_sparkles;
 extern int Use_file_xfer;
+extern bool Sound_reverb;
+extern bool Sound_doppler;
 
 extern bool Mem_superlow_memory_mode;
 
@@ -417,6 +419,8 @@ void SaveGameSettings()
 	
 	tempint = Sound_quality;
 	Database->write("SoundQuality", tempint);
+	Database->write("SoundReverbs", Sound_reverb);
+	Database->write("SoundDoppler", Sound_doppler);
 
 	Database->write("SoundQuantity",Sound_system.GetLLSoundQuantity());
 
@@ -594,6 +598,9 @@ void LoadGameSettings()
 	{
 		Sound_system.SetLLSoundQuantity(tempint);
 	}
+
+	Database->read("SoundReverbs", &Sound_reverb);
+	Database->read("SoundDoppler", &Sound_doppler);
 
 	Sound_card_name[0] = 0;
 	templen = TEMPBUFFERSIZE;
