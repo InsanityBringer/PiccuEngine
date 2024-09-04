@@ -532,7 +532,7 @@ int msn_CheckGetMission(network_address* net_addr, char* filename)
 	}
 
 
-	char pathname[PSFILENAME_LEN * 2];
+	char pathname[_MAX_PATH]; //[ISB] Why was this PSFILENAME_LEN * 2???
 	ddio_MakePath(pathname, D3MissionsDir, filename, NULL);
 	if (cfexist(filename) || cfexist(pathname))
 	{
