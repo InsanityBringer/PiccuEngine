@@ -184,6 +184,10 @@ struct RoomMesh
 	{
 		PostDrawElement& element = TransparentInteractions[num];
 
+		//TODO: TEMP CODE, needs to select lit or unlit shader. 
+		if (element.lmhandle == BAD_LMI_INDEX)
+			return; 
+
 		//Bind bitmaps. Temp API, should the bitmap system also handle binding? Or does that go elsewhere?
 		Room_VertexBuffer.BindBitmap(GetTextureBitmap(element.texturenum, 0));
 		Room_VertexBuffer.BindLightmap(element.lmhandle);
@@ -600,11 +604,17 @@ void UpdateRoomMesh(MeshBuilder& mesh, int roomnum, int indexOffset, int firstIn
 
 		if (fp.portal_num != -1)
 		{
-			faces_trans.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+			if (fp.flags & FF_LIGHTMAP)
+				faces_trans.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+			else
+				faces_trans.push_back(SortableElement{ i, (ushort)tmap, BAD_LMI_INDEX });
 		}
 		else if ((alphatype & (ATF_CONSTANT | ATF_TEXTURE)) != 0)
 		{
-			faces_trans.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+			if (fp.flags & FF_LIGHTMAP)
+				faces_trans.push_back(SortableElement{ i, (ushort)tmap, LightmapInfo[fp.lmi_handle].lm_handle });
+			else
+				faces_trans.push_back(SortableElement{ i, (ushort)tmap, BAD_LMI_INDEX });
 		}
 		else
 		{
@@ -787,8 +797,10 @@ void NewRender_Render(vector& vieweye, matrix& vieworientation, int roomnum)
 
 void NewRender_InitNewLevel()
 {
+#ifndef NDEBUG
 	MeshRooms();
 	MeshTerrain();
+#endif
 }
 
 static bool NewRenderPastPortal(room& rp, portal& pp)
