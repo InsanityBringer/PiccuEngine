@@ -819,33 +819,31 @@ bool llsOpenAL::ALErrorCheck(const char* context)
 	return false;
 }
 
+static constexpr float ScoreSound(float volume, int priority)
+{
+	return priority * 2 * volume;
+}
+
 short llsOpenAL::FindSoundSlot(float volume, int priority)
 {
 	int i;
-	int bestPriority = INT_MAX;
 	int bestSlot = -1;
-	float bestVolume = 1.0f;
+	float bestScore = ScoreSound(volume, priority);
 	//PutLog(LogLevel::Info, "Finding a sound slot");
 	//No free slots, so bump a low priorty one.
 	if (NumSoundsPlaying >= NumSoundChannels)
 	{
 		for (i = 0; i < NumSoundChannels; i++)
 		{
+			if (SoundEntries[i].streaming)
+				continue; //never bump a streaming sound, probably Bad
+
 			//check for lower priority sound
-			if (SoundEntries[i].info->priority < bestPriority)
+			float score = ScoreSound(SoundEntries[i].volume, SoundEntries[i].info->priority);
+			if (score < bestScore)
 			{
 				bestSlot = i;
-				bestVolume = SoundEntries[i].volume;
-				bestPriority = SoundEntries[i].info->priority;
-			}
-			//At least attempt to get the quietest sound possible
-			else if (SoundEntries[i].info->priority == bestPriority)
-			{
-				if (SoundEntries[i].volume < bestVolume)
-				{
-					bestSlot = i;
-					bestVolume = SoundEntries[i].volume;
-				}
+				bestScore = score;
 			}
 		}
 
