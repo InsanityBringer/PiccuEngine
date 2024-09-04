@@ -137,6 +137,10 @@ public:
 	// into the pilot data.
 	int read(bool skip_control_set,bool skip_mission_data);
 
+	// [ISB] Commits the pilot's state to global state.
+	// Used to work around the problems where merely reading a pilot file would commit global state.
+	void commit_state() const;
+
 public:
 	// data access functions
 	void set_name(char *name);

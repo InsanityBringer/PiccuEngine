@@ -240,7 +240,9 @@ void pilot::clean(bool reset)
 // It will correct any messed data.
 void pilot::verify(void)
 {
-	int i;
+	//[ISB] This isn't needed anymore because I only commit the globals when it's time to choose a pilot.
+	//The real solution would be to get rid of the duplicated globals holy crap why did they do this and instead have everything read from Current_pilot.
+	/*int i;
 	for (i = 0; i < MAX_PRIMARY_WEAPONS; i++)
 		PrimarySelectList[i] = GetAutoSelectPrimaryWpnIdx(i);
 	
@@ -249,7 +251,7 @@ void pilot::verify(void)
 
 	gameplay_toggles.guided_mainview = Game_toggles.guided_mainview;
 	gameplay_toggles.show_reticle = Game_toggles.show_reticle;
-	gameplay_toggles.ship_noises = Game_toggles.ship_noises;
+	gameplay_toggles.ship_noises = Game_toggles.ship_noises;*/
 
 	// kill graphical stat for inventory and reset to text version
 	if (hud_graphical_stat & STAT_INVENTORY)
@@ -258,61 +260,7 @@ void pilot::verify(void)
 		hud_stat = hud_stat | STAT_INVENTORY;
 	}
 
-	key_ramping = Key_ramp_speed;
-
-	/*
-	bool had_to_change = false;
-
-	//first check the ship mode
-	bool found_model = false;
-	for(int i=0;i<MAX_SHIPS;i++){
-		if(Ships[i].used && !stricmp(Ships[i].name,Pilot->ship_model) ){
-			found_model = true;
-			break;
-		}
-	}
-
-	if(!found_model){
-		//we couldn't find the ship model
-		had_to_change = true;
-		strcpy(Pilot->ship_model,DEFAULT_SHIP);
-	}
-
-	//check the custom texture
-	if(Pilot->ship_logo[0]!='\0'){
-		if(cfexist(Pilot->ship_logo)==CF_NOT_FOUND){
-			//couldn't find the custom texture
-			Pilot->ship_logo[0] = '\0';
-			had_to_change = true;
-		}
-	}
-
-	//check audio files
-	if(Pilot->audio1_file[0]!='\0'){
-		if(cfexist(Pilot->audio1_file)==CF_NOT_FOUND){
-			//couldn't find the custom texture
-			Pilot->audio1_file[0] = '\0';
-			had_to_change = true;
-		}
-	}
-
-	if(Pilot->audio2_file[0]!='\0'){
-		if(cfexist(Pilot->audio2_file)==CF_NOT_FOUND){
-			//couldn't find the custom texture
-			Pilot->audio2_file[0] = '\0';
-			had_to_change = true;
-		}
-	}
-
-	char temp_buffer[PILOT_STRING_SIZE];
-	if(Pilot->picture_id!=PPIC_INVALID_ID && !PPic_GetPilot(Pilot->picture_id,temp_buffer,PILOT_STRING_SIZE)){
-		//the pilot picture id is invalid
-		Pilot->picture_id = PPIC_INVALID_ID;
-		had_to_change = true;
-	}
-
-	return had_to_change;
-	*/
+	//key_ramping = Key_ramp_speed;
 }
 
 // This function makes the pilot file so it's write pending, meaning that
@@ -516,19 +464,6 @@ int pilot::read(bool skip_config, bool skip_mission_data)
 
 		read_controls(file, skip_config);
 
-		//////////////////////////////////////////////
-		int wpn;
-		for (wpn = 0; wpn < MAX_PRIMARY_WEAPONS; wpn++)
-			SetAutoSelectPrimaryWpnIdx(wpn, PrimarySelectList[wpn]);
-		for (wpn = 0; wpn < MAX_SECONDARY_WEAPONS; wpn++)
-			SetAutoSelectSecondaryWpnIdx(wpn, SecondarySelectList[wpn]);
-
-		Game_toggles.guided_mainview = gameplay_toggles.guided_mainview;
-		Game_toggles.show_reticle = gameplay_toggles.show_reticle;
-		Game_toggles.ship_noises = gameplay_toggles.ship_noises;
-
-		Key_ramp_speed = key_ramping;
-
 		cfclose(file);
 	}
 	catch (cfile_error)
@@ -566,6 +501,21 @@ int pilot::read(bool skip_config, bool skip_mission_data)
 
 	verify();
 	return PLTR_NO_ERROR;
+}
+
+void pilot::commit_state() const
+{
+	for (int wpn = 0; wpn < MAX_PRIMARY_WEAPONS; wpn++)
+		SetAutoSelectPrimaryWpnIdx(wpn, PrimarySelectList[wpn]);
+
+	for (int wpn = 0; wpn < MAX_SECONDARY_WEAPONS; wpn++)
+		SetAutoSelectSecondaryWpnIdx(wpn, SecondarySelectList[wpn]);
+
+	Game_toggles.guided_mainview = gameplay_toggles.guided_mainview;
+	Game_toggles.show_reticle = gameplay_toggles.show_reticle;
+	Game_toggles.ship_noises = gameplay_toggles.ship_noises;
+
+	Key_ramp_speed = key_ramping;
 }
 
 void pilot::set_name(char* n)

@@ -391,6 +391,7 @@ void PilotListSelectChangeCallback(int index)
 
 	Pilot->set_filename(filelist[index]);
 	PltReadFile(Pilot);
+	Pilot->commit_state();
 
 	// Setup all values
 	///////////////////////////////	
@@ -448,6 +449,7 @@ void PilotSelect(void)
 		//ok so the default pilot file is around, mark this as the current pilot
 		Current_pilot.set_filename(Default_pilot);
 		PltReadFile(&Current_pilot);
+		Current_pilot.commit_state();
 	}
 
 	char pfilename[_MAX_FNAME];
@@ -534,6 +536,7 @@ void PilotSelect(void)
 				working_pilot.get_filename(filename);
 				Current_pilot.set_filename(filename);
 				PltReadFile(&Current_pilot, true, true);
+				Current_pilot.commit_state(); //[ISB] set globals now
 
 				char pname[PILOT_STRING_SIZE];
 				Current_pilot.get_name(pname);
@@ -578,6 +581,7 @@ void PilotSelect(void)
 				{
 					Current_pilot.set_filename(old_file);
 					PltReadFile(&Current_pilot, true, true);
+					Current_pilot.commit_state();
 
 					char pname[PILOT_STRING_SIZE];
 					Current_pilot.get_name(pname);
@@ -712,6 +716,7 @@ void PilotSelect(void)
 
 			Current_pilot.set_filename(pfilename);
 			PltReadFile(&Current_pilot, true, true);
+			Current_pilot.commit_state();
 			//configure the current pilot
 			if (res == IDP_CONFIGKEYB)
 				CtlConfig(CTLCONFIG_KEYBOARD);
@@ -721,6 +726,7 @@ void PilotSelect(void)
 			PltWriteFile(&Current_pilot, false);
 
 			PltReadFile(&working_pilot, true, true);
+			working_pilot.commit_state();
 		}break;
 
 		case IDP_COPYCONTROLS:
@@ -999,6 +1005,7 @@ bool PilotChoose(pilot* Pilot, bool presets)
 			{
 				Pilot->set_filename(filelist[index]);
 				PltReadFile(Pilot, false);
+				Pilot->commit_state();
 				ret = true;
 				exit_menu = true;
 			}
@@ -1017,26 +1024,6 @@ bool PilotChoose(pilot* Pilot, bool presets)
 	return ret;
 }
 
-///////////////////////////////////////////////////////////
-//copies a pilot to another
-/***************************************************
-bool PilotCopy(pilot *Src,pilot *Dest)
-{
-	char sname[PILOT_STRING_SIZE];
-	char sship[PAGENAME_LEN];
-	ubyte sdiff;
-
-	Src->get_name(sname);
-	Src->get_ship(sship);
-	Src->get_difficulty(&sdiff);
-
-	Dest->set_name(sname);
-	Dest->set_ship(sship);
-	Dest->set_difficulty(sdiff);
-
-	return PltCopyKeyConfig(Src,Dest);
-}
-***************************************************/
 /////////////////////////////////////////////////////
 // Updates the pilot listbox
 void NewPltUpdate(newuiListBox* list, char** flist, int filecount, int selected, char* filename, bool presets)

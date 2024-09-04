@@ -143,6 +143,7 @@ int MainMenu()
 			strcat(pfilename, ".plt");
 			Current_pilot.set_filename(pfilename);
 			PltReadFile(&Current_pilot, true);
+			Current_pilot.commit_state();
 		}
 		first_time = false;
 	}
