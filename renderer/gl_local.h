@@ -85,7 +85,7 @@ extern int Last_texel_unit_set;
 
 void opengl_InitImages(void);
 void opengl_FreeImages(void);
-int opengl_MakeTextureObject(int tn);
+int opengl_MakeTextureObject(int tn, bool wrap);
 int opengl_MakeBitmapCurrent(int handle, int map_type, int tn);
 void opengl_TranslateBitmapToOpenGL(int texnum, int bm_handle, int map_type, int replace, int tn);
 void opengl_MakeWrapTypeCurrent(int handle, int map_type, int tn);
