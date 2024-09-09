@@ -15,60 +15,6 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * $Logfile: /DescentIII/Main/music/omflex.cpp $
- * $Revision: 14 $
- * $Date: 4/01/99 4:50p $
- * $Author: Matt $
- *
- * Read OMF file lexical analyzer.
- *
- * $Log: /DescentIII/Main/music/omflex.cpp $
- * 
- * 14    4/01/99 4:50p Matt
- * Took out Warning() function, chaning those calls to mprintf()
- * 
- * 13    2/27/99 6:52p Samir
- * fixed label-region scope problem.
- * 
- * 12    1/28/99 2:22p Samir
- * simplified music system for D3.
- * 
- * 11    12/15/98 10:22a Samir
- * upped max labels.
- * 
- * 10    12/11/98 3:28p Samir
- * added start of regions
- * 
- * 9     12/08/98 11:41a Samir
- * added new region commands.
- * 
- * 8     12/07/98 2:57p Samir
- * added transitions for combat.
- * 
- * 7     12/03/98 12:48p Samir
- * speed up sequencer so that gap between samples isn't too big.
- * 
- * 6     11/20/98 5:20p Samir
- * added a bunch of high level scripting commands.
- * 
- * 5     11/16/98 4:15p Samir
- * added death.
- * 
- * 4     11/13/98 2:27p Samir
- * new music system.
- * 
- * 3     8/10/98 5:56p Samir
- * new command for end of combat music added.
- * 
- * 2     7/28/98 5:43p Samir
- * reorg of music system.
- * 
- * 1     7/28/98 11:48a Samir
- * moved from sequencer.cpp
- *
- * $NoKeywords: $
- */
 
 #include "music.h"
 #include "musiclib.h"
@@ -80,13 +26,14 @@
 
 
 //	OMF INF FILE READ
-#define OMFFILEERR_ADDSECTION		INFFILE_CUSTOM				// error adding section to list.
+#define OMFFILEERR_ADDSECTION	INFFILE_CUSTOM			// error adding section to list.
 #define OMFFILEERR_INSOVERFLOW	(INFFILE_CUSTOM+1)		// too many instructions!
 #define OMFFILEERR_LBLOVERFLOW	(INFFILE_CUSTOM+2)		// too many labels!
-#define OMFFILEERR_GOTO				(INFFILE_CUSTOM+3)		// no goto label exists
-#define OMFFILEERR_SYNTAX			(INFFILE_CUSTOM+4)		// syntax error.
+#define OMFFILEERR_GOTO			(INFFILE_CUSTOM+3)		// no goto label exists
+#define OMFFILEERR_SYNTAX		(INFFILE_CUSTOM+4)		// syntax error.
 
-const char *OMFCommands[OMFCMD_NUM] = {
+const char *OMFCommands[OMFCMD_NUM] = 
+{
 	"stream",
 	"section",
 	"play",
@@ -173,7 +120,8 @@ bool OutrageMusicSeq::LoadTheme(const char *file)
 	if (!file)
 		return false;
 
-	if (!inf.Open(file, "[theme file]", OMFLex)) {
+	if (!inf.Open(file, "[theme file]", OMFLex)) 
+	{
   		mprintf((0,"Unable to find requested theme %s or bad file.\n", file));
 		return false;
 	}
@@ -191,7 +139,8 @@ bool OutrageMusicSeq::LoadTheme(const char *file)
 			switch (cmd)
 			{
 			case OMFCMD_LABEL:
-				if (n_labels == MAX_FILE_LABELS) {
+				if (n_labels == MAX_FILE_LABELS) 
+				{
 					cmd = OMFFILEERR_LBLOVERFLOW;
 					goto force_pre_error;
 				}
@@ -238,11 +187,13 @@ bool OutrageMusicSeq::LoadTheme(const char *file)
 			temp_ins_idx++;
 		}
 force_pre_error:
-		if (cmd == INFFILE_ERROR) {
+		if (cmd == INFFILE_ERROR) 
+		{
 			mprintf((0,"Error in music file %s line %d.\n", file, inf.line()));
 			Int3();
 		}
-		else if (cmd == OMFFILEERR_LBLOVERFLOW) {
+		else if (cmd == OMFFILEERR_LBLOVERFLOW) 
+		{
 			mprintf((0,"Error in music file %s line %d (too many labels).\n", file, inf.line()));
 			Int3();
 		}
@@ -251,7 +202,8 @@ force_pre_error:
 	inf.Close();
 
 // reopen for SECOND PASS (actual code read)
-	if (!inf.Open(file, "[theme file]", OMFLex)) {
+	if (!inf.Open(file, "[theme file]", OMFLex)) 
+	{
   		mprintf((0,"Unable to find requested theme %s or bad file.\n", file));
 		return false;
 	}
@@ -270,7 +222,8 @@ force_pre_error:
 			switch (cmd)
 			{
 			case OMFCMD_REGION:
-				if (in_region) {
+				if (in_region) 
+				{
 					cmd = OMFFILEERR_SYNTAX;
 					goto force_error;
 				}
@@ -286,7 +239,8 @@ force_pre_error:
 			case OMFCMD_STREAM:
 				{
 					char *sym = strchr(operand, '$');			// symbol AFTER '$'
-					if (!sym) {
+					if (!sym) 
+					{
 						cmd = INFFILE_ERROR;
 						goto force_error;
 					}
@@ -308,38 +262,47 @@ force_pre_error:
 			case OMFCMD_GOTO:
 				for (i = 0; i < n_labels; i++)
 				{
-					if (labels[i].region == cur_region && strcmp(operand, labels[i].name)==0) {
+					if (labels[i].region == cur_region && strcmp(operand, labels[i].name)==0) 
+					{
 						ADD_NEW_INS_NUM(cmd, labels[i].index);
 						break;
 					}
 				}
-				if (i == n_labels) {
+				if (i == n_labels) 
+				{
 					cmd = OMFFILEERR_GOTO;
 					goto force_error;
 				}
 				break;
 
 			case OMFCMD_SECTION:
-				if (!in_region) {
+				if (!in_region) 
+				{
 					cmd = OMFFILEERR_SYNTAX;
 					goto force_error;
 				}
-				if (strcmp(operand, "intro") == 0) {
+				if (strcmp(operand, "intro") == 0) 
+				{
 					theme_type = OMS_THEME_TYPE_INTRO;
 				}
-				else if (strcmp(operand, "idle") == 0) {
+				else if (strcmp(operand, "idle") == 0) 
+				{
 					theme_type = OMS_THEME_TYPE_IDLE;
 				}
-				else if (strcmp(operand, "combat") == 0) {
+				else if (strcmp(operand, "combat") == 0) 
+				{
 					theme_type = OMS_THEME_TYPE_COMBAT;
 				}
-				else if (strcmp(operand, "death") == 0) {
+				else if (strcmp(operand, "death") == 0) 
+				{
 					theme_type = OMS_THEME_TYPE_DEATH;
 				}
-				else if (strcmp(operand, "idle_combat") == 0) {
+				else if (strcmp(operand, "idle_combat") == 0) 
+				{
 					theme_type = OMS_THEME_TYPE_IDLE_TO_COMBAT;
 				}
-				else if (strcmp(operand, "combat_idle") == 0) {
+				else if (strcmp(operand, "combat_idle") == 0) 
+				{
 					theme_type = OMS_THEME_TYPE_COMBAT_TO_IDLE;
 				}
 
@@ -348,7 +311,8 @@ force_pre_error:
 
 			case OMFCMD_ENDSECTION:
 				ADD_NEW_INS_NUM(OMFCMD_ENDSECTION, 0);
-				if (!AddToList((short)cur_region, (short)theme_type, temp_ins_idx,temp_ins_buf)) {
+				if (!AddToList((short)cur_region, (short)theme_type, temp_ins_idx,temp_ins_buf)) 
+				{
 					cmd = OMFFILEERR_ADDSECTION;
 					goto force_error;
 				}
@@ -367,8 +331,10 @@ force_pre_error:
 			case OMFCMD_COMPARE:
 				{
 					tMusicVal val;
-					sscanf(operand, "r%d", &val);
-					ADD_NEW_INS_NUM(OMFCMD_COMPARE, val);
+					if (sscanf(operand, "r%hd", &val) > 0)
+					{
+						ADD_NEW_INS_NUM(OMFCMD_COMPARE, val);
+					}
 					break;
 				}
 
@@ -393,20 +359,24 @@ force_pre_error:
 			}
 		}
 
-		if (ifi_block) {
+		if (ifi_block) 
+		{
 			ADD_NEW_INS_NUM(OMFCMD_ENDIFI, 0);
 		}
 
 force_error:
-		if (cmd == INFFILE_ERROR) {
+		if (cmd == INFFILE_ERROR) 
+		{
 			mprintf((0,"Error in music file %s line %d.\n", file, inf.line()));
 			Int3();
 		}
-		else if (cmd == OMFFILEERR_ADDSECTION) {
+		else if (cmd == OMFFILEERR_ADDSECTION) 
+		{
 			mprintf((0,"Error in music file %s line %d (failed to add section).\n", file, inf.line()));
 			Int3();
 		}
-		else if (cmd == OMFFILEERR_INSOVERFLOW) {
+		else if (cmd == OMFFILEERR_INSOVERFLOW) 
+		{
 			mprintf((0,"Error in music file %s line %d (too many instructions).\n", file, inf.line()));
 			Int3();
 		}
