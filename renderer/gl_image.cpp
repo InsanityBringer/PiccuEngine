@@ -72,7 +72,7 @@ void opengl_FreeImages(void)
 	mem_free(delete_list);
 }
 
-int opengl_MakeTextureObject(int tn)
+int opengl_MakeTextureObject(int tn, bool wrap)
 {
 	int num = Cur_texture_object_num;
 
@@ -92,8 +92,9 @@ int opengl_MakeTextureObject(int tn)
 	glBindTexture(GL_TEXTURE_2D, num);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	GLenum wraptype = wrap ? GL_REPEAT : GL_CLAMP_TO_EDGE;
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wraptype);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wraptype);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -136,8 +137,8 @@ int opengl_MakeBitmapCurrent(int handle, int map_type, int tn)
 	{
 		if (OpenGL_lightmap_remap[handle] == 65535)
 		{
-			texnum = opengl_MakeTextureObject(tn);
-			SET_WRAP_STATE(OpenGL_lightmap_states[handle], WT_WRAP);
+			texnum = opengl_MakeTextureObject(tn, false);
+			SET_WRAP_STATE(OpenGL_lightmap_states[handle], WT_CLAMP);
 			SET_FILTER_STATE(OpenGL_lightmap_states[handle], 0);
 			OpenGL_lightmap_remap[handle] = texnum;
 			opengl_TranslateBitmapToOpenGL(texnum, handle, map_type, 0, tn);
@@ -153,7 +154,7 @@ int opengl_MakeBitmapCurrent(int handle, int map_type, int tn)
 	{
 		if (OpenGL_bitmap_remap[handle] == 65535)
 		{
-			texnum = opengl_MakeTextureObject(tn);
+			texnum = opengl_MakeTextureObject(tn, true);
 			SET_WRAP_STATE(OpenGL_bitmap_states[handle], WT_WRAP);
 			SET_FILTER_STATE(OpenGL_bitmap_states[handle], 0);
 			OpenGL_bitmap_remap[handle] = texnum;
