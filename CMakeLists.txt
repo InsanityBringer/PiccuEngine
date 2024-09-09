@@ -63,7 +63,9 @@ IF (WIN32)
 	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL /FD /EHsc /MT /MP /W3 /nologo /c /Zi /errorReport:prompt")
 	
 	SET(CMAKE_MODULE_LINKER_FLAGS "/SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
+	SEt(CMAKE_EXE_LINKER_FLAGS_RELEASE "/LTCG /DEBUG") #[ISB] Since /GL is specified at compile time, give the linker a bit of help here. Also generate debug information (how well does that work with LTCG?)
 	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
+	
 
 	SET(PLATFORM_INCLUDES "lib/win/directx" "lib/win" "thirdparty/OpenAL/include" )
 	
