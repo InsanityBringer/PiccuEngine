@@ -141,6 +141,9 @@ public:
 	// Used to work around the problems where merely reading a pilot file would commit global state.
 	void commit_state() const;
 
+	// [ISB] Gets the state from global
+	void fetch_state();
+
 public:
 	// data access functions
 	void set_name(char *name);

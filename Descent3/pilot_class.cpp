@@ -240,27 +240,12 @@ void pilot::clean(bool reset)
 // It will correct any messed data.
 void pilot::verify(void)
 {
-	//[ISB] This isn't needed anymore because I only commit the globals when it's time to choose a pilot.
-	//The real solution would be to get rid of the duplicated globals holy crap why did they do this and instead have everything read from Current_pilot.
-	/*int i;
-	for (i = 0; i < MAX_PRIMARY_WEAPONS; i++)
-		PrimarySelectList[i] = GetAutoSelectPrimaryWpnIdx(i);
-	
-	for (i = 0; i < MAX_SECONDARY_WEAPONS; i++)
-		SecondarySelectList[i] = GetAutoSelectSecondaryWpnIdx(i);
-
-	gameplay_toggles.guided_mainview = Game_toggles.guided_mainview;
-	gameplay_toggles.show_reticle = Game_toggles.show_reticle;
-	gameplay_toggles.ship_noises = Game_toggles.ship_noises;*/
-
 	// kill graphical stat for inventory and reset to text version
 	if (hud_graphical_stat & STAT_INVENTORY)
 	{
 		hud_graphical_stat = hud_graphical_stat & (~STAT_INVENTORY);
 		hud_stat = hud_stat | STAT_INVENTORY;
 	}
-
-	//key_ramping = Key_ramp_speed;
 }
 
 // This function makes the pilot file so it's write pending, meaning that
@@ -284,7 +269,6 @@ int pilot::flush(bool new_file)
 		return PLTW_NO_FILENAME;	//no filename was given
 	}
 
-
 	CFILE* file;
 	char real_filename[_MAX_PATH];
 
@@ -301,6 +285,7 @@ int pilot::flush(bool new_file)
 	try
 	{
 		verify();
+		fetch_state(); //Ensure pilot state is up to date. 
 
 		file = cfopen(real_filename, "wb");
 		if (!file)
@@ -516,6 +501,21 @@ void pilot::commit_state() const
 	Game_toggles.ship_noises = gameplay_toggles.ship_noises;
 
 	Key_ramp_speed = key_ramping;
+}
+
+void pilot::fetch_state()
+{
+	for (int i = 0; i < MAX_PRIMARY_WEAPONS; i++)
+		PrimarySelectList[i] = GetAutoSelectPrimaryWpnIdx(i);
+
+	for (int i = 0; i < MAX_SECONDARY_WEAPONS; i++)
+		SecondarySelectList[i] = GetAutoSelectSecondaryWpnIdx(i);
+
+	gameplay_toggles.guided_mainview = Game_toggles.guided_mainview;
+	gameplay_toggles.show_reticle = Game_toggles.show_reticle;
+	gameplay_toggles.ship_noises = Game_toggles.ship_noises;
+
+	key_ramping = Key_ramp_speed;
 }
 
 void pilot::set_name(char* n)
