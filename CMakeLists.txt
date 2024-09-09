@@ -60,10 +60,10 @@ IF (WIN32)
 	SET(D3_GAMEDIR "c:/games/Descent3/")	
 	set (CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "lib/win" "lib/win/directx" "thirdparty/OpenAL/libs/Win32") 
 	SET(CMAKE_CXX_FLAGS_DEBUG "/Od /EHsc /RTC1 /MTd /MP /W3 /nologo /c /Zi /errorReport:prompt")
-	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL /FD /EHsc /MT /MP /W3 /nologo /c /Zi /errorReport:prompt")
+	SET(CMAKE_CXX_FLAGS_RELEASE "/O2 /FD /EHsc /MT /MP /W3 /nologo /c /Zi /errorReport:prompt")
 	
 	SET(CMAKE_MODULE_LINKER_FLAGS "/SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
-	SEt(CMAKE_EXE_LINKER_FLAGS_RELEASE "/LTCG /DEBUG") #[ISB] Since /GL is specified at compile time, give the linker a bit of help here. Also generate debug information (how well does that work with LTCG?)
+	SEt(CMAKE_EXE_LINKER_FLAGS_RELEASE " /DEBUG") #[ISB] Generate debug information
 	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
 	
 
@@ -233,7 +233,7 @@ target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:RELWITHDEBINFO>
 add_library(dmfc SHARED ${DMFC_SOURCES})
 target_compile_definitions(dmfc PUBLIC -DOUTRAGE_VERSION -DDMFC_DLL)
 target_include_directories(dmfc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/netgames/includes")
-add_dependencies(PiccuEngine revision_check piccuengine_hog TCP-IP Tracker)
+add_dependencies(PiccuEngine revision_check piccuengine_hog TCP-IP Tracker dmfc)
 	
 install(TARGETS PiccuEngine DESTINATION ${D3_GAMEDIR})
 
