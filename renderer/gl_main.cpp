@@ -304,7 +304,7 @@ static int OpenGL_last_uploaded = 0;
 // Flips the screen
 void rend_Flip(void)
 {
-#ifndef NDEBUG
+#ifdef _DEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
@@ -345,7 +345,7 @@ void rend_Flip(void)
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
-#ifndef NDEBUG
+#ifdef _DEBUG
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
@@ -362,7 +362,7 @@ void rend_Flip(void)
 	framebuffer_current_draw = (framebuffer_current_draw + 1) % NUM_FBOS;
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffers[framebuffer_current_draw].Handle());
 
-#ifndef NDEBUG
+#ifdef _DEBUG
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{

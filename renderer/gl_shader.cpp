@@ -66,9 +66,11 @@ void opengl_InitShaders(void)
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock) * 35, nullptr, GL_DYNAMIC_READ);
 	glBindBufferBase(GL_UNIFORM_BUFFER, COMMON_BINDING, commonbuffername);
 
+#ifdef _DEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 
 	//The legacy common buffer uses the ortho matrix as a passthrough.
 	glGenBuffers(1, &legacycommonbuffername);
@@ -76,36 +78,44 @@ void opengl_InitShaders(void)
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock), nullptr, GL_DYNAMIC_READ);
 	glBindBufferBase(GL_UNIFORM_BUFFER, LEGACY_BINDING, legacycommonbuffername);
 
+#ifdef _DEBUG
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 
 	glGenBuffers(1, &specularbuffername);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, specularbuffername);
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(SpecularBlock), nullptr, GL_STREAM_READ);
 	glBindBufferBase(GL_UNIFORM_BUFFER, SPECULAR_BINDING, specularbuffername);
 
+#ifdef _DEBUG
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 
 	glGenBuffers(1, &fogbuffername);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, fogbuffername);
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(RoomBlock) * 100, nullptr, GL_DYNAMIC_READ);
 	glBindBufferBase(GL_UNIFORM_BUFFER, ROOM_BINDING, fogbuffername);
 
+#ifdef _DEBUG
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 
 	glGenBuffers(1, &terrainfogbuffername);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, terrainfogbuffername);
 	glBufferData(GL_COPY_WRITE_BUFFER, sizeof(TerrainFogBlock) * TERRAIN_FOG_COUNTER_MAX, nullptr, GL_DYNAMIC_READ);
 	glBindBufferBase(GL_UNIFORM_BUFFER, TERRAIN_FOG_BINDING, terrainfogbuffername);
 
+#ifdef _DEBUG
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 	terrainfogcounter = 0;
 
 	//Init shader pipelines
@@ -140,9 +150,11 @@ void rend_UpdateCommon(float* projection, float* modelview, int depth)
 	glBindBuffer(GL_COPY_WRITE_BUFFER, commonbuffername);
 	glBufferSubData(GL_COPY_WRITE_BUFFER, sizeof(CommonBlock) * depth, sizeof(CommonBlock), &newblock);
 
+#ifdef _DEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 
 	rend_SetCommonDepth(depth);
 }
@@ -157,9 +169,11 @@ void rend_UpdateSpecular(SpecularBlock* specularstate)
 	glBindBuffer(GL_COPY_WRITE_BUFFER, specularbuffername);
 	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, 16 + (specularstate->num_speculars * 32), specularstate);
 
+#ifdef _DEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 }
 
 void rend_UpdateFogBrightness(RoomBlock* roomstate, int numrooms)
@@ -167,18 +181,22 @@ void rend_UpdateFogBrightness(RoomBlock* roomstate, int numrooms)
 	glBindBuffer(GL_COPY_WRITE_BUFFER, fogbuffername);
 	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(RoomBlock) * numrooms, roomstate);
 
+#ifdef _DEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 }
 
 void rend_SetCurrentRoomNum(int roomblocknum)
 {
 	glBindBufferRange(GL_UNIFORM_BUFFER, ROOM_BINDING, fogbuffername, roomblocknum * sizeof(RoomBlock), sizeof(RoomBlock));
 
+#ifdef _DEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 }
 
 void rend_UpdateTerrainFog(float color[4], float start, float end)
@@ -198,9 +216,11 @@ void rend_UpdateTerrainFog(float color[4], float start, float end)
 	
 	glBufferSubData(GL_COPY_WRITE_BUFFER, terrainfogcounter * sizeof(TerrainFogBlock), sizeof(TerrainFogBlock), &block);
 	glBindBufferRange(GL_UNIFORM_BUFFER, TERRAIN_FOG_BINDING, terrainfogbuffername, terrainfogcounter * sizeof(TerrainFogBlock), sizeof(TerrainFogBlock));
+#ifdef _DEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 }
 
 void GL_UpdateLegacyBlock(float* projection, float* modelview)
@@ -212,9 +232,11 @@ void GL_UpdateLegacyBlock(float* projection, float* modelview)
 	glBindBuffer(GL_COPY_WRITE_BUFFER, legacycommonbuffername);
 	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(CommonBlock), &newblock);
 
+#ifdef _DEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 		Int3();
+#endif
 }
 
 //ATM this is redundant, but it will support a preprocessor for #include if needed later. 

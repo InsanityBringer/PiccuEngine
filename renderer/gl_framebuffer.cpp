@@ -180,11 +180,13 @@ void Framebuffer::SubColorBlit()
 		glBlitFramebuffer(0, 0, m_width, m_height, 0, 0, 
 			m_width, m_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
+#ifdef _DEBUG
 		GLenum err = glGetError();
 		if (err != GL_NO_ERROR)
 		{
 			mprintf((0, "Error resolving multisampling: %d\n", err));
 		}
+#endif
 
 		//Leave the sub color buffer bound for reading by BlitToRaw. 
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_subname);
@@ -196,11 +198,13 @@ void Framebuffer::BlitToRaw(GLuint target, unsigned int x, unsigned int y, unsig
 	SubColorBlit();
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target);
 
+#ifdef _DEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
 		mprintf((0, "Error unbinding draw framebuffer: %d\n", err));
 	}
+#endif
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -213,11 +217,13 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 {
 	SubColorBlit();
 
+#ifdef _DEBUG
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
 		mprintf((0, "Error leaving sub color blit: %d\n", err));
 	}
+#endif
 
 	glBindVertexArray(fbVAOName);
 	GLint oldviewport[4];
@@ -227,11 +233,13 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
+#ifdef _DEBUG
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
 		mprintf((0, "Error binding framebuffers: %d\n", err));
 	}
+#endif
 
 
 	Last_texel_unit_set = 0;
@@ -242,11 +250,14 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 	OpenGL_last_bound[0] = sourcename;
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, sourcename);
+
+#ifdef _DEBUG
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
 		mprintf((0, "Error unbinding draw framebuffer: %d\n", err));
 	}
+#endif
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

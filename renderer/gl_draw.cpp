@@ -21,7 +21,7 @@
 //The number of vertex attributes the legacy code used. 
 constexpr int NUM_LEGACY_VERTEX_ATTRIBS = 4;
 //The count of vertices that each buffer will store
-constexpr int NUM_VERTS_PER_BUFFER = 32000;
+constexpr int NUM_VERTS_PER_BUFFER = 640000;
 
 struct color_array
 {
@@ -38,7 +38,9 @@ struct gl_vertex
 	vector vert;
 	color_array color;
 	tex_array tex_coord;
+	float pad;
 	tex_array tex_coord2;
+	float pad2;
 };
 
 gl_vertex GL_vertices[100];
@@ -64,31 +66,118 @@ static ShaderProgram drawshaders[8];
 static int lastdrawshader = -1;
 
 static GLuint drawvao;
+static void* drawbuffermap;
 
 void GL_UseDrawVAO(void)
 {
 	glBindVertexArray(drawvao);
 }
 
-int GL_CopyVertices(int numvertices)
+void GL_InitPersistentDrawBuffer(size_t size)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
-	if (nextcommittedvertex + numvertices > NUM_VERTS_PER_BUFFER)
+	//Due to names becoming immutable when using buffer storage, 
+	//need to recycle buffers by explicitly deleting the old one. OpenGL maintains its lifetime until it is done
+	if (drawbuffer != 0)
 	{
-		size_t buffersize = NUM_VERTS_PER_BUFFER * sizeof(gl_vertex);
-		glBufferData(GL_ARRAY_BUFFER, buffersize, nullptr, GL_STREAM_DRAW);
-		nextcommittedvertex = 0;
+		glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glDeleteBuffers(1, &drawbuffer);
 	}
 
-	int startoffset = nextcommittedvertex;
+	glGenBuffers(1, &drawbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
 
-	void* dataptr = glMapBufferRange(GL_ARRAY_BUFFER, startoffset * sizeof(gl_vertex), numvertices * sizeof(gl_vertex), GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
-	memcpy(dataptr, GL_vertices, numvertices * sizeof(gl_vertex));
-	glUnmapBuffer(GL_ARRAY_BUFFER);
+	glBufferStorage(GL_ARRAY_BUFFER, size, nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 
-	nextcommittedvertex += numvertices;
+#ifdef _DEBUG
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+#endif
 
-	return startoffset;
+	//of course glVertexAttribBinding has to only be core in 4.3+
+	// because OpenGL makes only the best API design decisions at every step. 
+
+	//attrib 0: position
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), 0);
+
+	//attrib 1: color
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, color));
+
+	//attrib 2: uv
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, tex_coord));
+
+	//attrib 3: uv 2
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, tex_coord2));
+#ifdef _DEBUG
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+#endif
+
+	drawbuffermap = glMapBufferRange(GL_ARRAY_BUFFER, 0, size, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+#ifdef _DEBUG
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+#endif
+}
+
+void GL_DestroyPersistentDrawBuffer()
+{
+	if (OpenGL_buffer_storage_enabled && drawbuffer)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glDeleteBuffers(1, &drawbuffer);
+		drawbuffer = 0;
+	}
+}
+
+int GL_CopyVertices(int numvertices)
+{
+	if (OpenGL_buffer_storage_enabled)
+	{
+		if (nextcommittedvertex + numvertices > NUM_VERTS_PER_BUFFER)
+		{
+			size_t buffersize = NUM_VERTS_PER_BUFFER * sizeof(gl_vertex);
+			GL_InitPersistentDrawBuffer(buffersize);
+			nextcommittedvertex = 0;
+		}
+
+		glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
+		int startoffset = nextcommittedvertex;
+		void* dataptr = (void*)((uintptr_t)drawbuffermap + startoffset * sizeof(gl_vertex));
+		memcpy(dataptr, GL_vertices, numvertices * sizeof(gl_vertex));
+
+		nextcommittedvertex += numvertices;
+
+		return startoffset;
+	}
+	else
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
+		if (nextcommittedvertex + numvertices > NUM_VERTS_PER_BUFFER)
+		{
+			size_t buffersize = NUM_VERTS_PER_BUFFER * sizeof(gl_vertex);
+			glBufferData(GL_ARRAY_BUFFER, buffersize, nullptr, GL_STREAM_DRAW);
+			nextcommittedvertex = 0;
+		}
+
+		int startoffset = nextcommittedvertex;
+
+		void* dataptr = glMapBufferRange(GL_ARRAY_BUFFER, startoffset * sizeof(gl_vertex), numvertices * sizeof(gl_vertex), GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
+		memcpy(dataptr, GL_vertices, numvertices * sizeof(gl_vertex));
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+
+		nextcommittedvertex += numvertices;
+
+		return startoffset;
+	}
 }
 
 void opengl_SetDrawDefaults(void)
@@ -139,35 +228,38 @@ void opengl_SetDrawDefaults(void)
 	delete[] genericVertexBody;
 	delete[] genericFragBody;
 
-	//Init draw buffers
-	glGenBuffers(1, &drawbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
-	size_t buffersize = NUM_VERTS_PER_BUFFER * sizeof(gl_vertex);
-	glBufferData(GL_ARRAY_BUFFER, buffersize, nullptr, GL_STREAM_DRAW);
-
 	//Init VAO and vertex state
 	glGenVertexArrays(1, &drawvao);
 	glBindVertexArray(drawvao);
 
-	size_t offset = 0;
+	//Init draw buffers
+	size_t buffersize = NUM_VERTS_PER_BUFFER * sizeof(gl_vertex);
+	if (OpenGL_buffer_storage_enabled)
+	{
+		GL_InitPersistentDrawBuffer(buffersize);
+	}
+	else
+	{
+		glGenBuffers(1, &drawbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, drawbuffer);
+		glBufferData(GL_ARRAY_BUFFER, buffersize, nullptr, GL_STREAM_DRAW);
 
-	//attrib 0: position
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), 0);
+		//attrib 0: position
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), 0);
 
-	//attrib 1: color
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, color));
+		//attrib 1: color
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, color));
 
-	//attrib 2: uv
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, tex_coord));
-	offset += sizeof(tex_array) * NUM_VERTS_PER_BUFFER;
+		//attrib 2: uv
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, tex_coord));
 
-	//attrib 3: uv 2
-	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, tex_coord2));
-	offset += sizeof(tex_array) * NUM_VERTS_PER_BUFFER;
+		//attrib 3: uv 2
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(gl_vertex), (const void*)offsetof(gl_vertex, tex_coord2));
+	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

@@ -52,6 +52,7 @@ extern HDC hOpenGLDC;
 //gl_init.cpp
 extern bool OpenGL_packed_pixels;
 extern bool OpenGL_debugging_enabled;
+extern bool OpenGL_buffer_storage_enabled;
 int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state);
 void opengl_Close();
 
@@ -112,6 +113,7 @@ void opengl_SetMultitextureBlendMode(bool state);
 void opengl_DrawFlatPolygon3D(g3Point** p, int nv);
 //Call to ensure that the draw VAO is always ready to go when changing VAOs.
 void GL_UseDrawVAO(void);
+void GL_DestroyPersistentDrawBuffer();
 
 //gl_framebuffer.cpp
 class Framebuffer

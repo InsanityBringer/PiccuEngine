@@ -30,6 +30,7 @@ PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
 PFNWGLCREATECONTEXTATTRIBSARBPROC dwglCreateContextAttribsARB;
 
 bool OpenGL_debugging_enabled;
+bool OpenGL_buffer_storage_enabled;
 
 #if defined(WIN32)
 //	Moved from DDGR library
@@ -477,6 +478,8 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 	OpenGL_debugging_enabled = false;
 #endif
 
+	OpenGL_buffer_storage_enabled = opengl_CheckExtension("GL_ARB_buffer_storage");
+
 #elif defined(__LINUX__)
 	/***********************************************************
 	*               LINUX OPENGL
@@ -556,6 +559,7 @@ void opengl_Close()
 
 	opengl_FreeImages();
 	opengl_CloseFramebuffer();
+	GL_DestroyPersistentDrawBuffer();
 
 #if defined(WIN32)
 	wglMakeCurrent(NULL, NULL);
