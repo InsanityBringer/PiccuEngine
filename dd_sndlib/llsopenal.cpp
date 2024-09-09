@@ -43,7 +43,8 @@ LPALGETBUFFERPTRVSOFT dalGetBufferPtrvSOFT;
 //Hack: Maybe will fix problems with streaming system
 bool streamStartedthisFrame = false;
 
-float SoundDopplerMult = 0.6f;
+constexpr float DEFAULT_SOUNDDOPPLERMULT = 0.5f;
+float SoundDopplerMult = DEFAULT_SOUNDDOPPLERMULT;
 
 //llsOpenAL implementation
 void llsOpenAL::SetSoundCard(const char* name)
@@ -699,7 +700,7 @@ void llsOpenAL::SetEnvironmentToggles(const t3dEnvironmentToggles* env)
 	if (!DopplerEnabled)
 		SoundDopplerMult = 0;
 	else
-		SoundDopplerMult = .6f;
+		SoundDopplerMult = DEFAULT_SOUNDDOPPLERMULT;
 }
 
 void llsOpenAL::GetEnvironmentToggles(t3dEnvironmentToggles* env)
