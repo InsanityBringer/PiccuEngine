@@ -51,7 +51,15 @@ enum renderer_type
 	RENDERER_NONE,
 };
 
+enum backend_type
+{
+	BACKEND_GLLEGACY,
+	BACKEND_GL3
+};
+
+//TODO: Need to excise the legacy renderer selector from the code entirely. 
 extern renderer_type Renderer_type;
+extern backend_type BackendType;
 
 // renderer clear flags
 #define RF_CLEAR_ZBUFFER	1
@@ -250,7 +258,7 @@ struct tRendererStats
 // returns rendering statistics for the frame
 void rend_GetStatistics(tRendererStats *stats);
 
-void rend_SetTextureType (texture_type);
+void rend_SetTextureType (texture_type tt);
 
 // Given a handle to a bitmap and nv point vertices, draws a 3D polygon
 void rend_DrawPolygon3D(int handle,g3Point **p,int nv,int map_type=MAP_TYPE_BITMAP);
@@ -259,7 +267,7 @@ void rend_DrawPolygon3D(int handle,g3Point **p,int nv,int map_type=MAP_TYPE_BITM
 void rend_DrawPolygon2D(int handle,g3Point **p,int nv);
 
 // Tells the software renderer whether or not to use mipping
-void rend_SetMipState (sbyte);
+void rend_SetMipState (sbyte state);
 
 // Sets the fog state to TRUE or FALSE
 void rend_SetFogState (sbyte on);
@@ -410,15 +418,6 @@ void rend_DLLGetRenderState(DLLrendering_state* rstate);
 // Draws a simple bitmap at the specified x,y location
 void rend_DrawSimpleBitmap (int bm_handle,int x,int y);
 
-// Changes the resolution of the renderer
-void rend_SetResolution (int width,int height);
-
-// Shuts down OpenGL in a window
-void rend_CloseOpenGLWindow ();
-
-// Sets the state of the OpenGLWindow to on or off
-void rend_SetOpenGLWindowState (int state,oeApplication *app,renderer_preferred_state *pref_state);
-
 // Sets the hardware bias level for coplanar polygons
 // This helps reduce z buffer artifaces
 void rend_SetCoplanarPolygonOffset (float factor);
@@ -536,11 +535,176 @@ void rend_UpdateFogBrightness(RoomBlock* roomstate, int numrooms);
 void rend_SetCurrentRoomNum(int roomblocknum);
 void rend_UpdateTerrainFog(float color[4], float start, float end);
 
-#if defined(DD_ACCESS_RING) 
-#if defined(WIN32)
-// returns the direct draw object 
-void *rend_RetrieveDirectDrawObj(void **frontsurf, void **backsurf);
-#endif
-#endif
+void rend_BindBitmap(int handle);
+void rend_BindLightmap(int handle);
+
+void rend_RestoreLegacy();
+
+void rend_GetScreenSize(int& screen_width, int& screen_height);
+
+#include <vecmat.h>
+#include <vector>
+
+//Start and element count of a pass of a mesh
+struct ElementRange
+{
+	uint32_t offset, count;
+	ElementRange()
+	{
+		offset = count = 0;
+	}
+	ElementRange(uint32_t offset, uint32_t count) : offset(offset), count(count)
+	{
+	}
+};
+
+enum class PrimitiveType
+{
+	Triangles,
+	Lines,
+	Points,
+};
+
+//A sortable element is used to batch up elements by their texture and lightmap handle, if used. 
+struct SortableElement
+{
+	int element;
+	ushort texturehandle;
+	ushort lmhandle;
+
+	friend bool operator<(const SortableElement& l, const SortableElement& r)
+	{
+		uint lh = l.texturehandle | l.lmhandle << 16;
+		uint rh = r.texturehandle | r.lmhandle << 16;
+
+		return lh < rh;
+	}
+};
+
+struct RendVertex
+{
+	vector position;
+	ubyte r, g, b, a;
+	vector normal;
+	int lmpage;
+	float u1, v1;
+	float u2, v2;
+	float uslide, vslide; //only slide uv1 for the moment
+};
+
+class IVertexBuffer
+{
+public:
+	virtual void Initialize(uint32_t numvertices, uint32_t datasize, void* data) = 0;
+	//Performs a dynamic update of part of the vertex buffer.
+	//This cannot change the size of the underlying buffer object.
+	virtual void Update(uint32_t byteoffset, uint32_t datasize, void* data) = 0;
+	//Used for streaming buffers, appends data to the end of the buffer.
+	//When the buffer fills, will orphan the previous one to avoid sync if possible. 
+	//Buffer must have been initialized before using. Returns offset of data. 
+	virtual uint32_t Append(uint32_t size, void* data) = 0;
+	virtual void Bind() const = 0;
+
+	//TODO: Temp interface to load textures
+	virtual void BindBitmap(int bmhandle) const = 0;
+	virtual void BindLightmap(int lmhandle) const = 0;
+
+	//Draws all the vertices in the buffer in one go
+	virtual void Draw(PrimitiveType mode) const = 0;
+	//Draws a range of vertices from the buffer.
+	virtual void Draw(PrimitiveType mode, ElementRange range) const = 0;
+	//Draws a range of vertices from the buffer, from the range of the currently bound index buffer
+	virtual void DrawIndexed(PrimitiveType mode, ElementRange range) const = 0;
+
+	virtual void Destroy() = 0;
+
+	//Special primitive controls
+
+	//Adds a rotated screen-aligned billboard to the mesh
+	// [ISB] Wait, why is this here, shouldn't it be in MeshBuilder
+	//virtual void AddBitmapRotated(vector* origin, float angle, float width, float height, int color = 0xFFFFFF, float alpha = 1.0f) = 0;
+};
+
+class IIndexBuffer
+{
+public:
+	virtual void Initialize(uint32_t numindices, uint32_t datasize, void* data) = 0;
+	//Performs a dynamic update of part of the index buffer.
+	//This cannot change the size of the underlying buffer object.
+	virtual void Update(uint32_t byteoffset, uint32_t datasize, void* data) = 0;
+
+	virtual void Bind() const = 0;
+
+	virtual void Destroy() = 0;
+};
+
+//Should this be split into specialized builders for vertex and index buffers?
+class MeshBuilder
+{
+	bool m_initialized;
+	bool m_vertexstarted;
+
+	uint32_t m_vertexstartoffset;
+	uint32_t m_vertexstartcount;
+
+	bool m_indexstarted;
+	uint32_t m_indexstartoffset;
+	uint32_t m_indexstartcount;
+
+	std::vector<RendVertex> m_vertices;
+	std::vector<uint32_t> m_indicies;
+
+public:
+	MeshBuilder();
+
+	//Begins submitting vertices for a render pass.
+	void BeginVertices();
+	//Begins submitting indices for a render pass.
+	void BeginIndices();
+
+	//Adds vertices to the vertex buffer
+	void SetVertices(int numverts, RendVertex* vertices);
+	//For when there's no reason to batch up a bunch
+	void AddVertex(RendVertex& vertex);
+
+	//Adds indicies to the vertex buffer
+	void SetIndicies(int numindices, int* indicies);
+
+	ElementRange EndVertices();
+	ElementRange EndIndices();
+
+	void BuildVertices(IVertexBuffer& buffer);
+	void BuildIndicies(IIndexBuffer& buffer);
+
+	//Appends vertices to the vertex buffer, used for streaming buffers. 
+	ElementRange AppendVertices(IVertexBuffer& buffer);
+
+	void UpdateVertices(IVertexBuffer& buffer, uint32_t offset);
+	void UpdateIndicies(IIndexBuffer& buffer, uint32_t offset);
+
+	//Clears out the current mesh, allowing it to be reused. 
+	void Reset();
+
+
+	int NumVertices() const
+	{
+		return m_vertices.size();
+	}
+
+	int NumIndices() const
+	{
+		return m_indicies.size();
+	}
+
+	uint32_t VertexOffset() const
+	{
+		return m_vertices.size() * sizeof(m_vertices[0]);
+	}
+
+	uint32_t IndexOffset() const
+	{
+		return m_indicies.size() * sizeof(m_indicies[0]);
+	}
+};
 
 #endif

@@ -14,6 +14,19 @@ SET (RENDERER_SOURCES
 		renderer/gl_shader.h
 		renderer/gl_shadersource.cpp
 		
+		#legacy GL renderer
+		renderer/gl1_draw.cpp
+		renderer/gl1_framebuffer.cpp
+		renderer/gl1_image.cpp
+		renderer/gl1_init.cpp
+		renderer/gl1_local.h
+		renderer/gl1_main.cpp
+		renderer/gl1_shader.cpp
+		
+		#renderer switchboard
+		renderer/renderer.cpp
+		renderer/IRenderer.h
+		
 		#GLAD gl loader
 		renderer/gl.c
 		renderer/wgl.c
@@ -26,14 +39,4 @@ SET (RENDERER_SOURCES
 		renderer/setup.cpp
 		renderer/transforms.cpp)
 
-IF(UNIX)
-SET (RENDERER_SOURCES ${RENDERER_SOURCES} 
-		renderer/lnxscreenmode.cpp)
-ENDIF()
-
 set (RENDERER_SOURCES ${RENDERER_SOURCES} PARENT_SCOPE)
-
-# These are excluded.
-#opengl.cpp
-#renderer.cpp
-#Direct3D.cpp

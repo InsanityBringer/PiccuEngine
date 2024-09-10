@@ -19,110 +19,6 @@
 #include "gl_local.h"
 #include "gl_mesh.h"
 
-MeshBuilder::MeshBuilder()
-{
-	m_initialized = false;
-	m_vertexstartoffset = m_vertexstartcount = 0;
-	m_vertexstarted = false;
-	m_indexstartoffset = m_indexstartcount = 0;
-	m_indexstarted = false;
-}
-
-void MeshBuilder::BeginVertices()
-{
-	m_vertexstartoffset = m_vertices.size();
-	m_vertexstartcount = 0;
-	m_vertexstarted = true;
-}
-
-void MeshBuilder::BeginIndices()
-{
-	m_indexstartoffset = m_indicies.size();
-	m_indexstartcount = 0;
-	m_indexstarted = true;
-}
-
-void MeshBuilder::SetVertices(int numverts, RendVertex* vertices)
-{
-	if (!m_vertexstarted)
-	{
-		Error("MeshBuilder::SetVertices: BeginVertices not called!");
-	}
-	//This needs some optimization
-	for (int i = 0; i < numverts; i++)
-		m_vertices.push_back(vertices[i]);
-
-	m_vertexstartcount += numverts;
-}
-
-void MeshBuilder::AddVertex(RendVertex& vertex)
-{
-	m_vertices.push_back(vertex);
-	m_vertexstartcount++;
-}
-
-void MeshBuilder::SetIndicies(int numindices, int* indicies)
-{
-	if (!m_indexstarted)
-	{
-		Error("MeshBuilder::SetIndicies: BeginIndices not called!");
-	}
-	for (int i = 0; i < numindices; i++)
-		m_indicies.push_back(indicies[i]);
-
-	m_indexstartcount += numindices;
-}
-
-ElementRange MeshBuilder::EndVertices()
-{
-	if (!m_vertexstarted)
-		Error("MeshBuilder::EndVertices: Not started!");
-	m_vertexstarted = false;
-	return ElementRange(m_vertexstartoffset, m_vertexstartcount);
-}
-
-ElementRange MeshBuilder::EndIndices()
-{
-	if (!m_indexstarted)
-		Error("MeshBuilder::EndIndices: Not started!");
-	m_indexstarted = false;
-	return ElementRange(m_indexstartoffset, m_indexstartcount);
-}
-
-void MeshBuilder::BuildVertices(VertexBuffer& buffer)
-{
-	buffer.Initialize(m_vertices.size(), m_vertices.size() * sizeof(m_vertices[0]), m_vertices.data());
-}
-
-void MeshBuilder::BuildIndicies(IndexBuffer& buffer)
-{
-	buffer.Initialize(m_indicies.size(), m_indicies.size() * sizeof(m_indicies[0]), m_indicies.data());
-}
-
-ElementRange MeshBuilder::AppendVertices(VertexBuffer& buffer)
-{
-	uint32_t offset = buffer.Append(m_vertices.size() * sizeof(m_vertices[0]), m_vertices.data());
-	return ElementRange(offset, m_vertexstartcount);
-}
-
-void MeshBuilder::UpdateVertices(VertexBuffer& buffer, uint32_t offset)
-{
-	buffer.Update(offset, m_vertices.size() * sizeof(m_vertices[0]), m_vertices.data());
-}
-
-void MeshBuilder::UpdateIndicies(IndexBuffer& buffer, uint32_t offset)
-{
-	buffer.Update(offset, m_indicies.size() * sizeof(m_indicies[0]), m_indicies.data());
-}
-
-void MeshBuilder::Reset()
-{
-	m_vertices.clear();
-	m_indicies.clear();
-	m_vertexstartoffset = m_vertexstartcount = 0;
-	m_indexstartoffset = m_indexstartcount = 0;
-}
-
 VertexBuffer::VertexBuffer() : VertexBuffer(true, false)
 {
 }
@@ -183,7 +79,7 @@ void VertexBuffer::Initialize(uint32_t numvertices, uint32_t datasize, void* dat
 	m_size = datasize;
 	m_vertexcount = numvertices;
 
-	GL_UseDrawVAO();
+	rend_RestoreLegacy();
 }
 
 void VertexBuffer::Update(uint32_t byteoffset, uint32_t datasize, void* data)
@@ -223,16 +119,12 @@ void VertexBuffer::Bind() const
 
 void VertexBuffer::BindBitmap(int bmhandle) const
 {
-	opengl_MakeBitmapCurrent(bmhandle, MAP_TYPE_BITMAP, 0);
-	opengl_MakeWrapTypeCurrent(bmhandle, MAP_TYPE_BITMAP, 0);
-	opengl_MakeFilterTypeCurrent(bmhandle, MAP_TYPE_BITMAP, 0);
+	rend_BindBitmap(bmhandle);
 }
 
 void VertexBuffer::BindLightmap(int lmhandle) const
 {
-	opengl_MakeBitmapCurrent(lmhandle, MAP_TYPE_LIGHTMAP, 1);
-	opengl_MakeWrapTypeCurrent(lmhandle, MAP_TYPE_LIGHTMAP, 1);
-	opengl_MakeFilterTypeCurrent(lmhandle, MAP_TYPE_LIGHTMAP, 1);
+	rend_BindLightmap(lmhandle);
 }
 
 static GLenum GetGLPrimitiveType(PrimitiveType mode)
@@ -338,5 +230,5 @@ void IndexBuffer::Destroy()
 
 void rendTEMP_UnbindVertexBuffer()
 {
-	GL_UseDrawVAO();
+	rend_RestoreLegacy();
 }

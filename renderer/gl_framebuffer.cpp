@@ -24,7 +24,7 @@ static const float framebuffer_buffer[] = { -1.0f, -3.0f, 0.0f, 0.0f,
 					  -1.0f, 1.0f, 0.0f, 2.0f,
 					  3.0f, 1.0f, 2.0f, 2.0f };
 
-void GL_InitFramebufferVAO(void)
+void GL3Renderer::InitFramebufferVAO()
 {
 	if (fbVAOName)
 		return;
@@ -42,11 +42,11 @@ void GL_InitFramebufferVAO(void)
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)(sizeof(float) * 2));
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	GL_UseDrawVAO();
+	UseDrawVAO();
 	//glBindVertexArray(0);
 }
 
-void GL_DestroyFramebufferVAO(void)
+void GL3Renderer::DestroyFramebufferVAO(void)
 {
 	glDeleteBuffers(1, &fbVBOName);
 	glDeleteVertexArrays(1, &fbVAOName);
@@ -94,6 +94,9 @@ void Framebuffer::Update(int width, int height, bool msaa)
 
 	GLenum textureType = msaa ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
 
+	int screen_width, screen_height;
+	rend_GetScreenSize(screen_width, screen_height);
+
 	if (msaa)
 	{
 		//Create the sub framebuffer now if it hasn't already been.
@@ -105,13 +108,13 @@ void Framebuffer::Update(int width, int height, bool msaa)
 		}
 
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_colorname);
-		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, SAMPLE_COUNT, GL_RGBA8, OpenGL_state.screen_width, OpenGL_state.screen_height, GL_FALSE);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, SAMPLE_COUNT, GL_RGBA8, screen_width, screen_height, GL_FALSE);
 		
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_depthname);
-		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, SAMPLE_COUNT, GL_DEPTH_COMPONENT32F, OpenGL_state.screen_width, OpenGL_state.screen_height, GL_FALSE);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, SAMPLE_COUNT, GL_DEPTH_COMPONENT32F, screen_width, screen_height, GL_FALSE);
 
 		glBindTexture(GL_TEXTURE_2D, m_subcolorname);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, screen_width, screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -130,12 +133,12 @@ void Framebuffer::Update(int width, int height, bool msaa)
 	else
 	{
 		glBindTexture(GL_TEXTURE_2D, m_colorname);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, screen_width, screen_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 		glBindTexture(GL_TEXTURE_2D, m_depthname);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, OpenGL_state.screen_width, OpenGL_state.screen_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, screen_width, screen_height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
@@ -264,7 +267,5 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
-	//glBindVertexArray(0);
-	GL_UseDrawVAO();
 	glViewport(oldviewport[0], oldviewport[1], oldviewport[2], oldviewport[3]);
 }

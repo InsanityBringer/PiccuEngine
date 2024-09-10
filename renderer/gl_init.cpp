@@ -23,14 +23,10 @@
 #include <Windows.h>
 #endif
 
-renderer_preferred_state OpenGL_preferred_state = { false, true, false, 32, 1.0 };
-rendering_state OpenGL_state;
-
 PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
 PFNWGLCREATECONTEXTATTRIBSARBPROC dwglCreateContextAttribsARB;
 
-bool OpenGL_debugging_enabled;
-bool OpenGL_buffer_storage_enabled;
+
 
 #if defined(WIN32)
 //	Moved from DDGR library
@@ -42,7 +38,7 @@ HGLRC ResourceContext;
 bool Already_loaded = false;
 
 // Sets default states for our renderer
-void opengl_SetDefaults()
+void GL3Renderer::SetDefaults()
 {
 	mprintf((0, "Setting states\n"));
 
@@ -69,20 +65,20 @@ void opengl_SetDefaults()
 	}
 #endif
 
-	rend_SetAlphaType(AT_ALWAYS);
-	rend_SetAlphaValue(255);
-	rend_SetFiltering(1);
-	rend_SetLightingState(LS_NONE);
-	rend_SetTextureType(TT_FLAT);
-	rend_SetColorModel(CM_RGB);
-	rend_SetZBufferState(1);
-	rend_SetZValues(0, 3000);
+	SetAlphaType(AT_ALWAYS);
+	SetAlphaValue(255);
+	SetFiltering(1);
+	SetLighting(LS_NONE);
+	SetTextureType(TT_FLAT);
+	SetColorModel(CM_RGB);
+	SetZBufferState(1);
+	SetZValues(0, 3000);
 	OpenGL_last_bound[0] = 9999999;
 	OpenGL_last_bound[1] = 9999999;
 	Last_texel_unit_set = -1;
 	OpenGL_multitexture_state = false;
 
-	opengl_SetDrawDefaults();
+	SetDrawDefaults();
 
 	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	//glHint(GL_FOG_HINT, GL_NICEST);
@@ -294,8 +290,8 @@ die:
 	return ret;
 }
 
-// Check for OpenGL support, 
-int opengl_Setup(HDC glhdc)
+// Check for OpenGL support, and start er up
+int GL3Renderer::Setup(HDC glhdc)
 {
 	if (!GL_GetWGLExtensionProcs())
 	{
@@ -405,7 +401,7 @@ int opengl_Setup(HDC glhdc)
 #endif
 
 // Gets some specific information about this particular flavor of opengl
-void opengl_GetInformation()
+void GL3Renderer::GetInformation()
 {
 	mprintf((0, "OpenGL Vendor: %s\n", glGetString(GL_VENDOR)));
 	mprintf((0, "OpenGL Renderer: %s\n", glGetString(GL_RENDERER)));
@@ -419,7 +415,7 @@ void APIENTRY GL_LogDebugMsg(GLenum source, GLenum type, GLuint id, GLenum sever
 
 // Sets up our OpenGL rendering context
 // Returns 1 if ok, 0 if something bad
-int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
+int GL3Renderer::Init(oeApplication* app, renderer_preferred_state* pref_state)
 {
 	//int width,height;
 	int retval = 1;
@@ -459,17 +455,17 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 
 	hOpenGLDC = GetDC(hOpenGLWnd);
 
-	opengl_InitImages();
-	opengl_UpdateWindow();
+	InitImages();
+	UpdateWindow();
 
-	if (!opengl_Setup(hOpenGLDC))
+	if (!Setup(hOpenGLDC))
 	{
-		opengl_Close();
+		//opengl_Close();
 		return 0;
 	}
 
 #if defined(GL_DEBUG) && !defined(NDEBUG)
-	OpenGL_debugging_enabled = opengl_CheckExtension("GL_KHR_debug");
+	OpenGL_debugging_enabled = CheckExtension("GL_KHR_debug");
 	if (OpenGL_debugging_enabled)
 	{
 		glDebugMessageCallback(GL_LogDebugMsg, nullptr);
@@ -478,7 +474,7 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 	OpenGL_debugging_enabled = false;
 #endif
 
-	OpenGL_buffer_storage_enabled = opengl_CheckExtension("GL_ARB_buffer_storage");
+	OpenGL_buffer_storage_enabled = CheckExtension("GL_ARB_buffer_storage");
 
 #elif defined(__LINUX__)
 	/***********************************************************
@@ -503,33 +499,32 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 
 #endif
 	// Get some info
-	opengl_GetInformation();
+	GetInformation();
 
 	//Initialize the common buffer that will be shared across shaders. 
-	opengl_InitShaders();
+	InitShaders();
 
 	// Update framebuffer
-	opengl_UpdateFramebuffer();
+	UpdateFramebuffer();
 
 	mprintf((0, "Setting up multitexture...\n"));
 
 	//In this shader world, multitexture is always supported.
 	UseMultitexture = true;
-	//TODO: Need to use standard statement
 	OpenGL_packed_pixels = false;
 
-	opengl_InitCache();
+	InitCache();
 
 	if (UseMultitexture)
 		mprintf((0, "Using multitexture."));
 	else
 		mprintf((0, "Not using multitexture."));
 
-	opengl_SetUploadBufferSize(256, 256);
-	opengl_SetDefaults();
+	SetUploadBufferSize(256, 256);
+	SetDefaults();
 
 	// Default passthrough viewport. 
-	opengl_SetViewport();
+	SetViewport();
 
 	//g3_ForceTransformRefresh();
 
@@ -549,17 +544,34 @@ int opengl_Init(oeApplication* app, renderer_preferred_state* pref_state)
 	}
 #endif
 
+	extern const char* blitVertexSrc;
+	extern const char* blitFragmentSrc;
+	blitshader.AttachSource(blitVertexSrc, blitFragmentSrc);
+	blitshader_gamma = blitshader.FindUniform("gamma");
+	if (blitshader_gamma == -1)
+		Error("GLRenderer::Init: Failed to find gamma uniform!");
+
+	//Simple shader for testing, before everything is made to use shaders. 
+	extern const char* testVertexSrc;
+	extern const char* testFragmentSrc;
+	testshader.AttachSource(testVertexSrc, testFragmentSrc);
+
+	//[ISB] moved here.. stupid. 
+	SetGammaValue(OpenGL_preferred_state.gamma);
+
 	return retval;
 }
 
 // Releases the rendering context
-void opengl_Close()
+void GL3Renderer::Close()
 {
 	CHECK_ERROR(5);
 
-	opengl_FreeImages();
-	opengl_CloseFramebuffer();
-	GL_DestroyPersistentDrawBuffer();
+	blitshader.Destroy();
+
+	FreeImages();
+	CloseFramebuffer();
+	DestroyPersistentDrawBuffer();
 
 #if defined(WIN32)
 	wglMakeCurrent(NULL, NULL);
@@ -572,9 +584,9 @@ void opengl_Close()
 
 #endif
 
-	opengl_FreeUploadBuffers();
+	FreeUploadBuffers();
 
-	opengl_FreeCache();
+	FreeCache();
 
 #if defined(WIN32)
 	//	I'm freeing the DC here - samir

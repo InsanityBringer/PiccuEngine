@@ -38,8 +38,6 @@ struct ShaderDefinition
 	const char* fragment_filename;
 };
 
-void opengl_InitShaders(void);
-
 class ShaderProgram
 {
 	GLuint m_name;

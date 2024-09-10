@@ -22,6 +22,7 @@
 #include "gl_shader.h"
 #include "pserror.h"
 #include "renderer.h"
+#include "gl_local.h"
 
 constexpr int TERRAIN_FOG_COUNTER_MAX = 100;
 
@@ -58,7 +59,7 @@ ShaderDefinition gl_shaderdefs[] =
 
 ShaderProgram gl_shaderprogs[NUM_SHADERDEFS];
 
-void opengl_InitShaders(void)
+void GL3Renderer::InitShaders()
 {
 	lastshaderprog = nullptr;
 	glGenBuffers(1, &commonbuffername);
@@ -125,7 +126,7 @@ void opengl_InitShaders(void)
 	}
 }
 
-uint32_t rend_GetPipelineByName(const char* name)
+uint32_t GL3Renderer::GetPipelineByName(const char* name)
 {
 	for (uint32_t i = 0; i < NUM_SHADERDEFS; i++)
 	{
@@ -135,13 +136,13 @@ uint32_t rend_GetPipelineByName(const char* name)
 	return 0xFFFFFFFFu;
 }
 
-void rend_BindPipeline(uint32_t handle)
+void GL3Renderer::BindPipeline(uint32_t handle)
 {
 	if (handle < NUM_SHADERDEFS)
 		gl_shaderprogs[handle].Use();
 }
 
-void rend_UpdateCommon(float* projection, float* modelview, int depth)
+void GL3Renderer::UpdateCommon(float* projection, float* modelview, int depth)
 {
 	CommonBlock newblock;
 	memcpy(newblock.projection, projection, sizeof(newblock.projection));
@@ -156,15 +157,15 @@ void rend_UpdateCommon(float* projection, float* modelview, int depth)
 		Int3();
 #endif
 
-	rend_SetCommonDepth(depth);
+	SetCommonDepth(depth);
 }
 
-void rend_SetCommonDepth(int depth)
+void GL3Renderer::SetCommonDepth(int depth)
 {
 	glBindBufferRange(GL_UNIFORM_BUFFER, COMMON_BINDING, commonbuffername, depth * sizeof(CommonBlock), sizeof(CommonBlock));
 }
 
-void rend_UpdateSpecular(SpecularBlock* specularstate)
+void GL3Renderer::UpdateSpecular(SpecularBlock* specularstate)
 {
 	glBindBuffer(GL_COPY_WRITE_BUFFER, specularbuffername);
 	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, 16 + (specularstate->num_speculars * 32), specularstate);
@@ -176,7 +177,7 @@ void rend_UpdateSpecular(SpecularBlock* specularstate)
 #endif
 }
 
-void rend_UpdateFogBrightness(RoomBlock* roomstate, int numrooms)
+void GL3Renderer::UpdateFogBrightness(RoomBlock* roomstate, int numrooms)
 {
 	glBindBuffer(GL_COPY_WRITE_BUFFER, fogbuffername);
 	glBufferSubData(GL_COPY_WRITE_BUFFER, 0, sizeof(RoomBlock) * numrooms, roomstate);
@@ -188,7 +189,7 @@ void rend_UpdateFogBrightness(RoomBlock* roomstate, int numrooms)
 #endif
 }
 
-void rend_SetCurrentRoomNum(int roomblocknum)
+void GL3Renderer::SetCurrentRoomNum(int roomblocknum)
 {
 	glBindBufferRange(GL_UNIFORM_BUFFER, ROOM_BINDING, fogbuffername, roomblocknum * sizeof(RoomBlock), sizeof(RoomBlock));
 
@@ -199,7 +200,7 @@ void rend_SetCurrentRoomNum(int roomblocknum)
 #endif
 }
 
-void rend_UpdateTerrainFog(float color[4], float start, float end)
+void GL3Renderer::UpdateTerrainFog(float color[4], float start, float end)
 {
 	TerrainFogBlock block;
 	memcpy(block.color, color, sizeof(float) * 3);
@@ -223,7 +224,7 @@ void rend_UpdateTerrainFog(float color[4], float start, float end)
 #endif
 }
 
-void GL_UpdateLegacyBlock(float* projection, float* modelview)
+void GL3Renderer::UpdateLegacyBlock(float* projection, float* modelview)
 {
 	CommonBlock newblock;
 	memcpy(newblock.projection, projection, sizeof(newblock.projection));
