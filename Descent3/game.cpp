@@ -372,6 +372,7 @@ void SetScreenMode(int sm, bool force_res_change)
 			Render_preferred_state.window_height = Game_window_res_height;
 			Render_preferred_state.fullscreen = Game_fullscreen;
 
+			OpenGLProfile = (opengl_profile)DesiredOpenGLProfile;
 			rend_initted = rend_Init(PreferredRenderer, Descent, &Render_preferred_state);
 			rend_width = rend_height = 0;
 		}

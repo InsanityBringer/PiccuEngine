@@ -51,15 +51,15 @@ enum renderer_type
 	RENDERER_NONE,
 };
 
-enum backend_type
+enum opengl_profile
 {
-	BACKEND_GLLEGACY,
-	BACKEND_GL3
+	GLPROFILE_COMPAT,
+	GLPROFILE_CORE
 };
 
 //TODO: Need to excise the legacy renderer selector from the code entirely. 
 extern renderer_type Renderer_type;
-extern backend_type BackendType;
+extern opengl_profile OpenGLProfile;
 
 // renderer clear flags
 #define RF_CLEAR_ZBUFFER	1

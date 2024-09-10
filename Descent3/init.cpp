@@ -380,6 +380,7 @@ void SaveGameSettings()
 #else
 	Render_preferred_state.vsync_on = 0;
 #endif
+	Database->write("OpenGLProfile", DesiredOpenGLProfile);
 	Database->write("DetailScorchMarks",Detail_settings.Scorches_enabled);
 	Database->write("DetailWeaponCoronas",Detail_settings.Weapon_coronas_enabled);
 	Database->write("DetailFog",Detail_settings.Fog_enabled);
@@ -568,6 +569,7 @@ void LoadGameSettings()
 	Database->read("FastHeadlight",&Detail_settings.Fast_headlight_on);
 	Database->read("MirrorSurfaces",&Detail_settings.Mirrored_surfaces);
 	Database->read_int("RS_vsync",&Render_preferred_state.vsync_on);
+	Database->read_int("OpenGLProfile", &DesiredOpenGLProfile);
 
 	if (FindArg ("-vsync"))
 		Render_preferred_state.vsync_on=true;

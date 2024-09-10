@@ -29,13 +29,12 @@ void ConfigForceFeedback(void);
 
 
 // General option toggles
-typedef struct tGameToggles
+struct tGameToggles
 {
 	bool show_reticle;
 	bool guided_mainview;
 	bool ship_noises;
-}
-tGameToggles;
+};
 
 extern tGameToggles Game_toggles;
 
@@ -68,6 +67,8 @@ struct tVideoResolution
 extern int Game_video_resolution;
 extern int Game_window_res_width, Game_window_res_height;
 extern bool Game_fullscreen;
+//[ISB] yeah it shouldn't be an int but I don't want to deal with include order or include renderer.h in config so..
+extern int DesiredOpenGLProfile;
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //KEEP THESE MEMBERS IN THE SAME ORDER, IF YOU ADD,REMOVE, OR CHANGE ANYTHING IN THIS STRUCT, MAKE SURE YOU

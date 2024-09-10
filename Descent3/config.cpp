@@ -110,6 +110,8 @@ tGameToggles Game_toggles =
 	true
 };
 
+int DesiredOpenGLProfile = GLPROFILE_COMPAT; //[ISB] yeah it shouldn't be an int but I don't want to deal with include order or include renderer.h in config so..
+
 #define IDV_VCONFIG			12	//video config
 #define IDV_GCONFIG			13	//general config
 #define IDV_SCONFIG			14	//audio config
@@ -501,6 +503,7 @@ struct video_menu
 	char* buffer;
 	bool* fullscreen;
 	int* antialiasing;
+	int* backend;
 
 	int window_width, window_height;
 
@@ -522,6 +525,11 @@ struct video_menu
 
 		window_width = Game_window_res_width;
 		window_height = Game_window_res_height;
+
+		sheet->NewGroup("OpenGL profile", 0, 80);
+		backend = sheet->AddFirstLongRadioButton("Compat (for NV)");
+		sheet->AddLongRadioButton("Core (for AMD)");
+		*backend = DesiredOpenGLProfile;
 
 		// video settings
 		sheet->NewGroup(TXT_TOGGLES, 0, 120);
@@ -572,6 +580,16 @@ struct video_menu
 
 			SetScreenMode(GetScreenMode(), true);
 			Current_pilot.set_hud_data(NULL, NULL, NULL, &window_width, &window_height);
+		}
+
+		if (backend)
+		{
+			int olddesired = DesiredOpenGLProfile;
+			DesiredOpenGLProfile = (opengl_profile)*backend;
+			if (olddesired != DesiredOpenGLProfile && DesiredOpenGLProfile != OpenGLProfile)
+			{
+				DoMessageBox(TXT_WARNING, "Changing the OpenGL profile will apply the next time you start Piccu Engine.", MSGBOX_OK);
+			}
 		}
 
 		sheet = NULL;

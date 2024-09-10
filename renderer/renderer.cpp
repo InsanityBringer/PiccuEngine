@@ -26,7 +26,7 @@
 //TODO: Remove
 renderer_type Renderer_type = RENDERER_OPENGL;
 
-backend_type BackendType = BACKEND_GLLEGACY;
+opengl_profile OpenGLProfile = GLPROFILE_COMPAT;
 static IRenderer* renderer_inst;
 
 bool Renderer_initted;
@@ -59,12 +59,12 @@ int rend_Init(renderer_type state, oeApplication* app, renderer_preferred_state*
 
 	mprintf((0, "Renderer init is set to %d\n", Renderer_initted));
 
-	switch (BackendType)
+	switch (OpenGLProfile)
 	{
-	case BACKEND_GL3:
+	case GLPROFILE_CORE:
 		renderer_inst = new GL3Renderer();
 		break;
-	case BACKEND_GLLEGACY:
+	case GLPROFILE_COMPAT:
 		renderer_inst = new GLCompatibilityRenderer();
 		break;
 	default:
@@ -575,7 +575,7 @@ void rend_SetColorModel(color_model model)
 
 bool rend_CanUseNewrender()
 {
-	return BackendType == BACKEND_GL3;
+	return OpenGLProfile == GLPROFILE_CORE;
 }
 
 void rend_ClearBoundTextures()
