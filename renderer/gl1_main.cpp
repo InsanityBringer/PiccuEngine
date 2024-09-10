@@ -118,7 +118,7 @@ int GLCompatibilityRenderer::SetPreferredState(renderer_preferred_state* pref_st
 
 		if (pref_state->width != OpenGL_state.screen_width || pref_state->height != OpenGL_state.screen_height
 			|| pref_state->window_width != OpenGL_state.view_width || pref_state->window_height != OpenGL_state.view_height
-			|| pref_state->fullscreen != old_state.fullscreen)
+			|| pref_state->fullscreen != old_state.fullscreen || pref_state->antialised != old_state.antialised)
 		{
 			UpdateWindow();
 			SetViewport();
@@ -168,7 +168,7 @@ void GLCompatibilityRenderer::Flip(void)
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
-		mprintf((0, "Error entering flip: %d\n", err));
+		Int3();
 	}
 #endif
 #ifndef RELEASE
@@ -194,14 +194,10 @@ void GLCompatibilityRenderer::Flip(void)
 	OpenGL_polys_drawn = 0;
 	OpenGL_verts_processed = 0;
 
-	if (OpenGL_preferred_state.gamma == 1.0)
-		framebuffers[framebuffer_current_draw].BlitToRaw(0, framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h);
-	else
-	{
-		blitshader.Use();
-		framebuffers[framebuffer_current_draw].BlitTo(0, framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h);
-		glUseProgram(0);
-	}
+	//[ISB] remove the BlitToRaw call so I can hack around drivers that do things like forced antialiasing that cause an otherwise valid operation to stop working. 
+	blitshader.Use();
+	framebuffers[framebuffer_current_draw].BlitTo(0, framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h);
+	glUseProgram(0);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
@@ -209,7 +205,7 @@ void GLCompatibilityRenderer::Flip(void)
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
-		mprintf((0, "Error blitting to real framebuffer: %d\n", err));
+		Int3();
 	}
 #endif
 
@@ -226,7 +222,7 @@ void GLCompatibilityRenderer::Flip(void)
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
-		mprintf((0, "Error setting framebuffer back: %d\n", err));
+		Int3();
 	}
 #endif
 
@@ -885,7 +881,7 @@ void GLCompatibilityRenderer::UpdateFramebuffer(void)
 {
 	for (int i = 0; i < NUM_GL1_FBOS; i++)
 	{
-		framebuffers[i].Update(OpenGL_state.screen_width, OpenGL_state.screen_height, false);
+		framebuffers[i].Update(OpenGL_state.screen_width, OpenGL_state.screen_height, OpenGL_preferred_state.antialised);
 	}
 
 	framebuffer_current_draw = 0;

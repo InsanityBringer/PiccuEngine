@@ -216,19 +216,17 @@ void GL3Renderer::Flip()
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
-		mprintf((0, "Error entering flip: %d\n", err));
+		Int3();
 	}
 #endif
 #ifndef RELEASE
-	int i;
-
 	RTP_INCRVALUE(texture_uploads, OpenGL_uploads);
 	RTP_INCRVALUE(polys_drawn, OpenGL_polys_drawn);
 
 	mprintf_at((1, 1, 0, "Uploads=%d    Polys=%d   Verts=%d   ", OpenGL_uploads, OpenGL_polys_drawn, OpenGL_verts_processed));
 	mprintf_at((1, 2, 0, "Sets= 0:%d   1:%d   2:%d   3:%d   ", OpenGL_sets_this_frame[0], OpenGL_sets_this_frame[1], OpenGL_sets_this_frame[2], OpenGL_sets_this_frame[3]));
 	mprintf_at((1, 3, 0, "Sets= 4:%d   5:%d  ", OpenGL_sets_this_frame[4], OpenGL_sets_this_frame[5]));
-	for (i = 0; i < 10; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		OpenGL_sets_this_frame[i] = 0;
 	}
@@ -242,14 +240,10 @@ void GL3Renderer::Flip()
 	OpenGL_polys_drawn = 0;
 	OpenGL_verts_processed = 0;
 
-	if (OpenGL_preferred_state.gamma == 1.0)
-		framebuffers[framebuffer_current_draw].BlitToRaw(0, framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h);
-	else
-	{
-		blitshader.Use();
-		framebuffers[framebuffer_current_draw].BlitTo(0, framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h);
-		glUseProgram(0);
-	}
+	//[ISB] remove the BlitToRaw call so I can hack around drivers that do things like forced antialiasing that cause an otherwise valid operation to stop working. 
+	blitshader.Use();
+	framebuffers[framebuffer_current_draw].BlitTo(0, framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h);
+	glUseProgram(0);
 	
 	UseDrawVAO();
 
@@ -259,7 +253,7 @@ void GL3Renderer::Flip()
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
-		mprintf((0, "Error blitting to real framebuffer: %d\n", err));
+		Int3();
 	}
 #endif
 
@@ -276,7 +270,7 @@ void GL3Renderer::Flip()
 	err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
-		mprintf((0, "Error setting framebuffer back: %d\n", err));
+		Int3();
 	}
 #endif
 
