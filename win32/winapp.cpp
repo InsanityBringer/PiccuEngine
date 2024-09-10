@@ -632,11 +632,11 @@ void oeWin32Application::delay(float secs)
 	}
 
 // block if messages are still pending (for task switching too, this call will not return until messages are clear
-	do
+	/*do
 	{
 		result = this->defer_block();
 	}
-	while (result == DEFER_PROCESS_ACTIVE || result == DEFER_PROCESS_INPUT_IDLE);
+	while (result == DEFER_PROCESS_ACTIVE || result == DEFER_PROCESS_INPUT_IDLE);*/
 }
 
 
