@@ -21,11 +21,12 @@
 #include "IRenderer.h"
 #include "pserror.h"
 #include "gl_local.h"
+#include "gl1_local.h"
 
 //TODO: Remove
 renderer_type Renderer_type = RENDERER_OPENGL;
 
-backend_type BackendType = BACKEND_GL3;
+backend_type BackendType = BACKEND_GLLEGACY;
 static IRenderer* renderer_inst;
 
 bool Renderer_initted;
@@ -62,6 +63,9 @@ int rend_Init(renderer_type state, oeApplication* app, renderer_preferred_state*
 	{
 	case BACKEND_GL3:
 		renderer_inst = new GL3Renderer();
+		break;
+	case BACKEND_GLLEGACY:
+		renderer_inst = new GLCompatibilityRenderer();
 		break;
 	default:
 		Error("Unsupported backend");
@@ -567,6 +571,16 @@ void rend_SetLighting(light_state state)
 void rend_SetColorModel(color_model model)
 {
 	renderer_inst->SetColorModel(model);
+}
+
+bool rend_CanUseNewrender()
+{
+	return BackendType == BACKEND_GL3;
+}
+
+void rend_ClearBoundTextures()
+{
+	renderer_inst->ClearBoundTextures();
 }
 
 MeshBuilder::MeshBuilder()

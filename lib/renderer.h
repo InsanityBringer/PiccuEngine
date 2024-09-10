@@ -538,9 +538,18 @@ void rend_UpdateTerrainFog(float color[4], float start, float end);
 void rend_BindBitmap(int handle);
 void rend_BindLightmap(int handle);
 
+//[ISB] Restores state such that legacy drawing calls such as rend_DrawPolygon will work.
+//only needed for Core backend. 
 void rend_RestoreLegacy();
 
+//[ISB] Returns true if Newrender is capable of using the current backend.
+bool rend_CanUseNewrender();
+
 void rend_GetScreenSize(int& screen_width, int& screen_height);
+
+//[ISB] This should hopefully be a temporary interface, but this resets all the texture binding state.
+//Needed so that the generic framebuffer class can clear both backend's state
+void rend_ClearBoundTextures();
 
 #include <vecmat.h>
 #include <vector>

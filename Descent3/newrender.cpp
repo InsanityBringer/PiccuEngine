@@ -791,6 +791,9 @@ void ComputeRoomPulseLight(room* rp);
 RenderList gRenderList;
 void NewRender_Render(vector& vieweye, matrix& vieworientation, int roomnum)
 {
+	if (!rend_CanUseNewrender())
+		return;
+
 	gRenderList.GatherVisible(vieweye, vieworientation, roomnum);
 	gRenderList.Draw();
 }
@@ -798,6 +801,9 @@ void NewRender_Render(vector& vieweye, matrix& vieworientation, int roomnum)
 void NewRender_InitNewLevel()
 {
 #ifndef NDEBUG
+	if (!rend_CanUseNewrender())
+		return;
+
 	MeshRooms();
 	MeshTerrain();
 #endif

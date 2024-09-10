@@ -775,9 +775,6 @@ void GL3Renderer::TranslateBitmapToOpenGL(int texnum, int bm_handle, int map_typ
 		OpenGL_uploads++;
 }
 
-ubyte opengl_Framebuffer_ready = 0;
-chunked_bitmap opengl_Chunked_bitmap;
-
 void GL3Renderer::ChangeChunkedBitmap(int bm_handle, chunked_bitmap* chunk)
 {
 	int bw = bm_w(bm_handle, 0);
@@ -930,4 +927,11 @@ void GL3Renderer::BindLightmap(int handle)
 	MakeBitmapCurrent(handle, MAP_TYPE_LIGHTMAP, 1);
 	MakeWrapTypeCurrent(handle, MAP_TYPE_LIGHTMAP, 1);
 	MakeFilterTypeCurrent(handle, MAP_TYPE_LIGHTMAP, 1);
+}
+
+void GL3Renderer::ClearBoundTextures()
+{
+	OpenGL_last_bound[0] = -1;
+	OpenGL_last_bound[1] = -1;
+	Last_texel_unit_set = -1;
 }

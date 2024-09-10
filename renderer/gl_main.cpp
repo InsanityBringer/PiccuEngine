@@ -18,7 +18,6 @@
 */
 #include "gl_local.h"
 #include "rtperformance.h"
-#include "gl_shader.h"
 
 static float mat4_identity[16] =
 { 1, 0, 0, 0,
@@ -858,7 +857,7 @@ void GL3Renderer::UpdateFramebuffer(void)
 	//Unbind the read framebuffer so that OBS can capture the window properly
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
-	InitFramebufferVAO();
+	GL_InitFramebufferVAO();
 }
 
 void GL3Renderer::CloseFramebuffer(void)
@@ -870,7 +869,7 @@ void GL3Renderer::CloseFramebuffer(void)
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	DestroyFramebufferVAO();
+	GL_DestroyFramebufferVAO();
 }
 
 //shader test

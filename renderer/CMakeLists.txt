@@ -11,17 +11,17 @@ SET (RENDERER_SOURCES
 		renderer/gl_mesh.cpp
 		renderer/gl_mesh.h
 		renderer/gl_shader.cpp
-		renderer/gl_shader.h
 		renderer/gl_shadersource.cpp
 		
 		#legacy GL renderer
 		renderer/gl1_draw.cpp
-		renderer/gl1_framebuffer.cpp
 		renderer/gl1_image.cpp
 		renderer/gl1_init.cpp
 		renderer/gl1_local.h
 		renderer/gl1_main.cpp
 		renderer/gl1_shader.cpp
+		
+		renderer/gl_shared.h
 		
 		#renderer switchboard
 		renderer/renderer.cpp

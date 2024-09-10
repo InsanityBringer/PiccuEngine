@@ -35,7 +35,7 @@
 #include "mem.h"
 #include "mono.h"
 #include "pserror.h"
-#include "gl_shader.h"
+#include "gl_shared.h"
 #include "IRenderer.h"
 
 struct color_array
@@ -53,37 +53,7 @@ struct gl_vertex
 	vector vert;
 	color_array color;
 	tex_array tex_coord;
-	float pad;
 	tex_array tex_coord2;
-	float pad2;
-};
-
-//gl_framebuffer.cpp
-class Framebuffer
-{
-	GLuint		m_name, m_subname;
-	GLuint		m_colorname, m_subcolorname, m_depthname;
-	uint32_t	m_width, m_height;
-	bool		m_msaa;
-
-	//Used when multisampling is enabled. Blits the multisample framebuffer to the non-multisample sub framebuffer
-	//Leaves the sub framebuffer bound for reading to finish the blit. 
-	void SubColorBlit();
-public:
-	Framebuffer();
-	void Update(int width, int height, bool msaa);
-	void Destroy();
-	//Blits to the target framebuffer using glBlitFramebuffer.
-	//Will set current read framebuffer to m_name.
-	void BlitToRaw(GLuint target, unsigned int x, unsigned int y, unsigned int w, unsigned int h);
-	//Blits to the target framebuffer using a draw. Bind desired shader before calling. 
-	//Will set current read framebuffer to m_name. Will not trash viewport. 
-	void BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned int w, unsigned int h);
-
-	GLuint Handle() const
-	{
-		return m_name;
-	}
 };
 
 constexpr int NUM_GL3_FBOS = 2;
@@ -136,6 +106,9 @@ class GL3Renderer : public IRenderer
 	void* drawbuffermap = 0;
 
 	//IMAGE
+	ubyte opengl_Framebuffer_ready = 0;
+	chunked_bitmap opengl_Chunked_bitmap;
+
 	ushort* OpenGL_bitmap_remap = nullptr;
 	ushort* OpenGL_lightmap_remap = nullptr;
 	ubyte* OpenGL_bitmap_states = nullptr;
@@ -203,10 +176,6 @@ private:
 
 	// Turns on/off multitexture blending
 	void SetMultitextureBlendMode(bool state);
-
-	//FRAMEBUFFER
-	void InitFramebufferVAO();
-	void DestroyFramebufferVAO();
 
 	//INIT
 	// Sets default states for our renderer
@@ -472,35 +441,13 @@ public:
 	void RestoreLegacy() override;
 
 	void GetScreenSize(int& screen_width, int& screen_height) override;
+
+	void ClearBoundTextures() override;
 };
 
 #define CHECK_ERROR(n) //need to decide what it does. 
 
 #define GL_DEBUG
-
-#ifdef WIN32
-//typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int interval);
-extern PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
-
-extern HWND hOpenGLWnd;
-extern HDC hOpenGLDC;
-#endif
-
-//gl_init.cpp
-extern bool OpenGL_packed_pixels;
-extern bool OpenGL_debugging_enabled;
-extern bool OpenGL_buffer_storage_enabled;
-
-//gl_main.cpp
-extern oeApplication* ParentApplication;
-extern bool Fast_test_render;
-
-
-//gl_image.cpp
-extern int OpenGL_last_bound[2];
-extern int OpenGL_sets_this_frame[10];
-extern int OpenGL_uploads;
-extern int Last_texel_unit_set;
 
 #define GET_WRAP_STATE(x)	((x>>2) & 0x03)
 #define GET_MIP_STATE(x)	((x>>1) & 0x01);
@@ -509,11 +456,3 @@ extern int Last_texel_unit_set;
 #define SET_WRAP_STATE(x,s) {x&=0xF3; x|=(s<<2);}
 #define SET_MIP_STATE(x,s) {x&=0xFD; x|=(s<<1);}
 #define SET_FILTER_STATE(x,s) {x&=0xFE; x|=(s);}
-
-//gl_draw.cpp
-extern float OpenGL_Alpha_factor;
-extern float Alpha_multiplier;
-extern bool OpenGL_blending_on;
-extern bool OpenGL_multitexture_state;
-extern int OpenGL_polys_drawn;
-extern int OpenGL_verts_processed;

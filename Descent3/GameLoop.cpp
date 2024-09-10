@@ -1063,6 +1063,11 @@ void ProcessTestKeys(int key)
 		break;
 
 	case KEY_N:
+		if (!rend_CanUseNewrender())
+		{
+			AddHUDMessage("newrender is incompatible with GL compatibility backend.");
+			break;
+		}
 		Render_use_newrender = !Render_use_newrender;
 		if (Render_use_newrender)
 			AddHUDMessage("Using newrender.");

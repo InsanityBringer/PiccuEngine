@@ -24,7 +24,7 @@ static const float framebuffer_buffer[] = { -1.0f, -3.0f, 0.0f, 0.0f,
 					  -1.0f, 1.0f, 0.0f, 2.0f,
 					  3.0f, 1.0f, 2.0f, 2.0f };
 
-void GL3Renderer::InitFramebufferVAO()
+void GL_InitFramebufferVAO()
 {
 	if (fbVAOName)
 		return;
@@ -42,11 +42,11 @@ void GL3Renderer::InitFramebufferVAO()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (GLvoid*)(sizeof(float) * 2));
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	UseDrawVAO();
+	rend_RestoreLegacy();
 	//glBindVertexArray(0);
 }
 
-void GL3Renderer::DestroyFramebufferVAO(void)
+void GL_DestroyFramebufferVAO()
 {
 	glDeleteBuffers(1, &fbVBOName);
 	glDeleteVertexArrays(1, &fbVAOName);
@@ -143,9 +143,7 @@ void Framebuffer::Update(int width, int height, bool msaa)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
 
-	OpenGL_last_bound[0] = -1;
-	OpenGL_last_bound[1] = -1;
-	Last_texel_unit_set = -1;
+	rend_ClearBoundTextures();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_name);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureType, m_colorname, 0);
@@ -245,12 +243,11 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 #endif
 
 
-	Last_texel_unit_set = 0;
+	rend_ClearBoundTextures();
 	//glClientActiveTextureARB(GL_TEXTURE0);
 	glActiveTexture(GL_TEXTURE0);
 
 	GLuint sourcename = m_msaa ? m_subcolorname : m_colorname;
-	OpenGL_last_bound[0] = sourcename;
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, sourcename);
 

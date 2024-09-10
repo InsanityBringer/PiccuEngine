@@ -19,7 +19,6 @@
 #include <string>
 #include <vector>
 #include "CFILE.H"
-#include "gl_shader.h"
 #include "pserror.h"
 #include "renderer.h"
 #include "gl_local.h"
@@ -337,10 +336,6 @@ void ShaderProgram::CreateCommonBindings(int bindindex)
 		glUniformBlockBinding(m_name, uboindex, TERRAIN_FOG_BINDING);
 	}
 
-	GLenum err = glGetError();
-	if (err != GL_NO_ERROR)
-		Int3();
-
 	glUseProgram(0);
 }
 
@@ -402,6 +397,10 @@ void ShaderProgram::AttachSourceFromDefiniton(ShaderDefinition& def)
 
 void ShaderProgram::AttachSourcePreprocess(const char* vertexsource, const char* fragsource, bool textured, bool lightmapped, bool speculared, bool fogged)
 {
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+
 	const char* vertexstrs[3];
 	GLint vertexlens[3];
 	const char* fragstrs[3];
