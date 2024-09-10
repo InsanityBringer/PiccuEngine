@@ -34,10 +34,8 @@
 #include "mission_download.h"
 #include "renderer.h"
 #include "inetgetfile.h"
-
-#ifndef MACINTOSH
 #include "unzip.h"
-#endif
+#include <algorithm>
 
 int Got_url;
 msn_urls msn_URL = { "",{"","","","",""} };
@@ -367,7 +365,7 @@ int msn_DownloadWithStatus(char* url, char* filename)
 
 			if(total_bytes)
 			{
-				time_remain = ((float)(total_bytes-received_bytes))/((float)(received_bytes/time_elapsed));
+				time_remain = ((float)(total_bytes-received_bytes))/((float)(received_bytes/std::min(1, time_elapsed)));
 			}
 			if(time_elapsed&&received_bytes)
 			{
