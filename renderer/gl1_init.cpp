@@ -386,8 +386,15 @@ int GLCompatibilityRenderer::Init(oeApplication* app, renderer_preferred_state* 
 	if (blitshader_gamma == -1)
 		Error("rend_Init: Failed to find gamma uniform!");
 
+
 	//[ISB] moved here.. stupid. 
 	SetGammaValue(OpenGL_preferred_state.gamma);
+
+#ifdef _DEBUG
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+		Int3();
+#endif
 
 	return retval;
 }

@@ -431,8 +431,6 @@ public:
 	void ClearBoundTextures() override;
 };
 
-#define CHECK_ERROR(n) //need to decide what it does. 
-
 #define GL_DEBUG
 
 #define GET_WRAP_STATE(x)	((x>>2) & 0x03)

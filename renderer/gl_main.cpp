@@ -243,7 +243,7 @@ void GL3Renderer::Flip()
 	//[ISB] remove the BlitToRaw call so I can hack around drivers that do things like forced antialiasing that cause an otherwise valid operation to stop working. 
 	blitshader.Use();
 	framebuffers[framebuffer_current_draw].BlitTo(0, framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h);
-	glUseProgram(0);
+	ShaderProgram::ClearBinding();
 	
 	UseDrawVAO();
 
@@ -307,8 +307,6 @@ void GL3Renderer::SetGammaValue(float val)
 	blitshader.Use();
 
 	glUniform1f(blitshader_gamma, 1.f / val);
-
-	glUseProgram(0);
 }
 
 void GL3Renderer::SetFlatColor(ddgr_color color)
@@ -381,7 +379,7 @@ void GL3Renderer::SetLighting(light_state state)
 		break;
 	}
 
-	CHECK_ERROR(13)
+	CHECK_ERROR(13);
 }
 
 void GL3Renderer::SetColorModel(color_model state)
@@ -427,8 +425,8 @@ void GL3Renderer::SetTextureType(texture_type state)
 		break;
 	}
 
-	CHECK_ERROR(12)
-		OpenGL_state.cur_texture_type = state;
+	CHECK_ERROR(12);
+	OpenGL_state.cur_texture_type = state;
 }
 
 // Sets the state of bilinear filtering for our textures
@@ -458,7 +456,7 @@ void GL3Renderer::SetZBufferState(sbyte state)
 		glDisable(GL_DEPTH_TEST);
 	}
 
-	CHECK_ERROR(14)
+	CHECK_ERROR(14);
 }
 
 // Sets the near and far planes for z buffer
@@ -633,7 +631,7 @@ void GL3Renderer::SetAlphaType(sbyte atype)
 	}
 	OpenGL_state.cur_alpha_type = atype;
 	Alpha_multiplier = GetAlphaMultiplier();
-	CHECK_ERROR(15)
+	CHECK_ERROR(15);
 }
 
 // Sets the alpha value for constant alpha

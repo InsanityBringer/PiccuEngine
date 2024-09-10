@@ -34,12 +34,6 @@ void GLCompatibilityRenderer::SetDrawDefaults()
 	glColorPointer(4, GL_FLOAT, 0, GL_colors);
 	glTexCoordPointer(4, GL_FLOAT, 0, GL_tex_coords);
 
-#ifdef _DEBUG
-	err = glGetError();
-	if (err != GL_NO_ERROR)
-		Int3();
-#endif
-
 	if (UseMultitexture)
 	{
 		glClientActiveTextureARB(GL_TEXTURE0_ARB + 1);
@@ -174,14 +168,14 @@ void GLCompatibilityRenderer::DrawPolygon3D(int handle, g3Point** p, int nv, int
 	OpenGL_polys_drawn++;
 	OpenGL_verts_processed += nv;
 
-	CHECK_ERROR(10)
+	CHECK_ERROR(10);
 
-		// If there is a lightmap to draw, draw it as well
-		if (Overlay_type != OT_NONE)
-		{
-			return;	// Temp fix until I figure out whats going on
-			Int3();	// Shouldn't reach here
-		}
+	// If there is a lightmap to draw, draw it as well
+	if (Overlay_type != OT_NONE)
+	{
+		return;	// Temp fix until I figure out whats going on
+		Int3();	// Shouldn't reach here
+	}
 }
 
 // Takes nv vertices and draws the 2D polygon defined by those vertices.
@@ -297,7 +291,7 @@ void GLCompatibilityRenderer::DrawPolygon2D(int handle, g3Point** p, int nv)
 	OpenGL_polys_drawn++;
 	OpenGL_verts_processed += nv;
 
-	CHECK_ERROR(10)
+	CHECK_ERROR(10);
 }
 
 // draws a scaled 2d bitmap to our buffer
@@ -698,7 +692,7 @@ void GLCompatibilityRenderer::DrawMultitexturePolygon3D(int handle, g3Point** p,
 	OpenGL_polys_drawn++;
 	OpenGL_verts_processed += nv;
 
-	CHECK_ERROR(10)
+	CHECK_ERROR(10);
 }
 
 void GLCompatibilityRenderer::DrawFlatPolygon3D(g3Point** p, int nv)
@@ -756,8 +750,8 @@ void GLCompatibilityRenderer::DrawFlatPolygon3D(g3Point** p, int nv)
 	}
 
 	glEnd();
-	CHECK_ERROR(11)
-		OpenGL_polys_drawn++;
+	CHECK_ERROR(11);
+	OpenGL_polys_drawn++;
 	OpenGL_verts_processed += nv;
 }
 

@@ -21,6 +21,25 @@
 //Things shared by both the compatibility and core implementations. 
 
 #pragma once
+#include <glad/gl.h>
+#include "pserror.h"
+
+//uncomment to express your love for the best graphics API ever designed and enable extra error checking to show your love. 
+//#define I_LOVE_OPENGL
+
+#ifdef I_LOVE_OPENGL
+constexpr void CHECK_ERROR(int n) //need to decide what it does. 
+{
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+	{
+		mprintf((1, "GL Error in context %d: %x\n", n, err));
+		Int3();
+	}
+}
+#else
+#define CHECK_ERROR(n)
+#endif
 
 struct CommonBlock
 {
@@ -66,6 +85,9 @@ public:
 	void Destroy();
 
 	void Use();
+
+	//Replacement for glUseProgram(0) that nulls the last binding. 
+	static void ClearBinding();
 
 	GLuint Handle() const
 	{

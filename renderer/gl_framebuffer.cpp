@@ -244,7 +244,9 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 
 
 	rend_ClearBoundTextures();
-	//glClientActiveTextureARB(GL_TEXTURE0);
+	if (OpenGLProfile == GLPROFILE_COMPAT)
+		glClientActiveTextureARB(GL_TEXTURE0);
+
 	glActiveTexture(GL_TEXTURE0);
 
 	GLuint sourcename = m_msaa ? m_subcolorname : m_colorname;
@@ -265,4 +267,6 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	glViewport(oldviewport[0], oldviewport[1], oldviewport[2], oldviewport[3]);
+
+	rend_RestoreLegacy();
 }

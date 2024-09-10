@@ -103,7 +103,7 @@ int GL3Renderer::MakeTextureObject(int tn, bool wrap)
 
 	//glTexEnvf (GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
 
-	CHECK_ERROR(2)
+	CHECK_ERROR(2);
 
 	return num;
 }
@@ -183,8 +183,9 @@ int GL3Renderer::MakeBitmapCurrent(int handle, int map_type, int tn)
 		OpenGL_sets_this_frame[0]++;
 	}
 
-	CHECK_ERROR(7)
-		return 1;
+	CHECK_ERROR(7);
+
+	return 1;
 }
 
 // Sets up an appropriate wrap type for the current bound texture
@@ -240,7 +241,7 @@ void GL3Renderer::MakeWrapTypeCurrent(int handle, int map_type, int tn)
 		SET_WRAP_STATE(OpenGL_bitmap_states[handle], dest_wrap);
 	}
 
-	CHECK_ERROR(8)
+	CHECK_ERROR(8);
 }
 
 // Chooses the correct filter type for the currently bound texture
@@ -305,7 +306,7 @@ void GL3Renderer::MakeFilterTypeCurrent(int handle, int map_type, int tn)
 		SET_MIP_STATE(OpenGL_bitmap_states[handle], dest_mip);
 	}
 
-	CHECK_ERROR(9)
+	CHECK_ERROR(9);
 }
 
 int GL3Renderer::InitCache()
@@ -771,8 +772,8 @@ void GL3Renderer::TranslateBitmapToOpenGL(int texnum, int bm_handle, int map_typ
 		GameLightmaps[bm_handle].flags &= ~LF_LIMITS;
 	}
 
-	CHECK_ERROR(6)
-		OpenGL_uploads++;
+	CHECK_ERROR(6);
+	OpenGL_uploads++;
 }
 
 void GL3Renderer::ChangeChunkedBitmap(int bm_handle, chunked_bitmap* chunk)

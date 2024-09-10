@@ -146,6 +146,8 @@ int GLCompatibilityRenderer::SetPreferredState(renderer_preferred_state* pref_st
 		OpenGL_preferred_state = *pref_state;
 	}
 
+	CHECK_ERROR(33);
+
 	return retval;
 }
 
@@ -159,6 +161,8 @@ void GLCompatibilityRenderer::StartFrame(int x1, int y1, int x2, int y2, int cle
 	OpenGL_state.clip_y1 = y1;
 	OpenGL_state.clip_x2 = x2;
 	OpenGL_state.clip_y2 = y2;
+
+	CHECK_ERROR(31);
 }
 
 // Flips the screen
@@ -197,7 +201,7 @@ void GLCompatibilityRenderer::Flip(void)
 	//[ISB] remove the BlitToRaw call so I can hack around drivers that do things like forced antialiasing that cause an otherwise valid operation to stop working. 
 	blitshader.Use();
 	framebuffers[framebuffer_current_draw].BlitTo(0, framebuffer_blit_x, framebuffer_blit_y, framebuffer_blit_w, framebuffer_blit_h);
-	glUseProgram(0);
+	ShaderProgram::ClearBinding();
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
@@ -261,10 +265,7 @@ bool GLCompatibilityRenderer::CheckExtension(char* extName)
 void GLCompatibilityRenderer::SetGammaValue(float val)
 {
 	blitshader.Use();
-
 	glUniform1f(blitshader_gamma, 1.f / val);
-
-	glUseProgram(0);
 }
 
 void GLCompatibilityRenderer::SetFlatColor(ddgr_color color)
@@ -349,8 +350,8 @@ void GLCompatibilityRenderer::SetTextureType(texture_type state)
 		break;
 	}
 
-	CHECK_ERROR(12)
-		OpenGL_state.cur_texture_type = state;
+	CHECK_ERROR(12);
+	OpenGL_state.cur_texture_type = state;
 }
 
 // Sets the state of bilinear filtering for our textures
@@ -380,7 +381,7 @@ void GLCompatibilityRenderer::SetZBufferState(sbyte state)
 		glDisable(GL_DEPTH_TEST);
 	}
 
-	CHECK_ERROR(14)
+	CHECK_ERROR(14);
 }
 
 // Sets the near and far planes for z buffer
@@ -413,6 +414,8 @@ void GLCompatibilityRenderer::ClearScreen(ddgr_color color)
 	glClearColor((float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f, 0);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	CHECK_ERROR(20);
 }
 
 // Clears the zbuffer for the screen
@@ -474,7 +477,7 @@ void GLCompatibilityRenderer::SetLighting(light_state state)
 		break;
 	}
 
-	CHECK_ERROR(13)
+	CHECK_ERROR(13);
 }
 
 // returns the alpha that we should use
@@ -663,7 +666,7 @@ void GLCompatibilityRenderer::SetAlphaType(sbyte atype)
 	}
 	OpenGL_state.cur_alpha_type = atype;
 	Alpha_multiplier = GetAlphaMultiplier();
-	CHECK_ERROR(15)
+	CHECK_ERROR(15);
 }
 
 // Sets the alpha value for constant alpha

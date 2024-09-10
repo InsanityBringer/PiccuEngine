@@ -394,7 +394,7 @@ void GL3Renderer::DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 	OpenGL_polys_drawn++;
 	OpenGL_verts_processed += nv;
 
-	CHECK_ERROR(10)
+	CHECK_ERROR(10);
 }
 
 // Takes nv vertices and draws the 2D polygon defined by those vertices.

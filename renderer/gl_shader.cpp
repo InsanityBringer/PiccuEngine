@@ -336,7 +336,7 @@ void ShaderProgram::CreateCommonBindings(int bindindex)
 		glUniformBlockBinding(m_name, uboindex, TERRAIN_FOG_BINDING);
 	}
 
-	glUseProgram(0);
+	ClearBinding();
 }
 
 void ShaderProgram::AttachSource(const char* vertexsource, const char* fragsource)
@@ -458,7 +458,7 @@ GLint ShaderProgram::FindUniform(const char* uniform)
 
 void ShaderProgram::Destroy()
 {
-	glUseProgram(0);
+	ClearBinding();
 	glDeleteProgram(m_name);
 	m_name = 0;
 }
@@ -470,4 +470,10 @@ void ShaderProgram::Use()
 		lastshaderprog = this;
 		glUseProgram(m_name);
 	}
+}
+
+void ShaderProgram::ClearBinding()
+{
+	lastshaderprog = nullptr;
+	glUseProgram(0);
 }
