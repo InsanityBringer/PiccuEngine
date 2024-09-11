@@ -143,7 +143,7 @@ class oeD3Win32App: public oeWin32Application
 
 public:
 	oeD3Win32App(unsigned flags, HInstance hinst):
-		 oeWin32Application(ENGINE_NAME, flags, hinst) 
+		 oeWin32Application(ENGINE_NAME " " GIT_DESCRIPTION, flags, hinst) 
 	{ 
 	  	Descent = this;
 		shutdown = false;

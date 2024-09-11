@@ -137,7 +137,8 @@ oeWin32Application::oeWin32Application(const char *name, unsigned flags, HInstan
 
 	m_hInstance = hinst;
 	m_Flags = flags;
-	strcpy(m_WndName, name);
+	strncpy(m_WndName, name, sizeof(m_WndName));
+	m_WndName[sizeof(m_WndName) - 1] = '\0';
 
 	os_init();
 
