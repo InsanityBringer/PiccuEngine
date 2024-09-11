@@ -72,11 +72,10 @@ int rend_Init(renderer_type state, oeApplication* app, renderer_preferred_state*
 		break;
 	}
 
+	Renderer_initted = true;
 	retval = renderer_inst->Init(app, pref_state);
 	if (retval == 0)
 		rend_Close(); //Having renderer_inst->Init clean up would cause reentrancy problems, I suspect
-
-	Renderer_initted = 1;
 
 	return retval;
 #else
