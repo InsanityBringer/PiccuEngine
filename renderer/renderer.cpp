@@ -103,44 +103,68 @@ void rend_SetRendererType(renderer_type state)
 
 void rend_GetStatistics(tRendererStats* stats)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->GetStatistics(stats);
 }
 
 void rend_SetTextureType(texture_type tt)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetTextureType(tt);
 }
 
 void rend_DrawPolygon3D(int handle, g3Point** p, int nv, int map_type)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawPolygon3D(handle, p, nv, map_type);
 }
 
 void rend_DrawPolygon2D(int handle, g3Point** p, int nv)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawPolygon2D(handle, p, nv);
 }
 
 void rend_SetMipState(sbyte state)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetMipState(state);
 }
 
 // Sets the fog state to TRUE or FALSE
 void rend_SetFogState(sbyte on)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetFogState(on);
 }
 
 // Sets the near and far plane of fog
 void rend_SetFogBorders(float fog_near, float fog_far)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetFogBorders(fog_near, fog_far);
 }
 
 // Sets the color for fill based primitives;
 void rend_SetFlatColor(ddgr_color color)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetFlatColor(color);
 }
 
@@ -148,12 +172,18 @@ void rend_SetFlatColor(ddgr_color color)
 // what buffer (if any) to clear
 void rend_StartFrame(int x1, int y1, int x2, int y2, int clear_flags)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->StartFrame(x1, y1, x2, y2, clear_flags);
 }
 
 // Tells the renderer the frame is over
 void rend_EndFrame()
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->EndFrame();
 }
 
@@ -161,119 +191,179 @@ void rend_EndFrame()
 // NOTE: scripts are expecting the old prototype that has a zvalue (which is ignored) before color
 void rend_DrawScaledBitmap(int x1, int y1, int x2, int y2, int bm, float u0, float v0, float u1, float v1, int color, float* alphas)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawScaledBitmap(x1, y1, x2, y2, bm, u0, v0, u1, v1, color, alphas);
 }
 
 void rend_DrawScaledBitmapWithZ(int x1, int y1, int x2, int y2, int bm, float u0, float v0, float u1, float v1, float zval, int color, float* alphas)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawScaledBitmapWithZ(x1, y1, x2, y2, bm, u0, v0, u1, v1, zval, color, alphas);
 }
 
 // Sets the state of bilinear filtering for our textures
 void rend_SetFiltering(sbyte state)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetFiltering(state);
 }
 
 // Sets the state of zbuffering to on or off
 void rend_SetZBufferState(sbyte state)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetZBufferState(state);
 }
 
 // Sets the near and far planes for z buffer
 void rend_SetZValues(float nearz, float farz)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetZValues(nearz, farz);
 }
 
 // Sets a bitmap as an overlay to rendered on top of the next texture map
 void rend_SetOverlayMap(int handle)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetOverlayMap(handle);
 }
 
 // Sets the type of overlay operation
 void rend_SetOverlayType(ubyte type)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetOverlayType(type);
 }
 
 // Clears the display to a specified color
 void rend_ClearScreen(ddgr_color color)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->ClearScreen(color);
 }
 
 // Fills a rectangle on the display
 void rend_FillRect(ddgr_color color, int x1, int y1, int x2, int y2)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->FillRect(color, x1, y1, x2, y2);
 }
 
 // Sets a pixel on the display
 void rend_SetPixel(ddgr_color color, int x, int y)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetPixel(color, x, y);
 }
 
 // Sets a pixel on the display
 ddgr_color rend_GetPixel(int x, int y)
 {
+	if (!Renderer_initted)
+		return 0;
+
 	return renderer_inst->GetPixel(x, y);
 }
 
 // Sets up a font character to draw.  We draw our fonts as pieces of textures
 void rend_DrawFontCharacter(int bm_handle, int x1, int y1, int x2, int y2, float u, float v, float w, float h)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawFontCharacter(bm_handle, x1, y1, x2, y2, u, v, w, h);
 }
 
 // Draws a line
 void rend_DrawLine(int x1, int y1, int x2, int y2)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawLine(x1, y1, x2, y2);
 }
 
 //	Draws spheres
 void rend_FillCircle(ddgr_color col, int x, int y, int rad)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->FillCircle(col, x, y, rad);
 }
 
 //	draws circles
 void rend_DrawCircle(int x, int y, int rad)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawCircle(x, y, rad);
 }
 
 // Flips the surface
 void rend_Flip()
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->Flip();
 }
 
 // Sets the argb characteristics of the font characters.  color1 is the upper left and proceeds clockwise
 void rend_SetCharacterParameters(ddgr_color color1, ddgr_color color2, ddgr_color color3, ddgr_color color4)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetCharacterParameters(color1, color2, color3, color4);
 }
 
 // Sets the color of fog
 void rend_SetFogColor(ddgr_color fogcolor)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetFogColor(fogcolor);
 }
 
 // sets the alpha type
 void rend_SetAlphaType(sbyte type)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetAlphaType(type);
 }
 
 // Sets the constant alpha value
 void rend_SetAlphaValue(ubyte val)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetAlphaValue(val);
 }
 
@@ -281,24 +371,39 @@ void rend_SetAlphaValue(ubyte val)
 // usefull for motion blur effect
 void rend_SetAlphaFactor(float val)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetAlphaFactor(val);
 }
 
 // Returns the current Alpha factor
 float rend_GetAlphaFactor()
 {
+	if (!Renderer_initted)
+	{
+		Int3();
+		return 1.0f;
+	}
+
 	return renderer_inst->GetAlphaFactor();
 }
 
 // Sets the wrap parameter
 void rend_SetWrapType(wrap_type val)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetWrapType(val);
 }
 
 // Takes a screenshot of the current frame and puts it into the handle passed
 void rend_Screenshot(int bm_handle)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->Screenshot(bm_handle);
 }
 
@@ -306,12 +411,18 @@ void rend_Screenshot(int bm_handle)
 // get drawn without being clipped by the zbuffer
 void rend_SetZBias(float z_bias)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetZBias(z_bias);
 }
 
 // Enables/disables writes the depth buffer
 void rend_SetZBufferWriteMask(int state)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetZBufferWriteMask(state);
 }
 
@@ -324,17 +435,29 @@ void rend_SetSoftwareParameters(float aspect, int width, int height, int pitch, 
 // Fills in some variables so the 3d math routines know how to project
 void rend_GetProjectionParameters(int* width, int* height)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->GetProjectionParameters(width, height);
 }
 
 void rend_GetProjectionScreenParameters(int& screenLX, int& screenTY, int& screenW, int& screenH)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->GetProjectionScreenParameters(screenLX, screenTY, screenW, screenH);
 }
 
 // Returns the aspect ratio of the physical screen
 float rend_GetAspectRatio()
 {
+	if (!Renderer_initted)
+	{
+		Int3();
+		return 1.0;
+	}
+
 	return renderer_inst->GetAspectRatio();
 }
 
@@ -359,18 +482,27 @@ void rend_DrawLFBBitmap(int sx, int sy, int w, int h, int dx, int dy, ushort* da
 //	given a chunked bitmap, renders it.
 void rend_DrawChunkedBitmap(chunked_bitmap* chunk, int x, int y, ubyte alpha)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawChunkedBitmap(chunk, x, y, alpha);
 }
 
 //	given a chunked bitmap, renders it.scaled
 void rend_DrawScaledChunkedBitmap(chunked_bitmap* chunk, int x, int y, int neww, int newh, ubyte alpha)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawScaledChunkedBitmap(chunk, x, y, neww, newh, alpha);
 }
 
 // Draws a line using the states of the renderer
 void rend_DrawSpecialLine(g3Point* p0, g3Point* p1)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawSpecialLine(p0, p1);
 }
 
@@ -378,18 +510,30 @@ void rend_DrawSpecialLine(g3Point* p0, g3Point* p1)
 // Returns -1 if it had to use the default resolution/bitdepth
 int rend_SetPreferredState(renderer_preferred_state* pref_state)
 {
+	if (!Renderer_initted)
+	{
+		Int3();
+		return 0;
+	}
+
 	return renderer_inst->SetPreferredState(pref_state);
 }
 
 // Sets the gamma value 
 void rend_SetGammaValue(float val)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetGammaValue(val);
 }
 
 // Fills in the passed in pointer with the current rendering state
 void rend_GetRenderState(rendering_state* rstate)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->GetRenderState(rstate);
 }
 
@@ -397,12 +541,18 @@ void rend_GetRenderState(rendering_state* rstate)
 // Uses legacy structure for compatibiltity with current DLLs. 
 void rend_DLLGetRenderState(DLLrendering_state* rstate)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DLLGetRenderState(rstate);
 }
 
 // Draws a simple bitmap at the specified x,y location
 void rend_DrawSimpleBitmap(int bm_handle, int x, int y)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->DrawSimpleBitmap(bm_handle, x, y);
 }
 
@@ -410,6 +560,9 @@ void rend_DrawSimpleBitmap(int bm_handle, int x, int y)
 // This helps reduce z buffer artifaces
 void rend_SetCoplanarPolygonOffset(float factor)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetCoplanarPolygonOffset(factor);
 }
 
@@ -430,41 +583,62 @@ void rend_SetErrorMessage(char* str)
 // Preuploads a bitmap to the card
 void rend_PreUploadTextureToCard(int a, int b)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->PreUploadTextureToCard(a, b);
 }
 
 void rend_FreePreUploadedTexture(int a, int b)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->FreePreUploadedTexture(a, b);
 }
 
 // Returns 1 if there is mid video memory, 2 if there is low vid memory, or 0 if there is large vid memory
 int rend_LowVidMem()
 {
+	if (!Renderer_initted)
+		return 0;
+
 	return renderer_inst->LowVidMem();
 }
 
 // Returns 1 if the renderer supports bumpmapping
 int rend_SupportsBumpmapping()
 {
+	if (!Renderer_initted)
+		return 0;
+
 	return renderer_inst->SupportsBumpmapping();
 }
 
 // Gets a bumpmap ready for drawing, or turns off bumpmapping
 void rend_SetBumpmapReadyState(int state, int map)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetBumpmapReadyState(state, map);
 }
 
 // Clears the zbuffer
 void rend_ClearZBuffer()
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->ClearZBuffer();
 }
 
 // Clears the texture cache
 void rend_ResetCache()
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->ResetCache();
 }
 
@@ -472,22 +646,34 @@ void rend_ResetCache()
 // X and Y are the destination X,Y.
 void rend_CopyBitmapToFramebuffer(int bm_handle, int x, int y)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->CopyBitmapToFramebuffer(bm_handle, x, y);
 }
 
 // Gets a renderer ready for a framebuffer copy, or stops a framebuffer copy
 void rend_SetFrameBufferCopyState(bool state)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetFrameBufferCopyState(state);
 }
 
 void rend_UpdateCommon(float* projection, float* modelview, int depth)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->UpdateCommon(projection, modelview, depth);
 }
 
 void rend_SetCommonDepth(int depth)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetCommonDepth(depth);
 }
 
@@ -495,91 +681,145 @@ void rend_SetCommonDepth(int depth)
 //Use the test shader.
 void rend_UseShaderTest()
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->UseShaderTest();
 }
 
 //Revert to non-shader rendering
 void rend_EndShaderTest()
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->EndShaderTest();
 }
 
 void rend_SetCullFace(bool state)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetCullFace(state);
 }
 
 //Gets a handle to a shader by name
 uint32_t rend_GetPipelineByName(const char* name)
 {
+	if (!Renderer_initted)
+	{
+		Error("rend_GetPipelineByName: Called in dedicated!");
+	}
 	return renderer_inst->GetPipelineByName(name);
 }
 
 //Given a handle from rend_GetShaderByName, binds that particular pipeline object
 void rend_BindPipeline(uint32_t handle)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->BindPipeline(handle);
 }
 
 //Updates specular components
 void rend_UpdateSpecular(SpecularBlock* specularstate)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->UpdateSpecular(specularstate);
 }
 
 //Updates brightness/fog components
 void rend_UpdateFogBrightness(RoomBlock* roomstate, int numrooms)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->UpdateFogBrightness(roomstate, numrooms);
 }
 
 void rend_SetCurrentRoomNum(int roomblocknum)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetCurrentRoomNum(roomblocknum);
 }
 
 void rend_UpdateTerrainFog(float color[4], float start, float end)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->UpdateTerrainFog(color, start, end);
 }
 
 void rend_BindBitmap(int handle)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->BindBitmap(handle);
 }
 
 void rend_BindLightmap(int handle)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->BindLightmap(handle);
 }
 
 void rend_RestoreLegacy()
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->RestoreLegacy();
 }
 
 void rend_GetScreenSize(int& screen_width, int& screen_height)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->GetScreenSize(screen_width, screen_height);
 }
 
 void rend_SetLighting(light_state state)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetLighting(state);
 }
 
 void rend_SetColorModel(color_model model)
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->SetColorModel(model);
 }
 
 bool rend_CanUseNewrender()
 {
+	if (!Renderer_initted)
+	{
+		Error("rend_CanUseNewrender: Called in dedicated!");
+	}
+
 	return OpenGLProfile == GLPROFILE_CORE;
 }
 
 void rend_ClearBoundTextures()
 {
+	if (!Renderer_initted)
+		return;
+
 	renderer_inst->ClearBoundTextures();
 }
 
