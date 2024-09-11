@@ -33,6 +33,38 @@
 #include <stdio.h>
 #include <Xinput.h>
 
+//xinput loading garbage
+//Windows 7 needs xinput1_3
+//Windows 10 has xinput1_4
+//Some versions of Windows 10 or the server equivalent don't have xinput1_3,
+//so this loader will smooth over things by loading XInput directly.
+static HMODULE XInputModule;
+static bool XInputAvailable;
+typedef DWORD (WINAPI *XInputGetState_fp)(_In_ DWORD dwUserIndex, _Out_ XINPUT_STATE* pState );
+XInputGetState_fp DXInputGetState;
+
+void joyw_LoadXInput()
+{
+	XInputAvailable = false;
+	//Try xinput1_4 first
+	XInputModule = LoadLibrary("xinput1_4.dll");
+	if (!XInputModule)
+	{
+		XInputModule = LoadLibrary("xinput1_3.dll");
+		if (!XInputModule)
+		{
+			mprintf((1, "Failed to load XInput, no XInput support enabled.\n"));
+			return;
+		}
+	}
+
+	DXInputGetState = (XInputGetState_fp)GetProcAddress(XInputModule, "XInputGetState");
+	if (DXInputGetState)
+	{
+		XInputAvailable = true;
+	}
+}
+
 
 //////////////////////////////////////////////////////////////////////////////
 struct tJoystickRecord
@@ -96,56 +128,70 @@ bool joy_Init(bool emulation)
 	//Try to init forcefeedback (which initializes joysticks)
 	uint i, n; // = joyGetNumDevs();
 
+	joyw_LoadXInput();
+
 	ddio_ff_AttachForce();
 
-// initializes forcefeedback system?
-	if(ddio_ff_Init()){
+	// initializes forcefeedback system?
+	if(ddio_ff_Init())
+	{
 		mprintf((0,"DDForce: Force Feedback Joystick Found\n"));
 	}	
 
 // initialize data structures.
 	n = 15;
-	if (n) {
+	if (n) 
+	{
 		WJD.joystick = (tJoystickRecord *)mem_malloc(sizeof(tJoystickRecord)*n);
 		for (i = 0;i < n;i++)
 		{
 			WJD.joystick[i].valid = 0;
 		}
 	}
-	else {
+	else 
+	{
 		WJD.init = 0;
 		return false;
 	}
 	WJD.njoy = n;
 
-// attempt directinput initialization.
+	//attempt directinput initialization.
 	int dio_count = (!emulation) ? ddio_ffjoy_Init() : 0;
-	XINPUT_STATE _discard;
-	int xinput_success = XInputGetState(0, &_discard) == ERROR_SUCCESS
-	|| XInputGetState(1, &_discard) == ERROR_SUCCESS
-	|| XInputGetState(2, &_discard) == ERROR_SUCCESS
-	|| XInputGetState(3, &_discard) == ERROR_SUCCESS;
+	int xinput_success = false;
 
-    if (xinput_success) {
-		for (i = 0; i < 4; i++) {
-			joyxi_init(i);
-		}
+	if (XInputAvailable)
+	{
+		XINPUT_STATE _discard;
+		xinput_success = DXInputGetState(0, &_discard) == ERROR_SUCCESS
+			|| DXInputGetState(1, &_discard) == ERROR_SUCCESS
+			|| DXInputGetState(2, &_discard) == ERROR_SUCCESS
+			|| DXInputGetState(3, &_discard) == ERROR_SUCCESS;
 	}
-	else if(dio_count > 0) {
+
+    if (xinput_success) 
+	{
+		for (i = 0; i < 4; i++) 
+			joyxi_init(i);
+	}
+	else if(dio_count > 0) 
+	{
 		WJD.lpdi = DInputData.lpdi;
 
-	// map all ffjoysticks to our joystick structure.
+		//map all ffjoysticks to our joystick structure.
 		for (i = 0; i < dio_count; i++)
 		{
 			joydi_init_stick(i);
 		}
 
 	}
-//	enumerate all windows joysticks (1 and 2 only)
-	else if (joymm_init()) {
+
+	//enumerate all windows joysticks (1 and 2 only)
+	else if (joymm_init()) 
+	{
 		WJD.lpdi = NULL;
 	}
-	else {
+	else 
+	{
 		WJD.init = 0;
 		return false;
 	}
@@ -220,23 +266,29 @@ void joy_GetPos(tJoystick stick, tJoyPos *pos)
 
 	
 
-	if (WJD.lpdi) {
+	if (WJD.lpdi) 
+	{
 		joydi_get_pos(stick, pos);
 	}
-	else {
-		XINPUT_STATE state = {0};
-		if (XInputGetState(stick, &state) == ERROR_SUCCESS) {
-			pos->x = (int)(state.Gamepad.sThumbLX/32767.0f*128.0f);
-			pos->y = -(int)(state.Gamepad.sThumbLY/32767.0f*128.0f);
-			pos->z = (int)(state.Gamepad.bLeftTrigger/255.0f*128.0f);
-			pos->r = (int)(state.Gamepad.sThumbRX/32767.0f*128.0f);
-			pos->u = (int)(state.Gamepad.sThumbRY/32767.0f*128.0f);
-			pos->v = (int)(state.Gamepad.bRightTrigger/255.0f*128.0f);
-			pos->buttons = state.Gamepad.wButtons;
-			pos->buttons |= (state.Gamepad.bLeftTrigger > 0) ? (1<<16) : 0;
-			pos->buttons |= (state.Gamepad.bRightTrigger > 0) ? (1<<17) : 0;
-			pos->btn = 0;
-			return;
+	else 
+	{
+		if (XInputAvailable)
+		{
+			XINPUT_STATE state = { 0 };
+			if (DXInputGetState(stick, &state) == ERROR_SUCCESS)
+			{
+				pos->x = (int)(state.Gamepad.sThumbLX / 32767.0f * 128.0f);
+				pos->y = -(int)(state.Gamepad.sThumbLY / 32767.0f * 128.0f);
+				pos->z = (int)(state.Gamepad.bLeftTrigger / 255.0f * 128.0f);
+				pos->r = (int)(state.Gamepad.sThumbRX / 32767.0f * 128.0f);
+				pos->u = (int)(state.Gamepad.sThumbRY / 32767.0f * 128.0f);
+				pos->v = (int)(state.Gamepad.bRightTrigger / 255.0f * 128.0f);
+				pos->buttons = state.Gamepad.wButtons;
+				pos->buttons |= (state.Gamepad.bLeftTrigger > 0) ? (1 << 16) : 0;
+				pos->buttons |= (state.Gamepad.bRightTrigger > 0) ? (1 << 17) : 0;
+				pos->btn = 0;
+				return;
+			}
 		}
 
 		joymm_get_pos(stick, pos);
@@ -263,7 +315,8 @@ void ddio_InternalJoyFrame()
 {
 	if (!WJD.init) return;
 	
-	if (WJD.lpdi) {
+	if (WJD.lpdi) 
+	{
 		int i;
 		tJoystickRecord *joystick = &WJD.joystick[0];
 		for (i = 0; i < WJD.njoy; i++)
@@ -275,7 +328,8 @@ void ddio_InternalJoyFrame()
 			
 			retry_joy_poll:
 				HRESULT hr = lpdidev->Poll();
-				if (hr == DIERR_INPUTLOST && try_count < 2) {
+				if (hr == DIERR_INPUTLOST && try_count < 2) 
+				{
 					ddio_ff_Acquire(joystick->joy_context.ffdev);
 					try_count++;
 					goto retry_joy_poll;
@@ -288,8 +342,10 @@ void ddio_InternalJoyFrame()
 
 void joyxi_init(int i)
 {
+	assert(XInputAvailable);
 	XINPUT_STATE state = {0};
-	if (XInputGetState(i, &state) == ERROR_SUCCESS) {
+	if (DXInputGetState(i, &state) == ERROR_SUCCESS) 
+	{
 		WJD.joystick[i].valid = 1;
 		WJD.joystick[i].joy_context.joyid = i;
 		WJD.joystick[i].caps.axes_mask = 
