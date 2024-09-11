@@ -250,7 +250,9 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 	glActiveTexture(GL_TEXTURE0);
 
 	GLuint sourcename = m_msaa ? m_subcolorname : m_colorname;
-	glEnable(GL_TEXTURE_2D);
+	if (OpenGLProfile == GLPROFILE_COMPAT)
+		glEnable(GL_TEXTURE_2D);
+
 	glBindTexture(GL_TEXTURE_2D, sourcename);
 
 #ifdef _DEBUG
