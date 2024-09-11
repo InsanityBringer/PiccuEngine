@@ -306,7 +306,7 @@ void ConfigSetDetailLevel(int level)
 #define GAMMA_SLICE_HEIGHT 128
 #define GAMMA_SLICE_X		((GAMMA_MENU_W - GAMMA_SLICE_WIDTH)/2);
 #define GAMMA_SLICE_Y		64
-#define GAMMA_SLIDER_UNITS	100
+#define GAMMA_SLIDER_UNITS	145 //[ISB] Allow gamma all the way down to 0.1
 
 #define IDV_GAMMAAPPLY	5
 #define IDV_AUTOGAMMA	6
@@ -440,13 +440,13 @@ void config_gamma()
 
 	// add slider!
 	sheet->NewGroup(NULL, 0, 175);
-	slider_set.min_val.f = 1.0f;
+	slider_set.min_val.f = 0.1f;
 	slider_set.max_val.f = 3.0f;
 	slider_set.type = SLIDER_UNITS_FLOAT;
 
 	init_gamma = Render_preferred_state.gamma;
 	curpos = CALC_SLIDER_POS_FLOAT(init_gamma, &slider_set, GAMMA_SLIDER_UNITS);
-	gamma_slider = sheet->AddSlider(TXT_GAMMA, 100, curpos, &slider_set, UID_GAMMASLIDER);
+	gamma_slider = sheet->AddSlider(TXT_GAMMA, GAMMA_SLIDER_UNITS, curpos, &slider_set, UID_GAMMASLIDER);
 	sheet->SetInitialFocusedGadget(UID_GAMMASLIDER);
 
 	// do ui.
