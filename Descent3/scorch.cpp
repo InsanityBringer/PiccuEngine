@@ -64,12 +64,14 @@ int Scorch_texture_handles[MAX_SCORCH_TEXTURES];
 //Called when a new level is started to reset the scorch list
 void ResetScorches()
 {
-	Scorch_start = Scorch_end = 0;
+	Scorch_start = Scorch_end = -1;
 }
 
 //Delete the specified scorch mark
 void DeleteScorch(int index)
 {
+	ASSERT(Scorch_start >= 0);
+
 	int roomface = Scorches[index].roomface;
 	scorch *sp;
 	int i;
@@ -123,33 +125,38 @@ void AddScorch(int roomnum,int facenum,vector *pos,int texture_handle,float size
 
 	//Count the number of scorches on this face, and bail if already at max
 	int count = 0;
-	int i;
-	scorch *sp;
-	for (i=Scorch_start,sp=&Scorches[Scorch_start];;)
+
+	// [ISB] If this is the first time adding a scorch, no need to count
+	if (Scorch_start != -1)
 	{
-		float size = (float) sp->size / 16.0;
-
-		//Increment count, and stop drawing if hit limit
-		if (sp->roomface == roomface)
+		int i;
+		scorch* sp;
+		for (i = Scorch_start, sp = &Scorches[Scorch_start];;)
 		{
-			//Found one!
-			count += __max((int) size,1);	//count large marks more
-			if (count >= MAX_VIS_COUNT)
-				return;
-		}
+			float size = (float)sp->size / 16.0;
 
-		//Check for end of loop
-		if (i == Scorch_end)
-			break;
+			//Increment count, and stop drawing if hit limit
+			if (sp->roomface == roomface)
+			{
+				//Found one!
+				count += std::max((int)size, 1); //count large marks more
+				if (count >= MAX_VIS_COUNT)
+					return;
+			}
 
-		//Increment & wrap
-		if (++i == MAX_SCORCHES)
-		{
-			i = 0;
-			sp = Scorches;
+			//Check for end of loop
+			if (i == Scorch_end)
+				break;
+
+			//Increment & wrap
+			if (++i == MAX_SCORCHES)
+			{
+				i = 0;
+				sp = Scorches;
+			}
+			else
+				sp++;
 		}
-		else
-			sp++;
 	}
 
 	//Check for scorch going off the edge of the face, and bail if does
@@ -187,7 +194,7 @@ void AddScorch(int roomnum,int facenum,vector *pos,int texture_handle,float size
 		Scorch_start = 0;
 
 	//Get a pointer to our struct
-	sp = &Scorches[Scorch_end];
+	scorch* sp = &Scorches[Scorch_end];
 
 	//Fill in the data
 	sp->roomface = roomface;
