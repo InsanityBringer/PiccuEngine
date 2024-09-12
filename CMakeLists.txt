@@ -75,7 +75,6 @@ IF (WIN32)
 	
 	FIND_LIBRARY(DINPUT_LIBRARY NAMES dinput "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
 	FIND_LIBRARY(DXGUID_LIBRARY NAMES dxguid "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
-	FIND_LIBRARY(XINPUT_LIBRARY NAMES xinput "${CMAKE_SOURCE_DIR}/lib/win" "${CMAKE_SOURCE_DIR}/lib/win/directx")
 	#TODO: May need to find OpenAL64 eventually
 	FIND_LIBRARY(OPENAL_LIBRARY NAMES openal32 "${CMAKE_SOURCE_DIR}/thirdparty/OpenAL/libs" "${CMAKE_SOURCE_DIR}/thirdparty/OpenAL/libs/Win32")
 ENDIF ()
@@ -86,7 +85,7 @@ include_directories("lib" "Descent3" "netcon/includes" ${PLATFORM_INCLUDES})
 
 IF (WIN32)
 	SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib wininet.lib
-		${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${XINPUT_LIBRARY} ${OPENAL_LIBRARY})
+		${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${OPENAL_LIBRARY})
 	SET (MIN_PLATFORM_LIBS wsock32.lib wininet.lib)
 ENDIF()
 IF (UNIX AND NOT APPLE)
