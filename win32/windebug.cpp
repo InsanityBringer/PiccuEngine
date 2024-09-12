@@ -116,6 +116,8 @@ int Debug_ErrorBox(int type,const char *title, const char *topstring, const char
 		debug_break();
 
 	char *tmpbuf = (char *) GlobalAlloc(GMEM_FIXED,strlen(dumptext) + strlen(topstring) + strlen(bottomstring) + 10);//malloc(strlen(dumptext) + strlen(topstring) + strlen(bottomstring) + 10);
+	if (!tmpbuf)
+		return 0; //uh this is really freakin bad, heh
 
 	strcpy(tmpbuf,topstring);
 	if (dumptext[0]) {
@@ -858,7 +860,7 @@ char *Debug_DumpInfo()
 	DumpCallsStack( dumpBuffer ) ;  
 	dump_text_to_clipboard(dumpBuffer.buffer);
 
-	dumpBuffer.Printf( "\r\n[ This info has been copied to the clipboard for pasting to a bug report. ]\r\n" );
+	//dumpBuffer.Printf( "\r\n[ This info has been copied to the clipboard for pasting to a bug report. ]\r\n" );
 
 	return dumpBuffer.buffer;
 #else
@@ -1171,86 +1173,6 @@ int __cdecl RecordExceptionInfo(PEXCEPTION_POINTERS data, const char *Message)
 
 	wsprintf(topmsg,"Excecution in %s was stopped by %s",Message,desc); 
 
-	wsprintf(bottommsg,FORMAT_REG,Context->Eax, Context->SegCs, Context->Eip, Context->EFlags,
-								  Context->Ebx, Context->SegSs, Context->Esp, Context->Ebp,
-								  Context->Ecx, Context->SegDs, Context->Esi, Context->SegFs,
-								  Context->Edx, Context->SegEs, Context->Edi, Context->SegGs
-								  );
-
-	
-	HANDLE LogFile = CreateFile("error.log", GENERIC_WRITE, 0, 0,
-								OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
-	if (LogFile != INVALID_HANDLE_VALUE)
-	{
-		
-		char *p = Debug_DumpInfo();
-		lstrcpy(callstack,p);
-		
-		unsigned long NumBytes;
-		SetFilePointer(LogFile, 0, 0, FILE_END);
-		
-		WriteFile(LogFile, topmsg, lstrlen(topmsg), &NumBytes, 0);
-		WriteFile(LogFile, FORMATCRLF, lstrlen(FORMATCRLF), &NumBytes, 0);
-		
-		char Username[100];
-		unsigned long unamelen = 99;
-		char Machinename[200];
-		unsigned long cnamelen = 199;
-		GetUserName(Username,&unamelen);
-		GetComputerName(Machinename,&cnamelen);
-		wsprintf(callstack,"Username: %s\r\nMachineName: %s\r\n",Username,Machinename);
-		WriteFile(LogFile, callstack, lstrlen(callstack), &NumBytes, 0);
-
-#if ( defined(RELEASE) && (!defined(DEMO)) && (!defined(GAMEGAUGE)))
-		wsprintf(callstack,"Descent 3 Release build %d\r\n",D3_RELEASE_BUILD_NO);
-		WriteFile(LogFile, callstack, lstrlen(callstack), &NumBytes, 0);
-#endif
-		RecordSystemInformation(LogFile);
-		RecordModuleList(LogFile);
-		
-		
-		WriteFile(LogFile, bottommsg, lstrlen(bottommsg), &NumBytes, 0);
-		WriteFile(LogFile, FORMAT_SEP, lstrlen(FORMAT_SEP), &NumBytes, 0);
-
-		DWORD* pStack = (DWORD *)Context->Esp;
-		DWORD* pStackTop;
-		__asm
-		{
-			mov	eax, fs:[4]
-			mov pStackTop, eax
-		}
-		if (pStackTop > pStack + MaxStackDump)
-			pStackTop = pStack + MaxStackDump;
-		int Count = 0;
-
-		char	buffer[1000] = "";
-		const int safetyzone = 50;
-		char*	nearend = buffer + sizeof(buffer) - safetyzone;
-		char*	output = buffer;
-		while (pStack + 1 <= pStackTop)
-		{
-			if ((Count % StackColumns) == 0)
-				output += wsprintf(output, "%08x: ", pStack);
-			char *Suffix = " ";
-			if ((++Count % StackColumns) == 0 || pStack + 2 > pStackTop)
-				Suffix = "\r\n";
-			output += wsprintf(output, "%08x%s", *pStack, Suffix);
-			pStack++;
-			// Check for when the buffer is almost full, and flush it to disk.
-			if (output > nearend)
-			{
-				wsprintf(tmpmsg, "%s", buffer);
-				WriteFile(LogFile, tmpmsg, lstrlen(tmpmsg), &NumBytes, 0);
-				buffer[0] = 0;
-				output = buffer;
-			}
-		}
-		CloseHandle(LogFile);
-	}	
-	
-	if (!Debug_break)
-		Debug_ErrorBox(OSMBOX_OK, "Error", topmsg, bottommsg);
-
 	std::string dumpfilename;
 	dumpfilename.resize(strlen("yyyy-mm-ddThh-mm-ssZ"));
 	time_t curtime = time(nullptr);
@@ -1276,7 +1198,19 @@ int __cdecl RecordExceptionInfo(PEXCEPTION_POINTERS data, const char *Message)
 	{
 		MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dump, MiniDumpNormal, &info, nullptr, nullptr);
 		CloseHandle(dump);
+
+		wsprintf(bottommsg, "A crash dump file has been created at %s.\r\nYou can attach this to a bug report at https://github.com/InsanityBringer/PiccuEngine/issues", fullfilename.c_str());
 	}
+	else
+	{
+		if (User_directory)
+			wsprintf(bottommsg, "Failed to create a crash dump file!\r\nPlease ensure that the user directory %s is writable.", User_directory);
+		else
+			wsprintf(bottommsg, "Failed to create a crash dump file, before User_directory initialization!");
+	}
+
+	if (!Debug_break)
+		Debug_ErrorBox(OSMBOX_OK, "Error", topmsg, bottommsg);
 
 	BeenHere = false;
 	if(Debug_break)
