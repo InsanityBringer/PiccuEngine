@@ -736,24 +736,24 @@ void GL3Renderer::DrawSpecialLine(g3Point* p0, g3Point* p1)
 		{
 			if (OpenGL_state.cur_light_state == LS_FLAT_GOURAUD)
 			{
-				colorp->r = fr; colorp->g = fg, colorp->b = fb; colorp->a = alpha;
+				colorp->r = fr; colorp->g = fg, colorp->b = fb; colorp->a = (ubyte)alpha;
 			}
 			else
 			{
 				// Do lighting based on intesity (MONO) or colored (RGB)
 				if (OpenGL_state.cur_color_model == CM_MONO)
 				{
-					colorp->r = pnt->p3_uvl.l; colorp->g = pnt->p3_uvl.l; colorp->b = pnt->p3_uvl.l; colorp->a = alpha;
+					colorp->r = pnt->p3_uvl.l * 255; colorp->g = pnt->p3_uvl.l * 255; colorp->b = pnt->p3_uvl.l * 255; colorp->a = (ubyte)alpha;
 				}
 				else
 				{
-					colorp->r = pnt->p3_uvl.r; colorp->g = pnt->p3_uvl.g; colorp->b = pnt->p3_uvl.r; colorp->a = alpha;
+					colorp->r = pnt->p3_uvl.r * 255; colorp->g = pnt->p3_uvl.g * 255; colorp->b = pnt->p3_uvl.r * 255; colorp->a = (ubyte)alpha;
 				}
 			}
 		}
 		else
 		{
-			colorp->r = fr; colorp->g = fg, colorp->b = fb; colorp->a = alpha;
+			colorp->r = fr; colorp->g = fg, colorp->b = fb; colorp->a = (ubyte)alpha;
 		}
 
 		// Finally, specify a vertex
