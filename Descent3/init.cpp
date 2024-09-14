@@ -302,7 +302,10 @@ void PreInitD3Systems()
 	iframelmtarg = FindArg("-framecap");
 	if(iframelmtarg)
 	{
-		Min_allowed_frametime = (1.0/atof(GameArgs[iframelmtarg+1]));
+		float cap = atof(GameArgs[iframelmtarg + 1]);
+		if (cap == 0 || cap > 1000) //[ISB] high enough framerates cause the game to eat itself
+			cap = 1000; 
+		Min_allowed_frametime = (1.0/cap);
 		mprintf((0,"Using %f as a minimum frametime\n",Min_allowed_frametime));
 	}
 	else
