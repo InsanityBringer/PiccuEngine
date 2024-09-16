@@ -529,7 +529,10 @@ int hlsSystem::Update2dSound(int hlsound_uid, float volume, float pan)
 }
 bool hlsSystem::ComputePlayInfo(int sound_obj_index, vector* virtual_pos, vector* virtual_vel, float* adjusted_volume)
 {
-	int sound_index;
+	//[ISB] Need to figure out why this happens
+	ASSERT(Viewer_object != nullptr);
+	if (!Viewer_object)
+		return false; 
 
 	int sound_seg;
 	int ear_seg;
@@ -547,7 +550,7 @@ bool hlsSystem::ComputePlayInfo(int sound_obj_index, vector* virtual_pos, vector
 		return false;
 	}
 
-	sound_index = m_sound_objects[sound_obj_index].m_sound_index;
+	int sound_index = m_sound_objects[sound_obj_index].m_sound_index;
 	ASSERT(sound_index >= 0 && sound_index < MAX_SOUNDS);
 
 	if ((Sounds[m_sound_objects[sound_obj_index].m_sound_index].flags & SPF_LISTENER_UPDATE) &&
@@ -580,7 +583,6 @@ bool hlsSystem::ComputePlayInfo(int sound_obj_index, vector* virtual_pos, vector
 	if (!BOA_IsSoundAudible(sound_seg, ear_seg))
 		return false;
 
-#ifndef MACINTOSH
 	if (sound_seg != ear_seg &&
 		!(sound_seg == Highest_room_index + 1 && ear_seg > Highest_room_index) &&
 		!(ear_seg == Highest_room_index + 1 && sound_seg > Highest_room_index))
@@ -675,7 +677,6 @@ bool hlsSystem::ComputePlayInfo(int sound_obj_index, vector* virtual_pos, vector
 		}
 	}
 	else
-#endif
 	{
 		dir_to_sound = sound_pos - Viewer_object->pos;
 		dist = vm_NormalizeVector(&dir_to_sound);
@@ -683,7 +684,6 @@ bool hlsSystem::ComputePlayInfo(int sound_obj_index, vector* virtual_pos, vector
 	if (dist >= Sounds[sound_index].max_distance)
 		return false;
 
-#ifndef MACINTOSH
 	if (*adjusted_volume <= 0.0)
 	{
 		*adjusted_volume = 0.0;
@@ -697,7 +697,7 @@ bool hlsSystem::ComputePlayInfo(int sound_obj_index, vector* virtual_pos, vector
 		(*adjusted_volume > 0.0f) &&
 		(dir_to_sound * Viewer_object->orient.fvec < -.5))
 		m_sound_objects[sound_obj_index].play_info.sample_skip_interval = 1;
-#endif
+	
 	* virtual_pos = Viewer_object->pos + (dir_to_sound * dist);
 	return true;
 
