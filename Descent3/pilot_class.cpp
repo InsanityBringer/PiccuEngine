@@ -104,7 +104,7 @@ void pilot::initialize(void)
 	num_missions_flown = 0;
 	mission_data = NULL;
 	mouselook_control = false;
-	key_ramping = 0; //[ISB] does anyone like keyboard ramping? 
+	key_ramping = 0.000001; //[ISB] does anyone like keyboard ramping? Can't be 0. 
 	lrearview_enabled = false;
 	rrearview_enabled = false;
 
