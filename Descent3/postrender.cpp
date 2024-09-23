@@ -21,6 +21,7 @@
 #endif
 
 #include <stdlib.h>
+#include <algorithm>
 #include "object.h"
 #include "viseffect.h"
 #include "render.h"
@@ -58,10 +59,15 @@ static int Postrender_sort_func(const postrender_struct* a, const postrender_str
 
 #define STATE_PUSH(val) {state_stack[state_stack_counter]=val; state_stack_counter++; ASSERT (state_stack_counter<2000);}
 #define STATE_POP()	{state_stack_counter--; pop_val=state_stack[state_stack_counter];}
+
+
+
 // Sorts our texture states using the quicksort algorithm
 void SortPostrenders()
 {
-	postrender_struct v, t;
+	if (Num_postrenders > 0)
+		std::sort(&Postrender_list[0], &Postrender_list[Num_postrenders - 1]);
+	/*postrender_struct v, t;
 	int pop_val;
 	int i, j;
 	int l, r;
@@ -119,7 +125,7 @@ void SortPostrenders()
 		r = pop_val;
 		STATE_POP();
 		l = pop_val;
-	}
+	}*/
 }
 
 

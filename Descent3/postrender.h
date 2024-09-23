@@ -37,6 +37,11 @@ struct postrender_struct
 	
 	short roomnum;
 	float z;
+
+	friend bool operator<(const postrender_struct& l, const postrender_struct& r)
+	{
+		return l.z < r.z;
+	}
 };
 
 extern int Num_postrenders;
