@@ -675,6 +675,15 @@ int cfg_element_ui::DoUI()
 	Control_poll_flag = false;						// under multiplayer, the game frame is still running, so don't let
 															// assignments make it down to game frame (HACK)
 	newuiMessageBox::GetSheet()->Realize();
+
+	if (m_type == ctAxis)
+	{
+		Descent->defer();
+		Controller->poll(true); //force it to poll
+		Controller->commit_axis_state();
+
+		Controller->flush();
+	}
 	while (!quit) 
 	{
 		int key;

@@ -100,14 +100,15 @@ gameWinController::~gameWinController()
 #define CONTROLLER_POLLING_TIME		50
 #define MOUSE_POLLING_TIME				(1.0f/20.0f)
 
-void gameWinController::poll()
+void gameWinController::poll(bool force)
 {
 	if (m_Suspended)
 		return;
 
 	float cur_frame_timer = timer_GetTime();
 
-	if (m_frame_timer_ms == -1) {
+	if (m_frame_timer_ms == -1 && !force) 
+	{
 		// don't poll this frame.
 		m_frame_timer_ms = cur_frame_timer * 1000;
 		g_last_frame_timer_ms = cur_frame_timer * 1000;
@@ -332,42 +333,60 @@ ct_config_data gameWinController::get_controller_value(ct_type type_req)
 			float limit;
 			unsigned ctl = CONTROLLER_CTL_INFO(i, NULL_CONTROLLER);
 
-			if (m_ControlList[i].flags & CTF_V_AXIS) {
-				limit = (m_ControlList[i].sens[CT_V_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_V_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_V_AXIS - 1] / 2);
+			if (m_ControlList[i].flags & CTF_V_AXIS) 
+			{
+				//limit = (m_ControlList[i].sens[CT_V_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_V_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_V_AXIS - 1] / 2);
 				pos = get_axis_value(i, CT_V_AXIS, ctAnalog);
-				mprintf((0, "pos=%.2f\n", pos));
-				if (fabs(pos) > limit)
+				//[ISB] why are axis values 1 based?
+				if (fabs(fabs(pos) - fabs(m_ControlList[i].commit_state[CT_V_AXIS - 1])) > 0.2)
 					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_V_AXIS, NULL_BINDING));
+				/*if (fabs(pos) > limit)
+					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_V_AXIS, NULL_BINDING));*/
 			}
-			if (m_ControlList[i].flags & CTF_U_AXIS) {
-				limit = (m_ControlList[i].sens[CT_U_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_U_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_U_AXIS - 1] / 2);
+			if (m_ControlList[i].flags & CTF_U_AXIS) 
+			{
+				//limit = (m_ControlList[i].sens[CT_U_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_U_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_U_AXIS - 1] / 2);
 				pos = get_axis_value(i, CT_U_AXIS, ctAnalog);
-				if (fabs(pos) > limit)
+				if (fabs(fabs(pos) - fabs(m_ControlList[i].commit_state[CT_U_AXIS - 1])) > 0.2)
 					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_U_AXIS, NULL_BINDING));
+				/*if (fabs(pos) > limit)
+					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_U_AXIS, NULL_BINDING));*/
 			}
-			if (m_ControlList[i].flags & CTF_R_AXIS) {
-				limit = (m_ControlList[i].sens[CT_R_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_R_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_R_AXIS - 1] / 2);
+			if (m_ControlList[i].flags & CTF_R_AXIS) 
+			{
+				//limit = (m_ControlList[i].sens[CT_R_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_R_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_R_AXIS - 1] / 2);
 				pos = get_axis_value(i, CT_R_AXIS, ctAnalog);
-				if (fabs(pos) > limit)
+				if (fabs(fabs(pos) - fabs(m_ControlList[i].commit_state[CT_R_AXIS - 1])) > 0.2)
 					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_R_AXIS, NULL_BINDING));
+				/*if (fabs(pos) > limit)
+					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_R_AXIS, NULL_BINDING));*/
 			}
-			if (m_ControlList[i].flags & CTF_Z_AXIS) {
-				limit = (m_ControlList[i].sens[CT_Z_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_Z_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_Z_AXIS - 1] / 2);
+			if (m_ControlList[i].flags & CTF_Z_AXIS) 
+			{
+				//limit = (m_ControlList[i].sens[CT_Z_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_Z_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_Z_AXIS - 1] / 2);
 				pos = get_axis_value(i, CT_Z_AXIS, ctAnalog);
-				if (fabs(pos) > limit)
+				if (fabs(fabs(pos) - fabs(m_ControlList[i].commit_state[CT_Z_AXIS - 1])) > 0.2)
 					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_Z_AXIS, NULL_BINDING));
+				/*if (fabs(pos) > limit)
+					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_Z_AXIS, NULL_BINDING));*/
 			}
-			if (m_ControlList[i].flags & CTF_Y_AXIS) {
-				limit = (m_ControlList[i].sens[CT_Y_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_Y_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_Y_AXIS - 1] / 2);
+			if (m_ControlList[i].flags & CTF_Y_AXIS) 
+			{
+				//limit = (m_ControlList[i].sens[CT_Y_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_Y_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_Y_AXIS - 1] / 2);
 				pos = get_axis_value(i, CT_Y_AXIS, ctAnalog);
-				if (fabs(pos) > limit)
+				if (fabs(fabs(pos) - fabs(m_ControlList[i].commit_state[CT_Y_AXIS - 1])) > 0.2)
 					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_Y_AXIS, NULL_BINDING));
+				/*if (fabs(pos) > limit)
+					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_Y_AXIS, NULL_BINDING));*/
 			}
-			if (m_ControlList[i].flags & CTF_X_AXIS) {
-				limit = (m_ControlList[i].sens[CT_X_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_X_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_X_AXIS - 1] / 2);
+			if (m_ControlList[i].flags & CTF_X_AXIS) 
+			{
+				//limit = (m_ControlList[i].sens[CT_X_AXIS - 1] > 1.5f) ? 0.95f : (m_ControlList[i].sens[CT_X_AXIS - 1] > 1.0f) ? 0.80f : (m_ControlList[i].sens[CT_X_AXIS - 1] / 2);
 				pos = get_axis_value(i, CT_X_AXIS, ctAnalog);
-				if (fabs(pos) > limit)
+				if (fabs(fabs(pos) - fabs(m_ControlList[i].commit_state[CT_X_AXIS - 1])) > 0.2)
 					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_X_AXIS, NULL_BINDING));
+				/*if (fabs(pos) > limit)
+					val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_X_AXIS, NULL_BINDING));*/
 			}
 		}
 		break;
@@ -1396,6 +1415,21 @@ void gameWinController::set_controller_deadzone(int ctl, float deadzone)
 	if (deadzone > 0.9f) deadzone = 0.9f;
 
 	m_ControlList[ctl + 2].deadzone = deadzone;
+}
+
+void gameWinController::commit_axis_state()
+{
+	for (int i = 2; i < m_NumControls; i++)
+	{
+		for (int axis = CT_NUM_AXES - 1; axis >= 0; axis--)
+		{
+			//if (m_ControlList[i].flags & (1 << axis))
+			{
+				float value = get_axis_value(i, axis+1, ctAnalog);
+				m_ControlList[i].commit_state[axis] = value;
+			}
+		}
+	}
 }
 
 

@@ -75,7 +75,7 @@ public:
 
 //	this functions polls the controllers if needed.  some systems may not need to implement
 //	this function.
-	virtual void poll();
+	virtual void poll(bool force = false);
 
 //	flushes all controller information
 	virtual void flush();
@@ -117,6 +117,10 @@ public:
 // dead zone is from 0.0 to 0.5
 	void set_controller_deadzone(int ctl, float deadzone);
 
+	//[ISB] Commits the current state of all axises.
+	//These values will later be comopared by get_controller_value to determine if an axis has moved.
+	void commit_axis_state() override;
+
 
 private:
 	int m_NumControls;						// number of controllers available
@@ -132,6 +136,7 @@ private:
 		float sens[CT_NUM_AXES];
 		float sensmod[CT_NUM_AXES];
 		float deadzone;
+		float commit_state[CT_NUM_AXES];
 	} m_ControlList[CT_MAX_CONTROLLERS];	// the control list.
 
 	struct ct_element {

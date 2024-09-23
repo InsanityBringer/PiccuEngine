@@ -46,86 +46,11 @@ void ResetPostrenderList()
 	Num_postrenders = 0;
 }
 
-//Compare function for room face sort
-static int Postrender_sort_func(const postrender_struct* a, const postrender_struct* b)
-{
-	if (a->z < b->z)
-		return -1;
-	else if (a->z > b->z)
-		return 1;
-	else
-		return 0;
-}
-
-#define STATE_PUSH(val) {state_stack[state_stack_counter]=val; state_stack_counter++; ASSERT (state_stack_counter<2000);}
-#define STATE_POP()	{state_stack_counter--; pop_val=state_stack[state_stack_counter];}
-
-
-
 // Sorts our texture states using the quicksort algorithm
 void SortPostrenders()
 {
 	if (Num_postrenders > 0)
 		std::sort(&Postrender_list[0], &Postrender_list[Num_postrenders - 1]);
-	/*postrender_struct v, t;
-	int pop_val;
-	int i, j;
-	int l, r;
-	l = 0;
-	r = Num_postrenders - 1;
-
-	ushort state_stack_counter = 0;
-	ushort state_stack[MAX_POSTRENDERS];
-
-
-	while (1)
-	{
-		while (r > l)
-		{
-			i = l - 1;
-			j = r;
-			v = Postrender_list[r];
-			while (1)
-			{
-				while (Postrender_list[++i].z < v.z)
-					;
-
-				while (Postrender_list[--j].z > v.z)
-					;
-
-				if (i >= j)
-					break;
-
-				t = Postrender_list[i];
-				Postrender_list[i] = Postrender_list[j];
-				Postrender_list[j] = t;
-			}
-
-			t = Postrender_list[i];
-			Postrender_list[i] = Postrender_list[r];
-			Postrender_list[r] = t;
-
-			if (i - l > r - i)
-			{
-				STATE_PUSH(l);
-				STATE_PUSH(i - 1);
-				l = i + 1;
-			}
-			else
-			{
-				STATE_PUSH(i + 1);
-				STATE_PUSH(r);
-				r = i - 1;
-			}
-		}
-
-		if (!state_stack_counter)
-			break;
-		STATE_POP();
-		r = pop_val;
-		STATE_POP();
-		l = pop_val;
-	}*/
 }
 
 

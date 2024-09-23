@@ -356,17 +356,17 @@ void joyxi_init(int i)
 		strcpy(WJD.joystick[i].caps.name, "XInput Joystick");
 		WJD.joystick[i].caps.minx = -32768;
 		WJD.joystick[i].caps.miny = -32768;
-		WJD.joystick[i].caps.minz = 0;
+		WJD.joystick[i].caps.minz = -32768; //[ISB] Setting the triggers to -1 to 1 is a bit of a nonsequitur, but the controller class is currently primed to assume all axes are -1 to 1. 
 		WJD.joystick[i].caps.minr = -32768;
 		WJD.joystick[i].caps.minu = -32768;
-		WJD.joystick[i].caps.minv = -0;
+		WJD.joystick[i].caps.minv = -32768;
 		
 		WJD.joystick[i].caps.maxx = 32767;
 		WJD.joystick[i].caps.maxy = 32767;
-		WJD.joystick[i].caps.maxz = 255;
+		WJD.joystick[i].caps.maxz = 32767;
 		WJD.joystick[i].caps.maxr = 32767;
 		WJD.joystick[i].caps.maxu = 32767;
-		WJD.joystick[i].caps.maxv = 255;
+		WJD.joystick[i].caps.maxv = 32767;
 	}
 }
 

@@ -118,7 +118,7 @@ public:
 
 //	this functions polls the controllers if needed.  some systems may not need to implement
 //	this function.
-	virtual void poll() {};
+	virtual void poll(bool force = false) {};
 
 //	flushes all controller information
 	virtual void flush() = 0;
@@ -165,6 +165,10 @@ public:
 // toggles use of axis on controllers. ctl can be 0 to ???
 //	axis is a CT_?_AXIS value
 	void toggle_controller_axis(int ctl, int axis, bool toggle) {};
+
+	//[ISB] Commits the current state of all axises.
+	//These values will later be comopared by get_controller_value to determine if an axis has moved.
+	virtual void commit_axis_state() = 0;
 
 };
 
