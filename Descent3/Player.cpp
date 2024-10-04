@@ -391,6 +391,10 @@ void InitPlayerNewLevel(int slot)
 	Players[slot].keys = 0;
 	Players[slot].num_deaths_level = 0;
 
+	//[ISB] Don't you love it when level time based counters aren't reset across level changes?
+	Players[slot].last_hit_wall_sound_time = 0;
+	Players[slot].last_homing_warning_sound_time = 0;
+
 	if (Game_mode & GM_MULTI)
 		NetPlayers[slot].packet_time = 0;
 
