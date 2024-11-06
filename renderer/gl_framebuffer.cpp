@@ -122,12 +122,13 @@ void Framebuffer::Update(int width, int height, bool msaa)
 		glBindFramebuffer(GL_FRAMEBUFFER, m_subname);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_subcolorname, 0);
 
+#ifndef _NDEBUG
 		GLenum fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if (fbstatus != GL_FRAMEBUFFER_COMPLETE)
 		{
 			Error("Framebuffer::Update: Sub framebuffer object is incomplete!");
 		}
-
+#endif
 		glEnable(GL_MULTISAMPLE);
 	}
 	else
@@ -148,12 +149,13 @@ void Framebuffer::Update(int width, int height, bool msaa)
 	glBindFramebuffer(GL_FRAMEBUFFER, m_name);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureType, m_colorname, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, textureType, m_depthname, 0);
-
+#ifndef _NDEBUG
 	GLenum fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (fbstatus != GL_FRAMEBUFFER_COMPLETE)
 	{
 		Error("Framebuffer::Update: Framebuffer object is incomplete!");
 	}
+#endif
 }
 
 void Framebuffer::Destroy()
