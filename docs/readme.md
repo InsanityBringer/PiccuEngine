@@ -40,7 +40,7 @@ If you want to install Piccu Engine into another directory, the following files 
 The following directories should be copied over if you want to play Piccu Engine in multiplayer
 - netgames
 - online
-- missions/Fury.hog (stock Anarchy levels)
+- missions/Fury.mn3 (stock Anarchy levels)
 - missions/bedlam.mn3 (stock Capture the Flag levels)
 
 The following directories may be copied over, but are not critical
