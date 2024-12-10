@@ -274,3 +274,16 @@ void Framebuffer::BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned
 
 	rend_RestoreLegacy();
 }
+
+void Framebuffer::BindForRead()
+{
+	if (m_msaa)
+	{
+		SubColorBlit();
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_subname);
+	}
+	else
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_name);
+	}
+}

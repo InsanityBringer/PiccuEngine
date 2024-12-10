@@ -116,6 +116,10 @@ public:
 	//Will set current read framebuffer to m_name. Will not trash viewport. 
 	void BlitTo(GLuint target, unsigned int x, unsigned int y, unsigned int w, unsigned int h);
 
+	//When called without MSAA, just binds m_name to the read slot.
+	//When called with MSAA, will resolve to m_subname and bind that. 
+	void BindForRead();
+
 	GLuint Handle() const
 	{
 		return m_name;

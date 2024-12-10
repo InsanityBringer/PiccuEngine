@@ -861,7 +861,9 @@ void GLCompatibilityRenderer::Screenshot(int bm_handle)
 
 	dest_data = bm_data(bm_handle, 0);
 
+	framebuffers[framebuffer_current_draw].BindForRead();
 	glReadPixels(0, 0, OpenGL_state.screen_width, OpenGL_state.screen_height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)temp_data);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 	for (i = 0; i < h; i++)
 	{
