@@ -248,8 +248,12 @@ int llsOpenAL::PlaySound2d(play_information* play_info, int sound_index, float v
 
 	//PutLog(LogLevel::Info, "Initializing 2D source.");
 	InitSource2D(SoundEntries[sound_uid].handle, &Sounds[sound_index], volume);
+	SoundEntries[sound_uid].looping = false;
 	if (looped)
+	{
 		alSourcei(SoundEntries[sound_uid].handle, AL_LOOPING, AL_TRUE);
+		SoundEntries[sound_uid].looping = true;
+	}
 	if (ALErrorCheck("Setting 2D sound source properties.")) return -1;
 
 	play_info->left_volume = play_info->right_volume = volume;
@@ -297,6 +301,7 @@ int llsOpenAL::PlayStream(play_information* play_info)
 	alSourcei(SoundEntries[sound_uid].handle, AL_BUFFER, 0); //ensure no buffer is bound
 
 	SoundEntries[sound_uid].streamFormat = -1;
+	SoundEntries[sound_uid].looping = false; //okay they may loop but it's Different. 
 
 	if (play_info->m_stream_format & SIF_STREAMING_8_M)
 		SoundEntries[sound_uid].streamFormat = AL_FORMAT_MONO8;
@@ -370,8 +375,12 @@ int llsOpenAL::PlaySound3d(play_information* play_info, int sound_index, pos_sta
 	bool looped = f_looped || (Sounds[sound_index].flags & SPF_LOOPED) != 0;
 
 	InitSource3D(SoundEntries[sound_uid].handle, &Sounds[sound_index], cur_pos, master_volume);
+	SoundEntries[sound_uid].looping = false;
 	if (looped)
+	{
 		alSourcei(SoundEntries[sound_uid].handle, AL_LOOPING, AL_TRUE);
+		SoundEntries[sound_uid].looping = true;
+	}
 	if (ALErrorCheck("Setting 3D sound source properties.")) return -1;
 
 	play_info->left_volume = play_info->right_volume = master_volume;
@@ -483,6 +492,7 @@ void llsOpenAL::StopSound(int sound_uid, unsigned char f_immediately)
 		{
 			//Disable looping traits on the sound instead
 			alSourcei(SoundEntries[id].handle, AL_LOOPING, AL_FALSE);
+			SoundEntries[id].looping = false;
 			//alSourcePlay(SoundEntries[id].handle);
 		}
 
@@ -838,6 +848,9 @@ short llsOpenAL::FindSoundSlot(float volume, int priority)
 		{
 			if (SoundEntries[i].streaming)
 				continue; //never bump a streaming sound, probably Bad
+
+			if (SoundEntries[i].looping)
+				continue; //Don't bump looping sounds. 
 
 			//check for lower priority sound
 			float score = ScoreSound(SoundEntries[i].volume, SoundEntries[i].info->priority);
