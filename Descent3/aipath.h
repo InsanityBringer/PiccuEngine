@@ -32,11 +32,4 @@ bool AIPathInitPath(ai_path_info *aip);
 bool AIPathFreePath(ai_path_info *aip);
 bool AIFindAltPath(object *obj, int i, int j, float *dist = NULL);
 
-#ifdef _DEBUG
-bool MakeTestPath(int *start_room, vector *pos);
-
-extern int AIPath_test_end_room;
-extern vector AIPath_test_end_pos;
-#endif
-
 #endif

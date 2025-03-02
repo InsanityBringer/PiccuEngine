@@ -1085,10 +1085,6 @@ void ProcessTestKeys(int key)
 		AddHUDMessage("All outline options turned on.");
 		break;
 
-	case KEY_P:
-		MakeTestPath(&Player_object->roomnum, &Player_object->pos);
-		break;
-
 	case KEY_Q:
 		if (StateLimited)
 		{
