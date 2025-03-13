@@ -1142,11 +1142,6 @@ void ProcessTestKeys(int key)
 			Timedemo_frame = 0;
 		break;
 
-	case KEY_U:
-		AIPath_test_end_room = Player_object->roomnum;
-		AIPath_test_end_pos = Player_object->pos;
-		break;
-
 	case KEY_V:
 		if (Debug_print_block)
 		{
