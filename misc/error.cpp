@@ -124,59 +124,18 @@ void Error(char *fmt,...)
 	va_list arglist;
 	int exit_msg_len;
 		
-#ifdef MACINTOSH
-	strcpy(Exit_message,"");
-#else
 	strcpy(Exit_message,"Error: ");
-#endif
 	
 	va_start(arglist,fmt);
 	exit_msg_len = strlen(Exit_message);
 	Pvsprintf(Exit_message+exit_msg_len,MAX_MSG_LEN-exit_msg_len,fmt,arglist);
 	va_end(arglist);
 
-#ifdef MACINTOSH
-	Debug_ErrorBox(OSMBOX_OK, "Fatal Error", Exit_message, "");
-#else
 	sprintf(Exit_title_str,"%s Error",App_title);
-#endif
 	mprintf ((0,"%s\n",Exit_message));
 
-#ifdef _DEBUG
-	int answer;
-
-	if (DebugBreak_callback_stop)
-		(*DebugBreak_callback_stop)();
-
-	if (Debug_break)
-		answer = Debug_ErrorBox(OSMBOX_ABORTRETRYIGNORE,Exit_title_str,Exit_message,"Press RETRY to debug.");
-	else if(!no_debug_dialog)
-		answer = Debug_ErrorBox(OSMBOX_OKCANCEL,Exit_title_str,Exit_message,"Press OK to exit, CANCEL to ignore this error and continue.");
-
-	if(no_debug_dialog)
-		answer = IDOK;
-
-	switch (answer) {
-		case IDRETRY:
-			debug_break();		//Step Out of this function to see where Error() was called
-			//fall into ignore/cancel case
-		case IDIGNORE:
-		case IDCANCEL:
-			if (DebugBreak_callback_resume)
-				(*DebugBreak_callback_resume)();
-			return;
-		case IDOK:
-		case IDABORT:
-			break;		//do nothing, and exit below
-	}
-
-	//Clear the message, since we don't need to see it again when we exit
-	Exit_message[0] = 0;
-
-#else
 	if (!Error_initialized) 
 		error_Spew();
-#endif
 
 	//Clear the DEBUG_BREAK() callbacks
 	SetDebugBreakHandlers(NULL,NULL);

@@ -26,7 +26,7 @@
 bool error_Init(bool debugger, bool mono_debug, const char *app_title);
 
 //	exits the application and prints out a standard error message
-void Error(char *fmt,...);
+[[noreturn]] void Error(char *fmt,...);
 
 //	prints out an assertion error
 void AssertionFailed(char *expstr, char *file, int line);
