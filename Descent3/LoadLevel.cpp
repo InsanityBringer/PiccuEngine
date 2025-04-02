@@ -153,12 +153,6 @@ char* GetFailedXLateItemName(int type, int id)
 #define cf_ReadVector(f,v)  do {(v)->x=cf_ReadFloat(f); (v)->y=cf_ReadFloat(f); (v)->z=cf_ReadFloat(f); } while (0)
 #define cf_ReadMatrix(f,m)  do {cf_ReadVector((f),&(m)->rvec); cf_ReadVector((f),&(m)->uvec); cf_ReadVector((f),&(m)->fvec); } while (0)
 
-//	Lets put some function prototypes here
-void ReadAllTriggers(CFILE* ifile);
-void ReadAllDoorways(CFILE* ifile);
-void WriteAllTriggers(CFILE* ofile);
-void WriteAllDoorways(CFILE* ofile);
-
 //Prior to version 49, terrain objects had this flag set
 #define OLD_OBJECT_OVER_TERRAIN_FLAG	256
 
@@ -166,7 +160,6 @@ void WriteAllDoorways(CFILE* ofile);
 #define OLD_HANDLE_OBJNUM_MASK  		0x3ff			//to mask off the object number part of the handle
 #define OLD_HANDLE_COUNT_MASK			0xfffffc00	//to maks off the count part of the handle
 #define XLATE_HANDLE(handle) ((((handle) & OLD_HANDLE_COUNT_MASK) << 1) + ((handle) & OLD_HANDLE_OBJNUM_MASK))
-
 
 /*
 
@@ -231,7 +224,8 @@ int FindValidID(int type)
 {
 	int id = -1;
 
-	switch (type) {
+	switch (type) 
+	{
 	case OBJ_ROBOT:
 	case OBJ_POWERUP:
 	case OBJ_BUILDING:
@@ -239,7 +233,8 @@ int FindValidID(int type)
 		id = GetObjectID(type);
 		break;
 
-	case OBJ_DOOR: {
+	case OBJ_DOOR: 
+		{
 		int i;
 
 		for (i = 0; i < MAX_DOORS; i++)
@@ -363,13 +358,15 @@ int ReadObject(CFILE* ifile, object* objp, int handle, int fileversion)
 		break;
 	}
 	//Check for object not found
-	if (id == -1) {
+	if (id == -1) 
+	{
 		id = FindValidID(type);		//find any valid id
 
 		ASSERT(id != -1);
 
 #if (defined(EDITOR) || defined(NEWEDITOR))
-		if (GetFunctionMode() == EDITOR_MODE) {
+		if (GetFunctionMode() == EDITOR_MODE) 
+		{
 			char* old_name = GetFailedXLateItemName((type == OBJ_DOOR) ? XT_DOOR : XT_GENERIC, old_id);
 			char* new_name = (type == OBJ_DOOR) ? Doors[id].name : Object_info[id].name;
 			OutrageMessageBox("Object %d (type %s) has undefined ID %d, \"%s\".\n\n"
@@ -386,10 +383,13 @@ int ReadObject(CFILE* ifile, object* objp, int handle, int fileversion)
 	}
 
 	//Read the object's name
-	if (fileversion >= 95) {
+	if (fileversion >= 95) 
+	{
 		cf_ReadString(tempname, sizeof(tempname), ifile);
-		if (strlen(tempname)) {
-			if (type == OBJ_PLAYER) {
+		if (strlen(tempname)) 
+		{
+			if (type == OBJ_PLAYER) 
+			{
 #if (defined(EDITOR) || defined(NEWEDITOR))
 				if (GetFunctionMode() == EDITOR_MODE)
 					OutrageMessageBox("Object %d, Player %d has a name (\"%s\") which has been deleted.",
@@ -463,7 +463,8 @@ int ReadObject(CFILE* ifile, object* objp, int handle, int fileversion)
 	ObjSetAABB(objp);
 
 	//Set the name
-	if (tempname[0]) {
+	if (tempname[0]) 
+	{
 		objp->name = (char*)mem_malloc(strlen(tempname) + 1);
 		strcpy(objp->name, tempname);
 	}
@@ -483,11 +484,13 @@ int ReadObject(CFILE* ifile, object* objp, int handle, int fileversion)
 		cf_ReadInt(ifile);		//was parent_handle
 
 	//Read sound info if this is a soundsource object
-	if (objp->control_type == CT_SOUNDSOURCE) {
+	if (objp->control_type == CT_SOUNDSOURCE) 
+	{
 		ASSERT(objp->type == OBJ_SOUNDSOURCE);
 		if (fileversion < 119)
 			objp->ctype.soundsource_info.sound_index = cf_ReadInt(ifile);
-		else {
+		else 
+		{
 			char soundname[PAGENAME_LEN];
 			cf_ReadString(soundname, sizeof(soundname), ifile);
 			objp->ctype.soundsource_info.sound_index = soundname[0] ? FindSoundName(IGNORE_TABLE(soundname)) : -1;
@@ -499,22 +502,26 @@ int ReadObject(CFILE* ifile, object* objp, int handle, int fileversion)
 	{
 		//read in default script override information
 		i = cf_ReadByte(ifile);
-		if (i > 0) {
+		if (i > 0) 
+		{
 			objp->custom_default_script_name = (char*)mem_malloc(i + 1);
 			cf_ReadBytes((ubyte*)objp->custom_default_script_name, i, ifile);
 			objp->custom_default_script_name[i] = '\0';
 		}
-		else {
+		else 
+		{
 			objp->custom_default_script_name = NULL;
 		}
 
 		i = cf_ReadByte(ifile);
-		if (i > 0) {
+		if (i > 0) 
+		{
 			objp->custom_default_module_name = (char*)mem_malloc(i + 1);
 			cf_ReadBytes((ubyte*)objp->custom_default_module_name, i, ifile);
 			objp->custom_default_module_name[i] = '\0';
 		}
-		else {
+		else 
+		{
 			objp->custom_default_module_name = NULL;
 		}
 	}
@@ -525,25 +532,31 @@ int ReadObject(CFILE* ifile, object* objp, int handle, int fileversion)
 	}
 
 	//	load in obsolete script info
-	if (fileversion < LEVEL_FILE_OSIRIS1DEAD) {
-		if (fileversion < LEVEL_FILE_SCRIPTNAMES) {
+	if (fileversion < LEVEL_FILE_OSIRIS1DEAD) 
+	{
+		if (fileversion < LEVEL_FILE_SCRIPTNAMES) 
+		{
 			cf_ReadInt(ifile);
 		}
-		else {
+		else 
+		{
 			char name[MAX_D3XID_NAME];
 			cf_ReadString(name, MAX_D3XID_NAME, ifile);
 		}
 
-		if (fileversion >= LEVEL_FILE_SCRIPTPARMS) {
+		if (fileversion >= LEVEL_FILE_SCRIPTPARMS) 
+		{
 			short s = cf_ReadShort(ifile);
 
 			for (i = 0; i < s; i++)
 			{
 				sbyte stype = cf_ReadByte(ifile);
-				if (stype == PARMTYPE_NUMBER || stype == PARMTYPE_REF) {
+				if (stype == PARMTYPE_NUMBER || stype == PARMTYPE_REF) 
+				{
 					cf_ReadFloat(ifile);
 				}
-				else if (stype == PARMTYPE_VECTOR) {
+				else if (stype == PARMTYPE_VECTOR) 
+				{
 					cf_ReadFloat(ifile);
 					cf_ReadFloat(ifile);
 					cf_ReadFloat(ifile);
@@ -555,7 +568,8 @@ int ReadObject(CFILE* ifile, object* objp, int handle, int fileversion)
 		}
 
 
-		if (fileversion >= LEVEL_FILE_SCRIPTCHECK) {
+		if (fileversion >= LEVEL_FILE_SCRIPTCHECK) 
+		{
 			cf_ReadByte(ifile);
 		}
 	}
@@ -715,8 +729,10 @@ int ReadTrigger(CFILE* ifile, trigger* tp, int fileversion)
 	tp->activator = cf_ReadShort(ifile);
 
 	//Kill old portal trigger flag
-	if (fileversion < 103) {
-		if (tp->flags & OLD_TF_PORTAL) {
+	if (fileversion < 103) 
+	{
+		if (tp->flags & OLD_TF_PORTAL) 
+		{
 			tp->facenum = Rooms[tp->roomnum].portals[tp->facenum].portal_face;
 			tp->flags &= ~OLD_TF_PORTAL;
 		}
@@ -724,34 +740,41 @@ int ReadTrigger(CFILE* ifile, trigger* tp, int fileversion)
 
 	ASSERT(Rooms[tp->roomnum].faces[tp->facenum].flags & FF_HAS_TRIGGER);
 
-	if (fileversion < LEVEL_FILE_OSIRIS1DEAD) {
+	if (fileversion < LEVEL_FILE_OSIRIS1DEAD) 
+	{
 		if (fileversion < LEVEL_FILE_SCRIPTNAMES)
 			cf_ReadInt(ifile);
-		else {
+		else 
+		{
 			char name[MAX_D3XID_NAME];
 			cf_ReadString(name, MAX_D3XID_NAME, ifile);
-			if (fileversion >= LEVEL_FILE_TRIGPARMS) {
+			if (fileversion >= LEVEL_FILE_TRIGPARMS) 
+			{
 				int i;
 				short s = cf_ReadShort(ifile);
 				for (i = 0; i < s; i++)
 				{
 					sbyte type = cf_ReadByte(ifile);
-					if (type == PARMTYPE_NUMBER || type == PARMTYPE_REF) {
+					if (type == PARMTYPE_NUMBER || type == PARMTYPE_REF) 
+					{
 						cf_ReadFloat(ifile);
 					}
-					else if (type == PARMTYPE_VECTOR) {
+					else if (type == PARMTYPE_VECTOR) 
+					{
 						cf_ReadFloat(ifile);
 						cf_ReadFloat(ifile);
 						cf_ReadFloat(ifile);
 					}
-					else {
+					else 
+					{
 						Int3();				//	-get samir.
 					}
 				}
 			}
 		}
 
-		if (fileversion >= LEVEL_FILE_SCRIPTCHECK) {
+		if (fileversion >= LEVEL_FILE_SCRIPTCHECK) 
+		{
 			cf_ReadByte(ifile);
 		}
 	}
@@ -784,7 +807,8 @@ int ReadFace(CFILE* ifile, face* fp, int version)
 	//Read uvls, and adjust alpha settings
 	int alphaed = 0;
 
-	for (i = 0; i < fp->num_verts; i++) {
+	for (i = 0; i < fp->num_verts; i++) 
+	{
 		fp->face_uvls[i].u = cf_ReadFloat(ifile);
 		fp->face_uvls[i].v = cf_ReadFloat(ifile);
 
@@ -1234,22 +1258,21 @@ void CheckToWriteCompressShort(CFILE* fp, ushort* vals, int total)
 
 
 
-void ReadCompressionByte(CFILE* fp, ubyte* vals, int total)
+void ReadCompressionByte(CFILE* fp, ubyte* vals, size_t total)
 {
-	int count = 0;
+	size_t count = 0;
 	ubyte compressed = cf_ReadByte(fp);
 
 	if (compressed == 0)
 	{
-		for (int i = 0; i < total; i++)
+		for (size_t i = 0; i < total; i++)
 			vals[i] = cf_ReadByte(fp);
 
 		return;
 	}
 
-	while (count != total)
+	while (count < total)
 	{
-		ASSERT(count < total);
 		ubyte command = cf_ReadByte(fp);
 
 		if (command == 0)	// next byte is raw
@@ -1261,6 +1284,9 @@ void ReadCompressionByte(CFILE* fp, ubyte* vals, int total)
 		}
 		else if (command >= 2 && command <= 250)	// next pixel is run of pixels
 		{
+			//Fine for count to reach total exactly, since the loop will stop running then. 
+			if ((count + command) > total) //[ISB]: Should be no cases where this will ever reach 4GB - 1, so should be safe?
+				Error("ReadCompressionByte: compression buffer overrun");
 			ubyte height = cf_ReadByte(fp);
 			for (int k = 0; k < command; k++)
 			{
@@ -1272,9 +1298,9 @@ void ReadCompressionByte(CFILE* fp, ubyte* vals, int total)
 	}
 }
 
-void ReadCompressionShort(CFILE* fp, ushort* vals, int total)
+void ReadCompressionShort(CFILE* fp, ushort* vals, size_t total)
 {
-	int count = 0;
+	size_t count = 0;
 
 	ubyte compressed = cf_ReadByte(fp);
 
@@ -1286,9 +1312,8 @@ void ReadCompressionShort(CFILE* fp, ushort* vals, int total)
 		return;
 	}
 
-	while (count != total)
+	while (count < total)
 	{
-		ASSERT(count < total);
 		ubyte command = cf_ReadByte(fp);
 
 		if (command == 0)	// next byte is raw
@@ -1300,6 +1325,8 @@ void ReadCompressionShort(CFILE* fp, ushort* vals, int total)
 		}
 		else if (command >= 2 && command <= 250)	// next pixel is run of pixels
 		{
+			if ((count + command) > total) //[ISB]: Should be no cases where this will ever reach 4GB - 1, so should be safe?
+				Error("ReadCompressionShort: compression buffer overrun");
 			ushort height = cf_ReadShort(fp);
 			for (int k = 0; k < command; k++)
 			{
@@ -1451,6 +1478,10 @@ int ReadRoom(CFILE* ifile, room* rp, int version)
 				cf_ReadFloat(ifile);	//was close_time
 			}
 		}
+		else
+		{
+			Error("ReadRoom: Found door room from unsupported level version!");
+		}
 
 		if (doornum == -1)
 			doornum = FindValidID(OBJ_DOOR);		//find any valid id
@@ -1474,10 +1505,9 @@ int ReadRoom(CFILE* ifile, room* rp, int version)
 
 			int size = w * h * d;
 
-			if (size) {
-
+			if (size) 
+			{
 				rp->volume_lights = (ubyte*)mem_malloc(size);
-				ASSERT(rp->volume_lights);	// ran out of memory!
 			}
 			else
 				rp->volume_lights = NULL;
@@ -1648,12 +1678,10 @@ void ReadNewLightmapChunk(CFILE* fp, int version)
 			}
 		}
 
-		int xspacing;
-		int yspacing;
 		vector ul, norm;
 
-		xspacing = cf_ReadByte(fp);
-		yspacing = cf_ReadByte(fp);
+		int xspacing = cf_ReadByte(fp);
+		int yspacing = cf_ReadByte(fp);
 		cf_ReadVector(fp, &ul);
 		cf_ReadVector(fp, &norm);
 
@@ -1674,7 +1702,8 @@ void ReadNewLightmapChunk(CFILE* fp, int version)
 void ReadLightmapChunk(CFILE* fp, int version)
 {
 	//Don't read lightmaps for dedicated server
-	if (Dedicated_server) {
+	if (Dedicated_server) 
+	{
 		Num_lightmap_infos_read = 0;	//I don't think this will be used, but clear it just in case
 		return;
 	}
@@ -1689,24 +1718,21 @@ void ReadLightmapChunk(CFILE* fp, int version)
 		ASSERT(ded_dummy_data);
 	}
 
-
 	nummaps = cf_ReadInt(fp);
 	Num_lightmap_infos_read = nummaps;
 	ASSERT(nummaps < MAX_LIGHTMAP_INFOS);
 
 	for (i = 0; i < nummaps; i++)
 	{
-
 		if ((i % 10) == 0)
 		{
-			LoadLevelProgress(LOAD_PROGRESS_LOADING_LEVEL, (filelen) ? (float)chunk_start + (chunk_size / nummaps) / (float)filelen : 0.0f, CHUNK_LIGHTMAPS);
+			LoadLevelProgress(LOAD_PROGRESS_LOADING_LEVEL, (filelen) ? (float)chunk_start + ((float)chunk_size / nummaps) / (float)filelen : 0.0f, CHUNK_LIGHTMAPS);
 		}
-		int w, h, lmi;
-		ubyte type;
+		int lmi;
 
-		w = cf_ReadInt(fp);
-		h = cf_ReadInt(fp);
-		type = cf_ReadByte(fp);
+		int w = cf_ReadInt(fp);
+		int h = cf_ReadInt(fp);
+		ubyte type = cf_ReadByte(fp);
 
 		if (!Dedicated_server)
 		{
@@ -1727,10 +1753,8 @@ void ReadLightmapChunk(CFILE* fp, int version)
 		}
 		else
 		{
-			int x, y;
-
-			x = cf_ReadByte(fp);
-			y = cf_ReadByte(fp);
+			int x = cf_ReadByte(fp);
+			int y = cf_ReadByte(fp);
 
 			if (!Dedicated_server)
 			{
@@ -1823,6 +1847,7 @@ void ReadTerrainHeightChunk(CFILE* fp, int version)
 	else
 	{
 		ubyte* byte_vals = (ubyte*)mem_malloc(TERRAIN_DEPTH * TERRAIN_WIDTH);
+
 		ReadCompressionByte(fp, byte_vals, TERRAIN_DEPTH * TERRAIN_WIDTH);
 
 		for (i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
@@ -1833,13 +1858,11 @@ void ReadTerrainHeightChunk(CFILE* fp, int version)
 
 		mem_free(byte_vals);
 	}
-
 }
 
 void ReadGamePathsChunk(CFILE* fp, int version)
 {
 	// Currently, we will have no version specific info
-
 	int i, j;
 
 	// Get the number of paths
@@ -1926,14 +1949,10 @@ void ReadFFTMChunk(CFILE* fp, int version)
 
 void ReadBNodeChunk(CFILE* fp, int version)
 {
-	int i;
-	int j;
-	int k;
-
 	int hr_index = cf_ReadShort(fp);
 	ASSERT(hr_index == Highest_room_index + 8);
 
-	for (i = 0; i <= hr_index; i++)
+	for (int i = 0; i <= hr_index; i++)
 	{
 		char f_good_room = cf_ReadByte(fp);
 		if (f_good_room)
@@ -1946,7 +1965,7 @@ void ReadBNodeChunk(CFILE* fp, int version)
 			if (bnlist->num_nodes)
 			{
 				bnlist->nodes = (bn_node*)mem_malloc(sizeof(bn_node) * bnlist->num_nodes);
-				for (j = 0; j < bnlist->num_nodes; j++)
+				for (int j = 0; j < bnlist->num_nodes; j++)
 				{
 					bnlist->nodes[j].pos.x = cf_ReadFloat(fp);
 					bnlist->nodes[j].pos.y = cf_ReadFloat(fp);
@@ -1956,7 +1975,7 @@ void ReadBNodeChunk(CFILE* fp, int version)
 					if (bnlist->nodes[j].num_edges)
 					{
 						bnlist->nodes[j].edges = (bn_edge*)mem_malloc(sizeof(bn_edge) * bnlist->nodes[j].num_edges);
-						for (k = 0; k < bnlist->nodes[j].num_edges; k++)
+						for (int k = 0; k < bnlist->nodes[j].num_edges; k++)
 						{
 							bnlist->nodes[j].edges[k].end_room = cf_ReadShort(fp);
 							bnlist->nodes[j].edges[k].end_index = cf_ReadByte(fp);
@@ -1998,8 +2017,6 @@ void ReadBOAChunk(CFILE* fp, int version)
 {
 	// Currently, we will have no version specific info
 
-	int i, j;
-	int max_rooms;
 	int max_path_portals;
 
 	// Get the number of paths
@@ -2010,7 +2027,7 @@ void ReadBOAChunk(CFILE* fp, int version)
 	else
 		BOA_vis_checksum = 0;
 
-	max_rooms = cf_ReadInt(fp);
+	int max_rooms = cf_ReadInt(fp);
 
 	if (version < 62)
 	{
@@ -2024,6 +2041,10 @@ void ReadBOAChunk(CFILE* fp, int version)
 		max_path_portals = cf_ReadInt(fp);
 
 		ASSERT(max_rooms - 1 <= MAX_ROOMS + 8);
+		if (max_rooms - 1 > MAX_ROOMS + 8)
+			Error("ReadBOAChunk: max_rooms exceeds MAX_ROOMS!");
+		if (max_path_portals > MAX_PATH_PORTALS)
+			Error("ReadBOAChunk: max_path_portals exceeds MAX_PATH_PORTALS!");
 
 		if (version < 110 || (max_path_portals != MAX_PATH_PORTALS))
 		{
@@ -2040,17 +2061,17 @@ void ReadBOAChunk(CFILE* fp, int version)
 		}
 		else
 		{
-			for (i = 0; i <= max_rooms; i++)
+			for (int i = 0; i <= max_rooms; i++)
 			{
-				for (j = 0; j <= max_rooms; j++)
+				for (int j = 0; j <= max_rooms; j++)
 				{
 					BOA_Array[i][j] = cf_ReadShort(fp);
 				}
 			}
 
-			for (i = 0; i <= max_rooms; i++)
+			for (int i = 0; i <= max_rooms; i++)
 			{
-				for (j = 0; j < max_path_portals; j++)
+				for (int j = 0; j < max_path_portals; j++)
 				{
 					BOA_cost_array[i][j] = cf_ReadFloat(fp);
 				}
@@ -2066,13 +2087,11 @@ void ReadBOAChunk(CFILE* fp, int version)
 			}
 			else
 			{
-				int i, j;
-
-				for (i = 0; i < BOA_num_terrain_regions; i++)
+				for (int i = 0; i < BOA_num_terrain_regions; i++)
 				{
 					BOA_num_connect[i] = cf_ReadInt(fp);
 
-					for (j = 0; j < BOA_num_connect[i]; j++)
+					for (int j = 0; j < BOA_num_connect[i]; j++)
 					{
 						BOA_connect[i][j].roomnum = cf_ReadInt(fp);
 						BOA_connect[i][j].portal = cf_ReadInt(fp);
@@ -2085,32 +2104,28 @@ void ReadBOAChunk(CFILE* fp, int version)
 
 void ReadRoomAABBChunk(CFILE* fp, int version)
 {
-	int save_highest_room_index;
-	int i;
-
-	save_highest_room_index = cf_ReadInt(fp);
+	int save_highest_room_index = cf_ReadInt(fp);
 	ASSERT(save_highest_room_index < MAX_ROOMS); // Someone decreased the max amount of rooms
 	ASSERT(save_highest_room_index == Highest_room_index); // Someone decreased the max amount of rooms
+	if (save_highest_room_index >= MAX_ROOMS)
+		Error("ReadRoomAABBChunk: highest room index out of bounds!");
 
-	for (i = 0; i <= save_highest_room_index; i++)
+	for (int i = 0; i <= save_highest_room_index; i++)
 	{
 		BOA_AABB_ROOM_checksum[i] = cf_ReadInt(fp);
 	}
 
-	for (i = 0; i <= Highest_room_index; i++)
+	for (int i = 0; i <= Highest_room_index; i++)
 	{
 		int used = cf_ReadInt(fp);
 		ASSERT(Rooms[i].used == used);
 
 		if (used)
 		{
-			int j;
-			int k;
-
 			int n_faces = cf_ReadInt(fp);
 			ASSERT(Rooms[i].num_faces == n_faces);
 
-			for (j = 0; j < Rooms[i].num_faces; j++)
+			for (int j = 0; j < Rooms[i].num_faces; j++)
 			{
 				Rooms[i].faces[j].min_xyz.x = cf_ReadFloat(fp);
 				Rooms[i].faces[j].min_xyz.y = cf_ReadFloat(fp);
@@ -2138,15 +2153,15 @@ void ReadRoomAABBChunk(CFILE* fp, int version)
 			Rooms[i].bbf_list_max_xyz = (vector*)mem_malloc(sizeof(vector) * Rooms[i].num_bbf_regions);
 			Rooms[i].bbf_list_sector = (unsigned char*)mem_malloc(sizeof(char) * Rooms[i].num_bbf_regions);
 
-			for (j = 0; j < Rooms[i].num_bbf_regions; j++)
+			for (int j = 0; j < Rooms[i].num_bbf_regions; j++)
 			{
 				Rooms[i].num_bbf[j] = cf_ReadShort(fp);
 				Rooms[i].bbf_list[j] = (short*)mem_malloc(sizeof(short) * Rooms[i].num_bbf[j]);
 			}
 
-			for (j = 0; j < Rooms[i].num_bbf_regions; j++)
+			for (int j = 0; j < Rooms[i].num_bbf_regions; j++)
 			{
-				for (k = 0; k < Rooms[i].num_bbf[j]; k++)
+				for (int k = 0; k < Rooms[i].num_bbf[j]; k++)
 				{
 					Rooms[i].bbf_list[j][k] = cf_ReadShort(fp);
 				}
@@ -2171,10 +2186,10 @@ void ReadRoomAABBChunk(CFILE* fp, int version)
 
 void ReadMatcenChunk(CFILE* fp, int version)
 {
-	int i;
-
 	Num_matcens = cf_ReadInt(fp);
-	for (i = 0; i < Num_matcens; i++)
+	if (Num_matcens > MAX_MATCENS)
+		Error("ReadMatcenChunk: Too many matcens!");
+	for (int i = 0; i < Num_matcens; i++)
 	{
 		Matcen[i] = new matcen;
 		Matcen[i]->LoadData(fp);
@@ -2196,8 +2211,6 @@ void ReadLevelGoalsChunk(CFILE* fp, int version)
 // Reads relevant info about the terrain sky and lights
 void ReadTerrainSkyAndLightChunk(CFILE* fp, int version)
 {
-	int i, num_sats;
-
 	if (version >= 41)
 	{
 		if (version >= 88)
@@ -2210,12 +2223,12 @@ void ReadTerrainSkyAndLightChunk(CFILE* fp, int version)
 
 		if (version < 43)
 		{
-			for (i = 0; i < MAX_HORIZON_PIECES; i++)
+			for (int i = 0; i < MAX_HORIZON_PIECES; i++)
 				cf_ReadShort(fp);
 		}
 		else if (version < 74)
 		{
-			for (i = 0; i < MAX_HORIZON_PIECES; i++)
+			for (int i = 0; i < MAX_HORIZON_PIECES; i++)
 			{
 				cf_ReadShort(fp);
 				cf_ReadShort(fp);
@@ -2226,20 +2239,22 @@ void ReadTerrainSkyAndLightChunk(CFILE* fp, int version)
 		{
 			if (version < 104)
 			{
-				for (i = 0; i < 4; i++)
+				for (int i = 0; i < 4; i++)
 					cf_ReadShort(fp);
 			}
-			else {
+			else 
+			{
 				Terrain_sky.dome_texture = texture_xlate[cf_ReadShort(fp)];
 
 				//Check for failed xlate
-				if (Terrain_sky.dome_texture == -1) {
+				if (Terrain_sky.dome_texture == -1) 
+				{
 					Terrain_sky.dome_texture = 0;
 				}
 			}
 
 			if (version < 114)
-				for (i = 0; i < MAX_HORIZON_PIECES; i++)
+				for (int i = 0; i < MAX_HORIZON_PIECES; i++)
 					cf_ReadShort(fp);	// Was band textures
 		}
 	}
@@ -2272,13 +2287,15 @@ void ReadTerrainSkyAndLightChunk(CFILE* fp, int version)
 		Terrain_sky.rotate_rate = 0;
 
 
-	num_sats = cf_ReadInt(fp);
+	int num_sats = cf_ReadInt(fp);
 
 	ASSERT(num_sats <= MAX_SATELLITES);
+	if (num_sats > MAX_SATELLITES)
+		Error("ReadTerrainSkyAndLightChunk: Too many satellites in the sky!");
 
 	Terrain_sky.num_satellites = num_sats;
 
-	for (i = 0; i < num_sats; i++)
+	for (int i = 0; i < num_sats; i++)
 	{
 		Terrain_sky.satellite_texture[i] = texture_xlate[cf_ReadShort(fp)];
 
@@ -2323,7 +2340,7 @@ void ReadTerrainSkyAndLightChunk(CFILE* fp, int version)
 	// Read lighting
 	if (version <= 31)
 	{
-		for (i = 0; i < TERRAIN_WIDTH * TERRAIN_DEPTH; i++)
+		for (int i = 0; i < TERRAIN_WIDTH * TERRAIN_DEPTH; i++)
 		{
 			if (version >= 24)
 			{
@@ -2342,7 +2359,7 @@ void ReadTerrainSkyAndLightChunk(CFILE* fp, int version)
 		}
 		if (version >= 25)
 		{
-			for (i = 0; i < TERRAIN_WIDTH * TERRAIN_DEPTH; i++)
+			for (int i = 0; i < TERRAIN_WIDTH * TERRAIN_DEPTH; i++)
 				Terrain_dynamic_table[i] = cf_ReadByte(fp);
 		}
 	}
@@ -2351,30 +2368,30 @@ void ReadTerrainSkyAndLightChunk(CFILE* fp, int version)
 		ubyte* byte_vals = (ubyte*)mem_malloc(TERRAIN_DEPTH * TERRAIN_WIDTH);
 
 		ReadCompressionByte(fp, byte_vals, TERRAIN_DEPTH * TERRAIN_WIDTH);
-		for (i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
+		for (int i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
 			Terrain_seg[i].l = byte_vals[i];
 
 		ReadCompressionByte(fp, byte_vals, TERRAIN_DEPTH * TERRAIN_WIDTH);
-		for (i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
+		for (int i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
 			Terrain_seg[i].r = byte_vals[i];
 
 		ReadCompressionByte(fp, byte_vals, TERRAIN_DEPTH * TERRAIN_WIDTH);
-		for (i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
+		for (int i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
 			Terrain_seg[i].g = byte_vals[i];
 
 		ReadCompressionByte(fp, byte_vals, TERRAIN_DEPTH * TERRAIN_WIDTH);
-		for (i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
+		for (int i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
 			Terrain_seg[i].b = byte_vals[i];
 
 		ReadCompressionByte(fp, byte_vals, TERRAIN_DEPTH * TERRAIN_WIDTH);
-		for (i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
+		for (int i = 0; i < TERRAIN_DEPTH * TERRAIN_WIDTH; i++)
 			Terrain_dynamic_table[i] = byte_vals[i];
 
 		if (version >= 72)
 		{
 			Terrain_occlusion_checksum = cf_ReadInt(fp);
 			ReadCompressionByte(fp, byte_vals, OCCLUSION_SIZE * OCCLUSION_SIZE * 32);
-			for (i = 0; i < OCCLUSION_SIZE * OCCLUSION_SIZE * 32; i++)
+			for (int i = 0; i < OCCLUSION_SIZE * OCCLUSION_SIZE * 32; i++)
 			{
 				int row = i / 32;
 				int column = i % 32;
@@ -2535,11 +2552,11 @@ void ReadTextureList(CFILE* ifile)
 
 void ReadPlayerStarts(CFILE* infile, int fileversion)
 {
-	int i, n;
+	int n = (fileversion >= 120) ? cf_ReadShort(infile) : 32;
+	if (n > MAX_PLAYERS)
+		Error("ReadPlayerStarts: Too many player starts!");
 
-	n = (fileversion >= 120) ? cf_ReadShort(infile) : 32;
-
-	for (i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 	{
 		Players[i].startpos_flags = cf_ReadInt(infile);
 	}
@@ -2548,12 +2565,9 @@ void ReadPlayerStarts(CFILE* infile, int fileversion)
 
 void VerifyObjectList()
 {
-	int i;
+	ubyte already_listed[MAX_OBJECTS] = {};
 
-	ubyte already_listed[MAX_OBJECTS];
-	memset(already_listed, 0, MAX_OBJECTS);
-
-	for (i = 0; i <= Highest_room_index; i++)
+	for (int i = 0; i <= Highest_room_index; i++)
 	{
 		room* rp = &Rooms[i];
 		if (rp->flags & RF_EXTERNAL)
@@ -2567,7 +2581,7 @@ void VerifyObjectList()
 		}
 	}
 
-	for (i = 0; i < TERRAIN_WIDTH * TERRAIN_DEPTH; i++)
+	for (int i = 0; i < TERRAIN_WIDTH * TERRAIN_DEPTH; i++)
 	{
 		terrain_segment* tseg = &Terrain_seg[i];
 
@@ -2636,15 +2650,13 @@ char* New_door_names[] = {
 //Deals with some renamed doors.  Translates the old name to the new name, then looks up the id
 int SpecialFindDoorName(char* name)
 {
-	int i, id;
-
 	//Look up the old name, and return it if found
-	id = FindDoorName(name);
+	int id = FindDoorName(name);
 	if (id != -1)
 		return id;
 
 	//Didn't find old name, so see if there's a new name, and look for that
-	for (i = 0; i < NUM_RENAMED_DOORS; i++) {
+	for (int i = 0; i < NUM_RENAMED_DOORS; i++) {
 		if (stricmp(name, Old_door_names[i]) == 0)
 			return FindDoorName(New_door_names[i]);
 	}
@@ -2654,8 +2666,6 @@ int SpecialFindDoorName(char* name)
 }
 
 extern bool Disable_editor_rendering;
-
-
 
 #define LEVEL_LOADED_PCT_CALC	(filelen) ? (float)(chunk_size+chunk_start)/(float)filelen : 0.0f
 //Load a level file
@@ -2679,18 +2689,21 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 	RestartLevelMD5();
 
 	ifile = cfopen(filename, "rb");
-	if (!ifile) {
+	if (!ifile)
+	{
 		retval = 0;
 		goto end_loadlevel;
 	}
 
-	try {		//catch cfile errors
-
+	try 
+	{
+		//catch cfile errors
 		filelen = cfilelength(ifile);
 
 		//Read & check tag
 		cf_ReadBytes((ubyte*)tag, 4, ifile);
-		if (strncmp(tag, LEVEL_FILE_TAG, 4)) {
+		if (strncmp(tag, LEVEL_FILE_TAG, 4)) 
+		{
 			cfclose(ifile);
 			retval = 0;
 			goto end_loadlevel;
@@ -2700,7 +2713,8 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 		version = cf_ReadInt(ifile);
 
 		//Check for too-new version
-		if (version > LEVEL_FILE_VERSION) {
+		if (version > LEVEL_FILE_VERSION) 
+		{
 			cfclose(ifile);
 #if (defined(EDITOR) || defined(NEWEDITOR))
 			if (GetFunctionMode() == EDITOR_MODE)
@@ -2711,7 +2725,8 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 		}
 
 		//Check for too-old version
-		if (version < LEVEL_FILE_OLDEST_COMPATIBLE_VERSION) {
+		if (version < LEVEL_FILE_OLDEST_COMPATIBLE_VERSION) 
+		{
 			cfclose(ifile);
 #if (defined(EDITOR) || defined(NEWEDITOR))
 			if (GetFunctionMode() == EDITOR_MODE)
@@ -2784,9 +2799,9 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 		LoadLevelProgress(LOAD_PROGRESS_LOADING_LEVEL, 0.01f);
 
 		//Read and parse chunks
-		while (!cfeof(ifile)) {
+		while (!cfeof(ifile)) 
+		{
 			char chunk_name[4];
-
 
 			cf_ReadBytes((ubyte*)chunk_name, 4, ifile);
 			chunk_start = cftell(ifile);
@@ -2795,27 +2810,28 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 
 			if (ISCHUNK(CHUNK_TEXTURE_NAMES))
 				ReadTextureList(ifile);
-			else if (ISCHUNK(CHUNK_GENERIC_NAMES)) {
+			else if (ISCHUNK(CHUNK_GENERIC_NAMES)) 
+			{
 				BuildXlateTable(ifile, FindObjectIDName, generic_xlate, MAX_OBJECT_IDS, XT_GENERIC);
 			}
-			else if (ISCHUNK(CHUNK_DOOR_NAMES)) {
+			else if (ISCHUNK(CHUNK_DOOR_NAMES)) 
+			{
 				if (version < 82)
 					BuildXlateTable(ifile, SpecialFindDoorName, door_xlate, MAX_DOORS, XT_DOOR);
 				else
 					BuildXlateTable(ifile, FindDoorName, door_xlate, MAX_DOORS, XT_DOOR);
 			}
-			else if (ISCHUNK(CHUNK_ROOMS)) {
-				int num_rooms;
-
-				num_rooms = cf_ReadInt(ifile);
+			else if (ISCHUNK(CHUNK_ROOMS)) 
+			{
+				int num_rooms = cf_ReadInt(ifile);
 
 				extern void RoomMemInit(int nverts, int nfaces, int nfaceverts, int nportals);	//MOVE TO HEADER FILE
-				if (version >= 85) {
-					int nverts, nfaces, nfaceverts, nportals;
-					nverts = cf_ReadInt(ifile);
-					nfaces = cf_ReadInt(ifile);
-					nfaceverts = cf_ReadInt(ifile);
-					nportals = cf_ReadInt(ifile);
+				if (version >= 85) 
+				{
+					int nverts = cf_ReadInt(ifile);
+					int nfaces = cf_ReadInt(ifile);
+					int nfaceverts = cf_ReadInt(ifile);
+					int nportals = cf_ReadInt(ifile);
 					RoomMemInit(nverts, nfaces, nfaceverts, nportals);
 				}
 				else
@@ -2823,8 +2839,8 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 
 				n_degenerate_faces_removed = 0;
 				int roomnum;
-				for (i = 0; i < num_rooms; i++) {
-
+				for (i = 0; i < num_rooms; i++) 
+				{
 					if ((i % 10) == 0)
 					{
 						LoadLevelProgress(LOAD_PROGRESS_LOADING_LEVEL, (filelen) ? (float)(chunk_start + (((chunk_size) / num_rooms) * i)) / (float)filelen : 0.0f, NULL);
@@ -2839,10 +2855,15 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 				ASSERT(Highest_room_index < MAX_ROOMS);
 
 			}
-			else if (ISCHUNK(CHUNK_ROOM_WIND)) {
+			else if (ISCHUNK(CHUNK_ROOM_WIND)) 
+			{
 				int num_rooms = cf_ReadInt(ifile);
 
-				for (i = 0; i < num_rooms; i++) {
+				if (num_rooms > MAX_ROOMS)
+					Error("LoadLevel: Too many room wind vectors!");
+
+				for (i = 0; i < num_rooms; i++) 
+				{
 					int roomnum = cf_ReadShort(ifile);
 					cf_ReadVector(ifile, &Rooms[roomnum].wind);
 				}
@@ -2851,9 +2872,9 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 			{
 				ReadPlayerStarts(ifile, version);
 			}
-			else if (ISCHUNK(CHUNK_OBJECT_HANDLES)) {	//Read in any non-zero handles for deleted objects
-				int handle, objnum;
-
+			else if (ISCHUNK(CHUNK_OBJECT_HANDLES)) 
+			{
+				//Read in any non-zero handles for deleted objects
 				ubyte already_loaded[MAX_OBJECTS];
 				memset(already_loaded, 0, MAX_OBJECTS);
 
@@ -2862,12 +2883,14 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 
 				for (i = 0; i < n; i++)
 				{
-					handle = cf_ReadInt(ifile);
+					int handle = cf_ReadInt(ifile);
 
 					if (version < 94)
 						handle = XLATE_HANDLE(handle);
 
-					objnum = handle & HANDLE_OBJNUM_MASK;
+					int objnum = handle & HANDLE_OBJNUM_MASK;
+					if (objnum >= MAX_OBJECTS)
+						Error("LoadLevel: Associating handle with out-of-bounds object!");
 
 					ASSERT(already_loaded[objnum] == 0);
 
@@ -2875,9 +2898,11 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 					Objects[objnum].handle = handle;
 				}
 			}
-			else if (ISCHUNK(CHUNK_OBJECTS)) {
+			else if (ISCHUNK(CHUNK_OBJECTS)) 
+			{
 				n = cf_ReadInt(ifile);
-				for (i = 0; i < n; i++) {
+				for (i = 0; i < n; i++) 
+				{
 					int handle, objnum, roomnum;
 
 					if (version >= 45)
@@ -2887,11 +2912,14 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 							handle = XLATE_HANDLE(handle);
 						objnum = handle & HANDLE_OBJNUM_MASK;
 					}
-					else {
+					else 
+					{
 						objnum = i;
 						handle = i + HANDLE_COUNT_INCREMENT;
 					}
 
+					if (objnum >= MAX_OBJECTS)
+						Error("LoadLevel: Reading out-of-bounds object!");
 					ReadObject(ifile, &Objects[objnum], handle, version);
 
 					//Link the object into the mine
@@ -2899,23 +2927,25 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 
 					Objects[objnum].roomnum = -1;			 //ObjLink() expects the roomnum to be -1
 
-					if ((roomnum > Highest_room_index) && !ROOMNUM_OUTSIDE(roomnum)) {	//bad roomnum
+					if ((roomnum > Highest_room_index) && !ROOMNUM_OUTSIDE(roomnum)) 
+					{
+						//bad roomnum
 						Int3();										//loading object with invalid room number
 						Objects[objnum].type = OBJ_NONE;		//kill the object
 					}
-					else {
-						if (!ROOMNUM_OUTSIDE(roomnum) && Rooms[roomnum].flags & RF_EXTERNAL) {
+					else 
+					{
+						if (!ROOMNUM_OUTSIDE(roomnum) && Rooms[roomnum].flags & RF_EXTERNAL) 
+						{
 							mprintf((0, "Internal object %d linked to external room %d (type = %d)!!!\n", objnum, roomnum, Objects[objnum].type));
 							if (Objects[objnum].type == OBJ_VIEWER)
 								Objects[objnum].type = OBJ_NONE;		//kill the object
 							else
 							{
 								Int3();
-								int k;
 								int done = 0;
-								for (k = 0; k <= Highest_room_index && !done; k++)
+								for (int k = 0; k <= Highest_room_index && !done; k++)
 								{
-
 									if (Rooms[k].used && !(Rooms[k].flags & RF_EXTERNAL))
 									{
 										done = 1;
@@ -2937,9 +2967,11 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 				//Rebuild the free object list
 				ResetFreeObjects();
 			}
-			else if (ISCHUNK(CHUNK_TRIGGERS)) {
+			else if (ISCHUNK(CHUNK_TRIGGERS)) 
+			{
 				Num_triggers = cf_ReadInt(ifile);
-				for (i = 0; i < Num_triggers; i++) {
+				for (i = 0; i < Num_triggers; i++) 
+				{
 					ReadTrigger(ifile, &Triggers[i], version);
 				}
 			}
@@ -2995,12 +3027,18 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 				BSPChecksum = cf_ReadInt(ifile);
 				LoadBSPNode(ifile, &MineBSP.root);
 			}
-			else if (ISCHUNK(CHUNK_TERRAIN_SOUND)) {
+			else if (ISCHUNK(CHUNK_TERRAIN_SOUND)) 
+			{
 				int n_bands = cf_ReadInt(ifile);
-				for (int b = 0; b < n_bands; b++) {
+				if (n_bands > NUM_TERRAIN_SOUND_BANDS)
+					Error("LoadLevel: Num terrain sound bands exceeds NUM_TERRAIN_SOUND_BANDS!");
+
+				for (int b = 0; b < n_bands; b++) 
+				{
 					if (version < 119)
 						Terrain_sound_bands[b].sound_index = cf_ReadInt(ifile);
-					else {
+					else 
+					{
 						char soundname[PAGENAME_LEN];
 						cf_ReadString(soundname, sizeof(soundname), ifile);
 						Terrain_sound_bands[b].sound_index = FindSoundName(IGNORE_TABLE(soundname));
@@ -3012,9 +3050,11 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 				}
 			}
 #if (defined(EDITOR) || defined(NEWEDITOR))
-			else if (ISCHUNK(CHUNK_SCRIPT)) {
+			else if (ISCHUNK(CHUNK_SCRIPT)) 
+			{
 #if (defined(EDITOR) || defined(NEWEDITOR))
-				if (FindArg("-savescript")) {
+				if (FindArg("-savescript")) 
+				{
 					char path[MAX_PATH], name[MAX_PATH];
 					ddio_SplitPath(filename, path, name, NULL);
 					strcat(path, name);
@@ -3022,7 +3062,8 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 					CFILE* ofile = cfopen(path, "wb");
 					ubyte buf[1000];
 					int n = chunk_size, r;
-					while (n) {
+					while (n) 
+					{
 						r = cf_ReadBytes(buf, min(n, sizeof(buf)), ifile);
 						cf_WriteBytes(buf, r, ofile);
 						n -= r;
@@ -3032,14 +3073,16 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 #endif	//ifdef EDITOR
 			}
 #endif
-			else if (ISCHUNK(CHUNK_SCRIPT_CODE)) {
+			else if (ISCHUNK(CHUNK_SCRIPT_CODE)) 
+			{
 				//	Level_script = D3XLoadProgram(ifile); -- ripped out
 			}
 			else if (ISCHUNK(CHUNK_TERRAIN))
 			{
 				ReadTerrainChunks(ifile, version);
 			}
-			else if (ISCHUNK(CHUNK_LEVEL_INFO)) {
+			else if (ISCHUNK(CHUNK_LEVEL_INFO)) 
+			{
 				cf_ReadString(Level_info.name, sizeof(Level_info.name), ifile);
 
 				//Localize level name here...
@@ -3076,7 +3119,8 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 					FVI_always_check_ceiling = false;
 				}
 
-				if (version >= 127) {
+				if (version >= 127) 
+				{
 					Ceiling_height = cf_ReadFloat(ifile);
 					AppendToLevelChecksum(Ceiling_height);
 				}
@@ -3084,21 +3128,22 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 					Ceiling_height = MAX_TERRAIN_HEIGHT;
 			}
 #if (defined(EDITOR) || defined(NEWEDITOR))
-			else if (ISCHUNK(CHUNK_EDITOR_INFO)) {
-				int t;
-
+			else if (ISCHUNK(CHUNK_EDITOR_INFO)) 
+			{
 				//Read misc editor vars
-				t = cf_ReadShort(ifile);
+				int t = cf_ReadShort(ifile);
 				Curroomp = &Rooms[t];
 				Curface = cf_ReadShort(ifile);
-				if (version >= 81) {
+				if (version >= 81) 
+				{
 					Curedge = cf_ReadShort(ifile);
 					Curvert = cf_ReadShort(ifile);
 				}
 				t = cf_ReadShort(ifile);
 				Markedroomp = (t == -1) ? NULL : &Rooms[t];
 				Markedface = cf_ReadShort(ifile);
-				if (version >= 81) {
+				if (version >= 81) 
+				{
 					Markededge = cf_ReadShort(ifile);
 					Markedvert = cf_ReadShort(ifile);
 				}
@@ -3109,7 +3154,8 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 					Selected_rooms[i] = cf_ReadShort(ifile);		//saved as shorts to save disk space
 
 				//Read other misc stuff
-				if (version >= 14) {
+				if (version >= 14) 
+				{
 					Cur_object_index = cf_ReadInt(ifile);
 					Current_trigger = cf_ReadInt(ifile);
 					if (version < 106)
@@ -3120,7 +3166,8 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 						cf_ReadInt(ifile);		//was Editor_viewer_id[VM_TERRAIN]
 				}
 
-				if (version >= 55) {
+				if (version >= 55) 
+				{
 					cf_ReadVector(ifile, &Wireframe_view_mine.target);
 					cf_ReadMatrix(ifile, &Wireframe_view_mine.orient);
 					Wireframe_view_mine.dist = cf_ReadFloat(ifile);
@@ -3153,7 +3200,9 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 
 			}
 #endif //ifdef EDITOR
-			else {		//unknown chunk
+			else 
+			{
+				//unknown chunk
 				mprintf((0, "  Unknown chunk: %c%c%c%c, size=%d\n", chunk_name[0], chunk_name[1], chunk_name[2], chunk_name[3], chunk_size));
 			}
 
@@ -3164,7 +3213,8 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 		}
 
 	}	//try
-	catch (cfile_error* cfe) {
+	catch (cfile_error* cfe) 
+	{
 		mprintf((0, "Error reading: file = <%s>, error = \"%s\"\n", cfe->file->name, cfe->msg));
 		ASSERT(cfe->read_write == CFE_READING);
 #if (defined(EDITOR) || defined(NEWEDITOR))
@@ -4641,7 +4691,6 @@ void AlmostPageInDoor(int id)
 	for (int t = 0; t < pm->n_textures; t++)
 		AlmostPageInLevelTexture(pm->textures[t]);
 
-
 	if (doorpointer->open_sound != -1 && doorpointer->open_sound != SOUND_NONE_INDEX)
 		AlmostPageInSound(doorpointer->open_sound);
 	if (doorpointer->close_sound != -1 && doorpointer->close_sound != SOUND_NONE_INDEX)
@@ -4654,8 +4703,6 @@ void AlmostPageInWeapon(int id)
 
 	if (id == -1)
 		return;
-
-	int i;
 
 	if (!(weaponpointer->flags & (WF_IMAGE_BITMAP | WF_IMAGE_VCLIP)))
 	{
@@ -4709,7 +4756,7 @@ void AlmostPageInWeapon(int id)
 	}
 
 	// Try and load the various sounds
-	for (i = 0; i < MAX_WEAPON_SOUNDS; i++)
+	for (int i = 0; i < MAX_WEAPON_SOUNDS; i++)
 	{
 		if (weaponpointer->sounds[i] != SOUND_NONE_INDEX)
 		{
@@ -4720,8 +4767,6 @@ void AlmostPageInWeapon(int id)
 
 void AlmostPageInShip(int id)
 {
-	int i, t;
-
 	ship* shippointer = &Ships[id];
 
 	// Page in all textures for this object
@@ -4731,7 +4776,7 @@ void AlmostPageInShip(int id)
 
 	poly_model* pm = &Poly_models[shippointer->model_handle];
 
-	for (t = 0; t < pm->n_textures; t++)
+	for (int t = 0; t < pm->n_textures; t++)
 		AlmostPageInLevelTexture(pm->textures[t]);
 
 	if (shippointer->med_render_handle != -1)
@@ -4739,7 +4784,7 @@ void AlmostPageInShip(int id)
 		AlmostPageInPolymodel(shippointer->med_render_handle);
 
 		pm = &Poly_models[shippointer->med_render_handle];
-		for (t = 0; t < pm->n_textures; t++)
+		for (int t = 0; t < pm->n_textures; t++)
 			AlmostPageInLevelTexture(pm->textures[t]);
 	}
 
@@ -4748,7 +4793,7 @@ void AlmostPageInShip(int id)
 		AlmostPageInPolymodel(shippointer->lo_render_handle);
 
 		pm = &Poly_models[shippointer->lo_render_handle];
-		for (t = 0; t < pm->n_textures; t++)
+		for (int t = 0; t < pm->n_textures; t++)
 			AlmostPageInLevelTexture(pm->textures[t]);
 	}
 
@@ -4756,17 +4801,15 @@ void AlmostPageInShip(int id)
 	{
 		AlmostPageInPolymodel(shippointer->dying_model_handle);
 
-
 		pm = &Poly_models[shippointer->dying_model_handle];
-		for (t = 0; t < pm->n_textures; t++)
+		for (int t = 0; t < pm->n_textures; t++)
 			AlmostPageInLevelTexture(pm->textures[t]);
 	}
 
 	// Try and load the various weapons
-	int j;
-	for (i = 0; i < MAX_PLAYER_WEAPONS; i++)
+	for (int i = 0; i < MAX_PLAYER_WEAPONS; i++)
 	{
-		for (j = 0; j < MAX_WB_GUNPOINTS; j++)
+		for (int j = 0; j < MAX_WB_GUNPOINTS; j++)
 		{
 			if (shippointer->static_wb[i].gp_weapon_index[j] != LASER_INDEX)
 			{
@@ -4776,16 +4819,16 @@ void AlmostPageInShip(int id)
 	}
 
 	// Try and load the various weapons
-	for (i = 0; i < MAX_PLAYER_WEAPONS; i++)
+	for (int i = 0; i < MAX_PLAYER_WEAPONS; i++)
 	{
-		for (j = 0; j < MAX_WB_FIRING_MASKS; j++)
+		for (int j = 0; j < MAX_WB_FIRING_MASKS; j++)
 		{
 			if (shippointer->static_wb[i].fm_fire_sound_index[j] != SOUND_NONE_INDEX)
 				AlmostPageInSound(shippointer->static_wb[i].fm_fire_sound_index[j]);
 		}
 	}
 
-	for (i = 0; i < MAX_PLAYER_WEAPONS; i++)
+	for (int i = 0; i < MAX_PLAYER_WEAPONS; i++)
 	{
 		if (shippointer->firing_sound[i] != -1)
 			AlmostPageInSound(shippointer->firing_sound[i]);
@@ -4795,14 +4838,11 @@ void AlmostPageInShip(int id)
 
 		if (shippointer->spew_powerup[i] != -1)
 			AlmostPageInGeneric(shippointer->spew_powerup[i]);
-
 	}
 }
 
 void AlmostPageInGeneric(int id)
 {
-	int i, t;
-
 	if (id == -1)
 		return;
 
@@ -4814,18 +4854,15 @@ void AlmostPageInGeneric(int id)
 
 	poly_model* pm = &Poly_models[objinfopointer->render_handle];
 
-	for (t = 0; t < pm->n_textures; t++)
+	for (int t = 0; t < pm->n_textures; t++)
 		AlmostPageInLevelTexture(pm->textures[t]);
-
 
 	if (objinfopointer->med_render_handle != -1)
 	{
 		AlmostPageInPolymodel(objinfopointer->med_render_handle);
 
-
-
 		pm = &Poly_models[objinfopointer->med_render_handle];
-		for (t = 0; t < pm->n_textures; t++)
+		for (int t = 0; t < pm->n_textures; t++)
 			AlmostPageInLevelTexture(pm->textures[t]);
 	}
 
@@ -4833,14 +4870,13 @@ void AlmostPageInGeneric(int id)
 	{
 		AlmostPageInPolymodel(objinfopointer->lo_render_handle);
 
-
 		pm = &Poly_models[objinfopointer->lo_render_handle];
-		for (t = 0; t < pm->n_textures; t++)
+		for (int t = 0; t < pm->n_textures; t++)
 			AlmostPageInLevelTexture(pm->textures[t]);
 	}
 
 	// Process all sounds for this object
-	for (i = 0; i < MAX_OBJ_SOUNDS; i++)
+	for (int i = 0; i < MAX_OBJ_SOUNDS; i++)
 	{
 		if (objinfopointer->sounds[i] != SOUND_NONE_INDEX)
 		{
@@ -4848,8 +4884,9 @@ void AlmostPageInGeneric(int id)
 		}
 	}
 
-	if (objinfopointer->ai_info) {
-		for (i = 0; i < MAX_AI_SOUNDS; i++)
+	if (objinfopointer->ai_info) 
+	{
+		for (int i = 0; i < MAX_AI_SOUNDS; i++)
 		{
 			if (objinfopointer->ai_info->sound[i] != SOUND_NONE_INDEX)
 			{
@@ -4859,12 +4896,11 @@ void AlmostPageInGeneric(int id)
 	}
 
 	// Try and load the various wb sounds
-	int j;
 	if (objinfopointer->static_wb)
 	{
-		for (i = 0; i < MAX_WBS_PER_OBJ; i++)
+		for (int i = 0; i < MAX_WBS_PER_OBJ; i++)
 		{
-			for (j = 0; j < MAX_WB_FIRING_MASKS; j++)
+			for (int j = 0; j < MAX_WB_FIRING_MASKS; j++)
 			{
 				if (objinfopointer->static_wb[i].fm_fire_sound_index[j] != SOUND_NONE_INDEX)
 				{
@@ -4875,10 +4911,11 @@ void AlmostPageInGeneric(int id)
 	}
 
 	// Try and load the various wb sounds
-	if (objinfopointer->anim) {
-		for (i = 0; i < NUM_MOVEMENT_CLASSES; i++)
+	if (objinfopointer->anim) 
+	{
+		for (int i = 0; i < NUM_MOVEMENT_CLASSES; i++)
 		{
-			for (j = 0; j < NUM_ANIMS_PER_CLASS; j++)
+			for (int j = 0; j < NUM_ANIMS_PER_CLASS; j++)
 			{
 				if (objinfopointer->anim[i].elem[j].anim_sound_index != SOUND_NONE_INDEX)
 				{
@@ -4889,7 +4926,7 @@ void AlmostPageInGeneric(int id)
 	}
 
 	// Load the spew types
-	for (i = 0; i < MAX_DSPEW_TYPES; i++)
+	for (int i = 0; i < MAX_DSPEW_TYPES; i++)
 	{
 		if (objinfopointer->dspew_number[i] > 0 && objinfopointer->dspew[i] != 0 && objinfopointer->dspew[i] != id)
 		{
@@ -4899,13 +4936,14 @@ void AlmostPageInGeneric(int id)
 
 	// Try and load the various weapons
 
-	if (objinfopointer->static_wb) {
+	if (objinfopointer->static_wb) 
+	{
 		// Automatically include laser
 		AlmostPageInWeapon(LASER_INDEX);
 
-		for (i = 0; i < MAX_WBS_PER_OBJ; i++)
+		for (int i = 0; i < MAX_WBS_PER_OBJ; i++)
 		{
-			for (j = 0; j < MAX_WB_GUNPOINTS; j++)
+			for (int j = 0; j < MAX_WB_GUNPOINTS; j++)
 			{
 				if (objinfopointer->static_wb[i].gp_weapon_index[j] != LASER_INDEX)
 				{
@@ -4919,15 +4957,13 @@ void AlmostPageInGeneric(int id)
 extern char* Static_sound_names[];
 void AlmostPageInAllData()
 {
-	int i;
-
 	AlmostPageInShip(Players[Player_num].ship_index);
 	AlmostPageInLevelTexture(FindTextureName("LightFlareStar"));
 	AlmostPageInLevelTexture(FindTextureName("LightFlare"));
 
 	//mprintf((0,"%d bytes to page in for the ship.\n",need_to_page_in));
 		// Get static fireballs
-	for (i = 0; i < NUM_FIREBALLS; i++)
+	for (int i = 0; i < NUM_FIREBALLS; i++)
 	{
 		char name[PAGENAME_LEN];
 		strcpy(name, Fireballs[i].name);
@@ -4939,7 +4975,7 @@ void AlmostPageInAllData()
 	}
 	//mprintf((0,"%d bytes to page in for fireballs.\n",need_to_page_in));
 		// Get static sounds
-	for (i = 0; i < NUM_STATIC_SOUNDS; i++)
+	for (int i = 0; i < NUM_STATIC_SOUNDS; i++)
 	{
 		int sid = FindSoundName(IGNORE_TABLE(Static_sound_names[i]));
 
@@ -4948,7 +4984,7 @@ void AlmostPageInAllData()
 	}
 	//mprintf((0,"%d bytes to page in for static sounds.\n",need_to_page_in));
 		// First get textures	
-	for (i = 0; i <= Highest_room_index; i++)
+	for (int i = 0; i <= Highest_room_index; i++)
 	{
 		if (!Rooms[i].used)
 			continue;
@@ -4961,7 +4997,7 @@ void AlmostPageInAllData()
 	}
 	//mprintf((0,"%d bytes to page in for room textures.\n",need_to_page_in));
 		// Touch all terrain textures
-	for (i = 0; i < TERRAIN_TEX_WIDTH * TERRAIN_TEX_DEPTH; i++)
+	for (int i = 0; i < TERRAIN_TEX_WIDTH * TERRAIN_TEX_DEPTH; i++)
 	{
 		AlmostPageInLevelTexture(Terrain_tex_seg[i].tex_index);
 	}
@@ -4971,11 +5007,11 @@ void AlmostPageInAllData()
 		AlmostPageInLevelTexture(Terrain_sky.dome_texture);
 	}
 
-	for (i = 0; i < Terrain_sky.num_satellites; i++)
+	for (int i = 0; i < Terrain_sky.num_satellites; i++)
 		AlmostPageInLevelTexture(Terrain_sky.satellite_texture[i]);
 	//mprintf((0,"%d bytes to page in for the terrain.\n",need_to_page_in));	
 		// Touch all objects
-	for (i = 0; i <= Highest_object_index; i++)
+	for (int i = 0; i <= Highest_object_index; i++)
 	{
 		object* obj = &Objects[i];
 
@@ -4998,21 +5034,18 @@ void AlmostPageInAllData()
 //Go through all the data needing to be paged in, add it all up.
 int CountDataToPageIn()
 {
-
 	need_to_page_num = 0;
 	need_to_page_in = 0;
 
-	int i;
-
-	for (i = 0; i < MAX_BITMAPS; i++)
+	for (int i = 0; i < MAX_BITMAPS; i++)
 	{
 		texture_counted[i] = 0;
 	}
-	for (i = 0; i < MAX_SOUNDS; i++)
+	for (int i = 0; i < MAX_SOUNDS; i++)
 	{
 		sound_counted[i] = 0;
 	}
-	for (i = 0; i < MAX_POLY_MODELS; i++)
+	for (int i = 0; i < MAX_POLY_MODELS; i++)
 	{
 		poly_counted[i] = 0;
 	}
