@@ -2380,7 +2380,7 @@ void MultiDoServerRejectedChecksum(ubyte *data)
 	MULTI_ASSERT (Netgame.local_role==LR_CLIENT,NULL);
 
 	SKIP_HEADER (data,&count);
-	ShowProgressScreen (TXT_MLTLEVELNOMATCH);
+	ShowProgressScreen (TXT_MLTLEVELNOMATCH, "Remove any ship modifications if you have any loaded");
 	MultiLeaveGame();
 	Sleep (2000);
 }
