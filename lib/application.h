@@ -61,9 +61,13 @@ public:
 	void deactivate() { m_AppActive = false; };
 };
 
-#if defined(WIN32)
+#if defined(SDL3)
+#include "sdl\SDLApp.h"
+#elif defined(WIN32)
 #include "win\Win32App.h"
 #elif defined(__LINUX__)
 #include "linux/lnxapp.h"
+#else
+#error "application.h: Unknown platform"
 #endif
 #endif

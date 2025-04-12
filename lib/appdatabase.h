@@ -63,10 +63,14 @@ public:
 //Macro to write a string
 #define write_string(label,varp) write(label,varp,strlen(varp))
 
-#if defined(WIN32)
+#if defined(SDL3)
+#include "sdl\SDLDatabase.h"
+#elif defined(WIN32)
 #include "win\Win32Database.h"
 #elif defined(__LINUX__)
 #include "linux/lnxdatabase.h"
+#else
+#error "appdatabase.h: Unknown environment"
 #endif
 
 #endif

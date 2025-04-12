@@ -57,6 +57,7 @@ IF (APPLE)
 ENDIF()
 
 IF (WIN32)
+	set(USE_SDL OFF CACHE BOOL "Builds with SDL rather than the Win32 code.")
 	SET(D3_GAMEDIR "c:/games/Descent3/")	
 	set (CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "lib/win" "lib/win/directx" "thirdparty/OpenAL/libs/Win32") 
 	SET(CMAKE_CXX_FLAGS_DEBUG "/Od /EHsc /RTC1 /MTd /MP /W3 /nologo /c /Zi /errorReport:prompt")
@@ -66,8 +67,11 @@ IF (WIN32)
 	set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "/DEBUG")
 	set(CMAKE_EXE_LINKER_FLAGS_RELEASE " /DEBUG") #[ISB] Generate debug information
 	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
+	if (USE_SDL)
+		find_package(sdl3 REQUIRED)
+		add_definitions(-DSDL3)
+	endif()
 	
-
 	SET(PLATFORM_INCLUDES "lib/win/directx" "lib/win" "thirdparty/OpenAL/include" )
 	
 	SET(CMAKE_FIND_LIBRARY_PREFIXES "")
@@ -108,9 +112,14 @@ ADD_SUBDIRECTORY (cfile)
 ADD_SUBDIRECTORY (d3music)
 
 IF (WIN32)
-ADD_SUBDIRECTORY (ddio_win)
-ADD_SUBDIRECTORY (win32)
-ADD_SUBDIRECTORY (dd_sndlib)
+	if(USE_SDL)
+		ADD_SUBDIRECTORY (ddio_sdl)
+		ADD_SUBDIRECTORY (sdl)
+	else()
+		ADD_SUBDIRECTORY (ddio_win)
+		ADD_SUBDIRECTORY (win32)
+	endif()
+	ADD_SUBDIRECTORY (dd_sndlib)
 ENDIF()
 
 IF (UNIX)
@@ -195,10 +204,23 @@ SET (DESCENT3_SOURCES
 		${MAIN_SOURCES})
 		
 IF (WIN32)
+if (USE_SDL)
+SET (DESCENT3_SOURCES
+	${DESCENT3_SOURCES}
+	${DDIO_SDL_SOURCES}
+	${SDL_SOURCES}
+	${DD_SNDLIB_SOURCES}
+	Descent3.manifest)
+else()
 SET (DESCENT3_SOURCES
 	${DESCENT3_SOURCES}
 	${DDIO_WIN_SOURCES}
-	${WIN32_SOURCES}
+	Descent3.manifest)
+endif()
+
+#shared sources
+SET (DESCENT3_SOURCES
+	${DESCENT3_SOURCES}
 	${DD_SNDLIB_SOURCES}
 	Descent3.manifest)
 ENDIF()
@@ -214,7 +236,11 @@ ENDIF()
 add_executable(PiccuEngine ${DESCENT3_SOURCES})
 	
 IF (WIN32)
-	target_link_options(PiccuEngine PUBLIC /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC)
+	if (USE_SDL) #for convenience SDL will compile as a console app, and dump mono there
+		target_link_options(PiccuEngine PUBLIC /SAFESEH:NO /NODEFAULTLIB:LIBC)
+	else()
+		target_link_options(PiccuEngine PUBLIC /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC)
+	endif()
 ENDIF()
 
 IF (UNIX AND NOT APPLE)
@@ -276,4 +302,5 @@ source_group("ui" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ui/.+")
 source_group("unzip" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/unzip/.+")
 source_group("vecmat" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/vecmat/.+")
 source_group("win32" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/win32/.+")
+source_group("sdl" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/sdl/.+")
 
