@@ -215,6 +215,7 @@ else()
 SET (DESCENT3_SOURCES
 	${DESCENT3_SOURCES}
 	${DDIO_WIN_SOURCES}
+	${WIN32_SOURCES}
 	Descent3.manifest)
 endif()
 
