@@ -49,11 +49,11 @@ typedef struct tKey
 }tKey;
 
 
-class CRegistry
+class SDLRegistry
 {
 public:
-  CRegistry(char *name);
-  ~CRegistry();
+	SDLRegistry(const char *name);
+  ~SDLRegistry();
   void Export();
   bool Import();
   void CreateKey(char *name);

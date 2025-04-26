@@ -23,11 +23,12 @@
 #include "application.h"
 //[ISB] Version information
 #include "gitinfo.h"
+//Branding information
+#include "enginebrand.h"
 
 //The name of this product
 #define PRODUCT_NAME "Descent 3"
-//[ISB] Branding for the engine
-#define ENGINE_NAME "Piccu Engine"
+
 
 //This is the port number assigned to "descent3" by the IANA (Internet Assigned Numbers Authority)
 //Don't arbitrarily change this number!

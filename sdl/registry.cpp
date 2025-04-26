@@ -37,6 +37,10 @@
 #include "registry.h"
 #include "mono.h"
 
+#ifdef WIN32
+#define strcasecmp stricmp
+#endif
+
 //Convert a string that represents a hex value into an int
 int hextoi(char *p)
 {
@@ -124,28 +128,28 @@ char *ParseToken(char *p,char *buf,int bufsize)
 #define PARSE_STRING(buf)	do {ptr = ParseString(ptr,buf,sizeof(buf),'"','"'); } while (0)
 #define PARSE_TOKEN(buf)	do {ptr = ParseToken(ptr,buf,sizeof(buf)); } while (0)
 
-CRegistry::CRegistry(char *str)
+SDLRegistry::SDLRegistry(const char *str)
 {
   currentkey = root = NULL;
   strcpy(name,str);
 }
 
-CRegistry::~CRegistry()
+SDLRegistry::~SDLRegistry()
 {
   Destroy();
 }
 
-void CRegistry::GetSystemName(char *n)
+void SDLRegistry::GetSystemName(char *n)
 {
 	strcpy(n,name);
 }
 
-void CRegistry::SetSystemName(char *n)
+void SDLRegistry::SetSystemName(char *n)
 {
 	strcpy(name,n);
 }
 
-void CRegistry::Destroy(void)
+void SDLRegistry::Destroy(void)
 {
   tKey *curr,*next;
   curr = next = root;
@@ -157,7 +161,7 @@ void CRegistry::Destroy(void)
   root = NULL;
 }
 
-void CRegistry::DestroyKey(tKey *key)
+void SDLRegistry::DestroyKey(tKey *key)
 {
   tRecord *curr, *next;
   curr = next = key->records;
@@ -169,7 +173,7 @@ void CRegistry::DestroyKey(tKey *key)
   free(key);
 }
 
-void CRegistry::DestroyRecord(tRecord *record)
+void SDLRegistry::DestroyRecord(tRecord *record)
 {
   if(record->data){
     free(record->data);
@@ -178,7 +182,7 @@ void CRegistry::DestroyRecord(tRecord *record)
   free(record);
 }
 
-void CRegistry::Export()
+void SDLRegistry::Export()
 {
   tKey *curr,*next;
   curr = next = root;
@@ -194,7 +198,7 @@ void CRegistry::Export()
   fclose(file);
 }
 
-void CRegistry::ExportKey(tKey *key,FILE *file)
+void SDLRegistry::ExportKey(tKey *key,FILE *file)
 {
   tRecord *curr, *next;
   curr = next = key->records;
@@ -209,7 +213,7 @@ void CRegistry::ExportKey(tKey *key,FILE *file)
   }	
 }
 
-void CRegistry::ExportRecord(tRecord *record,FILE *file)
+void SDLRegistry::ExportRecord(tRecord *record,FILE *file)
 {
   int *dw;
   char *st;
@@ -229,7 +233,7 @@ void CRegistry::ExportRecord(tRecord *record,FILE *file)
   fputs(buffer,file);
 }
 
-bool CRegistry::Import()
+bool SDLRegistry::Import()
 {
   char buffer[500];
   char newbuff[500];
@@ -323,7 +327,7 @@ bool CRegistry::Import()
   return true;
 }
 
-void CRegistry::CreateKey(char *name)
+void SDLRegistry::CreateKey(char *name)
 {
   tKey *curr;
   if(LookupKey(name)){
@@ -352,7 +356,7 @@ void CRegistry::CreateKey(char *name)
   currentkey = curr;	
 }
 
-bool CRegistry::LookupKey(char *name)
+bool SDLRegistry::LookupKey(char *name)
 {
   tKey *curr;
   curr = root;
@@ -367,7 +371,7 @@ bool CRegistry::LookupKey(char *name)
   return false;
 }
 
-tRecord *CRegistry::LookupRecord(char *record,void *data)
+tRecord * SDLRegistry::LookupRecord(char *record,void *data)
 {
   if(!currentkey)
     return NULL;
@@ -397,7 +401,7 @@ tRecord *CRegistry::LookupRecord(char *record,void *data)
   return NULL;
 }
 
-int CRegistry::GetDataSize(char *record)
+int SDLRegistry::GetDataSize(char *record)
 {
   if(!currentkey)
     return false;
@@ -422,7 +426,7 @@ int CRegistry::GetDataSize(char *record)
   return 0;
 }
 
-bool CRegistry::CreateRecord(char *name,char type,void *data)
+bool SDLRegistry::CreateRecord(char *name,char type,void *data)
 {
   if(!currentkey)
     return false;

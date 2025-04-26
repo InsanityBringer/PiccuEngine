@@ -6,6 +6,8 @@ if (WIN32) #still embed the icon
 		sdl/sdldatabase.cpp
 		sdl/sdlmono.cpp
 		sdl/sdlcontroller.h
+		sdl/registry.cpp
+		sdl/registry.h
 		win32/win32res.h
 		win32/win32res.rc
 		win32/piccu_station_256.ico
@@ -19,5 +21,7 @@ else()
 		sdl/sdldatabase.cpp
 		sdl/sdlmono.cpp
 		sdl/sdlcontroller.h
+		sdl/registry.cpp
+		sdl/registry.h
 		PARENT_SCOPE)
 endif()
