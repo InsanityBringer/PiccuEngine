@@ -268,9 +268,15 @@ SET (MAIN_SOURCES
 		Descent3/weather.cpp)
 		
 IF (WIN32)
+	if (USE_SDL)
+	SET (MAIN_SOURCES ${MAIN_SOURCES}
+		Descent3/sdlmain.cpp
+		)
+	else()
 	SET (MAIN_SOURCES ${MAIN_SOURCES}
 		Descent3/winmain.cpp
 		)
+	endif()
 	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC")
 ENDIF()
 

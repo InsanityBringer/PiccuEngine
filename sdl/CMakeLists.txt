@@ -3,7 +3,7 @@ if (WIN32) #still embed the icon
 		sdl/sdlapp.cpp
 		sdl/sdlcontroller.cpp
 		sdl/sdlcon.cpp
-		sdl/sdldata.cpp
+		sdl/sdldatabase.cpp
 		sdl/sdlmono.cpp
 		sdl/sdlcontroller.h
 		win32/win32res.h
@@ -16,7 +16,7 @@ else()
 		sdl/sdlapp.cpp
 		sdl/sdlcontroller.cpp
 		sdl/sdlcon.cpp
-		sdl/sdldata.cpp
+		sdl/sdldatabase.cpp
 		sdl/sdlmono.cpp
 		sdl/sdlcontroller.h
 		PARENT_SCOPE)

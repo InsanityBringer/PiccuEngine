@@ -68,11 +68,14 @@ IF (WIN32)
 	set(CMAKE_EXE_LINKER_FLAGS_RELEASE " /DEBUG") #[ISB] Generate debug information
 	ADD_DEFINITIONS (-DIS_WINDOWS -D_CRT_SECURE_NO_WARNINGS -DWIN32 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
 	if (USE_SDL)
-		find_package(sdl3 REQUIRED)
+		find_package(sdl3 CONFIG REQUIRED)
 		add_definitions(-DSDL3)
 	endif()
 	
 	SET(PLATFORM_INCLUDES "lib/win/directx" "lib/win" "thirdparty/OpenAL/include" )
+	#if (USE_SDL)
+	#	set(PLATFORM_INCLUDES ${PLATFORM_INCLUDES} SDL3::SDL3)
+	#endif()
 	
 	SET(CMAKE_FIND_LIBRARY_PREFIXES "")
 	SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
@@ -90,6 +93,9 @@ include_directories("lib" "Descent3" "netcon/includes" ${PLATFORM_INCLUDES})
 IF (WIN32)
 	SET (PLATFORM_LIBS wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib wininet.lib
 		${DINPUT_LIBRARY} ${DXGUID_LIBRARY} ${OPENAL_LIBRARY})
+	if (USE_SDL)
+		SET (PLATFORM_LIBS ${PLATFORM_LIBS} SDL3::SDL3)
+	endif()
 	SET (MIN_PLATFORM_LIBS wsock32.lib wininet.lib)
 ENDIF()
 IF (UNIX AND NOT APPLE)
@@ -208,7 +214,7 @@ if (USE_SDL)
 SET (DESCENT3_SOURCES
 	${DESCENT3_SOURCES}
 	${DDIO_SDL_SOURCES}
-	${SDL_SOURCES}
+	${SDL3_SOURCES}
 	${DD_SNDLIB_SOURCES}
 	Descent3.manifest)
 else()
@@ -304,4 +310,5 @@ source_group("unzip" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/unzip/.+")
 source_group("vecmat" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/vecmat/.+")
 source_group("win32" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/win32/.+")
 source_group("sdl" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/sdl/.+")
+source_group("ddio_sdl" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_sdl/.+")
 
