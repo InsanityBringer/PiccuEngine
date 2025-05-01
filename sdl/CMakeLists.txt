@@ -4,10 +4,11 @@ if (WIN32) #still embed the icon
 		sdl/sdlcontroller.cpp
 		sdl/sdlcon.cpp
 		sdl/sdldatabase.cpp
-		sdl/sdlmono.cpp
 		sdl/sdlcontroller.h
 		sdl/registry.cpp
 		sdl/registry.h
+		win32/windebug.cpp
+		win32/winmono.cpp
 		win32/win32res.h
 		win32/win32res.rc
 		win32/piccu_station_256.ico
