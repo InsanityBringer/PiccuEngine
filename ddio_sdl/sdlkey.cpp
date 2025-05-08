@@ -210,7 +210,7 @@ void ddio_InternalResetKey(ubyte key)
 
 void ddio_SDLKeyEvent(SDL_Event& ev)
 {
-	try
+	if (DDIO_SDLKeycodeToDDIOKeycode.find(ev.key.key) != DDIO_SDLKeycodeToDDIOKeycode.end())
 	{
 		float timer = timer_GetTime();
 		//Lookup the keycode
@@ -236,8 +236,5 @@ void ddio_SDLKeyEvent(SDL_Event& ev)
 			WKeys[DDIOKeyCode].up_time = timer;
 		}
 		ddio_UpdateKeyState(DDIOKeyCode, WKeys[DDIOKeyCode].status);
-	}
-	catch (std::out_of_range& blarg)
-	{
 	}
 }
