@@ -20,12 +20,26 @@
 #include "mono.h"
 #include "networking.h"
 #include "pserror.h"
+#include "sdl/SDLDDIO.h"
 
 void SDLApplication::do_events()
 {
 	SDL_Event ev;
 	while (SDL_PollEvent(&ev))
 	{
+		switch (ev.type)
+		{
+		case SDL_EVENT_KEY_DOWN:
+		case SDL_EVENT_KEY_UP:
+			ddio_SDLKeyEvent(ev);
+			break;
+		case SDL_EVENT_MOUSE_MOTION:
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		case SDL_EVENT_MOUSE_BUTTON_UP:
+		case SDL_EVENT_MOUSE_WHEEL:
+			ddio_SDLMouseEvent(ev);
+			break;
+		}
 	}
 
 	if (m_deferhandler)
