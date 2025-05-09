@@ -92,6 +92,9 @@ void SDLApplication::init()
 	{
 		Error("Failed to create SDL Window! Error: %s", SDL_GetError());
 	}
+
+	//The mouse system needs the application object to work
+	ddio_SDLMouseLinkApp(this);
 }
 
 void SDLApplication::get_info(void* buffer)

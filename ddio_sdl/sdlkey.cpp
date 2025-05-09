@@ -210,11 +210,12 @@ void ddio_InternalResetKey(ubyte key)
 
 void ddio_SDLKeyEvent(SDL_Event& ev)
 {
-	if (DDIO_SDLKeycodeToDDIOKeycode.find(ev.key.key) != DDIO_SDLKeycodeToDDIOKeycode.end())
+	auto it = DDIO_SDLKeycodeToDDIOKeycode.find(ev.key.key);
+	if (it != DDIO_SDLKeycodeToDDIOKeycode.end())
 	{
 		float timer = timer_GetTime();
 		//Lookup the keycode
-		int DDIOKeyCode = DDIO_SDLKeycodeToDDIOKeycode.at(ev.key.key);
+		int DDIOKeyCode = it->second;
 
 		//Determine the type of event
 		if (ev.type == SDL_EVENT_KEY_DOWN)

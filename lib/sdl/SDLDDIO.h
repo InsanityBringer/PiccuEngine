@@ -18,7 +18,9 @@
 
 //Handler functions for SDL's event loop to call
 #include <SDL3/SDL_events.h>
+#include "application.h"
 
 void ddio_SDLKeyEvent(SDL_Event& ev);
+void ddio_SDLMouseLinkApp(SDLApplication* app);
 void ddio_SDLMouseEvent(SDL_Event& ev);
 void ddio_SDLJoyEvent(SDL_Event& ev);

@@ -58,4 +58,9 @@ public:
 	void set_flags(int newflags) override;
 	//  moves the window
 	void set_sizepos(int x, int y, int w, int h) override;
+
+	SDL_Window* GetWindow()
+	{
+		return m_window;
+	}
 };
