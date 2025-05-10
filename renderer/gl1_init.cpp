@@ -455,11 +455,12 @@ void GLCompatibilityRenderer::Close()
 	FreeImages();
 	CloseFramebuffer();
 
-#if defined(WIN32)
+#if defined(SDL3)
+	SDL_GL_DestroyContext(GLContext);
+#elif defined(WIN32)
 	wglMakeCurrent(NULL, NULL);
 
 	wglDeleteContext(ResourceContext);
-
 #elif defined(__LINUX__)
 	// SDL_Quit() handles this for us.
 #else
@@ -470,7 +471,7 @@ void GLCompatibilityRenderer::Close()
 
 	FreeCache();
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(SDL3)
 	//	I'm freeing the DC here - samir
 	ReleaseDC(hOpenGLWnd, hOpenGLDC);
 #endif

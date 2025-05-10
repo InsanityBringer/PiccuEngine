@@ -29,7 +29,9 @@ program_version Program_version;
 //	Initializes the current program state
 void ProgramVersion(int version_type, ubyte major, ubyte minor, ubyte build)
 {
-#if defined(WIN32)  // I'm sorry.  Samir
+#if defined(SDL3)
+	oeSDLAppDatabase dbase((oeSDLAppDatabase*)Database);
+#elif defined(WIN32)  // I'm sorry.  Samir
 	oeWin32AppDatabase dbase((oeWin32AppDatabase*)Database);
 #elif defined(__LINUX__)
 	oeLnxAppDatabase dbase((oeLnxAppDatabase*)Database);

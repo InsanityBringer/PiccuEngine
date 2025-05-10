@@ -24,6 +24,7 @@
 #include <math.h>
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_events.h>
 
 #include "DDAccess.h"
 #include "pserror.h"

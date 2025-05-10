@@ -20,7 +20,6 @@
 
 #include <stdint.h>
 #include <string>
-#include <SDL3/SDL.h>
 #include <SDL3/SDL_video.h>
 
 class SDLApplication : public oeApplication

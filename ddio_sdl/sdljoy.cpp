@@ -24,6 +24,7 @@
 
 bool joy_Init(bool emulation)
 {
+	return true;
 }
 
 void joy_Close()

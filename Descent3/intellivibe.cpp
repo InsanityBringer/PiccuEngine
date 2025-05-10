@@ -15,35 +15,11 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
-* $Logfile: /DescentIII/Main/intellivibe.cpp $
-* $Revision: 5 $
-* $Date: 4/28/00 6:49p $
-* $Author: Jeff $
-*
-* IntelliVIBE interface
-*
-* $Log: /DescentIII/Main/intellivibe.cpp $
- * 
- * 5     4/28/00 6:49p Jeff
- * created stub functions for non-win32
- * 
- * 4     3/30/00 6:00p Jeff
- * changed name of ivibe dll
- * 
- * 3     1/27/00 12:04p Jeff
- * updated IntelliVIBE to match new specs
- * 
- * 2     1/26/00 9:20p Jeff
- * added support for IntelliVIBE DLL
-*
-* $NoKeywords: $
-*/
 
 #define DD_ACCESS_RING
 #include "vibeinterface.h"
 
-#ifndef WIN32
+#if !defined(WIN32) || defined(SDL3)
 void VIBE_Init(oeApplication *app){}
 void VIBE_Close(void){}
 void VIBE_DoFrame(void){}
