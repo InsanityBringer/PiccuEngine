@@ -424,7 +424,7 @@ void ddio_FindFileFetchResult(int num, char* buffer)
     if (num < 0 || num >= DDIO_glob_count)
         Error("ddio_FindFileFetchResult: result out of range!");
 
-    snprintf(buffer, _MAX_PATH, "%s%s", DDIO_glob_dir.c_str(), DDIO_glob[num]);
+    snprintf(buffer, _MAX_PATH, "%s", DDIO_glob[num]);
 }
 
 bool ddio_FindFileStart(const char* wildcard, char* namebuf)
