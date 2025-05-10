@@ -263,6 +263,7 @@ target_link_libraries(PiccuEngine ${PLATFORM_LIBS})
 target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:RELEASE>:RELEASE>")
 target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:MINSIZEREL>:RELEASE>")
 target_compile_definitions(PiccuEngine PUBLIC -DMONO "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
+target_compile_definitions(PiccuEngine PUBLIC -DSDLKEY) #non-main projects see the SDL app but don't bundle SDL. 
 
 add_library(dmfc SHARED ${DMFC_SOURCES})
 target_compile_definitions(dmfc PUBLIC -DOUTRAGE_VERSION -DDMFC_DLL)

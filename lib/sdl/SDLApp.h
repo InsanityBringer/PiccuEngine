@@ -18,6 +18,7 @@
 
 #pragma once
 
+#ifdef SDLKEY //protect non-main projects from seeing the SDL libs
 #include <stdint.h>
 #include <string>
 #include <SDL3/SDL_video.h>
@@ -63,3 +64,4 @@ public:
 		return m_window;
 	}
 };
+#endif
