@@ -190,8 +190,8 @@ void ddio_SDLMouseEvent(SDL_Event& ev)
         }
         else
         {
-            DDIO_mouse_state.x += ev.motion.xrel;
-            DDIO_mouse_state.y += ev.motion.yrel;
+            DDIO_mouse_state.dx += ev.motion.xrel;
+            DDIO_mouse_state.dy += ev.motion.yrel;
         }
 
         DDIO_mouse_state.z = 0;
@@ -516,6 +516,22 @@ bool ddio_MouseInit()
     DDIO_mouse_state.suspended = false;
     ddio_MouseReset();
     DDIO_mouse_init = true;
+
+    DDIO_mouse_state.timer = timer_GetTime();
+    DDIO_mouse_state.naxis = 2;
+    DDIO_mouse_state.nbtns = N_DIMSEBTNS + 3; // always have a mousewheel. [ISB] disgusting hack: Can't change mousewheel bindings for old pilots, so make button 5 after the two mouse wheel buttons.
+    for (int i = 0; i < DDIO_mouse_state.nbtns; i++)
+    {
+        DDIO_mouse_state.btn_flags |= (1 << i);
+    }
+
+    memset(&DIM_buttons, 0, sizeof(t_mse_button_info));
+
+    //Never hide the cursor when the game is in dedicated server mode. 
+    if (!(Mouse_app->flags() & OEAPP_CONSOLE))
+    {
+        SDL_HideCursor();
+    }
 
     return true;
 
