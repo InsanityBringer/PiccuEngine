@@ -126,8 +126,10 @@ public:
 	}
 };
 
+#if defined(WIN32) && !defined(SDL3)
 extern PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
 extern PFNWGLCREATECONTEXTATTRIBSARBPROC dwglCreateContextAttribsARB;
+#endif
 extern bool Already_loaded;
 
 //A dumb bit of global state that needs to be fixed

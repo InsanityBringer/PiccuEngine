@@ -33,6 +33,10 @@
 
 #include <string.h>
 
+#ifdef SDL3
+#include <SDL3/SDL_version.h>
+#endif
+
 // externed from newui.cpp
 extern int UI_frame_result;
 
@@ -405,6 +409,11 @@ void mmInterface::CopyrightText()
 	grtext_Printf(x, y, "%s v%d.%d", typestr.c_str(), Program_version.major, Program_version.minor);
 	grtext_Puts(x, y + 12, engstr.c_str());
 	grtext_Puts(x, y + 24, hashbuf);
+#ifdef SDL3
+	int sdlver = SDL_GetVersion();
+	grtext_SetColor(GR_RGB(32, 255, 32));
+	grtext_Printf(x, y - 12, "SDL v%d.%d.%d", SDL_VERSIONNUM_MAJOR(sdlver), SDL_VERSIONNUM_MINOR(sdlver), SDL_VERSIONNUM_MICRO(sdlver));
+#endif
 
 	grtext_SetFlags(GRTEXTFLAG_SATURATE);
 

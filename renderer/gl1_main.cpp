@@ -30,6 +30,9 @@ void GLCompatibilityRenderer::UpdateWindow()
 		height = OpenGL_preferred_state.height;
 
 		//[ISB] center window
+#ifdef SDL3
+		ParentApplication->set_sizepos(-1, -1, OpenGL_state.view_width, OpenGL_state.view_height);
+#elif WIN32
 		int mWidth = GetSystemMetrics(SM_CXSCREEN);
 		int mHeight = GetSystemMetrics(SM_CYSCREEN);
 
@@ -38,18 +41,22 @@ void GLCompatibilityRenderer::UpdateWindow()
 		RECT rect = { orgX, orgY, orgX + OpenGL_state.view_width, orgY + OpenGL_state.view_height };
 		AdjustWindowRectEx(&rect, WS_CAPTION, FALSE, 0);
 		ParentApplication->set_sizepos(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+#endif
 		ParentApplication->set_flags(OEAPP_WINDOWED);
 	}
 	else
 	{
-		ParentApplication->set_flags(OEAPP_FULLSCREEN);
+		SDL_GetWindowSizeInPixels(GLWindow, &OpenGL_preferred_state.width, &OpenGL_preferred_state.height);
 
+#ifdef SDL3
+#elif WIN32
 		RECT rect;
 		GetWindowRect((HWND)hOpenGLWnd, &rect);
 		mprintf((0, "rect=%d %d %d %d\n", rect.top, rect.right, rect.bottom, rect.left));
 
 		OpenGL_state.view_width = rect.right - rect.left;
 		OpenGL_state.view_height = rect.bottom - rect.top;
+#endif
 
 		width = OpenGL_preferred_state.width;
 		height = OpenGL_preferred_state.height;
@@ -130,7 +137,12 @@ int GLCompatibilityRenderer::SetPreferredState(renderer_preferred_state* pref_st
 			SetGammaValue(pref_state->gamma);
 		}
 
-#ifdef WIN32
+#ifdef SDL3
+		if (pref_state->vsync_on)
+			SDL_GL_SetSwapInterval(1);
+		else
+			SDL_GL_SetSwapInterval(0);
+#elif WIN32
 		if (dwglSwapIntervalEXT)
 		{
 			if (pref_state->vsync_on)
@@ -213,7 +225,9 @@ void GLCompatibilityRenderer::Flip(void)
 	}
 #endif
 
-#if defined(WIN32)	
+#if defined(SDL3)
+	SDL_GL_SwapWindow(GLWindow);
+#elif defined(WIN32)	
 	SwapBuffers((HDC)hOpenGLDC);
 #elif defined(__LINUX__)
 	SDL_GL_SwapBuffers();

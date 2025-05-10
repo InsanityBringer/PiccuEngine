@@ -122,7 +122,29 @@ void GLCompatibilityRenderer::SetDefaults()
 	}
 }
 
-#if defined(WIN32)
+#if defined(SDL3)
+static GLADapiproc opengl_GLADLoad(const char* name)
+{
+	void* ptr = SDL_GL_GetProcAddress(name);
+	return (GLADapiproc)ptr;
+}
+
+int GLCompatibilityRenderer::Setup(SDL_Window* window)
+{
+	//Ideally this will set attribute flags here, but SDL wants those to be set before window creation.
+	//It might make more sense to delay window creation to when the graphics library initializes when in game mode.
+	//But for now, I'll accept a compatibility context.
+	GLWindow = window;
+	SDL_GLContext context = SDL_GL_CreateContext(window);
+	if (context == nullptr)
+	{
+		Error("GL3Renderer::Setup: SDL_GL_CreateContext failed!\n%s", SDL_GetError());
+		return 0;
+	}
+
+	return 1;
+}
+#elif defined(WIN32)
 static HMODULE glDllhandle = nullptr;
 static GLADapiproc opengl_GLADLoad(const char* name)
 {
@@ -255,7 +277,27 @@ int GLCompatibilityRenderer::Init(oeApplication* app, renderer_preferred_state* 
 	}
 
 	int windowX = 0, windowY = 0;
-#if defined(WIN32)
+#if defined(SDL3)
+	SDLApplication* sdlapp = dynamic_cast<SDLApplication*>(ParentApplication);
+	assert(sdlapp);
+	if (sdlapp)
+	{
+		InitImages();
+		UpdateWindow();
+		if (!Setup(sdlapp->GetWindow()))
+		{
+			//opengl_Close();
+			return 0;
+		}
+
+		OpenGL_debugging_enabled = false; //can fix
+		OpenGL_buffer_storage_enabled = CheckExtension("GL_ARB_buffer_storage");
+	}
+	else
+	{
+		Error("GL3Renderer::Init: Can't get app ptr");
+	}
+#elif defined(WIN32)
 	/***********************************************************
 	*               WINDOWS OPENGL
 	***********************************************************
@@ -369,7 +411,12 @@ int GLCompatibilityRenderer::Init(oeApplication* app, renderer_preferred_state* 
 
 	mprintf((0, "OpenGL initialization at %d x %d was successful.\n", OpenGL_state.screen_width, OpenGL_state.screen_height));
 
-#ifdef WIN32
+#if defined(SDL3)
+	if (pref_state->vsync_on)
+		SDL_GL_SetSwapInterval(1);
+	else
+		SDL_GL_SetSwapInterval(0);
+#elif defined(WIN32)
 	if (dwglSwapIntervalEXT)
 	{
 		if (pref_state->vsync_on)

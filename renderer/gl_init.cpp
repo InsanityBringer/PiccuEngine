@@ -18,17 +18,20 @@
 */
 #include "gl_local.h"
 #include "args.h"
-#ifdef WIN32
+
+#ifdef SDL3
+#include <SDL3/SDL_video.h>
+#elif WIN32
 #define NOMINMAX
 #include <Windows.h>
 #endif
 
+#if defined(SDL3)
+//hmm..
+#elif defined(WIN32)
 PFNWGLSWAPINTERVALEXTPROC dwglSwapIntervalEXT;
 PFNWGLCREATECONTEXTATTRIBSARBPROC dwglCreateContextAttribsARB;
 
-
-
-#if defined(WIN32)
 //	Moved from DDGR library
 HWND hOpenGLWnd = NULL;
 HDC hOpenGLDC = NULL;
@@ -106,7 +109,29 @@ void GL3Renderer::SetDefaults()
 	}
 }
 
-#if defined(WIN32)
+#if defined(SDL3)
+static GLADapiproc opengl_GLADLoad(const char* name)
+{
+	void* ptr = SDL_GL_GetProcAddress(name);
+	return (GLADapiproc)ptr;
+}
+
+int GL3Renderer::Setup(SDL_Window* window)
+{
+	//Ideally this will set attribute flags here, but SDL wants those to be set before window creation.
+	//It might make more sense to delay window creation to when the graphics library initializes when in game mode.
+	//But for now, I'll accept a compatibility context.
+	GLWindow = window;
+	SDL_GLContext context = SDL_GL_CreateContext(window);
+	if (context == nullptr)
+	{
+		Error("GL3Renderer::Setup: SDL_GL_CreateContext failed!\n%s", SDL_GetError());
+		return 0;
+	}
+
+	return 1;
+}
+#elif defined(WIN32)
 static HMODULE glDllhandle = nullptr;
 static GLADapiproc opengl_GLADLoad(const char* name)
 {
@@ -408,10 +433,12 @@ void GL3Renderer::GetInformation()
 	mprintf((0, "OpenGL Version: %s\n", glGetString(GL_VERSION)));
 }
 
+#if defined(WIN32) && !defined(SDL3)
 void APIENTRY GL_LogDebugMsg(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void* user)
 {
 	mprintf((0, "OpenGL debug msg %d: %s\n", id, msg));
 }
+#endif
 
 // Sets up our OpenGL rendering context
 // Returns 1 if ok, 0 if something bad
@@ -434,7 +461,27 @@ int GL3Renderer::Init(oeApplication* app, renderer_preferred_state* pref_state)
 	}
 
 	int windowX = 0, windowY = 0;
-#if defined(WIN32)
+#if defined(SDL3)
+	SDLApplication* sdlapp = dynamic_cast<SDLApplication*>(ParentApplication);
+	assert(sdlapp);
+	if (sdlapp)
+	{
+		InitImages();
+		UpdateWindow();
+		if (!Setup(sdlapp->GetWindow()))
+		{
+			//opengl_Close();
+			return 0;
+		}
+
+		OpenGL_debugging_enabled = false; //can fix
+		OpenGL_buffer_storage_enabled = CheckExtension("GL_ARB_buffer_storage");
+	}
+	else
+	{
+		Error("GL3Renderer::Init: Can't get app ptr");
+	}
+#elif defined(WIN32)
 	/***********************************************************
 	*               WINDOWS OPENGL
 	***********************************************************
@@ -534,7 +581,12 @@ int GL3Renderer::Init(oeApplication* app, renderer_preferred_state* pref_state)
 
 	mprintf((0, "OpenGL initialization at %d x %d was successful.\n", OpenGL_state.screen_width, OpenGL_state.screen_height));
 
-#ifdef WIN32
+#if defined(SDL3)
+	if (pref_state->vsync_on)
+		SDL_GL_SetSwapInterval(1);
+	else
+		SDL_GL_SetSwapInterval(0);
+#elif defined(WIN32)
 	if (dwglSwapIntervalEXT)
 	{
 		if (pref_state->vsync_on)
@@ -573,11 +625,12 @@ void GL3Renderer::Close()
 	CloseFramebuffer();
 	DestroyPersistentDrawBuffer();
 
-#if defined(WIN32)
+#if defined(SDL3)
+	SDL_GL_DestroyContext(GLContext);
+#elif defined(WIN32)
 	wglMakeCurrent(NULL, NULL);
 
 	wglDeleteContext(ResourceContext);
-
 #elif defined(__LINUX__)
 	// SDL_Quit() handles this for us.
 #else
@@ -588,7 +641,7 @@ void GL3Renderer::Close()
 
 	FreeCache();
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(SDL3)
 	//	I'm freeing the DC here - samir
 	ReleaseDC(hOpenGLWnd, hOpenGLDC);
 #endif

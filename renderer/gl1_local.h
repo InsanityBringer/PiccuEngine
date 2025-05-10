@@ -18,13 +18,16 @@
 */
 #pragma once
 
-#ifdef WIN32
+//can't figure out which one of these little jokers is including Windows.h..
 #define NOMINMAX
+#ifdef SDL3
+#include <SDL3/SDL_video.h>
+#elif WIN32
 #include <Windows.h>
+#include "wglext.h"
 #endif
 #include <algorithm>
 #include <glad/gl.h>
-#include "wglext.h"
 #define DD_ACCESS_RING //need direct access to some stuff
 #include "application.h"
 #include "3d.h"
@@ -148,7 +151,10 @@ class GLCompatibilityRenderer : public IRenderer
 	bool OpenGL_debugging_enabled = false;
 	bool OpenGL_buffer_storage_enabled = false;
 
-#if defined(WIN32)
+#if defined(SDL3)
+	SDL_GLContext GLContext;
+	SDL_Window* GLWindow;
+#elif defined(WIN32)
 	//	Moved from DDGR library
 	HWND hOpenGLWnd = nullptr;
 	HDC hOpenGLDC = nullptr;
@@ -170,7 +176,11 @@ private:
 	//INIT
 	// Sets default states for our renderer
 	void SetDefaults();
+#if defined(SDL3)
+	int Setup(SDL_Window* window);
+#elif defined(WIN32)
 	int Setup(HDC glhdc);
+#endif
 	void GetInformation();
 
 	//IMAGES
