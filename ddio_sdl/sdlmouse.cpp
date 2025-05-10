@@ -92,13 +92,13 @@ static struct mses_state
     bool suspended;
     sbyte cursor_count;
     float x_aspect, y_aspect; // used in calculating coordinates returned from ddio_MouseGetState
-    HANDLE hmseevt;           // signaled if mouse input is awaiting.
     short dx, dy, dz, imm_dz;
     short mode;         // mode of mouse operation.
     short nbtns, naxis; // device caps.
     float last_read_time; // [ISB] This is the time that the last WM_INPUT came in at
     float expire_time; // [ISB] How long a delta should be held for, to smooth out low poll devices at high framerates
     bool polled;            // [ISB] When a latched delta is read, this should be set to true. This will zero the deltas next read
+    float wheel_accum; //SDL mousewheel accumulation, does SDL support "smooth" scroll wheel support?
 } DDIO_mouse_state;
 
 static t_mse_button_info DIM_buttons;
@@ -109,6 +109,134 @@ static SDLApplication* Mouse_app;
 void ddio_SDLMouseLinkApp(SDLApplication* app)
 {
     Mouse_app = app;
+}
+
+void ddio_MouseButtonDown(float time, int buttonnum)
+{
+    t_mse_event ev;
+    DIM_buttons.down_count[buttonnum]++;
+    DIM_buttons.time_down[buttonnum] = time;
+    DIM_buttons.is_down[buttonnum] = true;
+    DDIO_mouse_state.btn_mask |= (1 << buttonnum);
+    ev.btn = buttonnum;
+    ev.state = true;
+    MB_queue.send(ev);
+}
+
+void ddio_MouseButtonUp(float time, int buttonnum)
+{
+    t_mse_event ev;
+    DIM_buttons.up_count[buttonnum]++;
+    DIM_buttons.is_down[buttonnum] = false;
+    DIM_buttons.time_up[buttonnum] = time;
+    DDIO_mouse_state.btn_mask &= ~(1 << buttonnum);
+    ev.btn = buttonnum;
+    ev.state = false;
+    MB_queue.send(ev);
+}
+
+void ddio_SDLMouseEvent(SDL_Event& ev)
+{
+    float time = timer_GetTime();
+    if (ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN || ev.type == SDL_EVENT_MOUSE_BUTTON_UP)
+    {
+        int sdlbutton = ev.button.button;
+        //translate SDL convention
+        int button = sdlbutton - 1;
+        if (sdlbutton == SDL_BUTTON_MIDDLE)
+            button = 2;
+        else if (sdlbutton == SDL_BUTTON_RIGHT)
+            button = 1;
+
+        if (ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+            ddio_MouseButtonDown(time, button);
+        else
+            ddio_MouseButtonUp(time, button);
+    }
+    else if (ev.type == SDL_EVENT_MOUSE_MOTION)
+    {
+        assert(Mouse_app != nullptr);
+        //In standard mode, sync the software cursor to the hardware cursor
+        if (DDIO_mouse_state.mode == MOUSE_STANDARD_MODE)
+        {
+            //SDL mouse events are relative to the window's origin, which thankfully makes translating the position easier
+            DDIORect clientrect = {};
+            SDL_Window* window = Mouse_app->GetWindow();
+            SDL_GetWindowSizeInPixels(window, &clientrect.right, &clientrect.bottom);
+
+            int brectwidth = DDIO_mouse_state.brect.right - DDIO_mouse_state.brect.left;
+            int brectheight = DDIO_mouse_state.brect.bottom - DDIO_mouse_state.brect.top;
+            int clientrectwidth = clientrect.right - clientrect.left;
+            int clientrectheight = clientrect.bottom - clientrect.top;
+
+            float brectaspect = (float)brectwidth / brectheight;
+            float clientrectaspect = (float)clientrectwidth / clientrectheight;
+
+            int xoffset, yoffset;
+            float scale;
+            if (brectaspect < clientrectaspect) //base screen is less wide, so pillarbox it
+            {
+                yoffset = 0; scale = (float)brectheight / clientrectheight;
+                xoffset = (clientrectwidth - (clientrectheight * brectaspect)) / 2;
+            }
+            else //base screen is more wide, so letterbox it
+            {
+                xoffset = 0; scale = (float)brectwidth / clientrectwidth;
+                yoffset = (clientrectheight - (clientrectwidth / brectaspect)) / 2;
+            }
+            DDIO_mouse_state.x = ((ev.motion.x - xoffset) * scale);
+            DDIO_mouse_state.y = ((ev.motion.y - yoffset) * scale);
+        }
+        else
+        {
+            DDIO_mouse_state.x += ev.motion.xrel;
+            DDIO_mouse_state.y += ev.motion.yrel;
+        }
+
+        DDIO_mouse_state.z = 0;
+
+        // check bounds of mouse cursor.
+        if (DDIO_mouse_state.x < DDIO_mouse_state.brect.left)
+            DDIO_mouse_state.x = (short)DDIO_mouse_state.brect.left;
+        if (DDIO_mouse_state.x >= DDIO_mouse_state.brect.right)
+            DDIO_mouse_state.x = (short)DDIO_mouse_state.brect.right - 1;
+        if (DDIO_mouse_state.y < DDIO_mouse_state.brect.top)
+            DDIO_mouse_state.y = (short)DDIO_mouse_state.brect.top;
+        if (DDIO_mouse_state.y >= DDIO_mouse_state.brect.bottom)
+            DDIO_mouse_state.y = (short)DDIO_mouse_state.brect.bottom - 1;
+        if (DDIO_mouse_state.z > DDIO_mouse_state.zmax)
+            DDIO_mouse_state.z = (short)DDIO_mouse_state.zmax;
+        if (DDIO_mouse_state.z < DDIO_mouse_state.zmin)
+            DDIO_mouse_state.z = (short)DDIO_mouse_state.zmin;
+    }
+    else if (ev.type == SDL_EVENT_MOUSE_WHEEL)
+    {
+        float factor = 1;
+        //can someone writing the sdl docs actually mention when this happens btw
+        if (ev.wheel.direction == SDL_MOUSEWHEEL_FLIPPED)
+            factor = -1;
+        
+        ev.wheel.y *= factor;
+        DDIO_mouse_state.wheel_accum += ev.wheel.y;
+        if (DDIO_mouse_state.wheel_accum <= -1)
+        {
+            DIM_buttons.down_count[MSEBTN_WHL_DOWN]++;
+            DIM_buttons.up_count[MSEBTN_WHL_DOWN]++;
+            DIM_buttons.is_down[MSEBTN_WHL_DOWN] = true;
+            DIM_buttons.time_down[MSEBTN_WHL_DOWN] = time;
+            DIM_buttons.time_up[MSEBTN_WHL_DOWN] = time + .1f;
+            DDIO_mouse_state.wheel_accum = 0;
+        }
+        else if (DDIO_mouse_state.wheel_accum >= 1)
+        {
+            DIM_buttons.down_count[MSEBTN_WHL_UP]++;
+            DIM_buttons.up_count[MSEBTN_WHL_UP]++;
+            DIM_buttons.is_down[MSEBTN_WHL_UP] = true;
+            DIM_buttons.time_down[MSEBTN_WHL_UP] = time;
+            DIM_buttons.time_up[MSEBTN_WHL_UP] = time + .1f;
+            DDIO_mouse_state.wheel_accum = 0;
+        }
+    }
 }
 
 void DDIOShowCursor(BOOL show)
@@ -176,6 +304,7 @@ void ddio_MouseReset()
     DDIO_mouse_state.cz = 0;
     DDIO_mouse_state.x_aspect = 1.0f;
     DDIO_mouse_state.y_aspect = 1.0f;
+    DDIO_mouse_state.wheel_accum = 0;
 
     // reset button states
     ddio_MouseQueueFlush();
