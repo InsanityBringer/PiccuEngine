@@ -153,8 +153,8 @@ void SDLApplication::set_sizepos(int x, int y, int w, int h)
 	if ((m_flags & OEAPP_FULLSCREEN) == 0)
 	{
 		//TODO: Should allow selecting a display number
-		SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 		SDL_SetWindowSize(m_window, m_winrect.w, m_winrect.h);
+		SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 		SDL_SyncWindow(m_window);
 	}
 }
