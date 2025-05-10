@@ -509,6 +509,26 @@ bool ddio_MouseGetEvent(int* btn, bool* state)
     return false;
 }
 
+bool ddio_MouseInit()
+{
+    ddio_MouseMode(MOUSE_STANDARD_MODE);
+
+    DDIO_mouse_state.suspended = false;
+    ddio_MouseReset();
+    DDIO_mouse_init = true;
+
+    return true;
+
+}
+
+// here we deinitialize our Mouse from DirectInput.
+void ddio_MouseClose() 
+{
+    if (!DDIO_mouse_init)
+        return;
+
+    DDIO_mouse_init = false;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // [ISB] These must be 32-char strings

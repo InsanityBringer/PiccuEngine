@@ -46,9 +46,8 @@ void GLCompatibilityRenderer::UpdateWindow()
 	}
 	else
 	{
-		SDL_GetWindowSizeInPixels(GLWindow, &OpenGL_preferred_state.width, &OpenGL_preferred_state.height);
-
 #ifdef SDL3
+		SDL_GetWindowSizeInPixels(GLWindow, &OpenGL_state.view_width, &OpenGL_state.view_height);
 #elif WIN32
 		RECT rect;
 		GetWindowRect((HWND)hOpenGLWnd, &rect);

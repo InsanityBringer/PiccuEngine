@@ -35,6 +35,8 @@
 #include "config.h"
 #include "ddio.h"
 
+int no_debug_dialog; //Needed to make win32 error.cpp happy. 
+
 class oeSDLGameDatabase : public oeSDLAppDatabase
 {
 public:
@@ -136,7 +138,7 @@ int SharedMain(int argc, char** argv)
 	SDLApplication* d3;
 	GatherArgs(argv);
 
-	oeSDLAppDatabase dbase;
+	oeSDLGameDatabase dbase;
 
 	// If this is a dedicated server, then start one!
 	if (FindArg("-dedicated"))
@@ -181,6 +183,7 @@ int SharedMain(int argc, char** argv)
 
 	PreInitD3Systems();
 
+	Descent = d3;
 	d3->init();
 	//d3->run();
 	Descent3();

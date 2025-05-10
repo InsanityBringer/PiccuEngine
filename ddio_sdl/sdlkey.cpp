@@ -239,3 +239,8 @@ void ddio_SDLKeyEvent(SDL_Event& ev)
 		ddio_UpdateKeyState(DDIOKeyCode, WKeys[DDIOKeyCode].status);
 	}
 }
+
+void ddio_SetKeyboardLanguage(int language)
+{
+	//SDL should handle this
+}

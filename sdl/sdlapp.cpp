@@ -158,3 +158,14 @@ void SDLApplication::set_sizepos(int x, int y, int w, int h)
 		SDL_SyncWindow(m_window);
 	}
 }
+
+void con_Printf(const char* fmt, ...)
+{
+	Error("con_Printf: STUB");
+}
+
+bool con_Input(char* buf, int buflen)
+{
+	Error("con_Input: STUB");
+	return false;
+}

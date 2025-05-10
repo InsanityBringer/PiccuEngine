@@ -142,6 +142,16 @@ int GLCompatibilityRenderer::Setup(SDL_Window* window)
 		return 0;
 	}
 
+	if (!Already_loaded)
+	{
+		if (!gladLoadGL(opengl_GLADLoad))
+		{
+			rend_SetErrorMessage("Failed to load opengl dll!\n");
+			Int3();
+			return 0;
+		}
+	}
+
 	return 1;
 }
 #elif defined(WIN32)

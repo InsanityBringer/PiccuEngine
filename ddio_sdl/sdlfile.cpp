@@ -94,6 +94,17 @@ int	ddio_GetFileLength(FILE* filePtr)
 	return fstats.st_size;
 }
 
+bool ddio_IsSeparator(char c)
+{
+    if (c == '/')
+        return true;
+#ifdef WIN32
+    else if (c == '\\')
+        return true;
+#endif
+    return false;
+}
+
 // Split a pathname into its component parts
 void ddio_SplitPath(const char* srcPath, char* path, char* filename, char* ext)
 {
@@ -109,7 +120,7 @@ void ddio_SplitPath(const char* srcPath, char* path, char* filename, char* ext)
     // Check for an extension
     ///////////////////////////////////////
     int t = totalLen - 1;
-    while ((srcPath[t] != '.') && (srcPath[t] != '/') && (t >= 0)) t--;
+    while ((srcPath[t] != '.') && !ddio_IsSeparator(srcPath[t]) && (t >= 0)) t--;
     //see if we are at an extension
     if ((t >= 0) && (srcPath[t] == '.')) 
     {
@@ -132,10 +143,10 @@ void ddio_SplitPath(const char* srcPath, char* path, char* filename, char* ext)
     // Check for file name
     ////////////////////////////////////
     int temp = (extStart != -1) ? (extStart) : (totalLen - 1);
-    while ((temp >= 0) && (srcPath[temp] != '/')) temp--;
+    while ((temp >= 0) && !ddio_IsSeparator(srcPath[temp])) temp--;
     if (temp < 0)
         temp = 0;
-    if (srcPath[temp] == '/') 
+    if (ddio_IsSeparator(srcPath[temp]))
     {
         //we have a file
         fileStart = temp + 1;
@@ -367,16 +378,6 @@ static std::string DDIO_glob_dir;
 //posix doesn't do it that way.
 //so who does?
 
-bool ddio_IsSeparator(char c)
-{
-    if (c == '/')
-        return true;
-#ifdef WIN32
-    else if (c == '\\')
-        return true;
-#endif
-    return false; 
-}
 
 void ddio_StupidPathSplit(std::string& path, std::string& directory, std::string& pattern)
 {
@@ -728,7 +729,7 @@ bool ddio_RenameFile(char* oldfile, char* newfile)
         return false;
 }
 
-bool ddio_CopyFile(char* srcfile, char* destfile)
+bool ddio_CopyFile(const char* srcfile, const char* destfile)
 {
 #ifdef WIN32
     if (CopyFile(srcfile, destfile, TRUE))
