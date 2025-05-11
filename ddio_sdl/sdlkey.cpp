@@ -152,6 +152,7 @@ bool ddio_InternalKeyInit(ddio_init_info* init_info)
 		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_RCTRL, KEY_RCTRL });
 		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_RSHIFT, KEY_RSHIFT });
 		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_RALT, KEY_RALT });
+		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_SPACE, KEY_SPACEBAR });
 
 	}
 	return true;
