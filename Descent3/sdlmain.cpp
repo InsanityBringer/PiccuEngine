@@ -171,6 +171,8 @@ int SharedMain(int argc, char** argv)
 			flags = OEAPP_WINDOWED;
 		}
 
+		SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+
 		d3 = new SDLApplication(ENGINE_NAME, flags);
 	}
 	atexit(D3End);

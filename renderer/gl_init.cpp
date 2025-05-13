@@ -122,6 +122,12 @@ int GL3Renderer::Setup(SDL_Window* window)
 	//It might make more sense to delay window creation to when the graphics library initializes when in game mode.
 	//But for now, I'll accept a compatibility context.
 	GLWindow = window;
+
+	//These are supposed to be before creating a window, but atm they're here. This seems to work on Windows at least.
+	//Need more time to figure out how compatibile this is.. or just make the decision before the first window is initialized. 
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 	if (context == nullptr)
 	{
