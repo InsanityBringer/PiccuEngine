@@ -153,7 +153,7 @@ class GL3Renderer : public IRenderer
 
 	//INIT
 	renderer_preferred_state OpenGL_preferred_state = { false, true, false, 32, 1.0 };
-	rendering_state OpenGL_state;
+	rendering_state OpenGL_state = {};
 
 	bool OpenGL_debugging_enabled = false;
 	bool OpenGL_buffer_storage_enabled = false;
