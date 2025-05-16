@@ -307,23 +307,15 @@ void GLCompatibilityRenderer::SetFogState(sbyte state)
 void GLCompatibilityRenderer::SetFogBorders(float nearz, float farz)
 {
 	// Sets the near and far plane of fog
-	float fogStart = 1.0f - 1.0f / nearz;
-	if (fogStart < 0)
-		fogStart = 0;
-	else if (fogStart > 1)
-		fogStart = 1;
-	float fogEnd = 1.0f - 1.0f / farz;
-	if (fogEnd < 0)
-		fogEnd = 0;
-	else if (fogEnd > 1)
-		fogEnd = 1;
+	float fog_start = std::max(0.f, std::min(1.0f, 1.0f - (1.0f / nearz)));
+	float fog_end = std::max(0.f, std::min(1.0f, 1.0f - (1.0f / farz)));
 
-	OpenGL_state.cur_fog_start = fogStart;
-	OpenGL_state.cur_fog_end = fogEnd;
+	OpenGL_state.cur_fog_start = fog_start;
+	OpenGL_state.cur_fog_end = fog_end;
 
 	glFogi(GL_FOG_MODE, GL_LINEAR);
-	glFogf(GL_FOG_START, fogStart);
-	glFogf(GL_FOG_END, fogEnd);
+	glFogf(GL_FOG_START, fog_start);
+	glFogf(GL_FOG_END, fog_end);
 }
 
 void GLCompatibilityRenderer::SetColorModel(color_model state)
