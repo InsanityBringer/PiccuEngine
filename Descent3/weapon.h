@@ -347,5 +347,11 @@ ushort GetAutoSelectSecondaryWpnIdx(int slot);
 void SetAutoSelectPrimaryWpnIdx(int slot, ushort idx);
 void SetAutoSelectSecondaryWpnIdx(int slot, ushort idx);
 
+//[ISB] Given a primary or secondary weapon index (not slot), determines its priority. Higher values are higher priority. 
+//Disabled weapons will receive a priority lower than any non-disabled weapons, but will still maintain relative order
+//to other disabled weapons. 
+int GetPrimaryPriority(int num);
+int GetSecondaryPriority(int num);
+
 
 #endif

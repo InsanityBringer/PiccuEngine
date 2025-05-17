@@ -704,7 +704,20 @@ void SelectPrimaryWeapon(int slot)
 		nw_low = slot % NUM_PRIMARY_SLOTS;
 		nw_high = nw_low + NUM_PRIMARY_SLOTS;
 
-		if (Weapon_slot_mask & (1 << slot))
+		if (Game_mode & GM_MULTI)
+		{
+			int lowpriority = GetPrimaryPriority(nw_low);
+			int highpriority = GetPrimaryPriority(nw_high);
+
+			if (lowpriority > highpriority)
+			{
+				int heh = nw_low;
+				nw_low = nw_high;
+				nw_high = heh;
+			}
+		}
+
+		if (Weapon_slot_mask & (1 << slot) || (Game_mode & GM_MULTI))
 		{
 			// we think we have a higher class of weapon.
 			if (is_weapon_available(avail_flags, nw_high))
@@ -805,7 +818,20 @@ void SelectSecondaryWeapon(int slot)
 	nw_low = (slot % NUM_SECONDARY_SLOTS) + SECONDARY_INDEX;
 	nw_high = nw_low + NUM_SECONDARY_SLOTS;
 
-	if (Weapon_slot_mask & (1 << slot))
+	if (Game_mode & GM_MULTI)
+	{
+		int lowpriority = GetSecondaryPriority(nw_low);
+		int highpriority = GetSecondaryPriority(nw_high);
+
+		if (lowpriority > highpriority)
+		{
+			int heh = nw_low;
+			nw_low = nw_high;
+			nw_high = heh;
+		}
+	}
+
+	if (Weapon_slot_mask & (1 << slot) || (Game_mode & GM_MULTI))
 	{
 		// we think we have a higher class of weapon.
 		if (is_weapon_available(avail_flags, nw_high, plr->weapon_ammo[nw_high]))
@@ -1013,6 +1039,36 @@ void SetAutoSelectSecondaryWpnIdx(int slot, ushort idx)
 const ushort IWPNSEL_SKIP = (~WPNSEL_SKIP);
 
 #define WPNINDEX(_index) (sel_list[(_index)]&IWPNSEL_SKIP)
+
+int GetPrimaryPriority(int num)
+{
+	for (int i = 0; i < 10; i++)
+	{
+		int item = PrimaryWpnSelectList[i + 1] & IWPNSEL_SKIP;
+		if (item == num)
+		{
+			if (PrimaryWpnSelectList[i + 1] & WPNSEL_SKIP)
+				return i - 10;
+			return i;
+		}
+	}
+	return -100; //corrupt pilot file?
+}
+
+int GetSecondaryPriority(int num)
+{
+	for (int i = 0; i < 10; i++)
+	{
+		int item = SecondaryWpnSelectList[i + 1] & IWPNSEL_SKIP;
+		if (item == num)
+		{
+			if (SecondaryWpnSelectList[i + 1] & WPNSEL_SKIP)
+				return i - 10;
+			return i;
+		}
+	}
+	return -100; //corrupt pilot file?
+}
 
 // automatically switches weapon up to next level in autoselect order to this value. and type.
 int SwitchPlayerWeapon(int weapon_type)
