@@ -31,7 +31,7 @@ void GLCompatibilityRenderer::UpdateWindow()
 
 		//[ISB] center window
 #ifdef SDL3
-		ParentApplication->set_sizepos(-1, -1, OpenGL_state.view_width, OpenGL_state.view_height);
+		ParentApplication->set_sizepos(OEAPP_COORD_CENTERED, OEAPP_COORD_CENTERED, OpenGL_state.view_width, OpenGL_state.view_height);
 #elif WIN32
 		int mWidth = GetSystemMetrics(SM_CXSCREEN);
 		int mHeight = GetSystemMetrics(SM_CYSCREEN);

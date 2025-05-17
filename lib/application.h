@@ -19,6 +19,7 @@
 #ifndef APP_H
 #define APP_H
 #include "pstypes.h"
+#include <limits.h>
 /*	Basic Application data types */
 /*	Application Object
 		This object entails initialization and cleanup of all operating system 
@@ -31,6 +32,9 @@ const int	OEAPP_WINDOWED = 1,			// App will run in a window. May not be supporte
 			OEAPP_FULLSCREEN = 2,		// App will run in fullscreen.  May not be supported.
 			OEAPP_TOPMOST = 4,			// App will be on the topmost display.  May not be supported.
 			OEAPP_CONSOLE = 8;			// App will run in a console style window.  
+
+//If the X or Y coordinate of a set_sizepos call is set to this, center the window instead
+constexpr int OEAPP_COORD_CENTERED = INT_MAX;
 class oeApplication
 {
 protected:

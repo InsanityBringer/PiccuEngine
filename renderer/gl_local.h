@@ -18,16 +18,18 @@
 */
 #pragma once
 
-//can't figure out which one of these little jokers is including Windows.h..
+//can't figure out which one of these little jokers is including Windows.h.. (for reference when SDL3 is defined)
 #define NOMINMAX
 #ifdef SDL3
 #include <SDL3/SDL_video.h>
 #elif WIN32
 #include <Windows.h>
-#include "wglext.h"
 #endif
 #include <algorithm>
 #include <glad/gl.h>
+#if defined(WIN32) && !defined(SDL3)
+#include "wglext.h"
+#endif
 #define DD_ACCESS_RING //need direct access to some stuff
 #include "application.h"
 #include "3d.h"

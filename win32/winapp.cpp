@@ -306,10 +306,22 @@ void oeWin32Application::set_sizepos(int x, int y, int w, int h)
 	if (!m_hWnd) 
 		return;
 
-	m_X = x;
-	m_Y = y;
 	m_W = w;
 	m_H = h;
+
+	if (x == OEAPP_COORD_CENTERED)
+	{
+		int hehwidth = GetSystemMetrics(SM_CXSCREEN);
+		x = hehwidth / 2 - x / 2;
+	}
+	if (y == OEAPP_COORD_CENTERED)
+	{
+		int hehheight = GetSystemMetrics(SM_CYSCREEN);
+		y = hehheight / 2 - y / 2;
+	}
+
+	m_X = x;
+	m_Y = y;
 
 	MoveWindow((HWND)m_hWnd, x, y, w, h, TRUE);
 }
