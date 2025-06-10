@@ -79,6 +79,8 @@ void joy_GetSDLStickCaps(int num, SDL_Joystick* stick, SDLJoyCaps& info)
 	}
 
 	//SDL always gives 16 bit signed readings for axes
+	//But the Descent 3 controller class has concluded that -128 to 127 is good enough so why even have these?
+	//Who hurt the person who wrote Descent 3's input code?
 	info.d3info.minr = info.d3info.minu = info.d3info.minv = info.d3info.minx = info.d3info.miny = info.d3info.minz = -32768;
 	info.d3info.maxr = info.d3info.maxu = info.d3info.maxv = info.d3info.maxx = info.d3info.maxy = info.d3info.maxz = 32767;
 }
@@ -162,38 +164,58 @@ void joy_GetPos(tJoystick joy, tJoyPos* pos)
 	//Read axes
 	if (info.d3info.axes_mask & JOYFLAG_XVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 0);
+		Sint16 axis = SDL_GetJoystickAxis(stick, 0) >> 8;
 		pos->x = axis;
 	}
+	else
+		pos->x = 0;
+
 	if (info.d3info.axes_mask & JOYFLAG_YVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 1);
+		Sint16 axis = SDL_GetJoystickAxis(stick, 1) >> 8;
 		pos->y = axis;
 	}
+	else
+		pos->y = 0;
+
 	if (info.d3info.axes_mask & JOYFLAG_ZVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 2);
+		Sint16 axis = SDL_GetJoystickAxis(stick, 2) >> 8;
 		pos->z = axis;
 	}
+	else
+		pos->z = 0;
+
 	if (info.d3info.axes_mask & JOYFLAG_RVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 3);
+		Sint16 axis = SDL_GetJoystickAxis(stick, 3) >> 8;
 		pos->r = axis;
 	}
+	else
+		pos->r = 0;
+
 	if (info.d3info.axes_mask & JOYFLAG_UVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 4);
+		Sint16 axis = SDL_GetJoystickAxis(stick, 4) >> 8;
 		pos->u = axis;
 	}
+	else
+		pos->u = 0;
+
 	if (info.d3info.axes_mask & JOYFLAG_VVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 5);
+		Sint16 axis = SDL_GetJoystickAxis(stick, 5) >> 8;
 		pos->v = axis;
 	}
+	else
+		pos->v = 0;
 
-	for (int i = 0; i < info.numhats; i++)
+	for (int i = 0; i < JOYPOV_NUM; i++)
 	{
-		pos->pov[i] = joy_HatBitsToValue(SDL_GetJoystickHat(stick, i));
+		if (i < info.numhats)
+			pos->pov[i] = joy_HatBitsToValue(SDL_GetJoystickHat(stick, i));
+		else
+			pos->pov[i] = JOYPOV_CENTER;
 	}
 
 	pos->buttons = 0;
@@ -208,8 +230,14 @@ void joy_GetPos(tJoystick joy, tJoyPos* pos)
 
 void joy_GetRawPos(tJoystick joy, tJoyPos* pos)
 {
-	//I don't really have a means to return uncalibrated stick readings?
 	joy_GetPos(joy, pos);
+	//I actually hate the Descent 3 controller class so much it's unbelievable
+	pos->x = (pos->x + 128) * JOYAXIS_RANGE;
+	pos->y = (pos->y + 128) * JOYAXIS_RANGE;
+	pos->z = (pos->z + 128) * JOYAXIS_RANGE;
+	pos->r = (pos->r + 128) * JOYAXIS_RANGE;
+	pos->u = (pos->u + 128) * JOYAXIS_RANGE;
+	pos->v = (pos->v + 128) * JOYAXIS_RANGE;
 }
 
 bool joy_IsValid(tJoystick joy)
