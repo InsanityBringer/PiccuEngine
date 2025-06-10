@@ -17,38 +17,206 @@
 */
 
 #include <string.h>
+#include <algorithm>
 #include <SDL3/SDL_joystick.h>
 
 #include "sdl/SDLDDIO.h"
 #include "joystick.h"
+#include "mono.h"
+
+struct SDLJoyCaps
+{
+	int numaxes;
+	int numhats;
+	tJoyInfo d3info;
+};
+
+static int numjoysticksSDL;
+static SDL_Joystick* joysticksSDL[MAX_JOYSTICKS];
+static SDLJoyCaps stickinfoSDL[MAX_JOYSTICKS];
+
+void joy_GetSDLStickCaps(int num, SDL_Joystick* stick, SDLJoyCaps& info)
+{
+	//Determine axis flags.
+	//It is a little disappointing how rigid Descent 3's joystick library is..
+	int numaxes = std::min(6, SDL_GetNumJoystickAxes(stick));
+	int flag = 1;
+	for (int i = 0; i < numaxes; i++)
+	{
+		info.d3info.axes_mask |= flag;
+		flag <<= 1;
+	}
+	info.numaxes = numaxes;
+
+	//Determine hat flags.
+	//Seriously it supports only 6 axes but 4 hats? I want that monster stick
+	int numhats = std::min(JOYPOV_NUM, SDL_GetNumJoystickHats(stick));
+	flag = JOYFLAG_POVVALID;
+	for (int i = 0; i < numhats; i++)
+	{
+		info.d3info.axes_mask |= flag;
+		flag <<= 1;
+	}
+	info.numhats = numhats;
+
+	//Determine buttons.
+	//Buttons cap out at 32 due to the use of a 32-bit integer for passing button flags.
+	int numbuttons = std::min(32, SDL_GetNumJoystickButtons(stick));
+	info.d3info.num_btns = numbuttons;
+
+	//Determine name.
+	//Is the name shown anywhere? Why do I keep on copying utf-8 strings into ascii ones?
+	const char* name = SDL_GetJoystickName(stick);
+	if (name)
+	{
+		strncpy(info.d3info.name, name, sizeof(info.d3info.name));
+	}
+	else
+	{
+		char buf[128];
+		sprintf(buf, "SDL Joystick %d", num);
+		strcpy(info.d3info.name, buf);
+	}
+
+	//SDL always gives 16 bit signed readings for axes
+	info.d3info.minr = info.d3info.minu = info.d3info.minv = info.d3info.minx = info.d3info.miny = info.d3info.minz = -32768;
+	info.d3info.maxr = info.d3info.maxu = info.d3info.maxv = info.d3info.maxx = info.d3info.maxy = info.d3info.maxz = 32767;
+}
 
 bool joy_Init(bool emulation)
 {
+	int numsticks;
+	SDL_JoystickID* cursticks = SDL_GetJoysticks(&numsticks);
+	for (int i = 0; i < numsticks; i++)
+	{
+		SDL_Joystick* stick = SDL_OpenJoystick(cursticks[i]);
+		if (stick)
+		{
+			joysticksSDL[numjoysticksSDL] = stick;
+			if (++numjoysticksSDL == MAX_JOYSTICKS)
+				break;
+
+			joy_GetSDLStickCaps(numjoysticksSDL, stick, stickinfoSDL[i]);
+		}
+		else
+		{
+			mprintf((1, "joy_Init: SDL_OpenJoystick failed with %s\n", SDL_GetError()));
+		}
+	}
+
+	SDL_free(cursticks);
 	return true;
 }
 
 void joy_Close()
 {
+	for (int i = 0; i < numjoysticksSDL; i++)
+	{
+		SDL_CloseJoystick(joysticksSDL[i]);
+	}
+
+	numjoysticksSDL = 0;
 }
 
 void joy_GetJoyInfo(tJoystick joy, tJoyInfo* info)
 {
-	memset(info, 0, sizeof(*info));
-	strcpy(info->name, "bogus joystick");
+	*info = stickinfoSDL[joy].d3info;
+}
+
+int joy_HatBitsToValue(int bits)
+{
+	//Assumption: only physically possible combinations of hat inputs are possible here.
+	//The nature of Descent 3's hat code would preclude any sort of impossibility though, like down+left and up being registered at the same time
+	if (bits == SDL_HAT_UP)
+		return JOYPOV_UP;
+
+	else if (bits == SDL_HAT_RIGHT)
+		return JOYPOV_RIGHT;
+
+	else if (bits == SDL_HAT_DOWN)
+		return JOYPOV_DOWN;
+
+	else if (bits == SDL_HAT_LEFT)
+		return JOYPOV_LEFT;
+
+	else if (bits == SDL_HAT_RIGHTUP)
+		return JOYPOV_UP + 0x20;
+
+	else if (bits == SDL_HAT_RIGHTDOWN)
+		return JOYPOV_RIGHT + 0x20;
+
+	else if (bits == SDL_HAT_LEFTDOWN)
+		return JOYPOV_DOWN + 0x20;
+
+	else if (bits == SDL_HAT_LEFTUP)
+		return JOYPOV_LEFT + 0x20;
+
+	return JOYPOV_CENTER;
 }
 
 void joy_GetPos(tJoystick joy, tJoyPos* pos)
 {
-	memset(pos, 0, sizeof(*pos));
+	SDL_Joystick* stick = joysticksSDL[joy];
+	SDLJoyCaps& info = stickinfoSDL[joy];
+
+	//Read axes
+	if (info.d3info.axes_mask & JOYFLAG_XVALID)
+	{
+		Sint16 axis = SDL_GetJoystickAxis(stick, 0);
+		pos->x = axis;
+	}
+	if (info.d3info.axes_mask & JOYFLAG_YVALID)
+	{
+		Sint16 axis = SDL_GetJoystickAxis(stick, 1);
+		pos->y = axis;
+	}
+	if (info.d3info.axes_mask & JOYFLAG_ZVALID)
+	{
+		Sint16 axis = SDL_GetJoystickAxis(stick, 2);
+		pos->z = axis;
+	}
+	if (info.d3info.axes_mask & JOYFLAG_RVALID)
+	{
+		Sint16 axis = SDL_GetJoystickAxis(stick, 3);
+		pos->r = axis;
+	}
+	if (info.d3info.axes_mask & JOYFLAG_UVALID)
+	{
+		Sint16 axis = SDL_GetJoystickAxis(stick, 4);
+		pos->u = axis;
+	}
+	if (info.d3info.axes_mask & JOYFLAG_VVALID)
+	{
+		Sint16 axis = SDL_GetJoystickAxis(stick, 5);
+		pos->v = axis;
+	}
+
+	for (int i = 0; i < info.numhats; i++)
+	{
+		pos->pov[i] = joy_HatBitsToValue(SDL_GetJoystickHat(stick, i));
+	}
+
+	pos->buttons = 0;
+	for (int i = 0; i < info.d3info.num_btns; i++)
+	{
+		if (SDL_GetJoystickButton(stick, i))
+		{
+			pos->buttons |= (1u << i);
+		}
+	}
 }
 
 void joy_GetRawPos(tJoystick joy, tJoyPos* pos)
 {
-	memset(pos, 0, sizeof(*pos));
+	//I don't really have a means to return uncalibrated stick readings?
+	joy_GetPos(joy, pos);
 }
 
 bool joy_IsValid(tJoystick joy)
 {
+	if (joy < numjoysticksSDL)
+		return true;
+
 	return false;
 }
 
@@ -58,6 +226,9 @@ void ddio_InternalJoyFrame()
 
 void ddio_SDLJoyEvent(SDL_Event& ev)
 {
+	//Hmm, should I read sticks here?
+	//Or query the state in joy_GetPos?
+	//Do it here if I ever write an event system for D3's input. 
 }
 
 //just kinda shoving the force feedback null impl here
