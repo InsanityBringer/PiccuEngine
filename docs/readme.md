@@ -35,11 +35,10 @@ If you want to install Piccu Engine into another directory, the following files 
 - missions/d3voice1.hog
 - missions/d3voice2.hog
 - missions/training.mn3
-- missions/merc.mn3 (if you own the 3: Mercenary expansion pack)
+- missions/merc.mn3 (if you own the Descent 3: Mercenary expansion pack)
 
 The following directories should be copied over if you want to play Piccu Engine in multiplayer
 - netgames
-- online
 - missions/Fury.mn3 (stock Anarchy levels)
 - missions/bedlam.mn3 (stock Capture the Flag levels)
 
