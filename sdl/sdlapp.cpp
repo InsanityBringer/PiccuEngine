@@ -88,6 +88,10 @@ void SDLApplication::init()
 	{
 		winflags |= SDL_WINDOW_FULLSCREEN;
 	}
+	if (m_flags & OEAPP_CONSOLE)
+	{
+		Error("SDLApplication::init: dedicated server currently unsupported");
+	}
 
 	m_window = SDL_CreateWindow(m_title.c_str(), 640, 480, winflags);
 	if (!m_window)
