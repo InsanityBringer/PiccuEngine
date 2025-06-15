@@ -31,6 +31,7 @@
 #include "pserror.h"
 #include "registry.h"
 #include "enginebrand.h"
+#include "ddio.h"
 
 #ifdef WIN32
 #define REGISTRY_FILENAME ENGINE_NAME_NO_SPACE".registry"
@@ -51,6 +52,9 @@ oeSDLAppDatabase::oeSDLAppDatabase()
     filename += '\\';
     filename += ENGINE_NAME;
     filename += '\\';
+
+    ddio_CreateDir(filename.c_str());
+
     filename += REGISTRY_FILENAME;
 
 #else
