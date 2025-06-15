@@ -49,6 +49,7 @@ void GL3Renderer::UpdateWindow()
 		height = OpenGL_preferred_state.height;
 
 		//[ISB] center window
+		ParentApplication->set_flags(OEAPP_WINDOWED);
 #ifdef SDL3
 		ParentApplication->set_sizepos(OEAPP_COORD_CENTERED, OEAPP_COORD_CENTERED, OpenGL_state.view_width, OpenGL_state.view_height);
 #elif WIN32
@@ -61,10 +62,10 @@ void GL3Renderer::UpdateWindow()
 		AdjustWindowRectEx(&rect, WS_CAPTION, FALSE, 0);
 		ParentApplication->set_sizepos(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
 #endif
-		ParentApplication->set_flags(OEAPP_WINDOWED);
 	}
 	else
 	{
+		ParentApplication->set_flags(OEAPP_FULLSCREEN);
 #ifdef SDL3
 		SDL_GetWindowSizeInPixels(GLWindow, &OpenGL_state.view_width, &OpenGL_state.view_height);
 #elif WIN32
