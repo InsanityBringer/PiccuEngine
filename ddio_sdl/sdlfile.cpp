@@ -495,7 +495,7 @@ char* ddio_GetUserDir(const char* extraname)
     if (extraname)
     {
         //The strcpy will null terminate this.
-        strcpy(&narrowstr[length + 1], extraname);
+        strcpy(&narrowstr[length], extraname);
     }
 
     return narrowstr;

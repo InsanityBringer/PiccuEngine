@@ -771,14 +771,21 @@ void InitIOSystems(bool editor)
 
 	//Set the base directory
 	int dirarg = FindArg("-setdir");
+	int dirhackarg = FindArg("-setdirnonportable");
 	int exedirarg = FindArg("-useexedir");
 
 	//[ISB] If the base is explicitly set, don't do any portable nonsense.
+	//Wait, this makes it impossible to debug non-portable installs in the debugger. Sigh.
+	//Added -setdirnonportable hack. 
 	bool modifiedbase = false;
 	if(dirarg)
 	{
 		modifiedbase = true;
 		strcpy(Base_directory,GameArgs[dirarg+1]);
+	}
+	else if (dirhackarg)
+	{
+		strcpy(Base_directory, GameArgs[dirhackarg + 1]);
 	}
 	else if(exedirarg)
 	{
