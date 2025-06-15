@@ -50,7 +50,7 @@ int hextoi(char *p)
     if ( (*p>='0') && (*p<='9') )
       value = (value * 16) + ((*p)-'0');
     else if ( (*p>='A') && (*p<='F') )
-      value = (value * 16) + ((*p)-'A');
+      value = (value * 16) + ((*p)-'A') + 10;
 	else
 		return value;
 		
