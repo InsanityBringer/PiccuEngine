@@ -148,6 +148,8 @@ void ddio_SDLMouseEvent(SDL_Event& ev)
             button = 2;
         else if (sdlbutton == SDL_BUTTON_RIGHT)
             button = 1;
+        else if (sdlbutton == SDL_BUTTON_X2)
+            button = 6;
 
         if (ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
             ddio_MouseButtonDown(time, button);
