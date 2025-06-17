@@ -17,7 +17,7 @@
 #ifndef NEWEDITOR
 	#include "d3edit.h"
 #else
-	#include "globals.h"
+	#include "../neweditor/globals.h"
 	#include "terrain.h"
 	#include "renderer.h"
 #endif
@@ -338,8 +338,6 @@ int GetFirstPath ()
 #ifndef NEWEDITOR
 #include "editor/d3edit.h"
 #endif
-
-#include "gr.h"
 
 void DrawAllPaths (grViewport *vp,vector *viewer_eye,matrix *viewer_orient,float zoom)
 {

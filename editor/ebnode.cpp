@@ -13,8 +13,8 @@
  
 
 #ifdef NEWEDITOR
-#include "neweditor/stdafx.h"
-#include "neweditor/NewEditor.h"
+#include "../neweditor/stdafx.h"
+#include "../neweditor/NewEditor.h"
 #endif
 
 #include "bnode.h"
@@ -1226,12 +1226,12 @@ void EBNode_MakeFirstPass(void)
 #ifndef NEWEDITOR
 #include "editor/d3edit.h"
 #else
-#include "neweditor/globals.h"
+#include "../neweditor/globals.h"
 #include "terrain.h"
 #include "renderer.h"
 #endif
 
-#include "gr.h"
+//#include "gr.h"
 #include "epath.h"
 
 void EBNode_DrawRoom(int room, grViewport *vp,vector *viewer_eye,matrix *viewer_orient,float zoom, bool f_current_room = false)

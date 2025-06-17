@@ -10,6 +10,7 @@
  AND AGREES TO THE TERMS HEREIN AND ACCEPTS THE SAME BY USE OF THIS FILE.
  COPYRIGHT 1996-2000 OUTRAGE ENTERTAINMENT, INC.  ALL RIGHTS RESERVED.
  */
+#ifndef NEWEDITOR
  #ifndef HEMICUBE_H
 #define HEMICUBE_H
 
@@ -94,4 +95,5 @@ float GetSideFactor( int row, int col );
 
 
 
+#endif
 #endif

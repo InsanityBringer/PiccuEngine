@@ -13,12 +13,12 @@
  // TriggerListCombo.cpp : implementation file
 //
 
-#include "stdafx.h"
+#include "../neweditor/StdAfx.h"
 
 #ifndef NEWEDITOR
 #include "editor.h"
 #else
-#include "neweditor.h"
+#include "../neweditor/NewEditor.h"
 #endif
 
 #include "TriggerListCombo.h"

@@ -17,7 +17,7 @@
 	#error include 'stdafx.h' before including this file for PCH
 #endif
 
-#include "resource.h"       // main symbols
+#include "../neweditor/resource.h"       // main symbols
 
 
 #include "d3edit.h"			// d3 editor header

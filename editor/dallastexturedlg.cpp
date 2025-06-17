@@ -13,7 +13,7 @@
  // DallasTextureDlg.cpp : implementation file
 //
 
-#include "stdafx.h"
+#include "../neweditor/StdAfx.h"
 #include "editor.h"
 #include "gametexture.h"
 #include "DallasTextureDlg.h"

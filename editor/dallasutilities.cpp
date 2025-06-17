@@ -12,7 +12,7 @@
  */
  
 
-#include "stdafx.h"
+#include "../neweditor/StdAfx.h"
 
 #include <string.h>
 #include <ctype.h>

@@ -355,7 +355,7 @@ void AttachRoom()
 		newroomp->verts[i] = ((attroomp->verts[i] - attcenter) * Placed_room_rotmat) + basecenter;
 
 	//Copy faces to new room
-	for (i=0;i<attroomp->num_faces;i++)
+	for (int i=0;i<attroomp->num_faces;i++)
 	{
 		CopyFace(&newroomp->faces[i],&attroomp->faces[i]);
 #ifdef NEWEDITOR
@@ -2731,7 +2731,8 @@ void DeleteVert(room *rp,int facenum,int vertnum)
 
 	//Delete the point on the connected face
 	face *fp2 = &rp->faces[f0];
-	for (int v2=0;v2<fp2->num_verts;v2++)
+	int v2;
+	for (v2=0;v2<fp2->num_verts;v2++)
 		if (fp2->face_verts[v2] == fp->face_verts[vertnum])
 			break;
 	ASSERT(v2 < fp2->num_verts);
@@ -2822,7 +2823,7 @@ bool MergeObjectIntoRoom(room *rp,int objnum)
 	int first_new_face = RoomAddFaces(rp,sm->num_faces);
 
 	//Copy the faces
-	for (i=0;i<sm->num_faces;i++) {
+	for (int i=0;i<sm->num_faces;i++) {
 		polyface *pfp = &sm->faces[i];
 		face *fp = &rp->faces[first_new_face+i];
 
@@ -2882,7 +2883,7 @@ void DeleteAllConnectedFaces(room *rp,int facenum)
 	MarkFaceForDeletion(rp,facenum);
 
 	//Now delete the faces
-	for (f=0;f<rp->num_faces;) {
+	for (int f=0;f<rp->num_faces;) {
 
 		if (rp->faces[f].tmap == -1)
 			DeleteRoomFace(rp,f);

@@ -15,7 +15,7 @@
 // DallasMainDlg.cpp : implementation file
 //
 
-#include "stdafx.h"
+#include "../neweditor/StdAfx.h"
 
 #include <string.h>
 #include <ctype.h>
@@ -38,8 +38,8 @@
 #include "levelgoal.h"
 
 #ifdef NEWEDITOR
-#include "globals.h"
-#include "NewEditor.h"
+#include "../neweditor/globals.h"
+#include "../neweditor/NewEditor.h"
 #else
 #include "editor.h"
 #include "editorDoc.h"

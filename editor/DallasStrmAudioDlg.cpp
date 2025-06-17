@@ -13,7 +13,7 @@
  // DallasStrmAudioDlg.cpp : implementation file
 //
 
-#include "stdafx.h"
+#include "../neweditor/StdAfx.h"
 #include "editor.h"
 #include "DallasUtilities.h"
 #include "manage.h"

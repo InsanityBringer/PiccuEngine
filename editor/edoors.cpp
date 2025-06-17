@@ -15,7 +15,7 @@
 #ifndef NEWEDITOR
 #include "d3edit.h"
 #else
-#include "globals.h"
+#include "../neweditor/globals.h"
 #define texdlg_texture GetCurrentTexture()
 #endif
 

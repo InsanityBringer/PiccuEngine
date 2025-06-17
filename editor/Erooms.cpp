@@ -127,7 +127,8 @@ void GetUVLForRoomPoint (int roomnum,int facenum,int vertnum,roomUVL *uvl)
 
 	// find the center point of this face
 	vm_MakeZero (&avg_vert);
-	for (int i=0;i<Rooms[roomnum].faces[facenum].num_verts;i++)
+	int i;
+	for (i=0;i<Rooms[roomnum].faces[facenum].num_verts;i++)
 		avg_vert+=Rooms[roomnum].verts[Rooms[roomnum].faces[facenum].face_verts[i]];
 
 	avg_vert/=i;
@@ -333,7 +334,7 @@ void SaveRoom (int n,char *filename)
 	cfseek (outfile,savepos,SEEK_SET);
 
 	// figure out correct texture ordering
-	for (i=0;i<Rooms[n].num_faces;i++)
+	for (int i=0;i<Rooms[n].num_faces;i++)
 	{
 		short index=Rooms[n].faces[i].tmap;
 
@@ -363,7 +364,7 @@ void SaveRoom (int n,char *filename)
 	// Write out how many different textures there are and then write their names
 	cf_WriteInt (outfile,highest_index);
 
-	for (i=0;i<highest_index;i++)
+	for (int i=0;i<highest_index;i++)
 	{
 		int index=Room_to_texture[i];
 		cf_WriteString(outfile,GameTextures[index].used?GameTextures[index].name:"");  	
@@ -379,7 +380,7 @@ void SaveRoom (int n,char *filename)
 	facesize=cftell(outfile);
 	cf_WriteInt (outfile,-1);
 
-	for (i=0;i<Rooms[n].num_faces;i++)
+	for (int i=0;i<Rooms[n].num_faces;i++)
 	{
 		cf_WriteByte (outfile,Rooms[n].faces[i].light_multiple);
 		cf_WriteInt (outfile,Rooms[n].faces[i].num_verts);
@@ -739,7 +740,7 @@ bool FaceIsPlanar(int nv,short *face_verts,vector *normal,vector *verts)
 
 	//Look for points too far from the average
 	float d;
-	for (v=0;v<nv;v++) {
+	for (int v=0;v<nv;v++) {
 		d = verts[face_verts[v]] * *normal;
 		if (fabs(d - average_d) > POINT_TO_PLANE_EPSILON)
 			return 0;
@@ -1366,8 +1367,9 @@ void DeleteRoomPortal(room *rp,int portalnum)
 	ASSERT(fp->portal_num == portalnum);
 	fp->portal_num = -1;
 
+	int p;
 	//Renumber all portals that come after this one
-	for (int p=portalnum+1;p<rp->num_portals;p++) {
+	for (p=portalnum+1;p<rp->num_portals;p++) {
 		portal *tp = &rp->portals[p];
 
 		//Renumber the face in this portal
@@ -1526,7 +1528,7 @@ void CopyRoom(room *destp,room *srcp)
 	}
 
 	//Copy over the verts
-	for (i=0;i<destp->num_verts;i++)
+	for (int i=0;i<destp->num_verts;i++)
 		destp->verts[i] = srcp->verts[i];
 
 	//Copy doorway info
@@ -1844,11 +1846,14 @@ int CheckForDuplicateFace(room *rp,int facenum)
 
  		if (fp0->num_verts == fp1->num_verts)
   			for (int v=0;v<fp1->num_verts;v++)	//look for a shared vert
-  				if (fp1->face_verts[v] == fp0->face_verts[0]) {
-  					for (int t=0;t<fp0->num_verts;t++)
+  				if (fp1->face_verts[v] == fp0->face_verts[0]) 
+				{
+					int t;
+  					for (t=0;t<fp0->num_verts;t++)
   						if (fp0->face_verts[t] != fp1->face_verts[(v+t) % fp1->num_verts])
   							break;
-  					if (t == fp0->num_verts) {
+  					if (t == fp0->num_verts) 
+					{
 						return j;
   					}
   					break;
@@ -2146,7 +2151,7 @@ void CountUniqueTextures ()
 
 	// Now count totals
 	int total=0,total_with_lights=0;
-	for (i=0;i<MAX_TEXTURES;i++)
+	for (int i=0;i<MAX_TEXTURES;i++)
 	{
 		if (texture_tracking[i])
 		{
@@ -2166,7 +2171,7 @@ void CountUniqueTextures ()
 	if (total>60)
 		CheckError ("ERROR: YOU HAVE MORE THAT 60 128x128 TEXTURES...YOU *MUST* FIX THIS!\n");
 
-	for (i=0;i<MAX_TEXTURES;i++)
+	for (int i=0;i<MAX_TEXTURES;i++)
 	{
 		if (texture_tracking[i] && !(GameTextures[i].flags & TF_LIGHT))
 		{
@@ -2174,7 +2179,7 @@ void CountUniqueTextures ()
 		}
 	}
 
-	for (i=0;i<MAX_TEXTURES;i++)
+	for (int i=0;i<MAX_TEXTURES;i++)
 	{
 		if (texture_tracking[i] && (GameTextures[i].flags & TF_LIGHT))
 		{
@@ -2525,7 +2530,8 @@ int RemoveDuplicateFacePoints(room *rp)
 				int new_verts[MAX_VERTS_PER_FACE];
 				roomUVL new_uvls[MAX_VERTS_PER_FACE];
 
-				for (int t=0;t<v;t++) {
+				int t;
+				for (t=0;t<v;t++) {
 					new_verts[t] = fp->face_verts[t];
 					new_uvls[t] = fp->face_uvls[t];
 				}
@@ -2593,17 +2599,22 @@ recheck_face:;
 					face_fixed = 0;		//deleted overrides fixed
 					f--; fp = &rp->faces[f];
 				}
-				else {
-					for (v=0;v<fp->num_verts;v++) {
-						if (fp->face_verts[v] == fp->face_verts[(v+2)%fp->num_verts]) {
+				else 
+				{
+					for (v=0;v<fp->num_verts;v++) 
+					{
+						if (fp->face_verts[v] == fp->face_verts[(v+2)%fp->num_verts]) 
+						{
 							short tverts[MAX_VERTS_PER_FACE];
 							roomUVL tuvls[MAX_VERTS_PER_FACE];
 
-							for (int i=0;i<fp->num_verts-2;i++) {
+							for (int i=0;i<fp->num_verts-2;i++) 
+							{
 								tverts[i] = fp->face_verts[(v+2+i)%fp->num_verts];
 								tuvls[i] = fp->face_uvls[(v+2+i)%fp->num_verts];
 							}
-							for (i=0;i<fp->num_verts-2;i++) {
+							for (int i=0;i<fp->num_verts-2;i++) 
+							{
 								fp->face_verts[i] = tverts[i];
 								fp->face_uvls[i] = tuvls[i];
 							}
@@ -2639,12 +2650,13 @@ int FindConnectedFace(room *rp,int facenum,int edgenum,int startface)
 	a0 = fp0->face_verts[edgenum];
 	b0 = fp0->face_verts[(edgenum+1)%fp0->num_verts];
 
-	for (f=startface,fp1=&rp->faces[startface];f<rp->num_faces;f++,fp1++) {
-
+	for (f=startface,fp1=&rp->faces[startface];f<rp->num_faces;f++,fp1++) 
+	{
 		if (f == facenum)
 			continue;
 
-  		for (int e=0;e<fp1->num_verts;e++) {
+  		for (int e=0;e<fp1->num_verts;e++) 
+		{
 
 			//Get edge verts - <a1,b1> is edge on second face
   			a1 = fp1->face_verts[e];

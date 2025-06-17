@@ -20,7 +20,6 @@
 #include "mem.h"
 #include "vecmat.h"
 #include "3d.h"
-#include "gr.h"
 
 #define EBDRAW_NONE                0
 #define EBDRAW_ROOM                1

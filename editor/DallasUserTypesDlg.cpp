@@ -13,11 +13,11 @@
  // DallasUserTypesDlg.cpp : implementation file
 //
 
-#include "stdafx.h"
+#include "../neweditor/StdAfx.h"
 #include "cfile.h"
 
 #ifdef NEWEDITOR
-#include "NewEditor.h"
+#include "../neweditor/NewEditor.h"
 #else
 #include "editor.h"
 #endif

@@ -13,7 +13,7 @@
  // DallasImportDlg.cpp : implementation file
 //
 
-#include "stdafx.h"
+#include "../neweditor/StdAfx.h"
 #include "editor.h"
 #include "cfile.h"
 #include "DallasMainDlg.h"

@@ -13,7 +13,7 @@
  
 
 
-#include "stdafx.h"
+#include "../neweditor/StdAfx.h"
 #include "ScriptCompilerAPI.h"
 #include "appdatabase.h"
 #include "descent.h"

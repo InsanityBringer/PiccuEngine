@@ -17,7 +17,7 @@
 #endif
 
 #include "SelManager.h"
-#include "stdafx.h"
+#include "../neweditor/StdAfx.h"
 
 #include "macros.h"
 
