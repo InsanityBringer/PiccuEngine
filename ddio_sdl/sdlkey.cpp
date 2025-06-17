@@ -76,7 +76,7 @@ bool ddio_InternalKeyInit(ddio_init_info* init_info)
 		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_LEFTBRACKET, KEY_LBRACKET });
 		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_RIGHTBRACKET, KEY_RBRACKET });
 		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_BACKSLASH, KEY_BACKSLASH });
-		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_GRAVE, KEY_RAPOSTRO });
+		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_GRAVE, KEY_LAPOSTRO });
 		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_A, KEY_A });
 		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_B, KEY_B });
 		DDIO_SDLKeycodeToDDIOKeycode.insert({ SDLK_C, KEY_C });
