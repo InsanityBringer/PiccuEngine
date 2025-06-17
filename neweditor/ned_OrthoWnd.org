@@ -1,0 +1,1280 @@
+/*
+* $Logfile: /DescentIII/Main/NewEditor/ned_OrthoWnd.cpp $
+* $Revision: 1.1.1.1 $
+* $Date: 2000/01/04 18:20:01 $
+* $Author: d3edit $
+*
+* class for the orthographic room panes
+*
+* $Log: ned_OrthoWnd.org,v $
+* Revision 1.1.1.1  2000/01/04 18:20:01  d3edit
+* Initial version
+*
+ * 
+ * 26    4/23/99 9:45a Gwar
+ * bug fixes, speed enhancements, code cleanup
+ * 
+ * 25    4/22/99 12:47p Gwar
+ * initial vert marking work
+ * 
+ * 24    4/21/99 11:59a Gwar
+ * added context menu and selection box
+ * 
+ * 23    4/21/99 7:32a Gwar
+ * made mouse/key controls better
+ * 
+ * 22    4/21/99 6:54a Gwar
+ * 
+ * 21    4/21/99 5:51a Gwar
+ * temporarily disabled vertex drawing
+ * 
+ * 20    4/21/99 5:31a Gwar
+ * rewrote orthographic viewer to facilitate ease of vertex placement and
+ * grid display
+ * 
+ * 19    4/16/99 6:38p Gwar
+ * first attempt at finding points in the world to insert vertices at by
+ * clicking on a screen location
+ * 
+ * 18    4/15/99 5:19p Gwar
+ * 
+ * 17    4/12/99 6:36a Gwar
+ * added cycle keys for current primitives, proper camera orientation,
+ * vertex movement keys
+ * 
+ * 16    4/09/99 3:00p Gwar
+ * added key handlers for prev/next room/face selection
+ * 
+ * 15    4/09/99 12:51a Jeff
+ * errors compiling, commented out EndSel() which was moved into
+ * globals.cpp
+ * 
+ * 14    4/08/99 6:20p Gwar
+ * misc. bug fixes
+ * 
+ * 13    4/08/99 4:29p Gwar
+ * added temporary zoom hack (for orthogonal testing)
+ * 
+ * 12    4/08/99 12:45p Gwar
+ * update when selected list changes
+ * 
+ * 11    4/07/99 8:26p Gwar
+ * removed ROTATING support for orthogonal views
+ * 
+ * 10    4/07/99 7:15p Gwar
+ * 
+ * 9     4/07/99 6:17p Kevin
+ * Improved Slew dialog title
+ * 
+ * 8     4/07/99 2:40p Gwar
+ * added draw flags
+ * 
+ * 7     4/06/99 10:40p Gwar
+ * 
+ * 6     4/06/99 10:34p Gwar
+ * 
+ * 5     4/06/99 10:28p Gwar
+ * removed m_CameraSlewer
+ * 
+ * 4     4/06/99 10:09p Gwar
+ * fixed problem with alt key not working
+ * 
+ * 3     4/06/99 7:34p Gwar
+ * ortho wnd's now can get focus (through OnLButtonDown)
+ * 
+ * 2     4/06/99 4:49p Gwar
+ * class for orthogonal panes in room frame
+*
+* $NoKeywords: $
+*/
+
+
+
+#include "stdafx.h"
+#include "room_external.h"
+#include "gr.h"
+#include "selectedroom.h"
+#include "SelManager.h"
+#include "globals.h"
+#include "ned_DrawWorld.h"
+#include "ned_OrthoWnd.h"
+#include "ned_HFile.h"
+#include "neweditor.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
+
+// scale factor
+#define O_MAX_SCALE				5.0
+#define O_MIN_SCALE				0.5
+
+// colors (format: O_TYPE_COLOR, where the 'O' stands for orthographic to distinguish from colors in perspective views)
+#define O_CUR_ROOM_COLOR		RGB(255,255,255)
+#define O_CUR_FACE_COLOR		RGB(0,0,255)
+#define O_CUR_VERT_COLOR		RGB(255,255,0)
+#define O_ROOM_COLOR			RGB(0,0,0)
+#define O_VERT_COLOR			RGB(255,255,255)
+#define O_GRIDLINE_COLOR		RGB(224,224,224)
+
+#define O_VERT_SIZE 2
+
+vector vec_InsertPos; // where we will insert a new vertex
+int num_verts;
+vector new_verts[MAX_VERTS_PER_ROOM];
+bool Vert_marks[MAX_VERTS_PER_ROOM]; // marked flags for each vertex
+
+/////////////////////////////////////////////////////////////////////////////
+// Cned_OrthoWnd
+
+IMPLEMENT_DYNCREATE(Cned_OrthoWnd, CWnd)
+
+Cned_OrthoWnd::Cned_OrthoWnd()
+{
+	m_BackColor = RGB(192,192,192);
+	m_nID = 0;
+	m_Title = "";
+	m_InFocus = false;
+	m_View_changed = true;
+	m_State_changed = true;
+	m_bShowVerts = true;
+	m_bShowNormals = false;
+	m_nGridSize = 10;
+	m_bGridShow = true;
+	m_bShowAttached = true;
+	m_ScaleStep = 0.5;
+	m_TrackRect.left = 0; m_TrackRect.right = 0; m_TrackRect.top = 0; m_TrackRect.bottom = 0;
+	m_rTracker.m_rect = m_TrackRect;
+	m_rTracker.m_nStyle = CRectTracker::solidLine;
+	memset(&m_Mouse,0,sizeof(m_Mouse));
+	memset(&m_Keys,0,sizeof(m_Keys));
+	memset(&Vert_marks,0,MAX_VERTS_PER_ROOM*sizeof(bool));
+	memset(&new_verts,0,MAX_VERTS_PER_ROOM*sizeof(vector));
+	num_verts = 0;
+	m_pParentFrame = NULL;
+	m_pPrim = NULL;
+}
+
+Cned_OrthoWnd::~Cned_OrthoWnd()
+{
+}
+
+
+BEGIN_MESSAGE_MAP(Cned_OrthoWnd, CWnd)
+	//{{AFX_MSG_MAP(Cned_OrthoWnd)
+	ON_WM_CREATE()
+	ON_WM_DESTROY()
+	ON_WM_MOUSEMOVE()
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
+	ON_WM_RBUTTONDOWN()
+	ON_WM_RBUTTONUP()
+	ON_WM_KEYUP()
+	ON_WM_MOUSEWHEEL()
+	ON_WM_KEYDOWN()
+	ON_WM_SYSCHAR()
+	ON_WM_TIMER()
+	ON_WM_SETFOCUS()
+	ON_WM_KILLFOCUS()
+	ON_WM_SYSKEYDOWN()
+	ON_WM_SYSKEYUP()
+	ON_WM_PAINT()
+	ON_WM_MBUTTONDOWN()
+	ON_WM_MBUTTONUP()
+	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_GRID_SIZE_1, OnGridSize1)
+	ON_COMMAND(ID_GRID_SIZE_2, OnGridSize2)
+	ON_COMMAND(ID_GRID_SIZE_3, OnGridSize3)
+	ON_COMMAND(ID_GRID_SIZE_4, OnGridSize4)
+	ON_COMMAND(ID_GRID_SIZE_5, OnGridSize5)
+	ON_COMMAND(ID_SHOW_ATCH_ROOMS, OnShowAtchRooms)
+	ON_COMMAND(ID_SHOW_GRID, OnShowGrid)
+	ON_COMMAND(ID_SHOW_NORMALS, OnShowNormals)
+	ON_COMMAND(ID_SHOW_VERTS, OnShowVerts)
+	ON_UPDATE_COMMAND_UI(ID_SHOW_GRID, OnUpdateShowGrid)
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
+
+
+void Cned_OrthoWnd::Render()
+{
+	InvalidateRect(NULL, FALSE);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Cned_OrthoWnd message handlers
+
+int Cned_OrthoWnd::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+{
+	if (CWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+	
+	// TODO: Add your specialized creation code here
+	m_TimerHandle = SetTimer(gTimerID++,10,NULL);
+	return 0;
+}
+
+void Cned_OrthoWnd::OnDestroy() 
+{
+	CWnd::OnDestroy();
+	
+	// TODO: Add your message handler code here
+}
+
+BOOL Cned_OrthoWnd::Create(const RECT& rect, CWnd* pParentWnd, LPCTSTR name, UINT nID) 
+{
+	// TODO: Add your specialized code here and/or call the base class
+	// this is not even called when pane is created within a splitter window
+	DWORD dwStyle = GRWND_STATIC_STYLE;
+
+	return CWnd::Create(NULL, name, dwStyle, rect, pParentWnd, nID);
+}
+
+
+void Cned_OrthoWnd::OnMouseMove(UINT nFlags, CPoint point) 
+{
+	// TODO: Add your message handler code here and/or call default
+
+	CClientDC dc(this);
+	CRect rc;
+
+	if (!m_InFocus)
+		SetFocus();
+
+	m_Mouse.x = point.x;
+	m_Mouse.y = point.y;
+
+	GetClientRect(&rc);
+
+	// Set up mapping mode and coordinate system
+	dc.SetMapMode(MM_ISOTROPIC);
+	dc.SetWindowExt(rc.Width()/m_CameraView.scale,rc.Height()/m_CameraView.scale);
+	dc.SetWindowOrg(m_CameraView.pos);
+	dc.SetViewportExt(rc.Width(), rc.Height());
+	dc.SetViewportOrg(rc.Width()/2, rc.Height()/2);
+
+	// Calculate logical coordinates
+	POINT pt = point;
+	dc.DPtoLP(&pt);
+
+	// Print the device and logical coordinates
+	PrintStatus("(%d, %d) = (%d, %d)", point.x, point.y, pt.x, pt.y);
+
+	CWnd::OnMouseMove(nFlags, point);
+}
+
+
+void EndSel(editorSelectorManager *esm);
+
+void Cned_OrthoWnd::OnLButtonDown(UINT nFlags, CPoint point) 
+{
+	// TODO: Add your message handler code here and/or call default
+	m_Mouse.left = true;
+
+	CClientDC dc(this);
+	CRect rc;
+
+	if (m_Keys.ctrl)
+	{
+		m_rTracker.TrackRubberBand(this, point);
+		m_rTracker.GetTrueRect(&m_TrackRect);
+	}
+
+	GetClientRect(&rc);
+
+	// Set up mapping mode and coordinate system
+	dc.SetMapMode(MM_ISOTROPIC);
+	dc.SetWindowExt(rc.Width()/m_CameraView.scale,rc.Height()/m_CameraView.scale);
+	dc.SetWindowOrg(m_CameraView.pos);
+	dc.SetViewportExt(rc.Width(), rc.Height());
+	dc.SetViewportOrg(rc.Width()/2, rc.Height()/2);
+
+	// Calculate logical coordinates
+	POINT pt = point;
+	dc.DPtoLP(&pt);
+
+	if (!m_Keys.ctrl)
+	{
+	// Save position (for use as the position to insert a new vertex)
+	if (m_nID == VIEW_XY)
+	{
+		vec_InsertPos.x = pt.x;
+		vec_InsertPos.y = pt.y;
+		vec_InsertPos.z = 0; // TODO: make this something other than 0
+	}
+	else if (m_nID == VIEW_XZ)
+	{
+		vec_InsertPos.x = pt.x;
+		vec_InsertPos.y = 0; // TODO: make this something other than 0
+		vec_InsertPos.z = pt.y;
+	}
+	else if (m_nID == VIEW_ZY)
+	{
+		vec_InsertPos.x = 0; // TODO: make this something other than 0
+		vec_InsertPos.y = pt.y;
+		vec_InsertPos.z = pt.x;
+	}
+	}
+
+	// TODO: need orthogonal search routine here
+
+	CWnd::OnLButtonDown(nFlags, point);
+}
+
+void Cned_OrthoWnd::OnLButtonUp(UINT nFlags, CPoint point) 
+{
+	// TODO: Add your message handler code here and/or call default
+	m_Mouse.left = false;
+
+	CWnd::OnLButtonUp(nFlags, point);
+}
+
+void Cned_OrthoWnd::OnRButtonDown(UINT nFlags, CPoint point) 
+{
+	// TODO: Add your message handler code here and/or call default
+	m_Mouse.right = true;
+
+	CWnd::OnRButtonDown(nFlags, point);
+}
+
+void Cned_OrthoWnd::OnRButtonUp(UINT nFlags, CPoint point) 
+{
+	// TODO: Add your message handler code here and/or call default
+	m_Mouse.right = false;
+
+	CWnd::OnRButtonUp(nFlags, point);
+}
+
+void Cned_OrthoWnd::OnMButtonDown(UINT nFlags, CPoint point) 
+{
+	// TODO: Add your message handler code here and/or call default
+	m_Mouse.mid = true;
+
+	CWnd::OnMButtonDown(nFlags, point);
+}
+
+void Cned_OrthoWnd::OnMButtonUp(UINT nFlags, CPoint point) 
+{
+	// TODO: Add your message handler code here and/or call default
+	m_Mouse.mid = false;
+
+	CWnd::OnMButtonUp(nFlags, point);
+}
+
+void Cned_OrthoWnd::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+	switch (nChar)
+	{
+	case VK_CONTROL:
+		m_Keys.ctrl = false;
+		break;
+
+	case VK_SHIFT:
+		m_Keys.shift = false;
+		break;
+
+	case VK_NUMPAD2:
+		m_Keys.down = false;
+		break;
+	}
+	
+	CWnd::OnKeyUp(nChar, nRepCnt, nFlags);
+}
+
+BOOL Cned_OrthoWnd::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
+{
+	m_CameraView.scale += -((zDelta/WHEEL_DELTA) * ZOOM_SCALE);
+	if (m_CameraView.scale > O_MAX_SCALE)
+		m_CameraView.scale = O_MAX_SCALE;
+	else if (m_CameraView.scale < O_MIN_SCALE)
+		m_CameraView.scale = O_MIN_SCALE;
+	else
+		m_CameraView.view_changed = true;
+	
+	return true;//CWnd::OnMouseWheel(nFlags, zDelta, pt);
+}
+
+void Cned_OrthoWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+	static int vert_idx = 0;
+	int i;
+
+	switch (nChar)
+	{
+	case VK_SPACE:
+		for (i=0; i<m_pPrim->roomp->num_verts; i++)
+		{
+			// TODO: Determine which verts lie within the tracking rectangle and change their mark flag
+			MarkVert(i);
+		}
+		break;
+
+	case VK_CONTROL:
+		m_Keys.ctrl = true;
+		break;
+
+	case VK_SHIFT:
+		m_Keys.shift = true;
+		break;
+
+	case VK_NUMPAD2:
+		m_Keys.down = true;
+		break;
+
+	case VK_LEFT:
+		if (m_Keys.shift)
+		{
+			switch (m_nID)
+			{
+			case VIEW_XY:
+				MoveMarkedVerts(-m_nGridSize,0,0);
+				break;
+			case VIEW_XZ:
+				MoveMarkedVerts(-m_nGridSize,0,0);
+				break;
+			case VIEW_ZY:
+				MoveMarkedVerts(0,0,-m_nGridSize);
+				break;
+			}
+		}
+		else
+		{
+			m_CameraView.pos.x -= m_nGridSize;
+		}
+		State_changed = true;
+		break;
+
+	case VK_RIGHT:
+		if (m_Keys.shift)
+		{
+			switch (m_nID)
+			{
+			case VIEW_XY:
+				MoveMarkedVerts(m_nGridSize,0,0);
+				break;
+			case VIEW_XZ:
+				MoveMarkedVerts(m_nGridSize,0,0);
+				break;
+			case VIEW_ZY:
+				MoveMarkedVerts(0,0,m_nGridSize);
+				break;
+			}
+		}
+		else
+		{
+			m_CameraView.pos.x += m_nGridSize;
+		}
+		State_changed = true;
+		break;
+
+	case VK_UP:
+		if (m_Keys.shift)
+		{
+			switch (m_nID)
+			{
+			case VIEW_XY:
+				MoveMarkedVerts(0,-m_nGridSize,0);
+				break;
+			case VIEW_XZ:
+				MoveMarkedVerts(0,0,-m_nGridSize);
+				break;
+			case VIEW_ZY:
+				MoveMarkedVerts(0,-m_nGridSize,0);
+				break;
+			}
+		}
+		else
+		{
+			m_CameraView.pos.y -= m_nGridSize;
+		}
+		State_changed = true;
+		break;
+
+	case VK_DOWN:
+		if (m_Keys.shift)
+		{
+			switch (m_nID)
+			{
+			case VIEW_XY:
+				MoveMarkedVerts(0,m_nGridSize,0);
+				break;
+			case VIEW_XZ:
+				MoveMarkedVerts(0,0,m_nGridSize);
+				break;
+			case VIEW_ZY:
+				MoveMarkedVerts(0,m_nGridSize,0);
+				break;
+			}
+		}
+		else
+		{
+			m_CameraView.pos.y += m_nGridSize;
+		}
+		State_changed = true;
+		break;
+
+	case VK_INSERT: // insert vertex at center of current edge
+		if (num_verts > MAX_VERTS_PER_ROOM - 1)
+			PrintStatus("You cannot add any more vertices to this room.");
+		else
+		{
+			new_verts[num_verts] = vec_InsertPos;
+			num_verts++;
+		}
+		State_changed = true;
+		break;
+
+	case 0x41:				// 'A'
+		m_CameraView.scale += m_ScaleStep;
+		if (m_CameraView.scale > O_MAX_SCALE)
+			m_CameraView.scale = O_MAX_SCALE;
+		else
+			m_CameraView.view_changed = true;
+		break;
+
+	case 0x5A:				// 'Z'
+		m_CameraView.scale -= m_ScaleStep;
+		if (m_CameraView.scale < O_MIN_SCALE)
+			m_CameraView.scale = O_MIN_SCALE;
+		else
+			m_CameraView.view_changed = true;
+		break;
+
+	case 0x43:				// 'C'
+		CenterRoom(m_pPrim->roomp);
+		break;
+
+	case 0x47:				// 'G'
+		m_bGridShow = !m_bGridShow;
+		break;
+
+	case 0x5B:				// '['
+		if (m_nGridSize != MIN_GRIDSIZE)
+			m_nGridSize /= 2;
+		break;
+
+	case 0x5D:				// ']'
+		if (m_nGridSize != MAX_GRIDSIZE)
+			m_nGridSize *= 2;
+		break;
+
+	case 0x45:				// 'E'
+		m_pPrim->vert = 0;
+		vert_idx = m_pPrim->roomp->faces[m_pPrim->face].face_verts[m_pPrim->vert];
+		if ( HIWORD(::GetKeyState(VK_SHIFT)) )
+			(m_pPrim->edge == 0) ? (m_pPrim->edge = m_pPrim->roomp->faces[m_pPrim->face].num_verts-1) : (m_pPrim->edge--);
+		else
+			(m_pPrim->edge == m_pPrim->roomp->faces[m_pPrim->face].num_verts-1) ? (m_pPrim->edge = 0) : (m_pPrim->edge++);
+		PrintStatus("Room: %d Face: %d Portal: %d Edge: %d Vertex (vert_idx): %d (%d)",ROOMNUM(m_pPrim->roomp),m_pPrim->face,m_pPrim->portal,m_pPrim->edge,m_pPrim->vert,vert_idx);
+		State_changed = true;
+		break;
+
+	case 0x46:				// 'F'
+		m_pPrim->vert = 0;
+		vert_idx = m_pPrim->roomp->faces[m_pPrim->face].face_verts[m_pPrim->vert];
+		if ( HIWORD(::GetKeyState(VK_SHIFT)) )
+			(m_pPrim->face == 0) ? (m_pPrim->face = m_pPrim->roomp->num_faces-1) : (m_pPrim->face--);
+		else
+			(m_pPrim->face == m_pPrim->roomp->num_faces-1) ? (m_pPrim->face = 0) : (m_pPrim->face++);
+		m_pPrim->portal = m_pPrim->roomp->faces[m_pPrim->face].portal_num;
+		PrintStatus("Room: %d Face: %d Portal: %d Edge: %d Vertex (vert_idx): %d (%d)",ROOMNUM(m_pPrim->roomp),m_pPrim->face,m_pPrim->portal,m_pPrim->edge,m_pPrim->vert,vert_idx);
+		State_changed = true;
+		// Update the current face/texture displays
+		Editor_state.SetCurrentRoomFaceTexture(ROOMNUM(m_pPrim->roomp), m_pPrim->face);
+		break;
+
+	case 0x50:				// 'P'
+		if (m_pPrim->portal != -1)
+		{
+			m_pPrim->vert = 0;
+			vert_idx = m_pPrim->roomp->faces[m_pPrim->face].face_verts[m_pPrim->vert];
+			if ( HIWORD(::GetKeyState(VK_SHIFT)) )
+				(m_pPrim->portal == 0) ? (m_pPrim->portal = m_pPrim->roomp->num_portals-1) : (m_pPrim->portal--);
+			else
+				(m_pPrim->portal == m_pPrim->roomp->num_portals-1) ? (m_pPrim->portal = 0) : (m_pPrim->portal++);
+			m_pPrim->face = m_pPrim->roomp->portals[m_pPrim->portal].portal_face;
+			PrintStatus("Room: %d Face: %d Portal: %d Edge: %d Vertex (vert_idx): %d (%d)",ROOMNUM(m_pPrim->roomp),m_pPrim->face,m_pPrim->portal,m_pPrim->edge,m_pPrim->vert,vert_idx);
+			State_changed = true;
+			// Update the current face/texture displays
+			Editor_state.SetCurrentRoomFaceTexture(ROOMNUM(m_pPrim->roomp), m_pPrim->face);
+		}
+		break;
+
+	case 0x52:				// 'R'
+		m_pPrim->face = m_pPrim->vert = 0;
+		m_pPrim->portal = -1;
+		vert_idx = m_pPrim->roomp->faces[m_pPrim->face].face_verts[m_pPrim->vert];
+		if ( HIWORD(::GetKeyState(VK_SHIFT)) )
+			(ROOMNUM(m_pPrim->roomp) == 0) ? (m_pPrim->roomp = &Rooms[Highest_room_index]) : (m_pPrim->roomp--);
+		else
+			(ROOMNUM(m_pPrim->roomp) == Highest_room_index) ? (m_pPrim->roomp = &Rooms[0]) : (m_pPrim->roomp++);
+		PrintStatus("Room: %d Face: %d Portal: %d Edge: %d Vertex (vert_idx): %d (%d)",ROOMNUM(m_pPrim->roomp),m_pPrim->face,m_pPrim->portal,m_pPrim->edge,m_pPrim->vert,vert_idx);
+		State_changed = true;
+		// Update the current face/texture displays
+		Editor_state.SetCurrentRoomFaceTexture(ROOMNUM(m_pPrim->roomp), m_pPrim->face);
+		break;
+
+	case 0x56:				// 'V'
+		if ( HIWORD(::GetKeyState(VK_SHIFT)) )
+			(m_pPrim->vert == 0) ? (m_pPrim->vert = m_pPrim->roomp->faces[m_pPrim->face].num_verts-1) : (m_pPrim->vert--);
+		else
+			(m_pPrim->vert == m_pPrim->roomp->faces[m_pPrim->face].num_verts-1) ? (m_pPrim->vert = 0) : (m_pPrim->vert++);
+		vert_idx = m_pPrim->roomp->faces[m_pPrim->face].face_verts[m_pPrim->vert];
+		PrintStatus("Room: %d Face: %d Portal: %d Edge: %d Vertex (vert_idx): %d (%d)",ROOMNUM(m_pPrim->roomp),m_pPrim->face,m_pPrim->portal,m_pPrim->edge,m_pPrim->vert,vert_idx);
+		State_changed = true;
+		break;
+	}
+
+	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+void Cned_OrthoWnd::OnSysChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+	// TODO: Add your message handler code here and/or call default
+	
+	CWnd::OnSysChar(nChar, nRepCnt, nFlags);
+}
+
+#define PANNING ( (m_Mouse.left && m_Keys.shift) || (m_Mouse.mid) )
+#define ZOOMING (m_Mouse.right && m_Keys.shift)
+
+void Cned_OrthoWnd::OnTimer(UINT nIDEvent) 
+{
+	//Do our thing here
+	int dx,dy;
+
+	if (m_CameraView.view_changed || m_State_changed) 
+	{
+		m_State_changed = m_CameraView.view_changed = false;
+		InvalidateRect(NULL, FALSE);
+	}
+
+	//Only process input when we have the focus
+	if(!m_InFocus)
+		return;
+
+	
+
+	dx = m_Mouse.x-m_Mouse.oldx;
+	dy = m_Mouse.y-m_Mouse.oldy;
+
+	if ( (dx!=0) || (dy!=0) ) {
+
+		if ( PANNING ) {
+			m_CameraView.pos.x -= dx;
+			m_CameraView.pos.y -= dy;
+			m_View_changed = true;
+		}
+
+		if ( ZOOMING ) {
+			m_CameraView.scale -= dy/10;
+			if (m_CameraView.scale > O_MAX_SCALE)
+				m_CameraView.scale = O_MAX_SCALE;
+			else if (m_CameraView.scale < O_MIN_SCALE)
+				m_CameraView.scale = O_MIN_SCALE;
+			else
+				m_View_changed = true;
+		}
+
+	}
+
+	// If there was mouse input, update the view immediately
+	if (m_View_changed) {
+		m_View_changed = false;
+		InvalidateRect(NULL, FALSE);
+	}
+
+	// Save mouse position
+	m_Mouse.oldx = m_Mouse.x;
+	m_Mouse.oldy = m_Mouse.y;
+
+	
+	CWnd::OnTimer(nIDEvent);
+}
+
+void Cned_OrthoWnd::OnSetFocus(CWnd* pOldWnd) 
+{
+	CWnd::OnSetFocus(pOldWnd);
+	
+//	if(gCameraSlewer)
+//		gCameraSlewer->AttachCamera(&m_CameraView,(char *)LPCSTR(m_Title));
+	m_InFocus = true;
+	
+}
+
+void Cned_OrthoWnd::OnKillFocus(CWnd* pNewWnd) 
+{
+	CWnd::OnKillFocus(pNewWnd);
+	memset(&m_Mouse,0,sizeof(m_Mouse));
+	memset(&m_Keys,0,sizeof(m_Keys));
+	
+	m_InFocus = false;
+	
+}
+
+void Cned_OrthoWnd::OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+	switch(nChar)
+	{
+	case VK_MENU:
+		m_Keys.alt = true;
+		break;
+	default:
+		CWnd ::OnSysKeyDown(nChar, nRepCnt, nFlags);
+	}
+	
+}
+
+void Cned_OrthoWnd::OnSysKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+	
+	switch(nChar)
+	{
+	case VK_MENU:
+		m_Keys.alt = false;
+		break;
+	default:
+		CWnd ::OnSysKeyUp(nChar, nRepCnt, nFlags);
+	}
+	
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Cned_OrthoWnd funcs
+
+void Cned_OrthoWnd::InitCamera()
+{
+	m_CameraView.scale = 1;
+	m_CameraView.pos.x = 0;
+	m_CameraView.pos.y = 0;
+	m_CameraView.view_changed = true;
+}
+
+
+void Cned_OrthoWnd::MarkVert(int vertnum)
+{
+	Vert_marks[vertnum] = !Vert_marks[vertnum];
+	if (m_bShowVerts)
+		m_State_changed = true;
+}
+
+
+void Cned_OrthoWnd::MoveMarkedVerts(float x, float y, float z)
+{
+	int vert_idx;
+	vector *pvert;
+
+	vert_idx = m_pPrim->roomp->faces[m_pPrim->face].face_verts[m_pPrim->vert];
+	pvert = &m_pPrim->roomp->verts[vert_idx];
+
+	pvert->x += x;
+	pvert->y += y;
+	pvert->z += z;
+}
+
+
+void Cned_OrthoWnd::OnPaint() 
+{
+	CPaintDC dc(this); // device context for painting
+	// TODO: Add your message handler code here
+
+	CRect rc;
+
+	GetClientRect(&rc);
+
+	// Paint the background
+	dc.FillSolidRect(&rc, m_BackColor);
+
+	// Set up mapping mode and coordinate system
+	dc.SetMapMode(MM_ISOTROPIC);
+	CSize oldWExt = dc.SetWindowExt(rc.Width()/m_CameraView.scale,rc.Height()/m_CameraView.scale);
+	CPoint oldWOrg = dc.SetWindowOrg(m_CameraView.pos);
+	CSize oldVExt = dc.SetViewportExt(rc.Width(), rc.Height());
+	CPoint oldVOrg = dc.SetViewportOrg(rc.Width()/2, rc.Height()/2);
+
+	// Draw grid lines
+	if (m_bGridShow)
+		DrawOrthoGrid(&dc,m_nGridSize);
+
+	// Draw the world
+	DrawOrthoWorld(&dc);
+
+	// Draw new vertices
+	if (m_bShowVerts)
+		DrawVerts(&dc,new_verts,num_verts,O_VERT_COLOR);
+
+	// Print the window title
+	dc.SetMapMode(MM_TEXT);
+	dc.SetWindowExt(oldWExt);
+	dc.SetWindowOrg(oldWOrg);
+	dc.SetViewportExt(oldVExt);
+	dc.SetViewportOrg(oldVOrg);
+	dc.SetTextColor(RGB(0,0,0));
+	dc.TextOut(10,10,m_Title,lstrlen(m_Title));
+
+	// Do not call CWnd::OnPaint() for painting messages
+}
+
+
+void Cned_OrthoWnd::DrawOrthoGrid(CPaintDC *pDC,int size)
+{
+	CSize WExt = pDC->GetWindowExt();
+	CPoint WOrg = pDC->GetWindowOrg();
+	CSize VExt = pDC->GetViewportExt();
+	CPoint VOrg = pDC->GetViewportOrg();
+	CPoint pt;
+	int i,j;
+	RECT rc = {WOrg.x-WExt.cx/2, WOrg.y-WExt.cy/2, WOrg.x+WExt.cx/2, WOrg.y+WExt.cy/2};
+
+	// Select pen
+	CPen pen(PS_SOLID,0,O_GRIDLINE_COLOR);
+	CPen *pOldPen;
+	pOldPen = pDC->SelectObject(&pen);
+
+	// Draw vertical grid lines
+	for (i=rc.left; i<WOrg.x+m_nGridSize; i++) {
+		pt.x = i; pt.y = rc.top;
+		// Draw first line
+		if ( !(pt.x % m_nGridSize) ) {
+			pDC->MoveTo(pt);
+			pt.y = rc.bottom;
+			pDC->LineTo(pt);
+			// Draw the rest of the lines
+			for (j=i; j<rc.right; j+=m_nGridSize) {
+				pt.x = j; pt.y = rc.top;
+				pDC->MoveTo(pt);
+				pt.y = rc.bottom;
+				pDC->LineTo(pt);
+			}
+			break;
+		}
+	}
+
+	// Draw horizontal grid lines
+	for (i=rc.top; i<WOrg.y+m_nGridSize; i++) {
+		pt.x = rc.left; pt.y = i;
+		// Draw first line
+		if ( !(pt.y % m_nGridSize) ) {
+			pDC->MoveTo(pt);
+			pt.x = rc.right;
+			pDC->LineTo(pt);
+			// Draw the rest of the lines
+			for (j=i; j<rc.bottom; j+=m_nGridSize) {
+				pt.x = rc.left; pt.y = j;
+				pDC->MoveTo(pt);
+				pt.x = rc.right;
+				pDC->LineTo(pt);
+			}
+			break;
+		}
+	}
+
+	// Select another pen
+	CPen pen2(PS_SOLID,0,RGB(255,255,0));
+	pDC->SelectObject(&pen2);
+
+	// Draw origin grid lines
+	if (rc.left < 0 && 0 < rc.right) {
+		pDC->MoveTo(0,rc.top);
+		pDC->LineTo(0,rc.bottom);
+	}
+	if (rc.top < 0 && 0 < rc.bottom) {
+		pDC->MoveTo(rc.left,0);
+		pDC->LineTo(rc.right,0);
+	}
+
+	// Unselect pen
+	pDC->SelectObject(&pOldPen);
+}
+
+
+void Cned_OrthoWnd::DrawOrthoWorld(CPaintDC *pDC)
+{
+	int i;
+	room *rp = m_pPrim->roomp;
+
+	// Draw attached rooms before current room
+	if (m_bShowAttached)
+		for (i=0; i<rp->num_portals; i++)
+			DrawOrthoRoom(pDC,&Rooms[rp->portals[i].croom],O_ROOM_COLOR);
+
+	// Draw verts
+	if (m_bShowVerts)
+		DrawVerts(pDC,rp->verts,rp->num_verts,O_VERT_COLOR);
+
+	// Draw current primitives (room, face, portal, edge, & vertex)
+	DrawCurrentPrims(pDC);
+}
+
+
+void Cned_OrthoWnd::DrawOrthoRoom(CPaintDC *pDC,room *rp,COLORREF color)
+{
+	int fn,vn;
+	face *fp = rp->faces;
+	POINT pos;
+
+	// Select pen
+	CPen pen(PS_SOLID,0,color);
+	CPen *pOldPen;
+	pOldPen = pDC->SelectObject(&pen);
+
+	// Draw the room
+	if (m_nID == VIEW_XY)
+	{
+		for (fn=0,fp=rp->faces;fn<rp->num_faces;fn++,fp++)
+		{
+			// Position pen at first vertex
+			pos.x = rp->verts[fp->face_verts[0]].x;
+			pos.y = rp->verts[fp->face_verts[0]].y;
+			pDC->MoveTo(pos.x, pos.y);
+			// Draw edges
+			for (vn=1;vn<fp->num_verts;vn++)
+			{
+				pos.x = rp->verts[fp->face_verts[vn]].x;
+				pos.y = rp->verts[fp->face_verts[vn]].y;
+				pDC->LineTo(pos.x, pos.y);
+			}
+			// Draw last edge
+			pos.x = rp->verts[fp->face_verts[0]].x;
+			pos.y = rp->verts[fp->face_verts[0]].y;
+			pDC->LineTo(pos.x, pos.y);
+		}
+	}
+	else if (m_nID == VIEW_XZ)
+	{
+		for (fn=0,fp=rp->faces;fn<rp->num_faces;fn++,fp++)
+		{
+			// Position pen at first vertex
+			pos.x = rp->verts[fp->face_verts[0]].x;
+			pos.y = rp->verts[fp->face_verts[0]].z;
+			pDC->MoveTo(pos.x, pos.y);
+			// Draw edges and vertices
+			for (vn=1;vn<fp->num_verts;vn++)
+			{
+				pos.x = rp->verts[fp->face_verts[vn]].x;
+				pos.y = rp->verts[fp->face_verts[vn]].z;
+				pDC->LineTo(pos.x, pos.y);
+			}
+			// Draw last edge and vertex
+			pos.x = rp->verts[fp->face_verts[0]].x;
+			pos.y = rp->verts[fp->face_verts[0]].z;
+			pDC->LineTo(pos.x, pos.y);
+		}
+	}
+	else if (m_nID == VIEW_ZY)
+	{
+		for (fn=0,fp=rp->faces;fn<rp->num_faces;fn++,fp++)
+		{
+			// Position pen at first vertex
+			pos.x = rp->verts[fp->face_verts[0]].z;
+			pos.y = rp->verts[fp->face_verts[0]].y;
+			pDC->MoveTo(pos.x, pos.y);
+			// Draw edges and vertices
+			for (vn=1;vn<fp->num_verts;vn++)
+			{
+				pos.x = rp->verts[fp->face_verts[vn]].z;
+				pos.y = rp->verts[fp->face_verts[vn]].y;
+				pDC->LineTo(pos.x, pos.y);
+			}
+			// Draw last edge and vertex
+			pos.x = rp->verts[fp->face_verts[0]].z;
+			pos.y = rp->verts[fp->face_verts[0]].y;
+			pDC->LineTo(pos.x, pos.y);
+		}
+	}
+
+	// Unselect pen
+	pDC->SelectObject(pOldPen);
+
+}
+
+
+void Cned_OrthoWnd::DrawVerts(CPaintDC *pDC,vector *verts,int num_verts,COLORREF color)
+{
+	int vn;
+	int size = O_VERT_SIZE;
+	POINT pos;
+
+	// Select pen
+	CPen pen(PS_SOLID,0,RGB(0,0,0));
+	CPen *pOldPen;
+	pOldPen = pDC->SelectObject(&pen);
+
+	// Select brush
+	CBrush brush(color);
+	CBrush *pOldBrush;
+	pOldBrush = pDC->SelectObject(&brush);
+
+	// Draw verts
+	if (m_nID == VIEW_XY)
+	{
+		for (vn=0; vn<num_verts; vn++)
+		{
+			pos.x = verts[vn].x;
+			pos.y = verts[vn].y;
+			if ( !IsVertDrawn(pos,vn) )
+				pDC->Rectangle(pos.x-size,pos.y-size,pos.x+size,pos.y+size);
+		}
+	}
+	else if (m_nID == VIEW_XZ)
+	{
+		for (vn=0; vn<num_verts; vn++)
+		{
+			pos.x = verts[vn].x;
+			pos.y = verts[vn].z;
+			if ( !IsVertDrawn(pos,vn) )
+				pDC->Rectangle(pos.x-size,pos.y-size,pos.x+size,pos.y+size);
+		}
+	}
+	else if (m_nID == VIEW_ZY)
+	{
+		for (vn=0; vn<num_verts; vn++)
+		{
+			pos.x = verts[vn].z;
+			pos.y = verts[vn].y;
+			if ( !IsVertDrawn(pos,vn) )
+				pDC->Rectangle(pos.x-size,pos.y-size,pos.x+size,pos.y+size);
+		}
+	}
+
+	// Unselect pen
+	pDC->SelectObject(pOldPen);
+
+	// Unselect brush
+	pDC->SelectObject(pOldBrush);
+}
+
+
+void Cned_OrthoWnd::CenterRoom(room *rp)
+{
+	int vn;
+	vector center = {0,0,0};
+
+	// Find center of room
+	for (vn=0;vn<rp->num_verts;vn++)
+	{
+		center.x += rp->verts[vn].x;
+		center.y += rp->verts[vn].y;
+		center.z += rp->verts[vn].z;
+	}
+	center.x /= rp->num_verts;
+	center.y /= rp->num_verts;
+	center.z /= rp->num_verts;
+
+	if (m_nID == VIEW_XY)
+	{
+		m_CameraView.pos.x = center.x;
+		m_CameraView.pos.y = center.y;
+	}
+	else if (m_nID == VIEW_XZ)
+	{
+		m_CameraView.pos.x = center.x;
+		m_CameraView.pos.y = center.z;
+	}
+	else if (m_nID == VIEW_ZY)
+	{
+		m_CameraView.pos.x = center.z;
+		m_CameraView.pos.y = center.y;
+	}
+
+	m_State_changed = true;
+}
+
+
+void Cned_OrthoWnd::DrawCurrentPrims(CPaintDC *pDC)
+{
+	room *rp = m_pPrim->roomp;
+	int vn;
+	POINT pos;
+
+	// Draw current room
+	DrawOrthoRoom(pDC,rp,O_CUR_ROOM_COLOR);
+
+	// Draw current vertex
+	if (m_bShowVerts)
+	{
+		int vert_idx = rp->faces[m_pPrim->face].face_verts[m_pPrim->vert];
+		DrawVerts(pDC,&rp->verts[vert_idx],1,O_CUR_VERT_COLOR);
+	}
+
+	// Draw current face
+	face *fp = &rp->faces[m_pPrim->face];
+
+	// Select pen
+	CPen pen(PS_SOLID,0,O_CUR_FACE_COLOR);
+	CPen *pOldPen;
+	pOldPen = pDC->SelectObject(&pen);
+
+	if (m_nID == VIEW_XY)
+	{
+		// Position pen at first vertex
+		pos.x = rp->verts[fp->face_verts[0]].x;
+		pos.y = rp->verts[fp->face_verts[0]].y;
+		pDC->MoveTo(pos.x, pos.y);
+		// Draw edges and vertices
+		for (vn=1;vn<fp->num_verts;vn++)
+		{
+			pos.x = rp->verts[fp->face_verts[vn]].x;
+			pos.y = rp->verts[fp->face_verts[vn]].y;
+			pDC->LineTo(pos.x, pos.y);
+		}
+		// Draw last edge and vertex
+		pos.x = rp->verts[fp->face_verts[0]].x;
+		pos.y = rp->verts[fp->face_verts[0]].y;
+		pDC->LineTo(pos.x, pos.y);
+	}
+	else if (m_nID == VIEW_XZ)
+	{
+		// Position pen at first vertex
+		pos.x = rp->verts[fp->face_verts[0]].x;
+		pos.y = rp->verts[fp->face_verts[0]].z;
+		pDC->MoveTo(pos.x, pos.y);
+		// Draw edges and vertices
+		for (vn=1;vn<fp->num_verts;vn++)
+		{
+			pos.x = rp->verts[fp->face_verts[vn]].x;
+			pos.y = rp->verts[fp->face_verts[vn]].z;
+			pDC->LineTo(pos.x, pos.y);
+		}
+		// Draw last edge and vertex
+		pos.x = rp->verts[fp->face_verts[0]].x;
+		pos.y = rp->verts[fp->face_verts[0]].z;
+		pDC->LineTo(pos.x, pos.y);
+	}
+	else if (m_nID == VIEW_ZY)
+	{
+		// Position pen at first vertex
+		pos.x = rp->verts[fp->face_verts[0]].z;
+		pos.y = rp->verts[fp->face_verts[0]].y;
+		pDC->MoveTo(pos.x, pos.y);
+		// Draw edges and vertices
+		for (vn=1;vn<fp->num_verts;vn++)
+		{
+			pos.x = rp->verts[fp->face_verts[vn]].z;
+			pos.y = rp->verts[fp->face_verts[vn]].y;
+			pDC->LineTo(pos.x, pos.y);
+		}
+		// Draw last edge and vertex
+		pos.x = rp->verts[fp->face_verts[0]].z;
+		pos.y = rp->verts[fp->face_verts[0]].y;
+		pDC->LineTo(pos.x, pos.y);
+	}
+
+	// Unselect pen
+	pDC->SelectObject(pOldPen);
+}
+
+
+void Cned_OrthoWnd::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
+	// TODO: Add your message handler code here
+	//Load top-level menu from resource
+	CMenu mnuTop;
+	mnuTop.LoadMenu(IDR_ORTHOWND_POPUP);
+
+	//get popup menu from first submenu
+	CMenu *pPopup = mnuTop.GetSubMenu(0);
+	ASSERT_VALID(pPopup);
+
+	//Checked state for popup menu items is automatically managed by MFC
+	//UPDATE_COMMAND_UI 
+
+	//Display popup menu
+	pPopup->TrackPopupMenu(TPM_LEFTALIGN|TPM_LEFTBUTTON,point.x,point.y,this,NULL);
+
+	//popup menu commands are automatically handled by standard MFC command routing
+	return;
+}
+
+void Cned_OrthoWnd::OnGridSize1() 
+{
+	if (m_nGridSize != 5) {
+		m_nGridSize = 5;
+		m_State_changed = true;
+	}
+}
+
+void Cned_OrthoWnd::OnGridSize2() 
+{
+	if (m_nGridSize != 10) {
+		m_nGridSize = 10;
+		m_State_changed = true;
+	}
+}
+
+void Cned_OrthoWnd::OnGridSize3() 
+{
+	if (m_nGridSize != 20) {
+		m_nGridSize = 20;
+		m_State_changed = true;
+	}
+}
+
+void Cned_OrthoWnd::OnGridSize4() 
+{
+	if (m_nGridSize != 50) {
+		m_nGridSize = 50;
+		m_State_changed = true;
+	}
+}
+
+void Cned_OrthoWnd::OnGridSize5() 
+{
+	if (m_nGridSize != 100) {
+		m_nGridSize = 100;
+		m_State_changed = true;
+	}
+}
+
+void Cned_OrthoWnd::OnShowAtchRooms() 
+{
+	m_bShowAttached = !m_bShowAttached;
+	m_State_changed = true;
+}
+
+void Cned_OrthoWnd::OnShowGrid() 
+{
+	m_bGridShow = !m_bGridShow;
+	m_State_changed = true;
+}
+
+void Cned_OrthoWnd::OnShowNormals() 
+{
+	m_bShowNormals = !m_bShowNormals;
+	m_State_changed = true;
+}
+
+void Cned_OrthoWnd::OnShowVerts() 
+{
+	m_bShowVerts = !m_bShowVerts;
+	m_State_changed = true;
+}
+
+void Cned_OrthoWnd::OnUpdateShowGrid(CCmdUI* pCmdUI) 
+{
+	pCmdUI->SetCheck(m_bGridShow);
+}
+
+
+// Keep track of positions already drawn to, so that there is no wasteful redraw
+bool Cned_OrthoWnd::IsVertDrawn(POINT pos,int index)
+{
+	static POINT Already_drawn_pos[MAX_VERTS_PER_ROOM];
+	bool Already_drawn = false;
+	int i;
+
+	// Search for vert already drawn at this point
+	for (i=0; i<index; i++)
+		if (Already_drawn_pos[i].x == pos.x && Already_drawn_pos[i].y == pos.y)
+		{
+			Already_drawn = true;
+			break;
+		}
+	Already_drawn_pos[index] = pos;
+
+	return Already_drawn;
+}
+

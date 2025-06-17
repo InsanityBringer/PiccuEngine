@@ -1,0 +1,61 @@
+:Base d3edit.hlp>main
+:Title The D3Edit Helpfile
+1 Getting started
+2 What is D3Edit ?=what_is_d3edit
+2 Terms and File Extensions=terms_and_file_extensions
+2 Conventions used in D3Edit Help=conventions
+2 Geometric Basics
+3 Vertices=vertices
+3 Faces=faces
+3 Rooms=rooms
+3 Normals=normals
+1 D3Edit walkthrough
+2 Introduction (start here)=intro_walktru
+2 Kickstart=kickstart
+2 Moving around in D3Edit=movement
+2 Edit Modes=edit_mode
+2 The World View=world_view
+2 The Room Editor=room_view
+2 Shortcut Keys=shortcut_keys
+2 The MN3 Packager Tool=mn3_packager
+2 The Toolbars
+3 Overview=toolbar_overview
+3 The Camera Slewer=camera_slewer
+3 The Edit Toolbar=edit_toolbar
+3 The Texture Toolbar=texture_toolbar
+3 The Object Toolbar=object_toolbar
+3 The Door Toolbar=door_toolbar
+1 Building levels
+2 Introduction (start here)=building_levels_intro
+2 Creating a new Level=new_level
+2 Inserting and placing Vertices=inserting_vertices
+2 Making and connecting Rooms=making_rooms
+2 Inserting and editing Faces=inserting_faces
+2 Texturing and Alignment=texturing
+2 Objects=objects
+2 Lighting and BOA visibility=lighting
+2 Goals=goals
+2 Geometric Actions
+3 Overview=geometric_actions
+3 Lathe=geometric_actions_lathe
+3 Extrude=geometric_actions_extrude
+3 Bend=geometric_actions_bend
+1 Dallas Scripting
+2 Scripting Overview=scripting
+2 What is a script?=dallas2
+2 Conditions in Dallas=dallas3
+2 Expressions in Dallas=dallas4
+2 Actions in Dallas=dallas5
+2 Nested IF-THEN Clauses=dallas6
+2 The Message System=dallas7
+2 The User Types Workshop=dallas8
+2 Copy and Paste=dallas9
+1 Outdoor areas
+2 Outdoor areas=outdoor_areas
+1 Troubleshooting
+2 Help! The editor just crashed=just_crashed
+2 Bugs=bugs
+2 Updates=update
+1 Support
+2 Online support=support
+2 About this helpfile=about_helpfile

@@ -56,6 +56,8 @@ IF (APPLE)
   SET(PLATFORM_INCLUDES "lib/linux" ${SDL_INCLUDE_DIR} "/usr/X11/include" )
 ENDIF()
 
+set(BUILD_NEWEDITOR OFF CACHE BOOL "Builds D3Edit.")
+
 IF (WIN32)
 	set(USE_SDL OFF CACHE BOOL "Builds with SDL rather than the Win32 code.")
 	SET(D3_GAMEDIR "c:/games/Descent3/")	
@@ -164,6 +166,10 @@ ADD_SUBDIRECTORY (netcon/inetfile)
 #dependent on above
 ADD_SUBDIRECTORY (netcon)
 
+if(BUILD_NEWEDITOR)
+ADD_SUBDIRECTORY (neweditor)
+endif()
+
 #[ISB] TODO: Needs fixing for new build system
 #IF(UNIX)
 #ADD_SUBDIRECTORY (scripts)
@@ -240,6 +246,24 @@ SET (DESCENT3_SOURCES
 	${DDIO_SOURCES})
 ENDIF()
 
+if (BUILD_NEWEDITOR)
+	set (NEWEDITOR_SOURCES
+		${BITMAP_SOURCES}
+		${CFILE_SOURCES}
+		${DDIO_COMMON_SOURCES}
+		${DDIO_WIN_SOURCES}
+		${FIX_SOURCES}
+		${MEM_SOURCES}
+		${MISC_SOURCES}
+		${MODULE_SOURCES}
+		${NEWEDITOR_SOURCES}
+		${PHYSICS_NEWEDITOR_SOURCES}
+		${RENDERER_NEWEDITOR_SOURCES}
+		${VECMAT_SOURCES}
+		${WIN32_NEWEDITOR_SOURCES}
+		${MAIN_NEWEDITOR_SOURCES})
+endif()
+
 add_executable(PiccuEngine ${DESCENT3_SOURCES})
 	
 IF (WIN32)
@@ -247,6 +271,15 @@ IF (WIN32)
 		target_link_options(PiccuEngine PUBLIC /SAFESEH:NO /NODEFAULTLIB:LIBC)
 	else()
 		target_link_options(PiccuEngine PUBLIC /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC)
+	endif()
+	
+	if (BUILD_NEWEDITOR)
+		add_executable(PiccuNewEditor ${NEWEDITOR_SOURCES})
+		target_link_options(PiccuNewEditor PUBLIC /SAFESEH:NO /SUBSYSTEM:WINDOWS /NODEFAULTLIB:LIBC)
+		target_compile_definitions(PiccuNewEditor PUBLIC -DNEWEDITOR -DAFXDLL)
+		target_compile_definitions(PiccuNewEditor PUBLIC -DMONO "$<$<CONFIG:RELEASE>:RELEASE>")
+		target_compile_definitions(PiccuNewEditor PUBLIC -DMONO "$<$<CONFIG:MINSIZEREL>:RELEASE>")
+		target_compile_definitions(PiccuNewEditor PUBLIC -DMONO "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
 	endif()
 ENDIF()
 
@@ -281,6 +314,7 @@ source_group("dd_sndlib" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/dd_sndl
 source_group("ddio_common" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_common/.+")
 source_group("ddio_lnx" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_lnx/.+")
 source_group("ddio_win" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/ddio_win/.+")
+source_group("editor" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/editor/.+")
 source_group("main" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/Descent3/.+")
 source_group("fix" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/fix/.+")
 source_group("grtext" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/grtext/.+")
@@ -301,6 +335,7 @@ source_group("netcon/inetfile" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/n
 source_group("netcon/lanclient" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netcon/lanclient/.+")
 source_group("netgames" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netgames/.+")
 source_group("netgames/dmfc" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/netgames/dmfc/.+")
+source_group("neweditor" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/neweditor/.+")
 source_group("physics" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/physics/.+")
 source_group("renderer" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/renderer/.+")
 source_group("rtperformance" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/rtperformance/.+")

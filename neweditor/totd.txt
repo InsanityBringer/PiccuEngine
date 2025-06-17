@@ -1,0 +1,18 @@
+You can change display settings for the panes of a room frame individually or all at once. To change the settings on an individual pane, right-click in the pane and choose a setting from the drop-down menu. To change the settings of all panes in the active room frame, choose a setting from the View menu instead.
+&&
+You can open up to 50 ORFs (room files) at a time, and each will open in its own window, but you may only open up one level (D3L) at a time. (Note: If you must open multiple levels, you can run more than one instance of the editor. However, copy/paste functions will not work across editor instances.)
+&&
+The current grid setting for an orthographic (2D) room pane determines the distance that marked vertices (or the camera) move with each keypress. Change the setting by right-clicking on the pane and choosing "Adjust grid size" from the drop-down menu.
+&&
+To display textures and room geometry more accurately in the textured views, make sure the z buffer is in use. Click the "Z Buffer" button in the toolbar to activate the z buffer.
+&&
+If you have a specific question, if you found a bug or if you just want to share your experiences with D3Edit, you can hop in the discussion forums, online at http://d3edit.tricordnet.com/. You must register before you can post to the forums, but registration is 100% free.
+&&
+Additional tips & tricks, examples and explanations are available from the online FAQ & user manual, online at 
+http://d3edit.tricordnet.com/. Be sure to check back frequently for the latest info.
+&&
+D3Edit supports custom object palettes. To add an object to your custom object palette, click the "Available Objects" button in the Object Bar. After specifying a filter, objects of the filter types will be displayed. Now simply click and drag the desired objects onto the custom tab in the Object Bar.
+&&
+D3Edit supports custom texture palettes. To add a texture to your custom texture palette, click the "Available Textures" button in the Texture Bar. After specifying a filter, textures of the filter types will be displayed. Now simply click and drag the desired textures onto the custom tab in the Texture Bar.
+&&
+

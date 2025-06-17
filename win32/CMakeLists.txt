@@ -11,3 +11,11 @@ SET (WIN32_SOURCES
 		win32/piccu_station_256.ico
 		win32/piccu_station_32.ico
 		PARENT_SCOPE)
+
+SET (WIN32_NEWEDITOR_SOURCES
+		win32/winapp.cpp
+		win32/wincon.cpp
+		win32/windata.cpp
+		win32/windebug.cpp
+		win32/winmono.cpp
+		PARENT_SCOPE)
