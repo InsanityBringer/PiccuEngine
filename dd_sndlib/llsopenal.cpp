@@ -241,7 +241,7 @@ int llsOpenAL::PlaySound2d(play_information* play_info, int sound_index, float v
 	ALErrorCheck("Clearing entry error in play sound 2d.");
 	if (!Initalized) return -1;
 	if (SoundFiles[Sounds[sound_index].sample_index].used == 0) return -1;
-	short sound_uid = FindSoundSlot(volume, play_info->priority);
+	short sound_uid = FindSoundSlot(ListenerPosition, volume, play_info->priority);
 	if (sound_uid < 0) return -1;
 
 	bool looped = f_looped || (Sounds[sound_index].flags & SPF_LOOPED) != 0;
@@ -277,6 +277,7 @@ int llsOpenAL::PlaySound2d(play_information* play_info, int sound_index, float v
 	SoundEntries[sound_uid].info = play_info;
 	SoundEntries[sound_uid].soundNum = sound_index;
 	SoundEntries[sound_uid].soundUID = NextUID * 256 + sound_uid;
+	SoundEntries[sound_uid].is3d = false;
 	//PutLog(LogLevel::Info, "Starting 2D sound %s with uid %d (slot %d)", pSoundFiles[pSounds[sound_index].sample_index].name, SoundEntries[sound_uid].soundUID, sound_uid);
 
 	NumSoundsPlaying++;
@@ -288,7 +289,7 @@ int llsOpenAL::PlayStream(play_information* play_info)
 	ALErrorCheck("Clearing entry error in play stream.");
 	float peakVolume = std::max(play_info->left_volume, play_info->right_volume);
 	if (!Initalized) return -1;
-	short sound_uid = FindSoundSlot(peakVolume, play_info->priority);
+	short sound_uid = FindSoundSlot(ListenerPosition, peakVolume, play_info->priority);
 	if (sound_uid < 0) 
 		return -1;
 
@@ -333,6 +334,7 @@ int llsOpenAL::PlayStream(play_information* play_info)
 	SoundEntries[sound_uid].volume = peakVolume;
 	SoundEntries[sound_uid].info = play_info;
 	SoundEntries[sound_uid].soundUID = NextUID * 256 + sound_uid;
+	SoundEntries[sound_uid].is3d = false;
 
 	NumSoundsPlaying++;
 	//PutLog(LogLevel::Info, "Starting stream with uid %d (slot %d). Format is %d. Buffer size is %d. Stream size is %d.", SoundEntries[sound_uid].soundUID, sound_uid, play_info->m_stream_format, play_info->m_stream_bufsize, play_info->m_stream_size);
@@ -367,7 +369,7 @@ int llsOpenAL::PlaySound3d(play_information* play_info, int sound_index, pos_sta
 	ALErrorCheck("Clearing entry error in play sound 3d.");
 	if (!Initalized) return -1;
 	if (SoundFiles[Sounds[sound_index].sample_index].used == 0) return -1;
-	short sound_uid = FindSoundSlot(master_volume, play_info->priority);
+	short sound_uid = FindSoundSlot(*cur_pos->position, master_volume, play_info->priority);
 	if (sound_uid < 0) return -1;
 
 	//PutLog(LogLevel::Info, "Starting 3D source");
@@ -402,6 +404,8 @@ int llsOpenAL::PlaySound3d(play_information* play_info, int sound_index, pos_sta
 	SoundEntries[sound_uid].info = play_info;
 	SoundEntries[sound_uid].soundNum = sound_index;
 	SoundEntries[sound_uid].soundUID = NextUID * 256 + sound_uid;
+	SoundEntries[sound_uid].is3d = true;
+	SoundEntries[sound_uid].lastpos = *cur_pos->position;
 	//PutLog(LogLevel::Info, "Starting 3D sound %s with uid %d (slot %d)", pSoundFiles[pSounds[sound_index].sample_index].name, SoundEntries[sound_uid].soundUID, sound_uid);
 
 	NumSoundsPlaying++;
@@ -440,6 +444,8 @@ void llsOpenAL::AdjustSound(int sound_uid, pos_state* cur_pos, float adjusted_vo
 		mprintf((0, "\t(%f %f %f) (%f %f %f)", -cur_pos->velocity->x, cur_pos->velocity->y, cur_pos->velocity->z, -cur_pos->position->x, cur_pos->position->y, cur_pos->position->z));
 	alSourcef(handle, AL_GAIN, adjusted_volume);
 	ALErrorCheck("Adjusting sound gain.");
+
+	SoundEntries[id].lastpos = *cur_pos->position;
 }
 
 void llsOpenAL::StopAllSounds(void)
@@ -830,16 +836,17 @@ bool llsOpenAL::ALErrorCheck(const char* context)
 	return false;
 }
 
-static constexpr float ScoreSound(float volume, int priority)
+static constexpr float CalcScore(float sqdist, float volume, int priority)
 {
-	return priority * 2 * volume;
+	float divider = priority * 2 * volume;
+	return std::min(sqdist, 1.0f) / divider;
 }
 
-short llsOpenAL::FindSoundSlot(float volume, int priority)
+short llsOpenAL::FindSoundSlot(vector where, float volume, int priority)
 {
 	int i;
 	int bestSlot = -1;
-	float bestScore = ScoreSound(volume, priority);
+	float bestScore = CalcScore(vm_VectorDistanceSqr(&where, &ListenerPosition), volume, priority);
 	//PutLog(LogLevel::Info, "Finding a sound slot");
 	//No free slots, so bump a low priorty one.
 	if (NumSoundsPlaying >= NumSoundChannels)
@@ -849,12 +856,14 @@ short llsOpenAL::FindSoundSlot(float volume, int priority)
 			if (SoundEntries[i].streaming)
 				continue; //never bump a streaming sound, probably Bad
 
-			if (SoundEntries[i].looping)
-				continue; //Don't bump looping sounds. 
-
 			//check for lower priority sound
-			float score = ScoreSound(SoundEntries[i].volume, SoundEntries[i].info->priority);
-			if (score < bestScore)
+			float score;// = ScoreDivider(SoundEntries[i].volume, SoundEntries[i].info->priority);
+			if (SoundEntries[i].is3d)
+				score = CalcScore(vm_VectorDistanceSqr(&SoundEntries[i].lastpos, &ListenerPosition), SoundEntries[i].volume, SoundEntries[i].info->priority);
+			else
+				score = CalcScore(1.0f, SoundEntries[i].volume, SoundEntries[i].info->priority);
+			
+			if (score > bestScore)
 			{
 				bestSlot = i;
 				bestScore = score;
@@ -868,7 +877,7 @@ short llsOpenAL::FindSoundSlot(float volume, int priority)
 		}
 		else
 		{
-			mprintf((0, "Can't find sound slot and unable to bump sound."));
+			mprintf((0, "Can't find sound slot and unable to bump sound.\n"));
 		}
 
 		return bestSlot;
@@ -881,7 +890,7 @@ short llsOpenAL::FindSoundSlot(float volume, int priority)
 				return i;
 		}
 	}
-	mprintf((0, "Can't find sound slot. NumSoundsPlaying is %d.", NumSoundsPlaying));
+	mprintf((0, "Can't find sound slot. NumSoundsPlaying is %d.\n", NumSoundsPlaying));
 	return -1;
 }
 

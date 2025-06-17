@@ -25,6 +25,7 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+#include "vecmat.h"
 
 //OpenAL LLS system implementation
 
@@ -49,6 +50,9 @@ struct llsOpenALSoundEntry
 	bool terminate;
 	bool looping;
 	play_information* info;
+
+	bool is3d;
+	vector lastpos;
 
 	//Streaming buffer handles. These are the actual handles that will be queued.
 	ALuint bufferHandles[NUM_STREAMING_BUFFERS];
@@ -98,7 +102,7 @@ class llsOpenAL : public llsSystem
 	
 	bool ALErrorCheck(const char* context);
 
-	short FindSoundSlot(float volume, int priority);
+	short FindSoundSlot(vector where, float volume, int priority);
 
 	void InitSource2D(uint32_t handle, sound_info* soundInfo, float volume);
 	void InitSourceStreaming(uint32_t handle, float volume);

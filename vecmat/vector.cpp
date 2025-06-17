@@ -215,6 +215,14 @@ float vm_VectorDistanceQuick (vector *a,vector *b)
 	return dist;
 }
 
+float vm_VectorDistanceSqr(const vector* a, const vector* b)
+{
+	vector dest;
+	vm_SubVectors(&dest, a, b);
+
+	return dest.x * dest.x + dest.y * dest.y + dest.z * dest.z;
+}
+
 //Calculates the perpendicular vector given three points
 //Parms:	n - the computed perp vector (filled in)
 //			v0,v1,v2 - three clockwise vertices

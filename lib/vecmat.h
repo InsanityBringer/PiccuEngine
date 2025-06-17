@@ -149,6 +149,8 @@ extern float vm_VectorDistance (const vector *a, const vector *b);
 // Gets the approx distances (magnitude) between two vectors. Faster.
 extern float vm_VectorDistanceQuick (vector *a,vector *b);
 
+extern float vm_VectorDistanceSqr(const vector* a, const vector* b);
+
 //Computes a normalized direction vector between two points
 //Parameters:	dest - filled in with the normalized direction vector
 //					start,end - the start and end points used to calculate the vector
