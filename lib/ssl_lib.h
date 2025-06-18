@@ -356,15 +356,15 @@ public:
 #ifndef NEWEDITOR 
 
 	#define MAX_SOUNDS			1000
+	#define MAX_SOUND_FILES		1000
 	
 	extern sound_info Sounds[MAX_SOUNDS];
 	extern sound_file_info SoundFiles[MAX_SOUND_FILES];
 #else
 	#include "..\neweditor\ned_Sound.h"
-#endif
-
 #define MAX_SOUND_FILES		1000
 extern sound_file_info SoundFiles[MAX_SOUND_FILES];
+#endif
 
 //	loads a sound from a wavefile.
 char SoundLoadWaveFile(char *filename, float percent_volume, int sound_file_index, bool f_high_quality, bool f_load_sample_data, int *e_type = NULL);

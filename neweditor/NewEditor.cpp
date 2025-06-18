@@ -66,7 +66,6 @@
 
 #include <direct.h>
 
-grScreen *Game_screen = NULL;				// The one and only video screen
 oeWin32Application *g_OuroeApp = NULL;		// The Main application
 //oeAppDatabase *g_Database = NULL;			// Application database.
 
@@ -383,14 +382,9 @@ BOOL CNewEditorApp::InitInstance()
 
 	g_OuroeApp = new oeWin32Application(&appinfo);
 	//g_Database = new oeD3Win32Database;
-	char *driver = "GDIX";
 	
-	if (!ddgr_Init(g_OuroeApp, driver, false)) 
-		AfxMessageBox("DDGR graphic system init failed.",MB_ICONSTOP|MB_OK);
-
 	// Init our renderer
-	grSurface::init_system();
-	rend_Init(RENDERER_SOFTWARE_16BIT,g_OuroeApp,NULL);
+	rend_Init(RENDERER_OPENGL,g_OuroeApp,NULL);
 
 	//Initialize the editor state (Desktop_surf,etc)
 	Editor_state.Initialize();

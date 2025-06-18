@@ -15,11 +15,10 @@
 #include "ddaccess.h"
 #include "application.h"
 #include "ned_Rend.h"
-#include "ddvid.h"
 #include "texture.h"
 #include "ned_RendOpenGL.h"
-#include "..\3d\globvars.h"
-#include "..\3d\clipper.h"
+//#include "..\3d\globvars.h"
+//#include "..\3d\clipper.h"
 #include "globals.h"
 
 int OpenGL_window_initted=0;
@@ -62,14 +61,6 @@ int rend_Init (renderer_type state, oeApplication *app,renderer_preferred_state 
 	mprintf ((0,"Renderer init is set to %d\n",Renderer_initted));
 	switch (Renderer_type)
 	{
-		case RENDERER_SOFTWARE_16BIT:
-		case RENDERER_SOFTWARE_8BIT:
-			NoLightmaps=false;
-			UseHardware=0;
-			StateLimited=0;
-			UseMultitexture=0;
-			retval=tex_Init ();
-			break;
 		case RENDERER_OPENGL:
 			NoLightmaps=false;
 			UseHardware=1;
@@ -117,10 +108,6 @@ void rend_SetPixel (ddgr_color color,int x,int y)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_SetPixel(color, x, y);
-		break;
 	case RENDERER_OPENGL:
 		rGL_SetPixel(color,x,y);
 		break;
@@ -133,10 +120,6 @@ ddgr_color rend_GetPixel (int x,int y)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		return tex_GetPixel(x, y);
-		break;
 	case RENDERER_OPENGL:
 		return rGL_GetPixel(x,y);
 		break;
@@ -151,10 +134,6 @@ void rend_Flip ()
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		ddvid_VideoFlip();
-		break;
 	case RENDERER_OPENGL:
 		rGL_Flip();
 		break;
@@ -169,10 +148,6 @@ void rend_DrawPolygon (int handle,g3Point **p,int nv,int map_type)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_DrawPointList (handle,p,nv);
-		break;
 	case RENDERER_OPENGL:
 		rGL_DrawPolygon(handle,p,nv,map_type);
 		break;
@@ -221,7 +196,7 @@ void rend_DrawFontCharacter (int bm_handle,int x1,int y1,int x2,int y2,float u,f
 	ptr_pnts[2]=&pnts[2];
 	ptr_pnts[3]=&pnts[3];
 
-	rend_DrawPolygon (bm_handle,ptr_pnts,4);
+	rend_DrawPolygon (bm_handle,ptr_pnts,4, MAP_TYPE_BITMAP);
 }
 
 
@@ -255,10 +230,6 @@ void rend_DrawLine (int x1,int y1,int x2,int y2)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_DrawLine(x1,y1,x2,y2);
-		break;
 	case RENDERER_OPENGL:
 		rGL_DrawLine(x1,y1,x2,y2);
 		break;
@@ -270,10 +241,6 @@ void rend_DrawCircle(int x, int y, int rad)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_DrawCircle(x, y, rad);
-		break;
 	case RENDERER_OPENGL:
 		//Int3();
 		break;
@@ -284,10 +251,6 @@ void rend_SetFlatColor (ddgr_color color)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_SetFlatColor(color);
-		break;
 	case RENDERER_OPENGL:
 		rGL_SetFlatColor(color);
 		break;
@@ -305,10 +268,6 @@ void rend_StartFrame (int x1,int y1,int x2,int y2,int clear_flags)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_StartFrame(x1,y1,x2,y2);
-		break;
 	case RENDERER_OPENGL:
 		rGL_BeginFrame (x1,y1,x2,y2,clear_flags);
 		break;
@@ -320,10 +279,6 @@ void rend_EndFrame ()
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_EndFrame();
-		break;
 	case RENDERER_OPENGL:
 		rGL_EndFrame();
 		break;
@@ -334,9 +289,6 @@ void rend_ClearScreen (ddgr_color color)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		break;
 	case RENDERER_OPENGL:
 		rGL_ClearScreen (color);
 		break;
@@ -348,10 +300,6 @@ void rend_SetSoftwareParameters(float aspect,int width,int height,int pitch,ubyt
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_SetSoftwareParameters (aspect,width,height,pitch,framebuffer);
-		break;
 	case RENDERER_OPENGL:
 		break;
 	}	
@@ -362,10 +310,6 @@ void rend_FillRect (ddgr_color color,int x1,int y1,int x2,int y2)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_FillRect(color, x1, y1, x2, y2);
-		break;
 	case RENDERER_OPENGL:
 		rGL_FillRect(color,x1,y1,x2,y2);
 		break;
@@ -378,10 +322,6 @@ float rend_GetAspectRatio ()
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		return tex_GetAspectRatio();
-		break;
 	case RENDERER_OPENGL:
 		return rGL_GetAspectRatio ();
 		break;
@@ -396,10 +336,6 @@ void rend_GetProjectionParameters (int *width,int *height)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_GetProjectionParameters(width,height);
-		break;
 	case RENDERER_OPENGL:
 		rGL_GetProjectionParameters(width,height);
 		break;
@@ -418,10 +354,6 @@ void rend_FillCircle(ddgr_color col, int x, int y, int rad)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_FillCircle(col, x, y, rad);
-		break;
 	case RENDERER_OPENGL:
 		break;
 	}	
@@ -513,10 +445,6 @@ void rend_SetLighting(light_state state)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_SetLighting (state);
-		break;
 	case RENDERER_OPENGL:
 		rGL_SetLightingState (state);
 		break;
@@ -527,10 +455,6 @@ void rend_SetColorModel (color_model state)
 {
 	switch (Renderer_type)
 	{
-		case RENDERER_SOFTWARE_16BIT:
-		case RENDERER_SOFTWARE_8BIT:
-			tex_SetColorModel (state);
-			break;
 		case RENDERER_OPENGL:
 			rGL_SetColorModel (state);
 			break;
@@ -541,10 +465,6 @@ void rend_SetAlphaType (sbyte atype)
 {
 	switch (Renderer_type)
 	{
-		case RENDERER_SOFTWARE_16BIT:
-		case RENDERER_SOFTWARE_8BIT:
-			tex_SetAlphaType (atype);
-			break;
 		case RENDERER_OPENGL:
 			rGL_SetAlphaType (atype);
 			break;
@@ -627,9 +547,6 @@ void rend_SetAlphaValue (ubyte val)
 {
 	switch (Renderer_type)
 	{
-		case RENDERER_SOFTWARE_16BIT:
-		case RENDERER_SOFTWARE_8BIT:
-			break;
 		case RENDERER_OPENGL:
 			rGL_SetAlphaValue (val);
 			break;
@@ -641,9 +558,6 @@ void rend_SetWrapType (wrap_type val)
 {
 	switch (Renderer_type)
 	{
-		case RENDERER_SOFTWARE_16BIT:
-		case RENDERER_SOFTWARE_8BIT:
-			break;
 		case RENDERER_OPENGL:
 			rGL_SetWrapType (val);
 			break;
@@ -655,9 +569,6 @@ void rend_SetFiltering (sbyte state)
 {
 	switch (Renderer_type)
 	{
-		case RENDERER_SOFTWARE_16BIT:
-		case RENDERER_SOFTWARE_8BIT:
-			break;
 		case RENDERER_OPENGL:
 			rGL_SetFiltering (state);
 			break;
@@ -669,9 +580,6 @@ void rend_SetZBufferState  (sbyte state)
 {
 	switch (Renderer_type)
 	{
-		case RENDERER_SOFTWARE_16BIT:
-		case RENDERER_SOFTWARE_8BIT:
-			break;
 		case RENDERER_OPENGL:
 			rGL_SetZBufferState (state);
 			break;
@@ -683,9 +591,6 @@ void rend_SetZValues (float nearz,float farz)
 {
 	switch (Renderer_type)
 	{
-		case RENDERER_SOFTWARE_16BIT:
-		case RENDERER_SOFTWARE_8BIT:
-			break;
 		case RENDERER_OPENGL:
 			rGL_SetZValues (nearz,farz);
 			break;
@@ -697,9 +602,6 @@ void rend_SetZBufferWriteMask (int state)
 {
 	switch (Renderer_type)
 	{
-		case RENDERER_SOFTWARE_16BIT:
-		case RENDERER_SOFTWARE_8BIT:
-			break;
 		case RENDERER_OPENGL:
 			rGL_SetZBufferWriteMask (state);
 			break;
@@ -711,10 +613,6 @@ void rend_SetMipState (sbyte mipstate)
 {
 	switch (Renderer_type)
 	{
-		case RENDERER_SOFTWARE_16BIT:
-		case RENDERER_SOFTWARE_8BIT:
-			tex_SetMipState (mipstate);
-			break;
 		case RENDERER_OPENGL:
 			break;
 	}

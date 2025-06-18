@@ -14,6 +14,7 @@
 #define __NED_RENDER_H_
 
 #include <windows.h>
+#include <stdint.h>
 #include "renderer.h"
 #include "application.h"
 #include "3d.h"
@@ -25,6 +26,19 @@ extern bool  StateLimited;
 extern bool  NoLightmaps;
 extern bool  UseMultitexture;
 extern bool  UseHardware;
+
+struct RendViewport
+{
+	int x, y;
+	int width, height;
+};
+
+//One of these is associated with each window.
+struct RendHandle
+{
+	uint32_t handle;
+	RendViewport default_viewport;
+};
 
 int rend_Init (renderer_type state, oeApplication *app,renderer_preferred_state *pref_state);
 
@@ -55,5 +69,11 @@ int rend_InitOpenGLWindow (oeApplication *app,renderer_preferred_state *pref_sta
 // Sets the state of the OpenGLWindow to on or off
 void rend_SetOpenGLWindowState (int state,oeApplication *app,renderer_preferred_state *pref_state);
 
+//Creates a new context with shared resources from the main context
+RendHandle& rend_NewContext(HWND hwnd);
+//Makes the specified handle current
+void rend_MakeCurrent(RendHandle& handle);
+//Deletes the context. All contexts will be deleted when rend is shut down. 
+void rend_DestroyContext(RendHandle& handle);
 
 #endif

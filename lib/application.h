@@ -65,7 +65,7 @@ public:
 	void deactivate() { m_AppActive = false; };
 };
 
-#if defined(SDL3)
+#if defined(SDL3) && !defined(NEWEDITOR)
 #include "sdl\SDLApp.h"
 #elif defined(WIN32)
 #include "win\Win32App.h"

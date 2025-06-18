@@ -133,6 +133,7 @@ set (NEWEDITOR_SOURCES
 	neweditor/ned_polymodel.cpp
 	neweditor/ned_Rend.h
 	neweditor/ned_Render.cpp
+	neweditor/ned_Renderer.cpp
 	neweditor/ned_RendOpenGL.cpp
 	neweditor/ned_RendOpenGL.h
 	neweditor/ned_Sound.cpp
