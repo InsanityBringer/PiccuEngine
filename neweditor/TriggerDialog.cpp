@@ -20,9 +20,9 @@
 #include "TriggerDialog.h"
 #include "EditLineDialog.h"
 #include "ned_Trigger.h"
-#include "erooms.h"
+#include "../editor/Erooms.h"
 
-#include "DallasMainDlg.h"
+#include "../editor/DallasMainDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

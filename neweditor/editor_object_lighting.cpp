@@ -11,10 +11,11 @@
  COPYRIGHT 1996-2000 OUTRAGE ENTERTAINMENT, INC.  ALL RIGHTS RESERVED.
  */
  
+#include <algorithm>
 #include "3d.h"
 #include "texture.h"
 #include "gametexture.h"
-#include "erooms.h"
+#include "../editor/Erooms.h"
 #include "editor_lighting.h"
 #include "descent.h"
 #include "room.h"
@@ -167,9 +168,9 @@ void ApplyLightmapToObjectSurface (object *obj,int subnum,int facenum,rad_surfac
 					red=green=blue=0;
 				}
 				
-				fr=min(1.0,sp->elements[i*xres+t].exitance.r+Ambient_red);
-				fg=min(1.0,sp->elements[i*xres+t].exitance.g+Ambient_green);
-				fb=min(1.0,sp->elements[i*xres+t].exitance.b+Ambient_blue);
+				fr= std::min(1.0f,sp->elements[i*xres+t].exitance.r+Ambient_red);
+				fg= std::min(1.0f,sp->elements[i*xres+t].exitance.g+Ambient_green);
+				fb= std::min(1.0f,sp->elements[i*xres+t].exitance.b+Ambient_blue);
 				
 				fr=(fr*255)+.5;
 				fg=(fg*255)+.5;
@@ -187,9 +188,9 @@ void ApplyLightmapToObjectSurface (object *obj,int subnum,int facenum,rad_surfac
 					blue/=2;
 				}
 			
-				red=min(red,255);
-				green=min(green,255);
-				blue=min(blue,255);
+				red = std::min(red,255);
+				green = std::min(green,255);
+				blue = std::min(blue,255);
 				
 				dest_data[(i+y1)*lw+(t+x1)]=OPAQUE_FLAG|GR_RGB16(red,green,blue);
 			}
@@ -714,7 +715,7 @@ void BuildObjectLightmapUVs (object *obj,int *sublist,int *facelist,int count,ve
 		// Figure out lightmap resolution
 	float xdiff=verts[rightmost_point].x-verts[leftmost_point].x;
 	float ydiff=verts[topmost_point].y-verts[bottommost_point].y;
-	float max_diff=(float)max(xdiff,ydiff);
+	float max_diff = std::max(xdiff,ydiff);
 	
 	int lightmap_x_res=-1,lightmap_y_res=-1;
 	float xspacing=LightSpacing;

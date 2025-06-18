@@ -17,10 +17,10 @@
 #include "neweditor.h"
 
 #include "gamepath.h"
-#include "epath.h"
+#include "../editor/EPath.h"
 #include "boa.h"
 #include "bnode.h"
-#include "ebnode.h"
+#include "../editor/ebnode.h"
 #include "ned_PathNode.h"
 #include "PathDialogBar.h"
 #include "ListDialog.h"

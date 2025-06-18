@@ -11,8 +11,8 @@
  COPYRIGHT 1996-2000 OUTRAGE ENTERTAINMENT, INC.  ALL RIGHTS RESERVED.
  */
  #include "room.h"
-#include "group.h"
-#include "erooms.h"
+#include "../editor/group.h"
+#include "../editor/erooms.h"
 
 //Placed room info
 extern int Placed_room;

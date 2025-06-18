@@ -15,7 +15,7 @@
 
 #include "stdafx.h"
 
-#include "HTexture.h"
+#include "../editor/HTexture.h"
 
 #include "globals.h"
 #include "neweditor.h"

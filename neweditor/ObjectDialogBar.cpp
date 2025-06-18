@@ -1523,7 +1523,7 @@ int CObjectDialogBar::GetFreePlayerIndex()
 		}
 	}
 
-	for (i=0;i<MAX_NET_PLAYERS;i++)
+	for (int i=0;i<MAX_NET_PLAYERS;i++)
 	{
 		if (slots[i]==0)
 		{

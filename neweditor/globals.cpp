@@ -17,10 +17,10 @@
 #include "globals.h"
 #include "pstring.h"
 #include "ned_DrawWorld.h"
-#include "selectedroom.h"
+#include "../editor/selectedroom.h"
 #include "MainFrm.h"
-#include "Erooms.h"
-#include "RoomUVs.h"
+#include "../editor/Erooms.h"
+#include "../editor/RoomUVs.h"
 
 #include "CameraSlew.h"
 #include "TextureDialogBar.h"

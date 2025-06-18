@@ -14,7 +14,7 @@
 #define _NED_SOUND_H
 
 
-typedef struct
+struct ned_sound_info
 {
 	char name[PAGENAME_LEN];	
 	char				used;
@@ -35,7 +35,7 @@ typedef struct
 
 	int table_file_id;
 	int table_stack[MAX_LOADED_TABLE_FILES];
-}ned_sound_info;
+};
 
 #define MAX_SOUNDS			750
 extern ned_sound_info	Sounds[MAX_SOUNDS];

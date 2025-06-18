@@ -19,9 +19,8 @@
 #include "renderer.h"
 #include "ned_Rend.h"
 #include "room_external.h"
-#include "gr.h"
-#include "selectedroom.h"
-#include "SelManager.h"
+#include "../editor/selectedroom.h"
+#include "../editor/SelManager.h"
 #include "globals.h"
 #include "MainFrm.h"
 #include "ned_DrawWorld.h"
@@ -36,25 +35,25 @@
 #include "gameloop.h"
 #include "descent.h"
 #include "terrain.h"
-#include "HTexture.h"
+#include "../editor/HTexture.h"
 #include "room.h"
-#include "roomuvs.h"
+#include "../editor/roomuvs.h"
 #include <string.h>
-#include "ObjMoveManager.h"
+#include "../editor/ObjMoveManager.h"
 #include "lightmap_info.h"
 #include "lightmap.h"
-#include "erooms.h"
-#include "hroom.h"
-#include "ebnode.h"
+#include "../editor/erooms.h"
+#include "../editor/hroom.h"
+#include "../editor/ebnode.h"
 
 #include <assert.h>
 
 #include "mono.h"
 #include "3d.h"
 #include "ddio.h"
-#include "epath.h"
+#include "../editor/epath.h"
 #include "radiosity.h"
-#include "hemicube.h"
+#include "../editor/hemicube.h"
 #include "args.h"
 #include "game.h"
 
@@ -74,7 +73,7 @@ int FindPointRoom(vector *pnt);
 
 object *Viewer_object = &Objects[0];		//which object we are seeing from
 static bool bDoOpenGL = false;
-static first_time=1;
+static bool first_time=true;
 HWND save_wnd;
 oeWin32Application *app;
 
@@ -529,7 +528,7 @@ void Cned_LevelWnd::OnLButtonUp(UINT nFlags, CPoint point)
 					// Copy uv values from marked face
 					static int last_copy_marked_room=-1,last_copy_marked_face=-1;
 					static int last_copy_room=-1,last_copy_face=-1;
-					static count;
+					static int count;
 
 					if (Markedroomp == NULL) 
 					{

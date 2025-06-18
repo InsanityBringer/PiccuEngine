@@ -18,7 +18,6 @@
 #include "pserror.h"
 #include "pstypes.h"
 #include "3d.h"
-#include "gr.h"
 
 // Shooting methods
 #define SM_HEMICUBE						0
@@ -40,23 +39,23 @@ typedef struct
 #define EF_IGNORE		1
 #define EF_SMALL		2	// Don't blend this one into the lightmap - it will corrupt!
 
-typedef struct
+struct rad_element
 {
 	vector *verts;
 	spectra exitance;
 	float area;
 	ubyte num_verts;
 	ubyte flags;  // see above
-} rad_element;
+};
 
 #define VEF_REVERSE_SHOOT	1
 
-typedef struct
+struct volume_element
 {
 	spectra color;
 	vector pos;	
 	ubyte flags;
-} volume_element;
+};
 
 #define ST_ROOM				0		// This is a room surface
 #define ST_TERRAIN			1		// This is a terrain surface
@@ -69,7 +68,7 @@ typedef struct
 #define SF_TOUCHES_TERRAIN	1
 #define SF_LIGHTSOURCE	2
 
-typedef struct
+struct rad_surface
 {
 	float area;
 	spectra emittance;		
@@ -91,14 +90,14 @@ typedef struct
 	float surface_area,element_area;
 
 	ubyte x1,y1,x2,y2;		// Where in the lightmap our bounds are
-} rad_surface;
+};
 
-typedef struct
+struct rad_point
 {
 	vector pos;
 	ubyte code;
 
-} rad_point;
+};
 
 extern float *Room_strongest_value[][4];
 

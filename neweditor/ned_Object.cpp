@@ -1113,7 +1113,7 @@ void InitObjectInfo()
 //		Object_info[i].module_name[0] = 0;		
 	}
 
-	for (i=0;i<MAX_OBJECT_TYPES;i++)
+	for (int i=0;i<MAX_OBJECT_TYPES;i++)
 		Num_object_ids[i] = 0;
 
 //	atexit(FreeObjectInfo);

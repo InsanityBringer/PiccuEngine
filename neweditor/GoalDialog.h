@@ -19,9 +19,9 @@
 // GoalDialog.h : header file
 //
 
-#include "RoomListCombo.h"
-#include "ObjectListCombo.h"
-#include "TriggerListCombo.h"
+#include "../editor/RoomListCombo.h"
+#include "../editor/ObjectListCombo.h"
+#include "../editor/TriggerListCombo.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CGoalDialog dialog

@@ -58,10 +58,10 @@ set (NEWEDITOR_SOURCES
 	neweditor/BendDialog.h
 	neweditor/CameraSlew.cpp
 	neweditor/CameraSlew.h
-	neweditor/ChildFrm.cpp
-	neweditor/ChildFrm.h
-	neweditor/ChildView.cpp
-	neweditor/ChildView.h
+	#neweditor/ChildFrm.cpp
+	#neweditor/ChildFrm.h
+	#neweditor/ChildView.cpp
+	#neweditor/ChildView.h
 	neweditor/DoorwayDialogBar.cpp
 	neweditor/DoorwayDialogBar.h
 	neweditor/EditLineDialog.cpp
@@ -100,8 +100,8 @@ set (NEWEDITOR_SOURCES
 	neweditor/MatcenDialog.cpp
 	neweditor/MatcenDialog.h
 	neweditor/MemDC.h
-	neweditor/MineFrame.cpp
-	neweditor/MineFrame.h
+	#neweditor/MineFrame.cpp
+	#neweditor/MineFrame.h
 	neweditor/MissionHogConfigDlg.cpp
 	neweditor/MissionHogConfigDlg.h
 	neweditor/ned_Door.cpp

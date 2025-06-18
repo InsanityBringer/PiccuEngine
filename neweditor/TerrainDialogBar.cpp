@@ -281,13 +281,13 @@ void CTerrainDialogBar::OnTerrainOcclusion()
 	memset(save_buffer,0,TERRAIN_WIDTH*TERRAIN_DEPTH);
 	memset(Terrain_fill,0,TERRAIN_WIDTH*TERRAIN_DEPTH);
 
-	for (i=0;i<TERRAIN_WIDTH*TERRAIN_DEPTH;i++)
+	for (int i=0;i<TERRAIN_WIDTH*TERRAIN_DEPTH;i++)
 	{
 		if (Terrain_seg[i].ypos==255)
 			save_buffer[i]=255;
 	}
 
-	for (i=0;i<OCCLUSION_SIZE;i++)
+	for (int i=0;i<OCCLUSION_SIZE;i++)
 	{
 		for (int t=0;t<OCCLUSION_SIZE;t++)
 		{
@@ -473,7 +473,7 @@ void CTerrainDialogBar::OnTerrainOcclusion()
 	mem_free (Terrain_fill);
 	mem_free (save_buffer);
 
-	for (i=0;i<256;i++)
+	for (int i=0;i<256;i++)
 		mem_free (touch_buffer[i]);
 		
 	Terrain_occlusion_checksum=Terrain_checksum+1;
@@ -663,10 +663,10 @@ void CTerrainDialogBar::OnExportPcxMap()
 	cf_WriteShort (outfile,256);
 	cf_WriteShort (outfile,2);
 
-	for (i=0;i<58;i++)
+	for (int i=0;i<58;i++)
 		cf_WriteByte (outfile,0);
 
-	for (i=0;i<TERRAIN_DEPTH;i++)
+	for (int i=0;i<TERRAIN_DEPTH;i++)
 	{
 		for (int t=0;t<TERRAIN_WIDTH;t++)
 		{
@@ -679,7 +679,7 @@ void CTerrainDialogBar::OnExportPcxMap()
 	}
 
 	cf_WriteByte (outfile,12);
-	for (i=0;i<256;i++)
+	for (int i=0;i<256;i++)
 	{
 		cf_WriteByte (outfile,i);
 		cf_WriteByte (outfile,i);

@@ -15,8 +15,8 @@
 
 #include "stdafx.h"
 
-#include "HTexture.h"
-#include "RoomUVs.h"
+#include "../editor/HTexture.h"
+#include "../editor/RoomUVs.h"
 
 #include "neweditor.h"
 #include "TexAlignDialog.h"

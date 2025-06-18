@@ -17,7 +17,7 @@
 #include "neweditor.h"
 #include "RoomProperties.h"
 #include "ned_Util.h"
-#include "erooms.h"
+#include "../editor/Erooms.h"
 #include "EditLineDialog.h"
 #include "damage_external.h"
 #include "ned_Rend.h"

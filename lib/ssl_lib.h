@@ -356,7 +356,6 @@ public:
 #ifndef NEWEDITOR 
 
 	#define MAX_SOUNDS			1000
-	#define MAX_SOUND_FILES		1000
 	
 	extern sound_info Sounds[MAX_SOUNDS];
 	extern sound_file_info SoundFiles[MAX_SOUND_FILES];
@@ -364,6 +363,7 @@ public:
 	#include "..\neweditor\ned_Sound.h"
 #endif
 
+#define MAX_SOUND_FILES		1000
 extern sound_file_info SoundFiles[MAX_SOUND_FILES];
 
 //	loads a sound from a wavefile.

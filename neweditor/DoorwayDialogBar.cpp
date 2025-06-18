@@ -26,8 +26,8 @@
 #include "ned_Tablefile.h"
 #include "doorway.h"
 #include "polymodel.h"
-#include "edoors.h"
-#include "hroom.h"
+#include "../editor/Edoors.h"
+#include "../editor/HRoom.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

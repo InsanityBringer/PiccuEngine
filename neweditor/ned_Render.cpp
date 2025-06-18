@@ -54,7 +54,7 @@
 #include "postrender.h"
 
 static int Faces_rendered=0;
-extern float GetFPS();
+//extern float GetFPS();
 
 //3d point for each vertex for use during rendering a room
 ubyte Room_clips[MAX_VERTS_PER_ROOM];		// used for face culling
@@ -362,7 +362,7 @@ typedef struct clip_wnd {
 	float left,top,right,bot;
 } clip_wnd;
 
-inline int clip2d(small_point *pnt,clip_wnd *wnd)
+inline int clip2d(g3Point *pnt,clip_wnd *wnd)
 {
 	int ret = 0;
 
@@ -456,7 +456,7 @@ void RenderFace(room *rp,int facenum)
 	texture_type tt;
 	ubyte	do_triangle_test=0;
 	g3Codes face_cc;
-	static first=1;
+	static int first=1;
 	static float lm_red[32],lm_green[32],lm_blue[32];
 	bool spec_face=0;
 	face_cc.cc_and=0xff;
@@ -1269,7 +1269,7 @@ int ExternalRoomVisibleFromPortal (int index,clip_wnd *wnd)
 {
 	int i;
 	ubyte code=0xff;
-	small_point pnt;
+	g3Point pnt;
 	// This is a stupid hack to prevent really large buildings from popping in and out of view
 	if (External_room_project_net[index]) 
 		return 1;
@@ -1316,7 +1316,7 @@ void MarkFacesForRendering (int roomnum,clip_wnd *wnd)
 		if (rp->mirror_face==-1) // || !Detail_settings.Mirrored_surfaces)
 		{
 			// Do pointer dereferencing instead of array lookup for speed reasons
-			small_point *pnt=&World_point_buffer[rp->wpb_index];
+			g3Point *pnt=&World_point_buffer[rp->wpb_index];
 
 			for (i=0;i<rp->num_verts;i++,pnt++)
 			{	
@@ -1338,7 +1338,7 @@ void MarkFacesForRendering (int roomnum,clip_wnd *wnd)
 			if (rp->flags & RF_MIRROR_VISIBLE)	// If this room is already mirror, just return
 				return;
 
-			small_point *pnt=&World_point_buffer[rp->wpb_index];
+			g3Point *pnt=&World_point_buffer[rp->wpb_index];
 
 			for (i=0;i<rp->num_verts;i++,pnt++)
 			{	
@@ -1404,7 +1404,7 @@ void MarkFacesForRendering (int roomnum,clip_wnd *wnd)
 		{
 			g3_RotatePoint (&pnts[i],&vecs[i]);
 			g3_ProjectPoint (&pnts[i]);
-			code=clip2d ((small_point *)&pnts[i],wnd);
+			code=clip2d (&pnts[i],wnd);
 			anded&=code;
 
 			if (pnts[i].p3_codes & CC_BEHIND)
@@ -1419,10 +1419,6 @@ void MarkFacesForRendering (int roomnum,clip_wnd *wnd)
 	}
 	
 }
-
-
-#include "3d\clipper.h"
-
 
 extern int GetFreePoints();
 
@@ -1559,7 +1555,7 @@ void BuildRoomListSub(int start_room_num,clip_wnd *wnd,int depth)
 						g3Point *pointlist[MAX_VERTS_PER_FACE],**pl = pointlist;
 						g3Point temp_points[MAX_VERTS_PER_FACE];
 	
-						for (k=0;k<this_fp->num_verts;k++)
+						for (int k=0;k<this_fp->num_verts;k++)
 						{
 							pointlist[k] = &portal_points[num_points+k];
 							ASSERT (!(pointlist[k]->p3_flags & PF_TEMP_POINT));
@@ -1576,7 +1572,7 @@ void BuildRoomListSub(int start_room_num,clip_wnd *wnd,int depth)
 						}
 						else
 						{
-							for (k=0;k<combine_nv;k++)
+							for (int k=0;k<combine_nv;k++)
 							{
 								temp_points[k]=*pl[k];
 								temp_points[k].p3_flags&=~PF_TEMP_POINT;
@@ -1584,7 +1580,7 @@ void BuildRoomListSub(int start_room_num,clip_wnd *wnd,int depth)
 
 							g3_FreeTempPoints(pl,combine_nv);
 
-							for (k=0;k<combine_nv;k++)
+							for (int k=0;k<combine_nv;k++)
 								portal_points[k+num_points]=temp_points[k];
 							
 							num_points+=combine_nv;
@@ -1692,7 +1688,7 @@ void BuildRoomListSub(int start_room_num,clip_wnd *wnd,int depth)
 			for (i=0;i<nv;i++) 
 			{
 				g3_ProjectPoint(pl[i]);
-				cc.cc_and &= clip2d((small_point *)pl[i],wnd);
+				cc.cc_and &= clip2d(pl[i],wnd);
 			}
 
 			// Make sure it didn't get clipped away
@@ -1810,7 +1806,7 @@ void BuildRoomList(int start_room_num,bool render_all)
 	{
 
 	// Mark all the faces in our start room as renderable
-	for (i=0;i<rp->num_faces;i++)
+	for (int i=0;i<rp->num_faces;i++)
 		rp->faces[i].flags|=FF_VISIBLE;
 	
 	MarkFacingFaces (start_room_num,rp->verts);
@@ -1839,7 +1835,7 @@ void BuildRoomList(int start_room_num,bool render_all)
 	{
 
 	// Mark all faces in all rooms as renderable
-	for (i=0; i<=Highest_room_index; i++)
+	for (int i=0; i<=Highest_room_index; i++)
 	{
 		rp = &Rooms[i];
 		if (!rp->used)

@@ -19,8 +19,6 @@
 // ned_GrWnd.h : header file
 //
 
-#include "gr.h"
-
 const DWORD GRWND_STYLE = WS_VISIBLE | WS_CHILD | WS_CAPTION | WS_CLIPSIBLINGS |
 							WS_THICKFRAME | WS_SYSMENU;
 const DWORD GRWND_STATIC_STYLE = WS_VISIBLE | WS_CHILD | WS_BORDER;
@@ -69,8 +67,6 @@ protected:
 protected:
 	HDC renderer_hDC;
 	HGLRC hRC;
-	grScreen *m_grScreen;				// screen belonging to window
-	grViewport *m_grViewport;			// Viewport belonging to window
 };
 
 /////////////////////////////////////////////////////////////////////////////

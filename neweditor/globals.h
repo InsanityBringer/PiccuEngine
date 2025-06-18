@@ -18,11 +18,10 @@
 #include "stdafx.h"
 #include <stdlib.h>
 
-#include "gr.h"
 #include "3d.h"
 #include "room.h"
-#include "group.h"
-#include "SelManager.h"
+#include "../editor/group.h"
+#include "../editor/SelManager.h"
 
 #define EditorMessageBox OutrageMessageBox
 extern int gTimerID;
@@ -521,7 +520,6 @@ public:
 	void SetCurrentBNode(int r,int n,int e);
 
 private:
-	grSurface *Desktop_surf;
 	CTextureOLETarget m_TextureDrop;
 	CGenericOLETarget m_GenericDrop;
 };

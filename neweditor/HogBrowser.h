@@ -28,12 +28,12 @@ void UnRegisterHogFile(int lib_id);
 
 /////////////////////////////////////////////////////////////////////////////
 // CHogBrowser dialog
-typedef struct tWildcardNode
+struct tWildcardNode
 {
 	char description[256];
 	char wildcard[128];
 	tWildcardNode *next;
-}tWildcardNode;
+};
 
 class CHogBrowser : public CDialog
 {

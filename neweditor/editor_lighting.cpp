@@ -18,7 +18,7 @@
 #include "3d.h"
 #include "texture.h"
 #include "gametexture.h"
-#include "erooms.h"
+#include "../editor/Erooms.h"
 #include "editor_lighting.h"
 #include "descent.h"
 #include "room.h"
@@ -3627,7 +3627,7 @@ void SetupSpecularLighting (int external)
 					// Get vertex normals for this punk
 					if (GameTextures[fp->tmap].flags & TF_SMOOTH_SPECULAR)
 					{
-						for (k=0;k<fp->num_verts;k++)
+						for (int k=0;k<fp->num_verts;k++)
 						{
 							SpecialFaces[n].vertnorms[k]=vertnorms[fp->face_verts[k]];
 						}

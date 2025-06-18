@@ -21,7 +21,7 @@
 #include "neweditor.h"
 #include "ScriptCompiler.h"
 #include "SettingsDialog.h"
-#include "ScriptCompilerAPI.h"
+#include "../editor/ScriptCompilerAPI.h"
 #include "globals.h"
 
 #ifdef _DEBUG

@@ -22,8 +22,8 @@
 #include "BendDialog.h"
 #include "RefFrameDialog.h"
 #include "ned_Geometry.h"
-#include "HRoom.h"
-#include "erooms.h"
+#include "../editor/HRoom.h"
+#include "../editor/Erooms.h"
 #include "EditLineDialog.h"
 
 #ifdef _DEBUG

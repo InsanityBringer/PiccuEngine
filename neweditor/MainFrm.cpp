@@ -21,16 +21,16 @@
 #include "MainFrm.h"
 #include "ned_HFile.h"
 #include "render.h"
-#include "HRoom.h"
+#include "../editor/HRoom.h"
 #include "LevelInfoDialog.h"
 #include "texture.h"
 #include "boa.h"
 #include "ListDialog.h"
 #include "EditLineDialog.h"
-#include "erooms.h"
+#include "../editor/Erooms.h"
 #include "ned_Geometry.h"
 #include "RefFrameDialog.h"
-#include "selectedroom.h"
+#include "../editor/selectedroom.h"
 #include "ned_Util.h"
 
 #include <direct.h>
@@ -1506,7 +1506,7 @@ void ned_CountUniqueRoomTextures(room *rp)
 	if (total>60)
 		CheckError ("ERROR: YOU HAVE MORE THAT 60 128x128 TEXTURES...YOU *MUST* FIX THIS!\n");
 
-	for (i=0;i<MAX_TEXTURES;i++)
+	for (int i=0;i<MAX_TEXTURES;i++)
 	{
 		if (texture_tracking[i] && !(GameTextures[i].flags & TF_LIGHT))
 		{
@@ -1514,7 +1514,7 @@ void ned_CountUniqueRoomTextures(room *rp)
 		}
 	}
 
-	for (i=0;i<MAX_TEXTURES;i++)
+	for (int i=0;i<MAX_TEXTURES;i++)
 	{
 		if (texture_tracking[i] && (GameTextures[i].flags & TF_LIGHT))
 		{

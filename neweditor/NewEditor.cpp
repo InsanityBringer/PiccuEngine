@@ -31,11 +31,10 @@
 #include "ned_HFile.h"
 #include "EditLineDialog.h"
 
-#include "erooms.h"
+#include "../editor/erooms.h"
 #include "bitmap.h"
 #include "gametexture.h"
 #include "texture.h"
-#include "gr.h"
 #include "lightmap_info.h"
 #include "special_face.h"
 #include "Application.h"
@@ -51,7 +50,7 @@
 #include "SplashScreen.h"
 #include "TipOfTheDay.h"
 #include "HogBrowser.h"
-#include "DallasMainDlg.h"
+#include "../editor/DallasMainDlg.h"
 #include "findintersection.h"
 #include "ned_Trigger.h"
 #include "ned_Door.h"
@@ -206,7 +205,7 @@ BOOL CNewEditorApp::InitInstance()
 
 	mem_Init();
 
-	World_point_buffer = (small_point *)mem_malloc(sizeof(small_point)*(TERRAIN_WIDTH*TERRAIN_DEPTH));
+	World_point_buffer = (g3Point *)mem_malloc(sizeof(g3Point)*(TERRAIN_WIDTH*TERRAIN_DEPTH));
 
 	// Grab the directories and setup paths
 	bool directory_setup = false;

@@ -18,7 +18,7 @@
 #include "ned_Tablefile.h"
 #include "object_external_struct.h"
 
-typedef struct
+struct ned_object_info
 {
 	bool used;
 	char name[PAGENAME_LEN];
@@ -40,7 +40,7 @@ typedef struct
 	int ref_count;
 	int table_file_id;
 	int table_stack[MAX_LOADED_TABLE_FILES];
-}ned_object_info;
+};
 
 #define MAX_OBJECT_IDS	810
 extern ned_object_info	Object_info[MAX_OBJECT_IDS];

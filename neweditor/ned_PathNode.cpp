@@ -15,10 +15,10 @@
 
 #include "globals.h"
 #include "gamepath.h"
-#include "epath.h"
+#include "../editor/epath.h"
 #include "EditLineDialog.h"
 #include "ned_PathNode.h"
-#include "ebnode.h"
+#include "../editor/ebnode.h"
 
 int InsertNodeIntoPath(int pathnum,int nodenum,int flags,int roomnum,vector pos,matrix orient);
 

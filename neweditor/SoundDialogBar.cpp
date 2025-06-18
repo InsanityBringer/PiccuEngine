@@ -18,7 +18,7 @@
 #include "SoundDialogBar.h"
 #include "ned_Sound.h"
 #include "neweditor.h"
-#include "DallasSoundDlg.h"
+#include "../editor/DallasSoundDlg.h"
 #include "EditLineDialog.h"
 #include "ned_Util.h"
 

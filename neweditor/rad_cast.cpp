@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include "radiosity.h"
-#include "rad_cast.h"
+#include "../editor/rad_cast.h"
 #include "terrain.h"
 #include	"room.h"
 #include "editor_lighting.h"

@@ -187,6 +187,16 @@ struct terrain_normals
 	vector normal2;		// Lower right triangle
 };
 
+struct small_point {
+	float		p3_sx, p3_sy;		//screen x&y
+	ubyte		p3_codes;			//clipping codes
+	ubyte		p3_flags;			//projected?
+	short		p3_pad;				//keep structure longword aligned
+
+	vector p3_vec;
+
+};
+
 extern ubyte Terrain_dynamic_table[];
 extern terrain_normals *TerrainNormals[MAX_TERRAIN_LOD];
 

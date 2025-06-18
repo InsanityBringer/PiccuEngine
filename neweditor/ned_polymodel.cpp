@@ -11,8 +11,7 @@
  COPYRIGHT 1996-2000 OUTRAGE ENTERTAINMENT, INC.  ALL RIGHTS RESERVED.
  */
  
-
-
+#include <algorithm>
 #include "objinfo.h"
 #include "polymodel.h"
 #include "pserror.h"
@@ -1508,7 +1507,7 @@ int ReadNewModelFile (int polynum,CFILE *infile)
 	}
 
 	// Set the greater of keyframe of positions or keyframe angles to to be max keyframes
-	pm->max_keys=max(pm->num_key_pos,pm->num_key_angles);	
+	pm->max_keys=std::max(pm->num_key_pos,pm->num_key_angles);	
 
 	// Build animation keyframe matrices
 

@@ -16,8 +16,8 @@
 
 #include "stdafx.h"
 
-#include "HRoom.h"
-#include "erooms.h"
+#include "../editor/HRoom.h"
+#include "../editor/Erooms.h"
 #include "room_external.h"
 #include "ned_Geometry.h"
 #include "ned_OrthoWnd.h"
@@ -30,7 +30,7 @@
 #include "EditLineDialog.h"
 #include "ned_HFile.h"
 #include "gamepath.h"
-#include "EPath.h"
+#include "../editor/EPath.h"
 #include "ned_PathNode.h"
 
 #ifdef _DEBUG
@@ -587,7 +587,7 @@ void CRoomFrm::DeleteMarkedFaces()
 	}
 
 	// If the current face is marked, it will be deleted, so update the current face/texture displays
-	for (i=0; i<num_m_faces; i++)
+	for (int i=0; i<num_m_faces; i++)
 	{
 		if (facenums[i] == prim->face)
 		{
@@ -636,7 +636,8 @@ void CRoomFrm::DeleteMarkedFaces()
 		}
 		SetPrim(rp,prim->face,portnum,edgenum,vertnum);
 		int num_faces = rp->num_faces;
-		for (int j=facenum; j<num_faces; j++)
+		int j;
+		for (j=facenum; j<num_faces; j++)
 			m_Face_marks[j] = m_Face_marks[j+1];
 		// Now zero out the unused element in the array (IMPORTANT)
 		m_Face_marks[j] = 0;
@@ -702,7 +703,8 @@ top:
 		if (!rp->num_verts && prim->vert == -1)
 			m_Current_nif_vert = -1;
 		int num_verts = rp->num_verts;
-		for (int j=vertnum; j<num_verts; j++)
+		int j;
+		for (j=vertnum; j<num_verts; j++)
 			m_Vert_marks[j] = m_Vert_marks[j+1];
 		// Now zero out the unused element in the array (IMPORTANT)
 		m_Vert_marks[j] = 0;

@@ -611,7 +611,7 @@ void DrawThrusterEffect (vector *pos,float r,float g,float b,vector *norm,float 
 		total_parts++;
 	}
 
-	for (t=total_parts-1;t>=0;t--)
+	for (int t=total_parts-1;t>=0;t--)
 	{
 		rend_SetZBias (-glow_size[t]);
 		g3_DrawBitmap (&glow_pos[t],glow_size[t],(glow_size[t]*bm_h(bm_handle,0))/bm_w(bm_handle,0),bm_handle,color);

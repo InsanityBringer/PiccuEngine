@@ -11,20 +11,17 @@
  COPYRIGHT 1996-2000 OUTRAGE ENTERTAINMENT, INC.  ALL RIGHTS RESERVED.
  */
  
-
-
-
 #include "stdafx.h"
+#include <algorithm>
 #include "room_external.h"
-#include "gr.h"
-#include "selectedroom.h"
-#include "SelManager.h"
-#include "erooms.h"
+#include "../editor/selectedroom.h"
+#include "../editor/SelManager.h"
+#include "../editor/erooms.h"
 #include "globals.h"
 #include "ned_DrawWorld.h"
 #include "ned_OrthoWnd.h"
 #include "ned_HFile.h"
-#include "HRoom.h"
+#include "../editor/HRoom.h"
 #include "neweditor.h"
 #include "ned_Geometry.h"
 #include "ObjectDialogBar.h"
@@ -33,7 +30,7 @@
 #include "MainFrm.h"
 #include "EditLineDialog.h"
 #include "gamepath.h"
-#include "epath.h"
+#include "../editor/epath.h"
 #include "ned_PathNode.h"
 
 #ifdef _DEBUG

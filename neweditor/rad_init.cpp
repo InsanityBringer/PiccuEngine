@@ -16,7 +16,7 @@
 #include "radiosity.h"
 #include "pserror.h"
 #include "findintersection.h"
-#include "rad_cast.h"
+#include "../editor/rad_cast.h"
 #include "ddio.h"
 #include "vecmat.h"
 #include "mem.h"

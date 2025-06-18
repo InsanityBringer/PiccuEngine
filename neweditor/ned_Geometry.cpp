@@ -15,13 +15,13 @@
 
 #include "stdafx.h"
 
-#include "erooms.h"
+#include "../editor/ERooms.h"
 #include "room_external.h"
 #include "vecmat.h"
 #include "globals.h"
 #include "ned_Geometry.h"
-#include "HRoom.h"
-#include "HTexture.h"
+#include "../editor/HRoom.h"
+#include "../editor/HTexture.h"
 
 void GetFaceVertFromVert(int *face, int *vert, room *rp, int srcvert)
 {
