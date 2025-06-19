@@ -33,6 +33,7 @@ CTerrainDialogBar *dlgTerrainDialogBar = NULL;
 
 CTerrainDialogBar::CTerrainDialogBar()
 {
+	Current_satellite = 0;
 	//{{AFX_DATA_INIT(CTerrainDialogBar)
 		// NOTE: the ClassWizard will add member initialization here
 	//}}AFX_DATA_INIT

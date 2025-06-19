@@ -73,6 +73,10 @@ bool Katmai=false;
 
 extern int Current_ship = 0;
 
+//[ISB] linking hacks
+char* User_directory = nullptr;
+int no_debug_dialog;
+
 // Global cameras (see the defines in globals.h)
 camera Level_cam,Room_cam;
 

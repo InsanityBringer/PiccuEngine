@@ -1,20 +1,8 @@
-/*
- THE COMPUTER CODE CONTAINED HEREIN IS THE SOLE PROPERTY OF OUTRAGE
- ENTERTAINMENT, INC. ("OUTRAGE").  OUTRAGE, IN DISTRIBUTING THE CODE TO
- END-USERS, AND SUBJECT TO ALL OF THE TERMS AND CONDITIONS HEREIN, GRANTS A
- ROYALTY-FREE, PERPETUAL LICENSE TO SUCH END-USERS FOR USE BY SUCH END-USERS
- IN USING, DISPLAYING,  AND CREATING DERIVATIVE WORKS THEREOF, SO LONG AS
- SUCH USE, DISPLAY OR CREATION IS FOR NON-COMMERCIAL, ROYALTY OR REVENUE
- FREE PURPOSES.  IN NO EVENT SHALL THE END-USER USE THE COMPUTER CODE
- CONTAINED HEREIN FOR REVENUE-BEARING PURPOSES.  THE END-USER UNDERSTANDS
- AND AGREES TO THE TERMS HEREIN AND ACCEPTS THE SAME BY USE OF THIS FILE.
- COPYRIGHT 1996-2000 OUTRAGE ENTERTAINMENT, INC.  ALL RIGHTS RESERVED.
- */
  #ifndef _MEMDC_H_
 #define _MEMDC_H_
 
 //////////////////////////////////////////////////
-// CMemDC - memory DC
+// CMemDC_NED - memory DC
 //
 // Author: Keith Rule
 // Email:  keithr@europa.com
@@ -28,16 +16,17 @@
 //
 // This class implements a memory Device Context
 
-class CMemDC : public CDC {
+//[ISB] Seemingly MFC has included a CMemDC at some point down the line. Give this a new name. 
+class CMemDC_NED : public CDC {
 private:
 	CBitmap m_bitmap; // Offscreen bitmap
-	CBitmap* m_oldBitmap; // bitmap originally found in CMemDC
+	CBitmap* m_oldBitmap; // bitmap originally found in CMemDC_NED
 	CDC* m_pDC; // Saves CDC passed in constructor
 	CRect m_rect; // Rectangle of drawing area.
 	BOOL m_bMemDC; // TRUE if CDC really is a Memory DC.
 public:
-//	CMemDC(CDC* pDC) : CDC(), m_oldBitmap(NULL), m_pDC(pDC)
-	CMemDC(CDC* pDC, const CRect& rcBounds) : CDC(), m_oldBitmap(NULL), m_pDC(pDC), m_rect(rcBounds) 
+//	CMemDC_NED(CDC* pDC) : CDC(), m_oldBitmap(NULL), m_pDC(pDC)
+	CMemDC_NED(CDC* pDC, const CRect& rcBounds) : CDC(), m_oldBitmap(NULL), m_pDC(pDC), m_rect(rcBounds) 
 	{
 		ASSERT(m_pDC != NULL); // If you asserted here, you passed in a NULL CDC.
 		
@@ -58,7 +47,7 @@ public:
 		}
 	}
 	
-	~CMemDC()
+	~CMemDC_NED()
 	{
 		if (m_bMemDC) {
 			// Copy the offscreen bitmap onto the screen.
@@ -75,10 +64,10 @@ public:
 	}
 	
 	// Allow usage as a pointer
-	CMemDC* operator->() {return this;}
+	CMemDC_NED* operator->() {return this;}
 	
 	// Allow usage as a pointer
-	operator CMemDC*() {return this;}
+	operator CMemDC_NED*() {return this;}
 };
 
 #endif

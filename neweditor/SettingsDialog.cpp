@@ -140,7 +140,7 @@ void CSettingsDialog::OnOK()
 		Use_software_zbuffer = true;
 	else
 		Use_software_zbuffer = false;
-	tex_SetZBufferState (Use_software_zbuffer);
+	rend_SetZBufferState (Use_software_zbuffer);
 	State_changed=1;
 
 	AfxGetApp()->WriteProfileInt("settings","ZBuffer",Use_software_zbuffer);

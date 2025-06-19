@@ -59,6 +59,11 @@ CTextureDialogBar::CTextureDialogBar()
 	m_CurrentRoom = -1;
 	m_CurrentTextureChanged = true;
 	m_CurrentFaceTextureChanged = true;
+
+	m_CurrentTextureTab = -1;
+	m_CustomDialog = nullptr;
+	m_LevelDialog = nullptr;
+	m_TextureTabDialog = nullptr;
 }
 
 
@@ -499,10 +504,10 @@ void CTextureDialogBar::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 		
-	PaintPreviewArea(&m_CTLightView);
+	/*PaintPreviewArea(&m_CTLightView);
 	PaintPreviewArea(&m_CFLightView);
 	PaintPreviewArea(&m_CTView);
-	PaintPreviewArea(&m_CFView);
+	PaintPreviewArea(&m_CFView);*/
 	
 	// Do not call CDialogBar::OnPaint() for painting messages
 }

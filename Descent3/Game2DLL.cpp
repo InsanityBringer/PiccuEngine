@@ -399,7 +399,7 @@ void GetGameAPI(game_api* api)
 	NEXTFP = (int*)rend_SetLighting;
 	NEXTFP = (int*)rend_SetColorModel;
 	NEXTFP = (int*)rend_SetTextureType;
-	NEXTFP = (int*)rend_DrawPolygon3D;
+	NEXTFP = (int*)rend_DrawPolygon;
 	NEXTFP = (int*)rend_SetMipState;
 	NEXTFP = (int*)rend_SetFogState;
 	NEXTFP = (int*)rend_SetFiltering;

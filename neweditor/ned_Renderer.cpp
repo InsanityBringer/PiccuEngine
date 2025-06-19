@@ -372,7 +372,7 @@ void rend_SetTextureType (texture_type state)
 }
 
 
-void rend_DrawScaledBitmap (int x1,int y1,int x2,int y2,
+void rend_DrawScaledBitmapWithZ (int x1,int y1,int x2,int y2,
 					      int bm,float u0,float v0,float u1,float v1,float zval,int color,float *alphas)
 {
 			g3Point *ptr_pnts[4];
@@ -637,6 +637,15 @@ void rend_MakeCurrent(RendHandle& handle)
 
 //Deletes the context. All contexts will be deleted when rend is shut down. 
 void rend_DestroyContext(RendHandle& handle)
+{
+}
+
+//The perils of partially including NewRender
+void rend_UpdateCommon(float* projection, float* modelview, int depth)
+{
+}
+
+void rend_SetCommonDepth(int depth)
 {
 }
 

@@ -1514,7 +1514,7 @@ int rGL_Setup(HDC glhdc)
 	{
 		if (!gladLoadGL(opengl_GLADLoad))
 		{
-			rend_SetErrorMessage("Failed to load opengl dll!\n");
+			//rend_SetErrorMessage("Failed to load opengl dll!\n");
 			Int3();
 			return 0;
 		}

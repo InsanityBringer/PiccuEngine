@@ -261,7 +261,7 @@ void rend_GetStatistics(tRendererStats *stats);
 void rend_SetTextureType (texture_type tt);
 
 // Given a handle to a bitmap and nv point vertices, draws a 3D polygon
-void rend_DrawPolygon3D(int handle,g3Point **p,int nv,int map_type=MAP_TYPE_BITMAP);
+void rend_DrawPolygon(int handle,g3Point **p,int nv,int map_type=MAP_TYPE_BITMAP);
 
 // Given a handle to a bitmap and nv point vertices, draws a 2D polygon
 void rend_DrawPolygon2D(int handle,g3Point **p,int nv);

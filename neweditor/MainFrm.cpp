@@ -1091,7 +1091,7 @@ void CMainFrame::OnZBuffer()
 {
 	// TODO: Add your command handler code here
 	Use_software_zbuffer=!Use_software_zbuffer;
-	tex_SetZBufferState (Use_software_zbuffer);
+	rend_SetZBufferState (Use_software_zbuffer);
 	State_changed=1;
 }
 

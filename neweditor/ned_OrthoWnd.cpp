@@ -2025,7 +2025,7 @@ void Cned_OrthoWnd::OnPaint()
 		return;
 
 	CDC *dc = (CDC *) &paint_dc;
-	CMemDC	pDC(dc, rc);
+	CMemDC_NED	pDC(dc, rc);
 
 	// Paint the background
 	pDC->FillSolidRect(&rc, m_BackColor);
@@ -2069,7 +2069,7 @@ void Cned_OrthoWnd::OnPaint()
 }
 
 
-void Cned_OrthoWnd::DrawOrthoGrid(CMemDC *pDC,int size)
+void Cned_OrthoWnd::DrawOrthoGrid(CMemDC_NED *pDC,int size)
 {
 	CSize WExt = pDC->GetWindowExt();
 	CPoint WOrg = pDC->GetWindowOrg();
@@ -2209,7 +2209,7 @@ void Cned_OrthoWnd::DrawOrthoGrid(CMemDC *pDC,int size)
 }
 
 
-void Cned_OrthoWnd::DrawOrthoRefFrame(CMemDC *pDC)
+void Cned_OrthoWnd::DrawOrthoRefFrame(CMemDC_NED *pDC)
 {
 	CSize WExt = pDC->GetWindowExt();
 	CPoint WOrg = pDC->GetWindowOrg();
@@ -2258,7 +2258,7 @@ void Cned_OrthoWnd::DrawOrthoRefFrame(CMemDC *pDC)
 }
 
 
-void Cned_OrthoWnd::DrawOrthoWorld(CMemDC *pDC)
+void Cned_OrthoWnd::DrawOrthoWorld(CMemDC_NED *pDC)
 {
 	room *rp = m_pPrim->roomp;
 	object *objp;
@@ -2312,7 +2312,7 @@ void Cned_OrthoWnd::DrawOrthoWorld(CMemDC *pDC)
 #define	MISCOBJ_COLOR		RGB(   0, 100, 100)		//some other object
 
 
-void Cned_OrthoWnd::DrawOrthoObjects(CMemDC *pDC,room *rp,object *obj,int num_objects)
+void Cned_OrthoWnd::DrawOrthoObjects(CMemDC_NED *pDC,room *rp,object *obj,int num_objects)
 {
 	RECT rect;
 	CBrush brush, *pOldBrush = NULL;
@@ -2482,7 +2482,7 @@ void Cned_OrthoWnd::DrawOrthoObjects(CMemDC *pDC,room *rp,object *obj,int num_ob
 }
 
 
-void Cned_OrthoWnd::DrawRoomCenter(CMemDC *pDC,room *rp,const int color)
+void Cned_OrthoWnd::DrawRoomCenter(CMemDC_NED *pDC,room *rp,const int color)
 {
 	int size = 5; // mark size;
 	vector center;
@@ -2536,7 +2536,7 @@ void Cned_OrthoWnd::DrawRoomCenter(CMemDC *pDC,room *rp,const int color)
 }
 
 
-void Cned_OrthoWnd::DrawOrthoRoom(CMemDC *pDC,room *rp,const int color)
+void Cned_OrthoWnd::DrawOrthoRoom(CMemDC_NED *pDC,room *rp,const int color)
 {
 	int fn,vn;
 	face *fp = rp->faces;
@@ -2619,7 +2619,7 @@ void Cned_OrthoWnd::DrawOrthoRoom(CMemDC *pDC,room *rp,const int color)
 }
 
 
-void Cned_OrthoWnd::DrawOrthoGamePaths(CMemDC *pDC,room *rp,const int color,const int br_color)
+void Cned_OrthoWnd::DrawOrthoGamePaths(CMemDC_NED *pDC,room *rp,const int color,const int br_color)
 {
 	vec2D pos;
 	game_path *gp;
@@ -2745,7 +2745,7 @@ void Cned_OrthoWnd::DrawOrthoGamePaths(CMemDC *pDC,room *rp,const int color,cons
 }
 
 
-void Cned_OrthoWnd::DrawOrthoAIPaths(CMemDC *pDC,room *rp,const int color,const int br_color)
+void Cned_OrthoWnd::DrawOrthoAIPaths(CMemDC_NED *pDC,room *rp,const int color,const int br_color)
 {
 	vec2D pos;
 	RECT rect;
@@ -2907,7 +2907,7 @@ static float ArrayY[10][20]={	{1,1,-1,-1,1},
 
 static int NumOfPoints[]={5,6,10,7,6,10,10,4,10,6};
 
-void Cned_OrthoWnd::DrawOrthoNumber(CMemDC *pDC,int num,vec2D pos,float size,const int color)
+void Cned_OrthoWnd::DrawOrthoNumber(CMemDC_NED *pDC,int num,vec2D pos,float size,const int color)
 {
 	int num_array[10];
 	int i,j;
@@ -2974,7 +2974,7 @@ void Cned_OrthoWnd::DrawOrthoNumber(CMemDC *pDC,int num,vec2D pos,float size,con
 }
 
 
-void Cned_OrthoWnd::DrawVerts(CMemDC *pDC,vector *verts,int num_verts,const int color)
+void Cned_OrthoWnd::DrawVerts(CMemDC_NED *pDC,vector *verts,int num_verts,const int color)
 {
 	int vn;
 	int size = O_VERT_SIZE;
@@ -3144,7 +3144,7 @@ void Cned_OrthoWnd::CenterFace(room *rp,int facenum)
 }
 
 
-void Cned_OrthoWnd::DrawCurrentPrims(CMemDC *pDC)
+void Cned_OrthoWnd::DrawCurrentPrims(CMemDC_NED *pDC)
 {
 	int vert_idx = -1;
 	face *fp = NULL;
@@ -3185,7 +3185,7 @@ void Cned_OrthoWnd::DrawCurrentPrims(CMemDC *pDC)
 }
 
 
-void Cned_OrthoWnd::DrawMarkedPrims(CMemDC *pDC)
+void Cned_OrthoWnd::DrawMarkedPrims(CMemDC_NED *pDC)
 {
 	room *rp = m_pPrim->roomp;
 	int i;
@@ -3209,7 +3209,7 @@ void Cned_OrthoWnd::DrawMarkedPrims(CMemDC *pDC)
 }
 
 
-void Cned_OrthoWnd::DrawOrthoFace(CMemDC *pDC,face *fp,room *rp,const int color)
+void Cned_OrthoWnd::DrawOrthoFace(CMemDC_NED *pDC,face *fp,room *rp,const int color)
 {
 	int vn;
 	vec2D pos;
@@ -3280,7 +3280,7 @@ void Cned_OrthoWnd::DrawOrthoFace(CMemDC *pDC,face *fp,room *rp,const int color)
 }
 
 
-void Cned_OrthoWnd::DrawOrthoEdge(CMemDC *pDC,face *fp,room *rp,const int color)
+void Cned_OrthoWnd::DrawOrthoEdge(CMemDC_NED *pDC,face *fp,room *rp,const int color)
 {
 	int nextvert = m_pPrim->vert;
 	vec2D pos;
@@ -3336,7 +3336,7 @@ void Cned_OrthoWnd::DrawOrthoEdge(CMemDC *pDC,face *fp,room *rp,const int color)
 }
 
 
-void Cned_OrthoWnd::DrawOrthoFaceNormal(CMemDC *pDC,room *rp,int facenum,const int color)
+void Cned_OrthoWnd::DrawOrthoFaceNormal(CMemDC_NED *pDC,room *rp,int facenum,const int color)
 {
 	vec2D pos;
 	vector center;
@@ -3385,7 +3385,7 @@ void Cned_OrthoWnd::DrawOrthoFaceNormal(CMemDC *pDC,room *rp,int facenum,const i
 	pDC->SelectObject(pOldPen);
 }
 
-void Cned_OrthoWnd::DrawOrthoObjectMark(CMemDC *pDC,room *rp,object *objp,const int color)
+void Cned_OrthoWnd::DrawOrthoObjectMark(CMemDC_NED *pDC,room *rp,object *objp,const int color)
 {
 	RECT rect;
 	vec2D pos;
@@ -3511,7 +3511,7 @@ void Cned_OrthoWnd::MoveCursor(float amount_x, float amount_y)
 	m_pParentFrame->m_State_changed = true;
 }
 
-void Cned_OrthoWnd::DrawCursor(CMemDC *pDC)
+void Cned_OrthoWnd::DrawCursor(CMemDC_NED *pDC)
 {
 	int size = 5; // cursor size;
 

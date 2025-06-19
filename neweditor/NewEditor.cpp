@@ -276,7 +276,7 @@ BOOL CNewEditorApp::InitInstance()
 	InitDynamicLighting();
 
 	// Set z-buffer state
-	tex_SetZBufferState (Use_software_zbuffer);
+	rend_SetZBufferState (Use_software_zbuffer);
 	State_changed = 1;
 
 	char hogpath[_MAX_PATH*2];

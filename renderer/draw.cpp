@@ -232,7 +232,7 @@ int g3_DrawPoly(int nv,g3Point **pointlist,int bm,int map_type,g3Codes *clip_cod
 	}
 
 	//Draw!
-	rend_DrawPolygon3D( bm, pointlist, nv, map_type );
+	rend_DrawPolygon( bm, pointlist, nv, map_type );
 
 free_points:;
 
