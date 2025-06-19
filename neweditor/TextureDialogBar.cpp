@@ -387,14 +387,14 @@ void CTextureDialogBar::PaintPreviewArea(CWnd *pWnd)
 	height = rect.Height();
 
 	//Draw here
-	grSurface *ds = Editor_state.GetDesktopSurface();
+	/*grSurface *ds = Editor_state.GetDesktopSurface();
 	if(!ds)
 		return;
 
 	//setup the drawing area
 	grHardwareSurface surface;
 	ds->attach_to_window((unsigned)pWnd->m_hWnd);
-	surface.create(width,height,BPP_16);
+	surface.create(width,height,BPP_16);*/
 
 	int room_tex = m_CurrentFaceTexture;
 
@@ -424,8 +424,8 @@ void CTextureDialogBar::PaintPreviewArea(CWnd *pWnd)
 		{
 			light_col = GR_RGB(0,0,0);
 		}
-		surface.clear(light_col);
-		ds->blt(0, 0, &surface);
+		//surface.clear(light_col);
+		//ds->blt(0, 0, &surface);
 	}else if(pWnd==&m_CFLightView)
 	{
 		//Current Face Light
@@ -451,8 +451,8 @@ void CTextureDialogBar::PaintPreviewArea(CWnd *pWnd)
 		{
 			light_col = GR_RGB(0,0,0);
 		}
-		surface.clear(light_col);
-		ds->blt(0, 0, &surface);
+		//surface.clear(light_col);
+		//ds->blt(0, 0, &surface);
 	}else if(pWnd==&m_CTView)
 	{
 		//Current Texture View
@@ -464,11 +464,11 @@ void CTextureDialogBar::PaintPreviewArea(CWnd *pWnd)
 		GetDlgItemText(IDC_CT_TEXTURENAME,TextureString);
 
 		// Display the bad texture if it's the sample texture
-		if (bm_handle == BAD_BITMAP_HANDLE && TextureString != "SAMPLE TEXTURE")
+		/*if (bm_handle == BAD_BITMAP_HANDLE && TextureString != "SAMPLE TEXTURE")
 			surface.clear(bk_col);
 		else
 			surface.load(bm_handle);
-		ds->blt(0, 0, &surface);
+		ds->blt(0, 0, &surface);*/
 	}else if(pWnd==&m_CFView)
 	{
 		//Current Face View		
@@ -480,19 +480,19 @@ void CTextureDialogBar::PaintPreviewArea(CWnd *pWnd)
 		GetDlgItemText(IDC_CF_TEXTURENAME,TextureString);
 
 		// Display the bad texture if it's the sample texture
-		if (bm_handle == BAD_BITMAP_HANDLE && TextureString != "SAMPLE TEXTURE")
+		/*if (bm_handle == BAD_BITMAP_HANDLE && TextureString != "SAMPLE TEXTURE")
 			surface.clear(bk_col);
 		else
 			surface.load(bm_handle);
-		ds->blt(0, 0, &surface);
+		ds->blt(0, 0, &surface);*/
 	}else
 	{
 		Int3();
 	}
 
 	//free up
-	surface.free();
-	ds->attach_to_window(NULL);
+	//surface.free();
+	//ds->attach_to_window(NULL);
 }
 
 void CTextureDialogBar::OnPaint() 

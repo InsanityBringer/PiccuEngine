@@ -40,8 +40,6 @@ Cned_GrWnd::Cned_GrWnd()
 {
 	m_BackColor = GR_RGB(0,0,0);
 	m_bInitted = false;
-	m_grScreen = NULL;
-	m_grViewport = NULL;
 }
 
 Cned_GrWnd::~Cned_GrWnd()
@@ -85,12 +83,15 @@ int Cned_GrWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 			client_height = ZBUFFER_MAX_DIMENSION;
 	}
 
-	if (client_width && client_height) {
-		ASSERT(m_grScreen == NULL);
+	if (client_width && client_height) 
+	{
+		/*ASSERT(m_grScreen == NULL);
 		// TODO : add m_Name and pass it to grScreen here, instead of NULL
 		m_grScreen = new grScreen(client_width, client_height, BPP_16, NULL);
 		m_grScreen->attach_to_window((unsigned)m_hWnd);
-		m_grViewport = new grViewport(m_grScreen);
+		m_grViewport = new grViewport(m_grScreen);*/
+
+		m_handle = rend_NewContext(m_hWnd);
 	}
 
 	return 0;
@@ -102,8 +103,8 @@ void Cned_GrWnd::OnDestroy()
 	
 	// TODO: Add your message handler code here
 //	destroy screen element
-	if (m_grViewport) {	 delete m_grViewport; m_grViewport = NULL; }
-	if (m_grScreen) { delete m_grScreen; m_grScreen = NULL; }
+	if (m_handle)
+		rend_DestroyContext(m_handle);
 }
 
 void Cned_GrWnd::OnPaint() 
@@ -112,16 +113,10 @@ void Cned_GrWnd::OnPaint()
 
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		if(m_grScreen)
-			m_grScreen->flip();
-		break;
-
 	case RENDERER_OPENGL:
 		{
-			SwapBuffers(renderer_hDC);
-			ValidateRect(NULL);
+			//SwapBuffers(renderer_hDC);
+			//ValidateRect(NULL);
 		}break;
 	}
 	
@@ -140,7 +135,7 @@ void Cned_GrWnd::OnSize(UINT nType, int cx, int cy)
 
 	CWnd::OnSize(nType, cx, cy);
 
-	if (m_grViewport) {
+	/*if (m_grViewport) {
 		delete m_grViewport;
 		delete m_grScreen;
 		m_grViewport = NULL;
@@ -151,7 +146,10 @@ void Cned_GrWnd::OnSize(UINT nType, int cx, int cy)
 		m_grScreen = new grScreen(cx, cy, BPP_16, NULL);
 		m_grScreen->attach_to_window((unsigned)m_hWnd);
 		m_grViewport = new grViewport(m_grScreen);
-	}
+	}*/
+
+	m_handle.default_viewport.width = cx;
+	m_handle.default_viewport.height = cy;
 }
 
 BOOL Cned_GrWnd::PreCreateWindow(CREATESTRUCT& cs) 
@@ -165,7 +163,8 @@ BOOL Cned_GrWnd::PreCreateWindow(CREATESTRUCT& cs)
 
 void Cned_GrWnd::SetDCPixelFormat(HDC hDC)
 {
-	int nPixelFormat;
+	//handled in rend
+	/*int nPixelFormat;
 	static PIXELFORMATDESCRIPTOR pfd = 
 	{
 		sizeof(PIXELFORMATDESCRIPTOR),		//size of this structure
@@ -190,5 +189,5 @@ void Cned_GrWnd::SetDCPixelFormat(HDC hDC)
 	nPixelFormat = ChoosePixelFormat(hDC,&pfd);
 
 	// Set Pixel format for device context
-	SetPixelFormat(hDC,nPixelFormat,&pfd);
+	SetPixelFormat(hDC,nPixelFormat,&pfd);*/
 }

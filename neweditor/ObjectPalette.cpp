@@ -25,6 +25,7 @@
 #include "ned_TableFile.h"
 #include "ProgressDialog.h"
 #include "ned_Util.h"
+#include "ned_Rend.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -223,11 +224,9 @@ BOOL CObjectPalette::OnInitDialog()
 	CWnd *wnd = GetDlgItem(IDC_VIEW);
 	wnd->GetClientRect(&rect);
 	
-	grSurface *ds = Editor_state.GetDesktopSurface();
-
 	m_ObjectList.SetShowFilter(m_ShowFilter);
 	m_ObjectList.SetParent(this);
-	m_ObjectList.Create(wnd,IDC_VIEW, rect, MEDIUM_SIZE,ds);	
+	m_ObjectList.Create(wnd,IDC_VIEW, rect, MEDIUM_SIZE);	
 	m_ObjectList.SelectItem(0);
 
 	CheckDlgButton(IDC_RADIO2,TRUE);
@@ -325,38 +324,36 @@ int CObjectPick::ListPrevItem(int curobj)
 	return prev_object;
 }
 
-void CObjectPick::DrawItem(int x, int y, grHardwareSurface *itemsurf, int item)
+void CObjectPick::DrawItem(int x, int y, int item)
 {
-	grSurface *ds = Editor_state.GetDesktopSurface();
 	bool draw_large = false;
 	int text_x = x;
 	int text_y = y + m_SurfDimension;
 	char str[PAGENAME_LEN];
 
-	if(!ds)
-		return;
-
 	int model_num = GetObjectImage(item);
 
 	strcpy(str,Object_info[item].name);
+
+	rend_MakeCurrent(m_handle);
 
 	if(model_num != -1)
 	{
 		if (item == m_ItemSel)
 			draw_large = true;
-		DrawItemModel(x,y,ds,itemsurf,model_num,draw_large);
-		DrawText(GR_RGB(255,255,255),text_x,text_y,itemsurf,str);
+		DrawItemModel(x,y,m_handle,model_num,draw_large);
+		DrawText(GR_RGB(255,255,255),text_x,text_y,str);
 	}
 	else
 	{
-		itemsurf->clear();
-		ds->blt(0, 0, itemsurf);
+		rend_ClearScreen(0);
 	}
 }
 
-void CObjectPick::DrawText(ddgr_color color, int x, int y, grHardwareSurface *itemsurf, char *str)
+void CObjectPick::DrawText(ddgr_color color, int x, int y, char *str)
 {
-	grSurface *ds = Editor_state.GetDesktopSurface();
+	//yeah I'd have to get grtext for this to work. Maybe. 
+	/*grSurface *ds = Editor_state.GetDesktopSurface();
 
 	if(!ds)
 		return;
@@ -378,7 +375,7 @@ void CObjectPick::DrawText(ddgr_color color, int x, int y, grHardwareSurface *it
 	{
 		itemsurf->clear();
 		ds->blt(0, 0, itemsurf);
-	}
+	}*/
 }
 
 //	if item was selected from the list box, this function is invoked.

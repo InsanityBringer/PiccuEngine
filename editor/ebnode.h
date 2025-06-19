@@ -20,6 +20,7 @@
 #include "mem.h"
 #include "vecmat.h"
 #include "3d.h"
+#include "../neweditor/RendHandle.h"
 
 #define EBDRAW_NONE                0
 #define EBDRAW_ROOM                1
@@ -31,7 +32,7 @@ extern char EBN_draw_type;
 extern void EBNode_MakeDefaultIntraRoomNodes(int roomnum);
 extern void EBNode_MakeDefaultInterRoomEdges(int roomnum);
 extern void EBNode_MakeFirstPass(void);
-extern void EBNode_Draw(char draw_type, grViewport *vp,vector *viewer_eye,matrix *viewer_orient,float zoom);
+extern void EBNode_Draw(char draw_type, RendHandle& handle,vector *viewer_eye,matrix *viewer_orient,float zoom);
 extern void EBNode_Move(bool f_offset, int roomnum, int pnt, vector *pos);
 extern int EBNode_AddNode(int roomnum, vector *pnt, bool f_from_editor, bool f_check_for_close_nodes);
 // Note the 2 last parameters are for internal use ONLY never set them

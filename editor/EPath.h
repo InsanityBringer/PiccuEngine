@@ -54,6 +54,7 @@ void DrawNumber (int num,vector pos,float size);
 
 class grViewport;
 // draws all the paths
-void DrawAllPaths (grViewport *vp,vector *viewer_eye,matrix *viewer_orient,float zoom);
+#include "../neweditor/RendHandle.h"
+void DrawAllPaths (RendHandle& handle,vector *viewer_eye,matrix *viewer_orient,float zoom);
 
 

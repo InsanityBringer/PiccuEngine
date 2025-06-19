@@ -379,14 +379,6 @@ SET (MAIN_NEWEDITOR_SOURCES
 		Descent3/weapon_external.h
 		Descent3/weather.h
 		Descent3/ambient.cpp
-		Descent3/AIGoal.cpp
-		Descent3/AImain.cpp
-		Descent3/aipath.cpp
-		Descent3/aiterrain.cpp
-		Descent3/ambient.cpp
-		Descent3/args.cpp
-		Descent3/attach.cpp
-		Descent3/audiotaunts.cpp
 		Descent3/bnode.cpp
 		Descent3/BOA.cpp
 		Descent3/gamepath.cpp

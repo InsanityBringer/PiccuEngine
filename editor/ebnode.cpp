@@ -1234,7 +1234,7 @@ void EBNode_MakeFirstPass(void)
 //#include "gr.h"
 #include "epath.h"
 
-void EBNode_DrawRoom(int room, grViewport *vp,vector *viewer_eye,matrix *viewer_orient,float zoom, bool f_current_room = false)
+void EBNode_DrawRoom(int room, RendHandle& handle,vector *viewer_eye,matrix *viewer_orient,float zoom, bool f_current_room = false)
 {
 	int i,current_path_index=0,t;
 	g3Point rot_points[300];
@@ -1418,7 +1418,9 @@ void EBNode_Move(bool f_offset, int roomnum, int pnt, vector *pos)
 	}
 }
 
-void EBNode_Draw(char draw_type, grViewport *vp,vector *viewer_eye,matrix *viewer_orient,float zoom)
+#include "../neweditor/ned_Rend.h"
+
+void EBNode_Draw(char draw_type, RendHandle& handle,vector *viewer_eye,matrix *viewer_orient,float zoom)
 {
 	int i;
 
@@ -1427,6 +1429,8 @@ void EBNode_Draw(char draw_type, grViewport *vp,vector *viewer_eye,matrix *viewe
 #else
 	int roomnum = ROOMNUM(theApp.m_pLevelWnd->m_Prim.roomp);
 #endif
+
+	rend_MakeCurrent(handle);
 
 	switch(draw_type)
 	{
@@ -1440,23 +1444,23 @@ void EBNode_Draw(char draw_type, grViewport *vp,vector *viewer_eye,matrix *viewe
 
 				for(i = 0; i < num_next_rooms; i++)
 				{
-					EBNode_DrawRoom(next_rooms[i], vp, viewer_eye, viewer_orient, zoom, false);
+					EBNode_DrawRoom(next_rooms[i], handle, viewer_eye, viewer_orient, zoom, false);
 				}
 			}
 		case EBDRAW_ROOM:
-			EBNode_DrawRoom(roomnum, vp, viewer_eye, viewer_orient, zoom, true);
+			EBNode_DrawRoom(roomnum, handle, viewer_eye, viewer_orient, zoom, true);
 		break;
 		case EBDRAW_LEVEL:
 			for(i = 0; i <= Highest_room_index; i++)
 			{
 				if(Rooms[i].used && !(Rooms[i].flags & RF_EXTERNAL))
 				{
-					EBNode_DrawRoom(i, vp, viewer_eye, viewer_orient, zoom, i == roomnum);
+					EBNode_DrawRoom(i, handle, viewer_eye, viewer_orient, zoom, i == roomnum);
 				}
 			}
 			for(i = 0; i < BOA_num_terrain_regions; i++)
 			{
-				EBNode_DrawRoom(Highest_room_index + i + 1, vp, viewer_eye, viewer_orient, zoom, ROOMNUM_OUTSIDE(roomnum) && (i == TERRAIN_REGION(roomnum)));
+				EBNode_DrawRoom(Highest_room_index + i + 1, handle, viewer_eye, viewer_orient, zoom, ROOMNUM_OUTSIDE(roomnum) && (i == TERRAIN_REGION(roomnum)));
 			}
 		break;
 	}

@@ -66,7 +66,8 @@ int rend_Init (renderer_type state, oeApplication *app,renderer_preferred_state 
 			UseHardware=1;
 			StateLimited=1;
 			UseMultitexture=0;
-			retval=rGL_Init (app,pref_state);
+			//retval=rGL_Init (app,pref_state);
+			retval = 0;
 			break;
 		default:
 //			rend_SetErrorMessage ("No renderer set.");
@@ -95,9 +96,7 @@ void rend_Close ()
 		case RENDERER_SOFTWARE_8BIT:
 			break;
 		case RENDERER_OPENGL:
-			#ifdef USE_OPENGL
-			opengl_Close();
-			#endif
+			//rGL_Close();
 			break;
 	}
 	Renderer_initted=0;
@@ -109,7 +108,7 @@ void rend_SetPixel (ddgr_color color,int x,int y)
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_SetPixel(color,x,y);
+		//rGL_SetPixel(color,x,y);
 		break;
 	}	
 }
@@ -121,7 +120,7 @@ ddgr_color rend_GetPixel (int x,int y)
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		return rGL_GetPixel(x,y);
+		//return rGL_GetPixel(x,y);
 		break;
 	}
 	
@@ -135,7 +134,7 @@ void rend_Flip ()
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_Flip();
+		//rGL_Flip();
 		break;
 	}
 
@@ -149,7 +148,7 @@ void rend_DrawPolygon (int handle,g3Point **p,int nv,int map_type)
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_DrawPolygon(handle,p,nv,map_type);
+		//rGL_DrawPolygon(handle,p,nv,map_type);
 		break;
 	}	
 }
@@ -231,7 +230,7 @@ void rend_DrawLine (int x1,int y1,int x2,int y2)
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_DrawLine(x1,y1,x2,y2);
+		//rGL_DrawLine(x1,y1,x2,y2);
 		break;
 	}
 }
@@ -252,7 +251,7 @@ void rend_SetFlatColor (ddgr_color color)
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_SetFlatColor(color);
+		//rGL_SetFlatColor(color);
 		break;
 	}	
 }
@@ -269,7 +268,7 @@ void rend_StartFrame (int x1,int y1,int x2,int y2,int clear_flags)
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_BeginFrame (x1,y1,x2,y2,clear_flags);
+		//rGL_BeginFrame (x1,y1,x2,y2,clear_flags);
 		break;
 	}	
 }
@@ -280,7 +279,7 @@ void rend_EndFrame ()
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_EndFrame();
+		///rGL_EndFrame();
 		break;
 	}	
 }
@@ -290,7 +289,7 @@ void rend_ClearScreen (ddgr_color color)
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_ClearScreen (color);
+		//rGL_ClearScreen (color);
 		break;
 	}
 }
@@ -311,7 +310,7 @@ void rend_FillRect (ddgr_color color,int x1,int y1,int x2,int y2)
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_FillRect(color,x1,y1,x2,y2);
+		//rGL_FillRect(color,x1,y1,x2,y2);
 		break;
 	}	
 }
@@ -323,7 +322,7 @@ float rend_GetAspectRatio ()
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		return rGL_GetAspectRatio ();
+		//return rGL_GetAspectRatio ();
 		break;
 	}
 
@@ -337,7 +336,7 @@ void rend_GetProjectionParameters (int *width,int *height)
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_GetProjectionParameters(width,height);
+		//rGL_GetProjectionParameters(width,height);
 		break;
 	}	
 }
@@ -364,12 +363,8 @@ void rend_SetTextureType (texture_type state)
 {
 	switch(Renderer_type)
 	{
-	case RENDERER_SOFTWARE_8BIT:
-	case RENDERER_SOFTWARE_16BIT:
-		tex_SetTextureType (state);
-		break;
 	case RENDERER_OPENGL:
-		rGL_SetTextureType(state);
+		//rGL_SetTextureType(state);
 		break;
 	}	
 }
@@ -437,7 +432,7 @@ void rend_DrawScaledBitmap (int x1,int y1,int x2,int y2,
 			ptr_pnts[3]=&pnts[3];
 
 			rend_SetTextureType (TT_LINEAR);
-			rend_DrawPolygon (bm,ptr_pnts,4);
+			rend_DrawPolygon (bm,ptr_pnts,4,MAP_TYPE_BITMAP);
 }
 
 
@@ -446,7 +441,7 @@ void rend_SetLighting(light_state state)
 	switch(Renderer_type)
 	{
 	case RENDERER_OPENGL:
-		rGL_SetLightingState (state);
+		//rGL_SetLightingState (state);
 		break;
 	}	
 }
@@ -456,7 +451,7 @@ void rend_SetColorModel (color_model state)
 	switch (Renderer_type)
 	{
 		case RENDERER_OPENGL:
-			rGL_SetColorModel (state);
+			//rGL_SetColorModel (state);
 			break;
 	}
 }
@@ -466,9 +461,7 @@ void rend_SetAlphaType (sbyte atype)
 	switch (Renderer_type)
 	{
 		case RENDERER_OPENGL:
-			rGL_SetAlphaType (atype);
-			break;
-		default:
+			//rGL_SetAlphaType (atype);
 			break;
 	}
 }
@@ -501,7 +494,7 @@ static renderer_type Save_rend;
 static bool Save_state_limit;
 void rend_SetOpenGLWindowState (int state,oeApplication *app,renderer_preferred_state *pref_state)
 {
-	if (state)
+	/*if (state)
 	{
 		if (!OpenGL_window_initted)
 		{
@@ -525,7 +518,7 @@ void rend_SetOpenGLWindowState (int state,oeApplication *app,renderer_preferred_
 			Renderer_type=RENDERER_SOFTWARE_16BIT;
 			StateLimited=Save_state_limit;
 		}
-	}
+	}*/
 }
 
 
@@ -548,7 +541,7 @@ void rend_SetAlphaValue (ubyte val)
 	switch (Renderer_type)
 	{
 		case RENDERER_OPENGL:
-			rGL_SetAlphaValue (val);
+			//rGL_SetAlphaValue (val);
 			break;
 	}
 }
@@ -559,7 +552,7 @@ void rend_SetWrapType (wrap_type val)
 	switch (Renderer_type)
 	{
 		case RENDERER_OPENGL:
-			rGL_SetWrapType (val);
+			//rGL_SetWrapType (val);
 			break;
 	}
 }
@@ -570,7 +563,7 @@ void rend_SetFiltering (sbyte state)
 	switch (Renderer_type)
 	{
 		case RENDERER_OPENGL:
-			rGL_SetFiltering (state);
+			//rGL_SetFiltering (state);
 			break;
 	}
 }
@@ -581,7 +574,7 @@ void rend_SetZBufferState  (sbyte state)
 	switch (Renderer_type)
 	{
 		case RENDERER_OPENGL:
-			rGL_SetZBufferState (state);
+			//rGL_SetZBufferState (state);
 			break;
 	}
 }
@@ -592,7 +585,7 @@ void rend_SetZValues (float nearz,float farz)
 	switch (Renderer_type)
 	{
 		case RENDERER_OPENGL:
-			rGL_SetZValues (nearz,farz);
+			//rGL_SetZValues (nearz,farz);
 			break;
 	}
 }
@@ -603,7 +596,7 @@ void rend_SetZBufferWriteMask (int state)
 	switch (Renderer_type)
 	{
 		case RENDERER_OPENGL:
-			rGL_SetZBufferWriteMask (state);
+			//rGL_SetZBufferWriteMask (state);
 			break;
 	}
 }
@@ -622,6 +615,24 @@ void rend_SetMipState (sbyte mipstate)
 
 // Sets the fog state to TRUE or FALSE
 void rend_SetFogState (sbyte on)
+{
+}
+
+//Creates a new context with shared resources from the main context
+RendHandle rend_NewContext(HWND hwnd)
+{
+	RendHandle blarg;
+	blarg.handle = 1;
+	return blarg;
+}
+
+//Makes the specified handle current
+void rend_MakeCurrent(RendHandle& handle)
+{
+}
+
+//Deletes the context. All contexts will be deleted when rend is shut down. 
+void rend_DestroyContext(RendHandle& handle)
 {
 }
 

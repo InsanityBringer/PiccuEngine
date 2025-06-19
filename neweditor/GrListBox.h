@@ -31,7 +31,7 @@ public:
 	CGrListBox();
 
 //	if selbox is true, then we use a rectangle to hilite the selection.
-	BOOL Create(CWnd *parent_wnd, int id, const RECT& rect, int surf_dim, grSurface *sDesktop, bool selbox = false);
+	BOOL Create(CWnd *parent_wnd, int id, const RECT& rect, int surf_dim, bool selbox = false);
 
 //	Internal management functions
 private:
@@ -52,6 +52,8 @@ protected:
 	int m_ScrollPos;							// used to check scroll bar
 	bool m_SelectionBox;						// do we use the selection box, or scale selection aid.
 	bool m_IsItemSelInBox;					// is item selected being displayed?
+
+	RendHandle m_handle;
 
 // Attributes
 public:
@@ -102,7 +104,6 @@ protected:
 
 // Current first item in box displayed.  We are allowed to modify this.
 	int m_ListItem;	
-	grSurface *m_Desktop_surf;
 	int m_SurfDimension;						// Square dimensions of visible item.
 	int m_ListLen;								// number of list items in list box total
 	bool m_bAllowSelection;
@@ -112,7 +113,7 @@ private:
 
 //	Drawing overridables
 protected:
-	virtual void DrawItem(int x, int y, grHardwareSurface *itemsurf, int item) = 0;
+	virtual void DrawItem(int x, int y, int item) = 0;
 
 //	miscellaneous overridables
 //	if item was selected from the list box, this function is invoked.

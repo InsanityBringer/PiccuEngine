@@ -381,7 +381,7 @@ void CObjectDialogBar::OnControlUpdate(CCmdUI* pCmdUI)
 
 extern int GetObjectImage(int handle);
 
-void CObjectDialogBar::PaintPreviewArea(CWnd *pWnd)
+void CObjectDialogBar::PaintPreviewArea(CWnd* pWnd, RendHandle& handle)
 {
 	int obj_type,obj_id,model_num;
 
@@ -397,15 +397,7 @@ void CObjectDialogBar::PaintPreviewArea(CWnd *pWnd)
 	width = rect.Width();
 	height = rect.Height();
 
-	//Draw here
-	grSurface *ds = Editor_state.GetDesktopSurface();
-	if(!ds)
-		return;
-
-	//setup the drawing area
-	grHardwareSurface surface;
-	ds->attach_to_window((unsigned)pWnd->m_hWnd);
-	surface.create(width,height,BPP_16);
+	rend_MakeCurrent(handle);
 
 	//render here
 	if(pWnd==&m_COView)
@@ -432,12 +424,12 @@ void CObjectDialogBar::PaintPreviewArea(CWnd *pWnd)
 				Int3();
 			}
 
-			DrawItemModel(0,0,ds,&surface,model_num,true);
+			DrawItemModel(0,0,handle,model_num,true);
 		}
 		else
 		{
-			surface.clear(bk_col);
-			ds->blt(0, 0, &surface);
+			//surface.clear(bk_col);
+			//ds->blt(0, 0, &surface);
 		}
 	}else if(pWnd==&m_CLOView)
 	{
@@ -478,29 +470,26 @@ void CObjectDialogBar::PaintPreviewArea(CWnd *pWnd)
 				Int3();
 			}
 
-			DrawItemModel(0,0,ds,&surface,model_num,true);
+			DrawItemModel(0,0,handle,model_num,true);
 		}
 		else
 		{
-			surface.clear(bk_col);
-			ds->blt(0, 0, &surface);
+			rend_ClearScreen(0);
+			//surface.clear(bk_col);
+			//ds->blt(0, 0, &surface);
 		}
 	}else
 	{
 		Int3();
 	}
-
-	//free up
-	surface.free();
-	ds->attach_to_window(NULL);
 }
 
 void CObjectDialogBar::OnPaint() 
 {
 	CPaintDC dc(this); // device context for painting
 		
-	PaintPreviewArea(&m_COView);
-	PaintPreviewArea(&m_CLOView);
+	//PaintPreviewArea(&m_COView);
+	//PaintPreviewArea(&m_CLOView);
 	
 	// Do not call CDialogBar::OnPaint() for painting messages
 }
@@ -1298,8 +1287,8 @@ void CObjectDialogBar::OnObjectInsert()
 	}
 }
 
-
-void DrawItemModel(int x,int y,grSurface *ds,grHardwareSurface *surf,int model_num,bool draw_large)
+#include "ned_Rend.h"
+void DrawItemModel(int x,int y,RendHandle& handle,int model_num,bool draw_large)
 {
 	vector zero_vector={0,0,0};
 	vector view_pos={0,0,0};
@@ -1325,23 +1314,25 @@ void DrawItemModel(int x,int y,grSurface *ds,grHardwareSurface *surf,int model_n
 	}
 
 	//Set up surface & vuewport
-	surf->clear();
-	grViewport *vport = new grViewport(surf);
-	vport->clear();
+	rend_MakeCurrent(handle);
+	rend_ClearScreen(0);
+	//surf->clear();
+	//grViewport *vport = new grViewport(surf);
+	//vport->clear();
 
 	if (model_num != -1)
 	{
 		//Draw to our surface
-		StartEditorFrame(vport,&view_pos,&id_matrix,D3_DEFAULT_ZOOM);
+		StartEditorFrame(handle,&view_pos,&id_matrix,D3_DEFAULT_ZOOM);
 		DrawPolygonModel(&zero_vector,&rot_matrix,model_num,NULL,0,1.0,1.0,1.0);
 		EndEditorFrame();
 	}
 
 	//Copy to the screen
-	ds->blt(x,y,surf);
+	//ds->blt(x,y,surf);
 
 	//Delete our viewport
-	delete vport;
+	//delete vport;
 }
 
 

@@ -20,7 +20,7 @@
 #include "editor\d3edit.h"
 #endif
 #ifdef NEWEDITOR
-#include "neweditor\globals.h"
+#include "../neweditor/globals.h"
 #endif
 
 #include "BOA.h"
@@ -1631,9 +1631,9 @@ extern uint check_point_to_face(vector* colp, vector* face_normal, int nv, vecto
 #if (defined(EDITOR) || defined(NEWEDITOR))
 
 #ifdef NEWEDITOR
-#include "neweditor/stdafx.h"
-#include "neweditor/resource.h"
-#include "neweditor/ProgressDialog.h"
+#include "../neweditor/stdafx.h"
+#include "../neweditor/resource.h"
+#include "../neweditor/ProgressDialog.h"
 
 // Displays/Updates the Visability Progress bar
 // state = 0 //create

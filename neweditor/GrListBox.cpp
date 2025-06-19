@@ -40,7 +40,6 @@ CGrListBox::CGrListBox()
 	m_HitY = 0;
 	m_CheckHit = false;
 	m_IsItemSelInBox = false;
-	m_Desktop_surf = NULL;
 	m_bAllowSelection = true;
 }
 
@@ -58,12 +57,10 @@ void CGrListBox::ForceUpdate(void)
 	ListBoxProc(true);
 }
 
-BOOL CGrListBox::Create(CWnd *parent_wnd, int id, const RECT& rect, int surf_dim, grSurface *sDesktop, bool selbox)
+BOOL CGrListBox::Create(CWnd *parent_wnd, int id, const RECT& rect, int surf_dim, bool selbox)
 {
-	ASSERT(sDesktop);
 	m_SurfDimension = surf_dim;
 	m_SelectionBox = selbox;
-	m_Desktop_surf = sDesktop;
 
 	return CWnd::Create(NULL, "GrListBox", WS_CHILD | WS_VISIBLE | WS_VSCROLL, rect, parent_wnd, id);
 }
@@ -289,8 +286,6 @@ void CGrListBox::SetBitmapSize(int size)
 void CGrListBox::ListBoxProc(bool do_draw)
 {
 	static bool in_listboxproc = false;
-	grHardwareSurface m_ItemSurf;
-	grHardwareSurface m_ItemSurfSel;
 	RECT box_rect;
 	int left, top, draw_x, draw_y;
 	int box_width, box_height;
@@ -306,11 +301,12 @@ void CGrListBox::ListBoxProc(bool do_draw)
 	box_height = box_rect.bottom - box_rect.top;
 	box_width = box_rect.right - box_rect.left;
 
-	if (do_draw) {
-		m_Desktop_surf->attach_to_window((unsigned)CWnd::m_hWnd);
-		m_Desktop_surf->clear(0,0,box_width,box_height);
-		m_ItemSurf.create(m_SurfDimension,m_SurfDimension,BPP_16);
-		m_ItemSurfSel.create(m_SurfDimension+8,m_SurfDimension+8,BPP_16);
+	if (do_draw) 
+	{
+		//m_Desktop_surf->attach_to_window((unsigned)CWnd::m_hWnd);
+		//m_Desktop_surf->clear(0,0,box_width,box_height);
+		//m_ItemSurf.create(m_SurfDimension,m_SurfDimension,BPP_16);
+		//m_ItemSurfSel.create(m_SurfDimension+8,m_SurfDimension+8,BPP_16);
 	}
 
 //	initialize list manager.
@@ -368,7 +364,8 @@ void CGrListBox::ListBoxProc(bool do_draw)
 		
 		if (m_CheckHit) 
 			if ( m_HitX>=draw_x && m_HitX<=(draw_x+m_SurfDimension+8) 
-				&& m_HitY>=draw_y && m_HitY<=(draw_y+m_SurfDimension+8)) {
+				&& m_HitY>=draw_y && m_HitY<=(draw_y+m_SurfDimension+8)) 
+			{
 
 				if(m_bAllowSelection)
 				{
@@ -380,25 +377,28 @@ void CGrListBox::ListBoxProc(bool do_draw)
 
 		if (m_ItemSel == item) m_IsItemSelInBox = true;
 
-		if (do_draw) {
-			if (m_ItemSel == item) {
-				if (m_SelectionBox) {
-					grViewport vp(&m_ItemSurfSel);
+		if (do_draw) 
+		{
+			if (m_ItemSel == item) 
+			{
+				if (m_SelectionBox) 
+				{
+					/*grViewport vp(&m_ItemSurfSel);
 					vp.clear();
 					vp.lock();
 					vp.rect(GR_RGB(255,0,255), 0,0,vp.width()-1,vp.height()-1);
 					vp.rect(GR_RGB(255,0,255), 1,1,vp.width()-2,vp.height()-2);
 					vp.rect(GR_RGB(255,0,255), 2,2,vp.width()-3,vp.height()-3);
 					vp.unlock();
-					m_Desktop_surf->blt(draw_x-4,draw_y-4,vp.get_parent());
-					this->DrawItem(draw_x, draw_y, &m_ItemSurf, item);
+					m_Desktop_surf->blt(draw_x-4,draw_y-4,vp.get_parent());*/
+					this->DrawItem(draw_x, draw_y, item);
 				}
 				else {
-					this->DrawItem(draw_x-4, draw_y-4, &m_ItemSurfSel, item);
+					this->DrawItem(draw_x-4, draw_y-4, item);
 				}
 			}
 			else
-				this->DrawItem(draw_x, draw_y, &m_ItemSurf, item);
+				this->DrawItem(draw_x, draw_y, item);
 		}
 
 		item = this->ListNextItem(item);
@@ -411,7 +411,8 @@ void CGrListBox::ListBoxProc(bool do_draw)
 
 //	update the scroll bar
 //	free up any graphic resources initialized here.
-	if (do_draw) {
+	if (do_draw) 
+	{
 		SCROLLINFO si;
 
 		si.cbSize = sizeof(si);
@@ -423,10 +424,10 @@ void CGrListBox::ListBoxProc(bool do_draw)
 		CWnd::SetScrollInfo(SB_VERT, &si);
 		CWnd::ShowScrollBar(SB_VERT);
 
-		m_ItemSurfSel.free();
-		m_ItemSurf.free();
+		//m_ItemSurfSel.free();
+		//m_ItemSurf.free();
 
-		m_Desktop_surf->attach_to_window(NULL);
+		//m_Desktop_surf->attach_to_window(NULL);
 	}
 
 	in_listboxproc = false;

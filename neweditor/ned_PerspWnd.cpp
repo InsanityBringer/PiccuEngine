@@ -173,7 +173,7 @@ void Cned_PerspWnd::Render(bool force_repaint)
 	FrameCount++;
 
 	//	Don't do a thing if these objects aren't created yet or the window isn't initialized for rendering
-	if (!m_grScreen || !m_grViewport || !m_bInitted)
+	if (!m_handle || !m_bInitted)
 		return;
 
 	if (Renderer_type == RENDERER_OPENGL)
@@ -182,18 +182,18 @@ void Cned_PerspWnd::Render(bool force_repaint)
 	vector view_pos = m_Cam.target - (m_Cam.orient.fvec * m_Cam.dist);
 
 	if (m_bTextured) {
-		TexGrStartOpenGL();
+		//TexGrStartOpenGL();
 		TGWRenderRoom(&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM,ROOMNUM(m_pPrim->roomp)); // D3EditState.current_room);
 //		TGWRenderMine(&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM,ROOMNUM(m_pPrim->roomp)); // D3EditState.current_room);
 		if (m_pParentFrame == theApp.m_pRoomFrm) // only draw for main room frame
 		{
-			DrawAllPaths(m_grViewport,&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM);
-			EBNode_Draw(EBDRAW_ROOM,m_grViewport,&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM); // EBN_draw_type
+			DrawAllPaths(m_handle,&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM);
+			EBNode_Draw(EBDRAW_ROOM,m_handle,&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM); // EBN_draw_type
 		}
-		TexGrStopOpenGL();
+		//TexGrStopOpenGL();
 	} else {
 		flags |= DRAW_CUR | DRAW_OBJ;
-		DrawWorld(m_grViewport,&m_Cam.target,&m_Cam.orient,m_Cam.dist,0,m_Cam.rad,flags,m_pPrim);
+		DrawWorld(m_handle,&m_Cam.target,&m_Cam.orient,m_Cam.dist,0,m_Cam.rad,flags,m_pPrim);
 	}
 
 	m_StartFlip = TRUE;
@@ -286,13 +286,13 @@ void Cned_PerspWnd::OnLButtonDown(UINT nFlags, CPoint point)
 		found_facenum = m_pPrim->face;
 		// WireframeFindRoomFace requires that the viewport its checking to be the last one that was rendered, so call Render() first.
 		Render(false);
-		if (WireframeFindRoomFace(m_grViewport,point.x,point.y,&found_segnum,&found_facenum,FM_SPECIFIC,true)) {
+		if (WireframeFindRoomFace(m_handle,point.x,point.y,&found_segnum,&found_facenum,FM_SPECIFIC,true)) {
 			find_mode = FM_NEXT;
 		}
 
 find_again:;
 
-		if (WireframeFindRoomFace(m_grViewport,point.x,point.y,&found_segnum,&found_facenum,find_mode,true)) {
+		if (WireframeFindRoomFace(m_handle,point.x,point.y,&found_segnum,&found_facenum,find_mode,true)) {
 			ASSERT(found_segnum!=-1);
 			ASSERT(found_facenum!=-1);
 			room *rp = &Rooms[found_segnum];
@@ -351,12 +351,13 @@ find_again:;
 	}
 	else // Textures
 	{
-		CRect rc(m_grViewport->left(),m_grViewport->top(),m_grViewport->right(),m_grViewport->bottom());
+		CRect rc(m_handle.default_viewport.x, m_handle.default_viewport.y, m_handle.default_viewport.x + m_handle.default_viewport.width, m_handle.default_viewport.y + m_handle.default_viewport.height);
 		// Make sure the mouse cursor is not outside of the viewport!!!!
 		if (rc.PtInRect(point))
 		{
 
-		TexGrStartOpenGL();
+		//TexGrStartOpenGL();
+			rend_MakeCurrent(m_handle);
 
 //		ResetPostrenderList();
 
@@ -373,8 +374,8 @@ find_again:;
 //		TGWRenderMine (&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM,Viewer_object->roomnum);
 		if (m_pParentFrame == theApp.m_pRoomFrm) // only draw for main room frame
 		{
-			DrawAllPaths(m_grViewport,&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM);
-			EBNode_Draw(EBDRAW_ROOM,m_grViewport,&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM); // EBN_draw_type
+			DrawAllPaths(m_handle,&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM);
+			EBNode_Draw(EBDRAW_ROOM,m_handle,&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM); // EBN_draw_type
 		}
 		TSearch_on=0;
 
@@ -425,7 +426,7 @@ find_again:;
 			m_State_changed = true;
 		}
 
-		TexGrStopOpenGL();
+		//TexGrStopOpenGL();
 
 		}
 	}
@@ -446,7 +447,7 @@ void Cned_PerspWnd::OnLButtonUp(UINT nFlags, CPoint point)
 	{
 		int roomnum,facenum,type;
 
-		CRect rc(m_grViewport->left(),m_grViewport->top(),m_grViewport->right(),m_grViewport->bottom());
+		CRect rc(m_handle.default_viewport.x, m_handle.default_viewport.y, m_handle.default_viewport.x + m_handle.default_viewport.width, m_handle.default_viewport.y + m_handle.default_viewport.height);
 		// Make sure the mouse cursor is not outside of the viewport!!!!
 		if (rc.PtInRect(point))
 		{
@@ -459,10 +460,11 @@ void Cned_PerspWnd::OnLButtonUp(UINT nFlags, CPoint point)
 
 			vector view_pos = m_Cam.target - (m_Cam.orient.fvec * m_Cam.dist);
 
-			TexGrStartOpenGL();
+			rend_MakeCurrent(m_handle);
+			//TexGrStartOpenGL();
 			TGWRenderRoom(&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM,ROOMNUM(m_pPrim->roomp)); // D3EditState.current_room);
 	//		TGWRenderMine (&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM,Viewer_object->roomnum);
-			TexGrStopOpenGL();
+			//TexGrStopOpenGL();
 
 			TSearch_on=0;
 
@@ -508,7 +510,7 @@ void Cned_PerspWnd::OnLButtonUp(UINT nFlags, CPoint point)
 					// Copy uv values from marked face
 					static int last_copy_marked_room=-1,last_copy_marked_face=-1;
 					static int last_copy_room=-1,last_copy_face=-1;
-					static count;
+					static int count;
 
 					if (Markedroomp == NULL) 
 					{
@@ -1225,7 +1227,7 @@ void Cned_PerspWnd::TGWRenderRoom(vector *pos,matrix *orient,float zoom,int star
 	m_last_zoom = zoom;
 	m_last_start_room = start_roomnum;
 	
-	StartEditorFrame(m_grViewport,pos,orient,zoom);
+	StartEditorFrame(m_handle,pos,orient,zoom);
 	FrameCount++;
 
 	RenderMine(start_roomnum,0,0,false,m_bOutline,m_bFlat,m_pPrim);
@@ -1251,7 +1253,7 @@ void Cned_PerspWnd::OnPaint()
 
 		if (bDoOpenGL)
 		{
-			HWND save_wnd;
+			/*HWND save_wnd;
 
 			app=(oeWin32Application *)g_OuroeApp;
 
@@ -1263,12 +1265,12 @@ void Cned_PerspWnd::OnPaint()
 			Cned_GrWnd::OnPaint();
 
 			rend_SetOpenGLWindowState (0,g_OuroeApp,NULL);
-			app->m_hWnd=(HWnd)save_wnd;
+			app->m_hWnd=(HWnd)save_wnd;*/
 		}
 		else
 		{
-	  		m_grScreen->flip();
-			m_grViewport->clear(); // GR_RGB(128,128,128)
+	  		//m_grScreen->flip();
+			//m_grViewport->clear(); // GR_RGB(128,128,128)
 		}
 
 		

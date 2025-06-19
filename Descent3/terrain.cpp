@@ -17,7 +17,7 @@
 */
 
 #ifdef NEWEDITOR
-#include "neweditor\globals.h"
+#include "..\neweditor\globals.h"
 #else
 #include <stdlib.h>
 #endif

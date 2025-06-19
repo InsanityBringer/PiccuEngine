@@ -17,7 +17,7 @@
 */
 
 #ifdef NEWEDITOR
-#include "globals.h"
+#include "../neweditor/globals.h"
 #endif
 
 #include "matcen.h"

@@ -11,9 +11,9 @@
  COPYRIGHT 1996-2000 OUTRAGE ENTERTAINMENT, INC.  ALL RIGHTS RESERVED.
  */
  
-
-
 #include "vecmat.h"
+#include "RendHandle.h"
+#include "grdefs.h"
 
 // bit flags for DrawWorld(,,,,,,,drawflags)
 #define DRAW_ALL	1
@@ -46,7 +46,7 @@ void DrawRoom(room *rp,int room_type = -1);
 void DrawRoomRotated(room *rp,vector *rotpoint,matrix *rotmat,vector *placepoint,int room_color);
 // Draws a 3D perspective wireframe view
 // Parameters:	prim - the structure containing the primitives to use
-void DrawWorld(grViewport *vp,vector *view_target,matrix *view_orient,float view_dist,int start_room,float rad,int drawflags,prim *prim);
+void DrawWorld(RendHandle& handle,vector *view_target,matrix *view_orient,float view_dist,int start_room,float rad,int drawflags,prim *prim);
 void DrawAllRooms(vector *view_target,float rad);
 
 //Finds the closest room:face to the viewer at a given x,y screen position in the wireframe view
@@ -55,10 +55,10 @@ void DrawAllRooms(vector *view_target,float rad);
 //					roomnum,facenum - pointers to variables to be filled in
 //					ingore_previous - if this is true, ignore the previous face & find the next farther face
 //Returns:		true if found a room/face
-bool WireframeFindRoomFace(grViewport *vp,int x,int y,int *roomnum,int *facenum,int find_mode,bool one_room);
+bool WireframeFindRoomFace(RendHandle& handle,int x,int y,int *roomnum,int *facenum,int find_mode,bool one_room);
 
 //Adds all the rooms that have a vertex inside of a given screen box to the selected list
 //Parameters:	vp - the viewport we're checking.  Must be the same viewport as the last wireframe view rendered
 //					left,top,right,bot - the screen coordinates of the box
 //Returns:		the number of rooms found
-int SelectRoomsInBox(grViewport *vp,int left,int top,int right,int bot);
+int SelectRoomsInBox(int left,int top,int right,int bot);

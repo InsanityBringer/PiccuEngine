@@ -198,7 +198,7 @@ void Cned_LevelWnd::Render(bool force_repaint)
 	FrameCount++;
 
 	//	Don't do a thing if these objects aren't created yet or the window isn't initialized for rendering
-	if (!m_grScreen || !m_grViewport || !m_bInitted)
+	if (!m_handle || !m_bInitted)
 		return;
 
 	if (first_time)
@@ -208,20 +208,22 @@ void Cned_LevelWnd::Render(bool force_repaint)
 			bDoOpenGL=true;
 	}
 
+	rend_MakeCurrent(m_handle);
+
 	vector view_pos = m_Cam.target - (m_Cam.orient.fvec * m_Cam.dist);
 
 	if (m_bTextured) {
-		TexGrStartOpenGL();
+		//TexGrStartOpenGL();
 		TGWRenderMine(&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM,ROOMNUM(m_Prim.roomp)); // D3EditState.current_room);
 //		TGWRenderMine(&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM,ROOMNUM(m_Prim.roomp)); // D3EditState.current_room);
 		if (!Dont_draw_terrain)
 			RenderTerrain(0);
-		DrawAllPaths(m_grViewport,&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM);
-		EBNode_Draw(EBDRAW_LEVEL,m_grViewport,&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM); // EBN_draw_type
-		TexGrStopOpenGL();
+		DrawAllPaths(m_handle,&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM);
+		EBNode_Draw(EBDRAW_LEVEL,m_handle,&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM); // EBN_draw_type
+		//TexGrStopOpenGL();
 	} else {
 		flags |= DRAW_ALL | DRAW_CUR;
-		DrawWorld(m_grViewport,&m_Cam.target,&m_Cam.orient,m_Cam.dist,0,m_Cam.rad,flags,&m_Prim);
+		DrawWorld(m_handle,&m_Cam.target,&m_Cam.orient,m_Cam.dist,0,m_Cam.rad,flags,&m_Prim);
 	}
 
 	m_StartFlip = TRUE;
@@ -302,6 +304,8 @@ void Cned_LevelWnd::OnLButtonDown(UINT nFlags, CPoint point)
 	m_BDOWN_Found_x = -1;
 	m_BDOWN_Found_y = -1;
 
+	rend_MakeCurrent(m_handle);
+
 	// Different routines depending on whether textures are up
 	if (!m_bTextured)
 	{
@@ -315,13 +319,13 @@ void Cned_LevelWnd::OnLButtonDown(UINT nFlags, CPoint point)
 	{
 		// WireframeFindRoomFace requires that the viewport its checking to be the last one that was rendered, so call Render() first.
 		Render(false);
-		if (WireframeFindRoomFace(m_grViewport,point.x,point.y,&found_segnum,&found_facenum,FM_SPECIFIC,false)) {
+		if (WireframeFindRoomFace(m_handle,point.x,point.y,&found_segnum,&found_facenum,FM_SPECIFIC,false)) {
 			find_mode = FM_NEXT;
 		}
 
 find_again:;
 
-		if (WireframeFindRoomFace(m_grViewport,point.x,point.y,&found_segnum,&found_facenum,find_mode,false)) {
+		if (WireframeFindRoomFace(m_handle,point.x,point.y,&found_segnum,&found_facenum,find_mode,false)) {
 			ASSERT(found_segnum!=-1);
 			ASSERT(found_facenum!=-1);
 			room *rp = &Rooms[found_segnum];
@@ -344,12 +348,12 @@ find_again:;
 	}
 	else // Textures
 	{
-		CRect rc(m_grViewport->left(),m_grViewport->top(),m_grViewport->right(),m_grViewport->bottom());
+		CRect rc(m_handle.default_viewport.x,m_handle.default_viewport.y,m_handle.default_viewport.x + m_handle.default_viewport.width, m_handle.default_viewport.y + m_handle.default_viewport.height);
 		// Make sure the mouse cursor is not outside of the viewport!!!!
 		if (rc.PtInRect(point))
 		{
 
-		TexGrStartOpenGL();
+		//TexGrStartOpenGL();
 
 //		ResetPostrenderList();
 
@@ -366,8 +370,8 @@ find_again:;
 //		TGWRenderMine (&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM,Viewer_object->roomnum);
 		if (!Dont_draw_terrain)
 			RenderTerrain(0);
-		DrawAllPaths(m_grViewport,&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM);
-		EBNode_Draw(EBDRAW_LEVEL,m_grViewport,&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM); // EBN_draw_type
+		DrawAllPaths(m_handle,&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM);
+		EBNode_Draw(EBDRAW_LEVEL,m_handle,&Viewer_object->pos,&Viewer_object->orient,D3_DEFAULT_ZOOM); // EBN_draw_type
 		TSearch_on=0;
 
 		// Save what we found, for the button up handler
@@ -441,7 +445,7 @@ find_again:;
 				dlgTerrainDialogBar->SetCurrentSat(TSearch_seg);
 		}
 
-		TexGrStopOpenGL();
+		//TexGrStopOpenGL();
 
 		}
 	}
@@ -456,6 +460,8 @@ void Cned_LevelWnd::OnLButtonUp(UINT nFlags, CPoint point)
 	// TODO: Add your message handler code here and/or call default
 	m_Mouse.left = false;
 
+	rend_MakeCurrent(m_handle);
+
 	// Different routines depending on whether textures are up
 	if (!m_bTextured)
 	{
@@ -464,7 +470,7 @@ void Cned_LevelWnd::OnLButtonUp(UINT nFlags, CPoint point)
 	{
 		int roomnum,facenum,type;
 
-		CRect rc(m_grViewport->left(),m_grViewport->top(),m_grViewport->right(),m_grViewport->bottom());
+		CRect rc(m_handle.default_viewport.x, m_handle.default_viewport.y, m_handle.default_viewport.x + m_handle.default_viewport.width, m_handle.default_viewport.y + m_handle.default_viewport.height);
 		// Make sure the mouse cursor is not outside of the viewport!!!!
 		if (rc.PtInRect(point))
 		{
@@ -477,11 +483,11 @@ void Cned_LevelWnd::OnLButtonUp(UINT nFlags, CPoint point)
 
 			vector view_pos = m_Cam.target - (m_Cam.orient.fvec * m_Cam.dist);
 
-			TexGrStartOpenGL();
+			//TexGrStartOpenGL();
 			TGWRenderMine(&view_pos,&m_Cam.orient,D3_DEFAULT_ZOOM,ROOMNUM(m_Prim.roomp)); // D3EditState.current_room);
 			if (!Dont_draw_terrain)
 				RenderTerrain(0);
-			TexGrStopOpenGL();
+			//TexGrStopOpenGL();
 
 			TSearch_on=0;
 
@@ -1310,7 +1316,7 @@ void Cned_LevelWnd::TGWRenderMine(vector *pos,matrix *orient,float zoom,int star
 	m_last_zoom = zoom;
 	m_last_start_room = start_roomnum;
 	
-	StartEditorFrame(m_grViewport,pos,orient,zoom);
+	StartEditorFrame(m_handle,pos,orient,zoom);
 	FrameCount++;
 
 	RenderMine(start_roomnum,0,0,true,m_bOutline,m_bFlat,&m_Prim);
@@ -1342,18 +1348,18 @@ void Cned_LevelWnd::OnPaint()
 
 			save_wnd=(HWND)app->m_hWnd;
 			app->m_hWnd=(HWnd)m_hWnd;
-			rend_SetOpenGLWindowState (1,g_OuroeApp,NULL);
+			//rend_SetOpenGLWindowState (1,g_OuroeApp,NULL);
 
-			rend_Flip();
+			//rend_Flip();
 //			Cned_GrWnd::OnPaint();
 
-			rend_SetOpenGLWindowState (0,g_OuroeApp,NULL);
+			//rend_SetOpenGLWindowState (0,g_OuroeApp,NULL);
 			app->m_hWnd=(HWnd)save_wnd;
 		}
 		else
 		{
-	  		m_grScreen->flip();
-			m_grViewport->clear();
+	  		//m_grScreen->flip();
+			//m_grViewport->clear();
 		}
 
 		

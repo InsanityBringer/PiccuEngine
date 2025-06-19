@@ -337,9 +337,11 @@ int GetFirstPath ()
 
 #ifndef NEWEDITOR
 #include "editor/d3edit.h"
+#else
+#include "../neweditor/ned_Rend.h"
 #endif
 
-void DrawAllPaths (grViewport *vp,vector *viewer_eye,matrix *viewer_orient,float zoom)
+void DrawAllPaths (RendHandle& handle,vector *viewer_eye,matrix *viewer_orient,float zoom)
 {
 	int i,current_path_index=0,t;
 	g3Point rot_points[300];
@@ -347,6 +349,8 @@ void DrawAllPaths (grViewport *vp,vector *viewer_eye,matrix *viewer_orient,float
 
 	if (!Show_paths)
 		return;
+
+	rend_MakeCurrent(handle);
 
 	current_path_index=GetFirstPath();
 

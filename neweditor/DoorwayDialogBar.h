@@ -18,8 +18,10 @@
 #endif // _MSC_VER > 1000
 // DoorwayDialogBar.h : header file
 //
+#include "RendHandle.h"
 #include "resource.h"
 #include "ned_Door.h"
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CDoorwayDialogBar dialog
@@ -68,7 +70,7 @@ protected:
 	int m_CurrentDoor;
 	void InitKeyPad(void);
 	void RedrawArea();
-	void PaintPreviewArea(CWnd *pWnd);
+	void PaintPreviewArea(CWnd *pWnd, RendHandle& handle);
 	void RedrawPreviewArea(CWnd *pWnd);
 	void KeyCheck(int id,int keynum);
 	char door_in_mem[MAX_DOORS];

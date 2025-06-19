@@ -20,7 +20,7 @@
 #include <vector>
 
 #ifdef NEWEDITOR
-#include "neweditor\globals.h"
+#include "..\neweditor\globals.h"
 void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain, bool render_all, bool outline, bool flat, prim* prim);
 #endif
 #include "terrain.h"
@@ -95,6 +95,7 @@ float Clip_scale_left, Clip_scale_top, Clip_scale_right, Clip_scale_bot;
 bool Rendering_main_view = true;
 #endif
 
+#ifndef NEWEDITOR
 VertexBuffer Terrain_vertexbuffer;
 IndexBuffer Terrain_indexbuffer;
 
@@ -334,6 +335,7 @@ void MeshTerrain()
 	builder.BuildVertices(Terrain_vertexbuffer);
 	builder.BuildIndicies(Terrain_indexbuffer);
 }
+#endif
 
 void InitTerrainRenderSpeedups()
 {
@@ -929,6 +931,7 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 		rend_SetZValues(0, 5000);
 	}
 
+#ifndef NEWEDITOR
 	if (Render_use_newrender)
 	{
 		//mesh test
@@ -952,6 +955,7 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 		rend_EndShaderTest();
 	}
 	else
+#endif
 	{
 		// And display!
 		if (nt > 0)

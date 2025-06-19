@@ -384,7 +384,7 @@ BOOL CNewEditorApp::InitInstance()
 	//g_Database = new oeD3Win32Database;
 	
 	// Init our renderer
-	rend_Init(RENDERER_OPENGL,g_OuroeApp,NULL);
+	rend_Init(RENDERER_SOFTWARE_16BIT,g_OuroeApp,NULL);
 
 	//Initialize the editor state (Desktop_surf,etc)
 	Editor_state.Initialize();

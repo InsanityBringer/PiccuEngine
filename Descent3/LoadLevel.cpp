@@ -33,9 +33,9 @@
 #include "gametexture.h"
 
 #ifdef NEWEDITOR
-#include "..\neweditor\ned_gametexture.h"
-#include "..\neweditor\ned_Object.h"
-#include "editor\Erooms.h"
+#include "../neweditor/ned_gametexture.h"
+#include "../neweditor/ned_Object.h"
+#include "../editor/Erooms.h"
 #endif
 
 #include "trigger.h"
@@ -86,8 +86,8 @@
 #endif
 
 #ifdef NEWEDITOR
-#include "..\neweditor\neweditor.h"
-#include "..\neweditor\globals.h"
+#include "../neweditor/neweditor.h"
+#include "../neweditor/globals.h"
 #endif
 
 MD5* Level_md5 = NULL;
@@ -4291,7 +4291,7 @@ void WritePlayerStarts(CFILE* outfile)
 }
 
 
-#include "editor/ebnode.h"
+#include "../editor/ebnode.h"
 
 //Save a level file
 //Returns 1 if file saved ok, else 0

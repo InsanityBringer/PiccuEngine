@@ -69,8 +69,8 @@ protected:
 	int ListNextItem(int curitem);
 	int ListPrevItem(int curitem);
 
-	void DrawItem(int x, int y, grHardwareSurface *itemsurf, int item);
-	void DrawText(ddgr_color color, int x, int y, grHardwareSurface *itemsurf, char *str);
+	void DrawItem(int x, int y, int item);
+	void DrawText(ddgr_color color, int x, int y, char *str);
 
 	//	if item was selected from the list box, this function is invoked.
 	void OnItemSelected(int item);

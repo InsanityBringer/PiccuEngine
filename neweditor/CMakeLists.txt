@@ -195,5 +195,6 @@ set (NEWEDITOR_SOURCES
 	neweditor/TipOfTheDay.h
 	neweditor/TriggerDialog.cpp
 	neweditor/TriggerDialog.h
+	neweditor/RendHandle.h
 	PARENT_SCOPE)
 	

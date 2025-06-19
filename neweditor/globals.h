@@ -22,6 +22,7 @@
 #include "room.h"
 #include "../editor/group.h"
 #include "../editor/SelManager.h"
+#include "RendHandle.h"
 
 #define EditorMessageBox OutrageMessageBox
 extern int gTimerID;
@@ -212,7 +213,7 @@ extern char D3HogDir[_MAX_PATH*2];
 
 //Look for player objects & set player starts
 void FindPlayerStarts();
-void StartEditorFrame(grViewport *vp, vector *viewer_eye, matrix *viewer_orient, float zoom);
+void StartEditorFrame(RendHandle& handle, vector *viewer_eye, matrix *viewer_orient, float zoom);
 void EndEditorFrame();
 void GetMouseRotation( int idx, int idy, matrix * RotMat );
 void LoadLevelProgress(int step,float percent,char *chunk);
@@ -445,12 +446,6 @@ public:
 
 	//Attaches the desktop grSurface to a window
 	void AttachDesktopSurface(unsigned hWnd);
-
-	//Returns a pointer to the desktop surface
-	grSurface *GetDesktopSurface(void);
-
-	//Blits a surface to the desktop surface
-	bool DesktopBlit(int x,int y,grSurface *sSource);
 
 	//Clears the desktop surface
 	void DesktopClear(int x,int y,int w,int h);

@@ -641,29 +641,18 @@ float Render_FOV	= D3_DEFAULT_FOV;
 float Render_zoom = D3_DEFAULT_ZOOM;
 
 // from main\editor\gameeditor.cpp
-static grViewport *Editor_g3_vp = NULL;
+static RendHandle* Editor_g3_vp = NULL;
 
-void StartEditorFrame(grViewport *vp, vector *viewer_eye, matrix *viewer_orient, float zoom)
+void StartEditorFrame(RendHandle& handle, vector *viewer_eye, matrix *viewer_orient, float zoom)
 {
-	grSurface *surf;
+	Editor_g3_vp = &handle;										// This surface should be locked.  bad?
 
-	ASSERT(vp != NULL);
-
-	Editor_g3_vp = vp;
-	surf = Editor_g3_vp->lock();
-	if (!surf) 
-		Int3();													// This surface should be locked.  bad?
-
-	rend_StartFrame(0,0,surf->width(),surf->height());
+	rend_StartFrame(0,0,handle.default_viewport.width,handle.default_viewport.height);
 	g3_StartFrame(viewer_eye,viewer_orient,zoom);
 }
 
-
-
 void EndEditorFrame()
 {
-	Editor_g3_vp->unlock();
-	Editor_g3_vp = NULL;
 	g3_EndFrame();
 	rend_EndFrame();
 }
@@ -705,10 +694,7 @@ void GetMouseRotation( int idx, int idy, matrix * RotMat )
 	RotMat->rvec.z = -RotMat->fvec.x;
 	RotMat->uvec.z = -RotMat->fvec.y;
 	RotMat->fvec.z = cos_theta;
-
 }
-
-
 
 
 // Selection
@@ -730,7 +716,7 @@ void EndSel(editorSelectorManager *esm)
 	if (! keys.ctrl )		//ctrl + select means add to list
 		ClearRoomSelectedList();
 
-	n = SelectRoomsInBox(NULL,left,top,right,bot);
+	n = SelectRoomsInBox(left,top,right,bot);
 	PrintStatus("%d rooms selected",n);
 
 	esm->EndSelection();
@@ -784,24 +770,15 @@ CEditorState::CEditorState()
 	bn_room = 0;
 	bn_node = 0;
 	bn_edge = 0;
-	Desktop_surf = NULL;
 }
 
 CEditorState::~CEditorState()
 {
-	if (Desktop_surf) {
-		delete Desktop_surf;
-		Desktop_surf = NULL;
-	}
 }
 
 //Attaches the desktop grSurface to a window
 void CEditorState::AttachDesktopSurface(unsigned hWnd)
 {
-	if(Desktop_surf)
-	{
-		Desktop_surf->attach_to_window(hWnd);
-	}
 }
 
 //Initializes the Editor State
@@ -809,41 +786,18 @@ void CEditorState::Initialize(void)
 {
 	// TODO : read values from registry
 	texscale = 1.0f;
-	Desktop_surf = new grSurface(0,0,0, SURFTYPE_VIDEOSCREEN, 0);
 }
 
 //Shutsdown the Editor State
 void CEditorState::Shutdown(void)
 {
-	if (Desktop_surf) {
-		delete Desktop_surf;
-		Desktop_surf = NULL;
-	}
 }
 
-//Returns a pointer to the desktop surface
-grSurface *CEditorState::GetDesktopSurface(void)
-{
-	return Desktop_surf;
-}
-
-//Blits a surface to the desktop surface
-bool CEditorState::DesktopBlit(int x,int y,grSurface *sSource)
-{
-	if(!Desktop_surf)
-		return false;
-
-	Desktop_surf->blt(x, y, sSource);
-	return true;
-}
 
 //Clears the desktop surface
 void CEditorState::DesktopClear(int x,int y,int w,int h)
 {
-	if(!Desktop_surf)
-		return;
-
-	Desktop_surf->clear(x,y,w,h);
+	Int3();
 }
 
 //Sets up texture dragging

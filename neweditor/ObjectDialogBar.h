@@ -20,6 +20,7 @@
 //
 #include "resource.h"
 #include "ObjectPalette.h"
+#include "RendHandle.h"
 
 extern int Insert_mode;
 
@@ -132,7 +133,7 @@ protected:
 	int m_current_start_pos;
 	void InitKeyPad(void);
 	void RedrawArea();
-	void PaintPreviewArea(CWnd *pWnd);
+	void PaintPreviewArea(CWnd *pWnd, RendHandle& handle); //handle had better point to pWnd's RendHandle or else. 
 	void RedrawPreviewArea(CWnd *pWnd);
 	void DoObjectTabNotify(NMHDR *nmhdr);
 	int m_CurrentObjectTab;
@@ -171,7 +172,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-void DrawItemModel(int x,int y,grSurface *ds,grHardwareSurface *surf,int model_num,bool draw_large);
+void DrawItemModel(int x,int y, RendHandle& handle,int model_num,bool draw_large);
 
 /////////////////////////////////////////////////////////////////////////////
 // CObjectProperties dialog

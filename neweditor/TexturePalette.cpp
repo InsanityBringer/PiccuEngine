@@ -233,12 +233,10 @@ BOOL CTexturePalette::OnInitDialog()
 	RECT rect;
 	CWnd *wnd = GetDlgItem(IDC_VIEW);
 	wnd->GetClientRect(&rect);
-	
-	grSurface *ds = Editor_state.GetDesktopSurface();
 
 	m_TextureList.SetShowFilter(m_ShowFilter);
 	m_TextureList.SetParent(this);
-	m_TextureList.Create(wnd,IDC_VIEW, rect, MEDIUM_SIZE,ds);	
+	m_TextureList.Create(wnd,IDC_VIEW, rect, MEDIUM_SIZE);	
 	m_TextureList.SelectItem(0);
 	
 	CheckDlgButton(IDC_RADIO2,TRUE);
@@ -338,20 +336,20 @@ int CTexturePick::ListPrevItem(int curtex)
 	return prev_texture;
 }
 
-void CTexturePick::DrawItem(int x, int y, grHardwareSurface *itemsurf, int item)
+void CTexturePick::DrawItem(int x, int y, int item)
 {
 	int bm_handle = -1;
-	grSurface *ds = Editor_state.GetDesktopSurface();
 	bm_handle = ned_GetTextureBitmap (item,0);
 
 	if(bm_handle<BAD_BITMAP_HANDLE)
 		bm_handle = BAD_BITMAP_HANDLE;
 
-	if(!ds)
+	//TODO emulate with rend_ commands
+	/*if(!ds)
 		return;
 
 	itemsurf->load(bm_handle);
-	ds->blt(x, y, itemsurf);
+	ds->blt(x, y, itemsurf);*/
 }
 
 //	if item was selected from the list box, this function is invoked.

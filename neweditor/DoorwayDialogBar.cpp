@@ -28,6 +28,7 @@
 #include "polymodel.h"
 #include "../editor/Edoors.h"
 #include "../editor/HRoom.h"
+#include "ned_Rend.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -182,9 +183,9 @@ void CDoorwayDialogBar::OnControlUpdate(CCmdUI* pCmdUI)
 }
 
 extern int GetDoorImage(int handle);
-extern void DrawItemModel(int x,int y,grSurface *ds,grHardwareSurface *surf,int model_num,bool draw_large);
+extern void DrawItemModel(int x,int y,RendHandle& handle,int model_num,bool draw_large);
 
-void CDoorwayDialogBar::PaintPreviewArea(CWnd *pWnd)
+void CDoorwayDialogBar::PaintPreviewArea(CWnd *pWnd, RendHandle& handle)
 {
 	int door_id,model_num;
 
@@ -201,14 +202,16 @@ void CDoorwayDialogBar::PaintPreviewArea(CWnd *pWnd)
 	height = rect.Height();
 
 	//Draw here
-	grSurface *ds = Editor_state.GetDesktopSurface();
+	/*grSurface *ds = Editor_state.GetDesktopSurface();
 	if(!ds)
 		return;
 
 	//setup the drawing area
 	grHardwareSurface surface;
 	ds->attach_to_window((unsigned)pWnd->m_hWnd);
-	surface.create(width,height,BPP_16);
+	surface.create(width,height,BPP_16);*/
+
+	rend_MakeCurrent(handle);
 
 	//render here
 	if(pWnd==&m_CDView)
@@ -219,12 +222,13 @@ void CDoorwayDialogBar::PaintPreviewArea(CWnd *pWnd)
 			door_id = m_CurrentDoor;
 			model_num = GetDoorImage(door_id);
 
-			DrawItemModel(0,0,ds,&surface,model_num,true);
+			DrawItemModel(0,0,handle,model_num,true);
 		}
 		else
 		{
-			surface.clear(bk_col);
-			ds->blt(0, 0, &surface);
+			rend_ClearScreen(0);
+			//surface.clear(bk_col);
+			//ds->blt(0, 0, &surface);
 		}
 	}else
 	{
@@ -232,15 +236,15 @@ void CDoorwayDialogBar::PaintPreviewArea(CWnd *pWnd)
 	}
 
 	//free up
-	surface.free();
-	ds->attach_to_window(NULL);
+	//surface.free();
+	//ds->attach_to_window(NULL);
 }
 
 void CDoorwayDialogBar::OnPaint() 
 {
 	CPaintDC dc(this); // device context for painting
 		
-	PaintPreviewArea(&m_CDView);
+	//PaintPreviewArea(&m_CDView);
 	
 	// Do not call CDialogBar::OnPaint() for painting messages
 }
