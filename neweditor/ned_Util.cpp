@@ -25,7 +25,8 @@ char *IntSpacing(int i)
 
 	i = abs(i);
 
-	for (int n=1;i >= 10;n++)
+	int n;
+	for (n=1;i >= 10;n++)
 		i /= 10;
 
 	ASSERT(n <= 20);

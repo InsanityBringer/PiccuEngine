@@ -266,7 +266,7 @@ void UpdateUnsentValues ()
 	int i;
 	rad_surface *sat_surface;
 
-	static last_report_time=-10;
+	static int last_report_time=-10;
 
 	rad_TotalUnsent=0.0f;
 	rad_MaxSurface=NULL;

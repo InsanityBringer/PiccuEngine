@@ -63,7 +63,7 @@ public:
 //Macro to write a string
 #define write_string(label,varp) write(label,varp,strlen(varp))
 
-#if defined(SDL3)
+#if defined(SDL3) && !defined(NEWEDITOR)
 #include "sdl\SDLDatabase.h"
 #elif defined(WIN32)
 #include "win\Win32Database.h"

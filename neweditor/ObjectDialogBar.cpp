@@ -26,6 +26,7 @@
 #include "object.h"
 #include "polymodel.h"
 #include "ship.h"
+#include "ned_Rend.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

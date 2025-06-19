@@ -21,6 +21,8 @@
 //#include "..\3d\clipper.h"
 #include "globals.h"
 
+void rend_CloseOpenGLWindow();
+
 int OpenGL_window_initted=0;
 
 // The font characteristics
@@ -476,17 +478,19 @@ int WindowGL=0;
 // Gets OpenGL ready to work in a window
 int rend_InitOpenGLWindow (oeApplication *app,renderer_preferred_state *pref_state)
 {
-	WindowGL=1;
-	return rGL_Init (app,pref_state);
+	//WindowGL=1;
+	//return rGL_Init (app,pref_state);
+	Int3();
+	return 0; //please don't call this legacy code
 }
 
 // Shuts down OpenGL in a window
 void rend_CloseOpenGLWindow ()
 {
-	rGL_Close();
-	WindowGL=0;
-	OpenGL_window_initted=0;
-	mprintf ((1,"SHUTTING DOWN WINDOWED OPENGL!"));
+	//rGL_Close();
+	//WindowGL=0;
+	//OpenGL_window_initted=0;
+	//mprintf ((1,"SHUTTING DOWN WINDOWED OPENGL!"));
 }
 
 // Sets the state of the OpenGLWindow to on or off

@@ -772,7 +772,7 @@ void CTexAlignDialog::OnUVFaceMap()
 			OutrageMessageBox("One or more marked faces have more than four vertices. Operation aborted.");
 			return;
 		}
-		for (i=0; i<num_m_faces; i++)
+		for (int i=0; i<num_m_faces; i++)
 			FaceMapTexture(facenums[i]);
 	}
 	else if (m_pPrim->face != -1)

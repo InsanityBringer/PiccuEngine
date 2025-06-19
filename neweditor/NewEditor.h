@@ -141,7 +141,6 @@ extern CCameraSlew *gCameraSlewer;
 #include "application.h"
 #include "AppDatabase.h"
 
-extern grScreen *Game_screen;				// The one and only video screen
 extern oeWin32Application *g_OuroeApp;		// The Main application
 //extern oeAppDatabase *g_Database;			// Application database.
 

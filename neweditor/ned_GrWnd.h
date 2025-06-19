@@ -20,6 +20,7 @@
 //
 
 #include "RendHandle.h"
+#include "grdefs.h"
 
 const DWORD GRWND_STYLE = WS_VISIBLE | WS_CHILD | WS_CAPTION | WS_CLIPSIBLINGS |
 							WS_THICKFRAME | WS_SYSMENU;

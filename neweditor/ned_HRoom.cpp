@@ -135,7 +135,7 @@ void AttachRoom()
 		newroomp->verts[i] = ((attroomp->verts[i] - attcenter) * Placed_room_rotmat) + basecenter;
 
 	//Copy faces to new room
-	for (i=0;i<attroomp->num_faces;i++)
+	for (int i=0;i<attroomp->num_faces;i++)
 		CopyFace(&newroomp->faces[i],&attroomp->faces[i]);
 
 	//Recompute normals for the faces

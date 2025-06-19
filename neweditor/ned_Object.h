@@ -42,7 +42,8 @@ struct ned_object_info
 	int table_stack[MAX_LOADED_TABLE_FILES];
 };
 
-#define MAX_OBJECT_IDS	810
+//[ISB] synced value with Piccu code
+#define MAX_OBJECT_IDS	910
 extern ned_object_info	Object_info[MAX_OBJECT_IDS];
 extern int Num_objects;
 

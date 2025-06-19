@@ -18,8 +18,6 @@
 #include "ned_GrWnd.h"
 #include "ned_Rend.h"
 
-#include "ned_GLLoad.h"
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
