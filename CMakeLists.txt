@@ -99,7 +99,7 @@ IF (WIN32)
 		SET (PLATFORM_LIBS ${PLATFORM_LIBS} SDL3::SDL3)
 	endif()
 	SET (MIN_PLATFORM_LIBS wsock32.lib wininet.lib)
-	set (NEWEDITOR_PLATFORM_LIBS nafxcw.lib libcmt.lib wsock32.lib winmm.lib Glu32.lib OpenGL32.lib dbghelp.lib wininet.lib)
+	set (NEWEDITOR_PLATFORM_LIBS ${PLATFORM_LIBS})
 ENDIF()
 IF (UNIX AND NOT APPLE)
 	SET (PLATFORM_LIBS ${SDL_LIBRARY} caca asound audio esd aa directfb m dl GLU)
@@ -261,7 +261,9 @@ if (BUILD_NEWEDITOR)
 		${RENDERER_NEWEDITOR_SOURCES}
 		${VECMAT_SOURCES}
 		${WIN32_NEWEDITOR_SOURCES}
-		${MAIN_NEWEDITOR_SOURCES})
+		${MAIN_NEWEDITOR_SOURCES}
+		${MD5_SOURCES} #Needed for 1.5's LoadLevel, could just use NED's.. but nah
+		)
 endif()
 
 add_executable(PiccuEngine ${DESCENT3_SOURCES})
@@ -280,6 +282,7 @@ IF (WIN32)
 		target_compile_definitions(PiccuNewEditor PUBLIC -DMONO "$<$<CONFIG:RELEASE>:RELEASE>")
 		target_compile_definitions(PiccuNewEditor PUBLIC -DMONO "$<$<CONFIG:MINSIZEREL>:RELEASE>")
 		target_compile_definitions(PiccuNewEditor PUBLIC -DMONO "$<$<CONFIG:RELWITHDEBINFO>:RELEASE>")
+		target_link_libraries(PiccuNewEditor ${NEWEDITOR_PLATFORM_LIBS})
 	endif()
 ENDIF()
 

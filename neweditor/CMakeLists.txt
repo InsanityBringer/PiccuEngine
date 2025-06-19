@@ -116,8 +116,6 @@ set (NEWEDITOR_SOURCES
 	neweditor/ned_GrWnd.h
 	neweditor/ned_HFile.cpp
 	neweditor/ned_HFile.h
-	neweditor/ned_HRoom.cpp
-	neweditor/ned_HRoom.h
 	neweditor/ned_LevelGoal.cpp
 	neweditor/ned_LevelWnd.cpp
 	neweditor/ned_LevelWnd.h
@@ -196,5 +194,6 @@ set (NEWEDITOR_SOURCES
 	neweditor/TriggerDialog.cpp
 	neweditor/TriggerDialog.h
 	neweditor/RendHandle.h
+	neweditor/physics_common.cpp
 	PARENT_SCOPE)
 	
