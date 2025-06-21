@@ -93,7 +93,9 @@ LONG CSoundDialogBar::OnInitDialog ( UINT wParam, LONG lParam)
 	dlgSoundDialogBar = this;
 //	lsound_init();
 
-	if ( !HandleInitDialog(wParam, lParam) || !UpdateData(FALSE))
+	//[ISB] In currentyear this function never returns true. heh. 
+	HandleInitDialog(wParam, lParam);
+	if (!UpdateData(FALSE))
 	{
 		TRACE0("Warning: UpdateData failed during dialog init.\n");
 		return FALSE;

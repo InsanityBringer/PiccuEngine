@@ -136,8 +136,8 @@ void CTerrainDialogBar::InitBar()
 LONG CTerrainDialogBar::OnInitDialog ( UINT wParam, LONG lParam)
 {
 	dlgTerrainDialogBar = this;
-
-	if ( !HandleInitDialog(wParam, lParam) || !UpdateData(FALSE))
+	HandleInitDialog(wParam, lParam);
+	if (!UpdateData(FALSE))
 	{
 		TRACE0("Warning: UpdateData failed during dialog init.\n");
 		return FALSE;
