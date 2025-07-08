@@ -45,6 +45,10 @@
 #include "viseffect.h"
 #include "psrand.h"
 #include "vibeinterface.h"
+#include "gameloop.h" //for Gametime;
+
+//[ISB] Don't play additional pain sounds within this interval
+constexpr float PAIN_SOUND_INTERVAL = 0.05f;
 
 // Shake variables
 static matrix Old_player_orient;
@@ -187,6 +191,9 @@ void DecreasePlayerEnergy (int slot,float energy)
 //Plays the sound for a player being damaged
 void PlayPlayerDamageSound(object *playerobj,int damage_type)
 {
+	if (PlayersExtra[playerobj->id].last_pain_time > Gametime)
+		return;
+
 	int sound_handle;
 
 	switch (damage_type) 
@@ -205,12 +212,17 @@ void PlayPlayerDamageSound(object *playerobj,int damage_type)
 	}
 
 	Sound_system.Play3dSound(sound_handle, SND_PRIORITY_HIGHEST, playerobj);
+	PlayersExtra[playerobj->id].last_pain_time = Gametime + PAIN_SOUND_INTERVAL;
 }
 
 //Plays the sound for a player being damaged
 void PlayPlayerInvulnerabilitySound(object *playerobj)
 {
+	if (PlayersExtra[playerobj->id].last_pain_time > Gametime)
+		return;
+
 	Sound_system.Play3dSound(SOUND_METALLIC_DOOR_HIT, SND_PRIORITY_HIGHEST, playerobj);
+	PlayersExtra[playerobj->id].last_pain_time = Gametime + PAIN_SOUND_INTERVAL;
 }
 
 //Kills the player

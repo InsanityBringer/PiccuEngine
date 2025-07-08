@@ -69,6 +69,13 @@ struct team
 	int score;
 };
 
+//[ISB] hack ahoy:
+//This is some aux data I needed for Piccu features but aren't important enough to warrant changing the player structure over
+struct player_extra
+{
+	float last_pain_time;
+};
+
 extern int Player_num;
 extern int Default_ship_permission;
 
@@ -77,6 +84,7 @@ extern object *Player_object;
 
 extern int Num_teams,Team_game;
 extern player Players[];
+extern player_extra PlayersExtra[];
 extern team Teams[];
 extern float HudNameTan;
 extern int Current_waypoint;
