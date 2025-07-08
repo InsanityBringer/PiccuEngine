@@ -545,9 +545,11 @@ void InitPlayerNewShip(int slot, int inven_reset)
 			Players[slot].inventory.Add(OBJ_ROBOT, ROBOT_GUIDEBOT);
 	}
 
-	// update IntelliVIBE
+	//[ISB] Holding MD during level transitions causes problems, reset FOV on a new ship
 	if (slot == Player_num)
-		VIBE_PlayerRespawn();
+	{
+		Render_FOV = Render_FOV_desired;
+	}
 }
 
 // Gives the named player an afterburner
