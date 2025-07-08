@@ -16,6 +16,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
 #include "weapon.h"
 #include "pstypes.h"
 #include "pserror.h"
@@ -649,6 +650,26 @@ void LoadWeaponSelectStates(CFILE* fp)
 	ResetWeaponSelectStates(state);
 }
 
+//Checks if a primary weapon can be fired at all. 
+//Used to determine slot selection priorities. 
+bool CheckCanFireWeapon(int slot)
+{
+	player& plr = Players[Player_num];
+	ship& ship = Ships[plr.ship_index];
+	otype_wb_info& wb = ship.static_wb[slot];
+	dynamic_wb_info& p_dwb = Player_object->dynamic_wb[slot];
+
+	float ammo_scale = (p_dwb.flags & DWBF_QUAD) != 0 ? 2 : 1;
+
+	if (wb.energy_usage * ammo_scale > 0 && plr.energy <= 0)
+		return false;
+
+	if (wb.ammo_usage * ammo_scale > 0 && plr.weapon_ammo[slot] <= 0)
+		return false;
+
+	return true;
+}
+
 void SelectWeapon(int slot)
 {
 	if (Player_object->type != OBJ_PLAYER)
@@ -709,11 +730,9 @@ void SelectPrimaryWeapon(int slot)
 			int lowpriority = GetPrimaryPriority(nw_low);
 			int highpriority = GetPrimaryPriority(nw_high);
 
-			if (lowpriority > highpriority)
+			if (lowpriority > highpriority || !CheckCanFireWeapon(nw_high) && CheckCanFireWeapon(nw_low))
 			{
-				int heh = nw_low;
-				nw_low = nw_high;
-				nw_high = heh;
+				std::swap(nw_low, nw_high);
 			}
 		}
 
@@ -825,9 +844,7 @@ void SelectSecondaryWeapon(int slot)
 
 		if (lowpriority > highpriority)
 		{
-			int heh = nw_low;
-			nw_low = nw_high;
-			nw_high = heh;
+			std::swap(nw_low, nw_high);
 		}
 	}
 

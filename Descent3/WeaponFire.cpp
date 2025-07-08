@@ -18,7 +18,6 @@
 
 #include "weapon.h"
 #include "descent.h"
-#include "weapon.h"
 #include "polymodel.h"
 #include "room.h"
 #include "object.h"
@@ -27,7 +26,6 @@
 #include "hud.h"
 #include "hlsoundlib.h"
 #include "gameevent.h"
-#include "polymodel.h"
 #include "lighting.h"
 #include "fireball.h"
 #include <string.h>
@@ -41,7 +39,6 @@
 #include "viseffect.h"
 #include "vclip.h"
 #include "SmallViews.h"
-#include "hlsoundlib.h"
 #include "soundload.h"
 #include "stringtable.h"
 #include "multi.h"
