@@ -1643,8 +1643,14 @@ void collide_generic_and_player( object * robotobj, object * playerobj, vector *
 		cur_pos.orient = &playerobj->orient;
 		cur_pos.roomnum = playerobj->roomnum;
 
-		Sound_system.Play3dSound(SOUND_PLAYER_HIT_WALL, SND_PRIORITY_HIGHEST, &cur_pos, MAX_GAME_VOLUME * scalar);		
+		//Try to avoid creating a racket when you're repeatedly hitting something..
+		if (Players[playerobj->id].last_hit_wall_sound_time + MIN_PLAYER_WALL_SOUND_TIME < Gametime)
+		{
+			Sound_system.Play3dSound(SOUND_PLAYER_HIT_WALL, SND_PRIORITY_HIGHEST, &cur_pos, MAX_GAME_VOLUME * scalar);
+			Players[playerobj->id].last_hit_wall_sound_time = Gametime;
+		}
 
+		//.. but robots still get to hear all that racket.. because gameplay
 		ain_hear hear;
 		hear.f_directly_player = true;
 		hear.hostile_level = 0.10f;
