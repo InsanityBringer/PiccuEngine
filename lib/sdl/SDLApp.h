@@ -23,6 +23,10 @@
 #include <string>
 #include <SDL3/SDL_video.h>
 
+extern void con_init();
+extern void con_shutdown();
+extern void con_defer();
+
 class SDLApplication : public oeApplication
 {
 protected:

@@ -26,21 +26,29 @@
 
 void SDLApplication::do_events()
 {
-	SDL_Event ev;
-	while (SDL_PollEvent(&ev))
+	if (m_flags & OEAPP_CONSOLE)
 	{
-		switch (ev.type)
+		//no normal window, so run console window instead. 
+		con_defer();
+	}
+	else
+	{
+		SDL_Event ev;
+		while (SDL_PollEvent(&ev))
 		{
-		case SDL_EVENT_KEY_DOWN:
-		case SDL_EVENT_KEY_UP:
-			ddio_SDLKeyEvent(ev);
-			break;
-		case SDL_EVENT_MOUSE_MOTION:
-		case SDL_EVENT_MOUSE_BUTTON_DOWN:
-		case SDL_EVENT_MOUSE_BUTTON_UP:
-		case SDL_EVENT_MOUSE_WHEEL:
-			ddio_SDLMouseEvent(ev);
-			break;
+			switch (ev.type)
+			{
+			case SDL_EVENT_KEY_DOWN:
+			case SDL_EVENT_KEY_UP:
+				ddio_SDLKeyEvent(ev);
+				break;
+			case SDL_EVENT_MOUSE_MOTION:
+			case SDL_EVENT_MOUSE_BUTTON_DOWN:
+			case SDL_EVENT_MOUSE_BUTTON_UP:
+			case SDL_EVENT_MOUSE_WHEEL:
+				ddio_SDLMouseEvent(ev);
+				break;
+			}
 		}
 	}
 
@@ -50,6 +58,9 @@ void SDLApplication::do_events()
 
 void SDLApplication::change_window()
 {
+	if (m_flags & OEAPP_CONSOLE)
+		return;
+
 	if (m_flags & OEAPP_FULLSCREEN)
 	{
 		SDL_SetWindowFullscreen(m_window, true);
@@ -84,13 +95,19 @@ SDLApplication::~SDLApplication()
 void SDLApplication::init()
 {
 	SDL_WindowFlags winflags = SDL_WINDOW_OPENGL;
+
+	//The mouse system needs the application object to work
+	ddio_SDLMouseLinkApp(this);
+
 	if (m_flags & OEAPP_FULLSCREEN)
 	{
 		winflags |= SDL_WINDOW_FULLSCREEN;
 	}
 	if (m_flags & OEAPP_CONSOLE)
 	{
-		Error("SDLApplication::init: dedicated server currently unsupported");
+		con_init(); 
+		//Don't want a window
+		return;
 	}
 
 	m_window = SDL_CreateWindow(m_title.c_str(), 640, 480, winflags);
@@ -98,9 +115,6 @@ void SDLApplication::init()
 	{
 		Error("Failed to create SDL Window! Error: %s", SDL_GetError());
 	}
-
-	//The mouse system needs the application object to work
-	ddio_SDLMouseLinkApp(this);
 }
 
 void SDLApplication::get_info(void* buffer)
@@ -139,6 +153,9 @@ void SDLApplication::set_defer_handler(void(*func)(bool))
 
 void SDLApplication::set_flags(int newflags)
 {
+	if (m_flags & OEAPP_CONSOLE)
+		return; //the rigamole of changing the console state would be something. 
+
 	uint32_t oldflags = m_flags;
 	m_flags = newflags;
 	if (oldflags != newflags)
@@ -161,15 +178,4 @@ void SDLApplication::set_sizepos(int x, int y, int w, int h)
 		SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 		SDL_SyncWindow(m_window);
 	}
-}
-
-void con_Printf(const char* fmt, ...)
-{
-	Error("con_Printf: STUB");
-}
-
-bool con_Input(char* buf, int buflen)
-{
-	Error("con_Input: STUB");
-	return false;
 }

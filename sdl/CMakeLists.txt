@@ -13,6 +13,7 @@ if (WIN32) #still embed the icon
 		win32/win32res.rc
 		win32/piccu_station_256.ico
 		win32/piccu_station_32.ico
+		win32/wincon_sdl.cpp
 		PARENT_SCOPE)
 else()
 	SET (SDL3_SOURCES
