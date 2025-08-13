@@ -762,6 +762,19 @@ void DoScreenshot()
 
 #include "TelCom.h"
 
+static int MouseCaptureForcing = 0;
+
+MouseForceCapture::MouseForceCapture()
+{
+	MouseCaptureForcing++;
+}
+
+MouseForceCapture::~MouseForceCapture()
+{
+	MouseCaptureForcing--;
+	ASSERT(MouseCaptureForcing >= 0);
+}
+
 bool ShouldCaptureMouse()
 {
 	if (Dedicated_server)
@@ -769,6 +782,9 @@ bool ShouldCaptureMouse()
 
 	if (!Descent->active())
 		return false; //Never grab when the app isn't active
+
+	if (MouseCaptureForcing > 0)
+		return true;
 
 	if (GetFunctionMode() != GAME_MODE)
 		return false; //Never grab outside of game

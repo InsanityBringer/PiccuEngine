@@ -415,19 +415,19 @@ ct_config_data gameSDLController::get_controller_value(ct_type type_req)
 		}
 		if (m_ControlList[i].flags & CTF_Z_AXIS) {
 			pos = get_axis_value(i, CT_Z_AXIS, ctAnalog);
-			if (fabs(pos) >= 0.90f)
+			if (fabs(pos) >= 0.30f)
 				val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_Z_AXIS, NULL_BINDING));
 		}
 		if (m_ControlList[i].flags & CTF_Y_AXIS) {
 			pos = get_axis_value(i, CT_Y_AXIS, ctAnalog);
 			//	mprintf((0, "y=%.2f   ", pos));
-			if (fabs(pos) >= 0.90f)
+			if (fabs(pos) >= 0.30f)
 				val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_Y_AXIS, NULL_BINDING));
 		}
 		if (m_ControlList[i].flags & CTF_X_AXIS) {
 			pos = get_axis_value(i, CT_X_AXIS, ctAnalog);
 			//	mprintf((0, "x=%.2f\n", pos));
-			if (fabs(pos) >= 0.90f)
+			if (fabs(pos) >= 0.30f)
 				val = MAKE_CONFIG_DATA(ctl, CONTROLLER_CTL_VALUE(CT_X_AXIS, NULL_BINDING));
 		}
 	}

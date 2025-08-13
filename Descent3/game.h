@@ -193,6 +193,14 @@ void SetGamemodeScript(const char *scrfilename,int num_requested_teams=-1);
 // Does a screenshot and tells the bitmap lib to save out the picture as a tga
 void DoScreenshot ();
 
+// [ISB] Create one of these to force the mouse to capture. Will free when all go out of scope. 
+class MouseForceCapture
+{
+public:
+	MouseForceCapture();
+	~MouseForceCapture();
+};
+
 //[ISB] Returns true if the mouse should be captured upon returning to the game.
 bool ShouldCaptureMouse();
 

@@ -657,6 +657,8 @@ void cfg_element_ui::Create(const char *title, ct_type type, ubyte controller, u
 #define GCV_VALUE(_r) (CONTROLLER_CTL1_VALUE(CONTROLLER_VALUE(ccfgdata)))
 #define GCV_VALID_RESULT(_r) (CONTROLLER_CTL1_INFO(CONTROLLER_INFO(ccfgdata)) != (sbyte)NULL_CONTROLLER) 
 
+#include "game.h"
+
 int cfg_element_ui::DoUI()
 {
 	extern void ddio_MouseQueueFlush();
@@ -675,6 +677,8 @@ int cfg_element_ui::DoUI()
 	Control_poll_flag = false;						// under multiplayer, the game frame is still running, so don't let
 															// assignments make it down to game frame (HACK)
 	newuiMessageBox::GetSheet()->Realize();
+
+	MouseForceCapture mousecapture;
 
 	if (m_type == ctAxis)
 	{
