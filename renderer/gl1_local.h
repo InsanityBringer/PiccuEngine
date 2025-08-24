@@ -166,6 +166,9 @@ class GLCompatibilityRenderer : public IRenderer
 	// The font characteristics
 	float rend_FontRed[4], rend_FontBlue[4], rend_FontGreen[4], rend_FontAlpha[4];
 
+	//if false, never, ever do anything with framebuffers while I try to get out of here. 
+	bool framebuffer_ok = false;
+
 private:
 	//DRAW
 	void SetDrawDefaults();

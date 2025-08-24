@@ -365,6 +365,14 @@ int GLCompatibilityRenderer::Init(oeApplication* app, renderer_preferred_state* 
 	// Default passthrough viewport. 
 	SetViewport();
 
+	framebuffer_ok = false;
+	if (glGenFramebuffers == nullptr)
+	{
+		Error("OpenGL implementation does not appear to expose OpenGL 3.3. ");
+		return 0;
+	}
+	framebuffer_ok = true;
+
 	// Update framebuffer
 	UpdateFramebuffer();
 
@@ -463,7 +471,8 @@ void GLCompatibilityRenderer::Close()
 
 	blitshader.Destroy();
 	FreeImages();
-	CloseFramebuffer();
+	if (framebuffer_ok)
+		CloseFramebuffer();
 
 #if defined(SDL3)
 	SDL_GL_DestroyContext(GLContext);

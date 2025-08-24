@@ -567,6 +567,14 @@ int GL3Renderer::Init(oeApplication* app, renderer_preferred_state* pref_state)
 	//Initialize the common buffer that will be shared across shaders. 
 	InitShaders();
 
+	framebuffer_ok = false;
+	if (glGenFramebuffers == nullptr)
+	{
+		Error("OpenGL implementation does not appear to expose OpenGL 3.3.");
+		return 0;
+	}
+	framebuffer_ok = true;
+
 	// Update framebuffer
 	UpdateFramebuffer();
 
@@ -638,7 +646,9 @@ void GL3Renderer::Close()
 	blitshader.Destroy();
 
 	FreeImages();
-	CloseFramebuffer();
+	if (framebuffer_ok)
+		CloseFramebuffer();
+
 	DestroyPersistentDrawBuffer();
 
 #if defined(SDL3)
