@@ -29,6 +29,7 @@ struct SDLJoyCaps
 	int numaxes;
 	int numhats;
 	tJoyInfo d3info;
+	int16_t axisbase[6];
 };
 
 static int numjoysticksSDL;
@@ -45,6 +46,11 @@ void joy_GetSDLStickCaps(int num, SDL_Joystick* stick, SDLJoyCaps& info)
 	{
 		info.d3info.axes_mask |= flag;
 		flag <<= 1;
+
+		if (!SDL_GetJoystickAxisInitialState(stick, i, &info.axisbase[i]))
+		{
+			info.axisbase[i] = 0;
+		}
 	}
 	info.numaxes = numaxes;
 
@@ -156,6 +162,36 @@ int joy_HatBitsToValue(int bits)
 	return JOYPOV_CENTER;
 }
 
+//SDL joysticks will always return values in the range -32768 to 32767, even for inputs that are never negative
+//(analog triggers, throttles, and so on)
+//Scale to the base
+static int ScaleSDLAxisReading(int16_t input, int16_t base)
+{
+	if (base == 0)
+		return input >> 8;
+
+	//Typical setup for throttles and analog triggers that are only positive. 
+	else if (base == SDL_JOYSTICK_AXIS_MIN)
+		return ((input + -SDL_JOYSTICK_AXIS_MIN) >> 9);
+
+	else
+	{
+		//Not sure if this ever happens, but for axes for a base value not at the extreme,
+		//I suppose I'll handle them by scaling their components separately.
+		int axismax = SDL_JOYSTICK_AXIS_MAX - base;
+		int axismin = SDL_JOYSTICK_AXIS_MIN - base;
+
+		if (input < base)
+		{
+			return (int)((input - base) / (float)axismin * -128);
+		}
+		else
+		{
+			return (int)((input - base) / (float)axismax * 127);
+		}
+	}
+}
+
 void joy_GetPos(tJoystick joy, tJoyPos* pos)
 {
 	SDL_Joystick* stick = joysticksSDL[joy];
@@ -164,48 +200,48 @@ void joy_GetPos(tJoystick joy, tJoyPos* pos)
 	//Read axes
 	if (info.d3info.axes_mask & JOYFLAG_XVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 0) >> 8;
-		pos->x = axis;
+		Sint16 axis = SDL_GetJoystickAxis(stick, 0);
+		pos->x = ScaleSDLAxisReading(axis, info.axisbase[0]);
 	}
 	else
 		pos->x = 0;
 
 	if (info.d3info.axes_mask & JOYFLAG_YVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 1) >> 8;
-		pos->y = axis;
+		Sint16 axis = SDL_GetJoystickAxis(stick, 1);
+		pos->y = ScaleSDLAxisReading(axis, info.axisbase[1]);
 	}
 	else
 		pos->y = 0;
 
 	if (info.d3info.axes_mask & JOYFLAG_ZVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 2) >> 8;
-		pos->z = axis;
+		Sint16 axis = SDL_GetJoystickAxis(stick, 2);
+		pos->z = ScaleSDLAxisReading(axis, info.axisbase[2]);
 	}
 	else
 		pos->z = 0;
 
 	if (info.d3info.axes_mask & JOYFLAG_RVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 3) >> 8;
-		pos->r = axis;
+		Sint16 axis = SDL_GetJoystickAxis(stick, 3);
+		pos->r = ScaleSDLAxisReading(axis, info.axisbase[3]);
 	}
 	else
 		pos->r = 0;
 
 	if (info.d3info.axes_mask & JOYFLAG_UVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 4) >> 8;
-		pos->u = axis;
+		Sint16 axis = SDL_GetJoystickAxis(stick, 4);
+		pos->u = ScaleSDLAxisReading(axis, info.axisbase[4]);
 	}
 	else
 		pos->u = 0;
 
 	if (info.d3info.axes_mask & JOYFLAG_VVALID)
 	{
-		Sint16 axis = SDL_GetJoystickAxis(stick, 5) >> 8;
-		pos->v = axis;
+		Sint16 axis = SDL_GetJoystickAxis(stick, 5);
+		pos->v = ScaleSDLAxisReading(axis, info.axisbase[5]);
 	}
 	else
 		pos->v = 0;
