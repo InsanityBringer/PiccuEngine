@@ -173,6 +173,8 @@ static int ScaleSDLAxisReading(int16_t input, int16_t base)
 	//Typical setup for throttles and analog triggers that are only positive. 
 	else if (base == SDL_JOYSTICK_AXIS_MIN)
 		return ((input + -SDL_JOYSTICK_AXIS_MIN) >> 9);
+	else if (base == SDL_JOYSTICK_AXIS_MAX)
+		return ((input - SDL_JOYSTICK_AXIS_MAX) >> 9);
 
 	else
 	{
