@@ -101,10 +101,10 @@ bool joy_Init(bool emulation)
 		if (stick)
 		{
 			joysticksSDL[numjoysticksSDL] = stick;
+			joy_GetSDLStickCaps(numjoysticksSDL, stick, stickinfoSDL[i]);
+
 			if (++numjoysticksSDL == MAX_JOYSTICKS)
 				break;
-
-			joy_GetSDLStickCaps(numjoysticksSDL, stick, stickinfoSDL[i]);
 		}
 		else
 		{
