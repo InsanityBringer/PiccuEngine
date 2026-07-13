@@ -176,6 +176,7 @@ struct netgame_info
 	int	killgoal;						// kill goal for this level
 	int	respawn_time;
 	int	max_players;
+	int pad_1_4_compat;						//Formerly the ill-fated level checksum. Padding added because terminal located a problem in the netgame API. 
 	ubyte difficulty;						// Game difficulty level
     u_char digest[16];
 };
