@@ -1171,12 +1171,26 @@ RenderList::RenderList()
 	EyeOrient{}
 {
 	HasFoundTerrain = false;
+	HasAddedExternal = false;
 	EyeRoomnum = 0;
 
 	//Reserve space in the vectors to their original limits, to establish a reasonable initial allocation
 	VisibleRooms.reserve(100);
 	FogPortals.reserve(8);
 	PostRenders.reserve(3000);
+}
+
+void RenderList::GatherExternalRooms(Frustum& frustum, NewRenderWindow& window)
+{
+	//I'm rather curious why they chose to use objects for this
+	for (int objnum = 0; objnum < Highest_object_index; objnum++)
+	{
+		object& objp = Objects[objnum];
+		if (objp.type != OBJ_ROOM || (objp.flags & OF_DEAD) || objp.render_type == RT_NONE || !OBJECT_OUTSIDE(&objp))
+			continue;
+
+		PushRoom(objp.id, window);
+	}
 }
 
 void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroomnum)
@@ -1189,6 +1203,7 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 	PostRenders.clear();
 
 	HasFoundTerrain = false;
+	HasAddedExternal = false;
 
 	EyePos = eye_pos;
 	EyeOrient = eye_orient;
@@ -1209,13 +1224,24 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 	else
 	{
 		HasFoundTerrain = true;
-		//add external rooms here
+		GatherExternalRooms(viewFrustum, initialWindow);
 	}
 
 	while (PendingRooms())
 	{
 		RenderListEntry entry = PopRoom();
 		AddRoom(entry, viewFrustum);
+	}
+
+	//If the terrain was touched, but external rooms weren't added, add their chains now. 
+	if (HasFoundTerrain && !HasAddedExternal)
+	{
+		GatherExternalRooms(viewFrustum, initialWindow);
+		while (PendingRooms())
+		{
+			RenderListEntry entry = PopRoom();
+			AddRoom(entry, viewFrustum);
+		}
 	}
 }
 

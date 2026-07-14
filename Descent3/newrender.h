@@ -136,6 +136,7 @@ class RenderList
 	//Queue used for a room breadth first search
 	std::queue<RenderListEntry> RoomCheckList;
 	bool HasFoundTerrain;
+	bool HasAddedExternal;
 
 	vector EyePos;
 	matrix EyeOrient;
@@ -173,6 +174,7 @@ class RenderList
 	//Adds a room to the visible list. Will check visibility of all portal faces,
 	//and add all visibile connected rooms to the room check queue. 
 	void AddRoom(RenderListEntry& entry, Frustum& frustum);
+	void GatherExternalRooms(Frustum& frustum, NewRenderWindow& window);
 
 	void PreDraw();
 	void DrawWorld(int passnum);
