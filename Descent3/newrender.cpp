@@ -1189,7 +1189,14 @@ void RenderList::GatherExternalRooms(Frustum& frustum, NewRenderWindow& window)
 		if (objp.type != OBJ_ROOM || (objp.flags & OF_DEAD) || objp.render_type == RT_NONE || !OBJECT_OUTSIDE(&objp))
 			continue;
 
-		PushRoom(objp.id, window);
+		//Mark room visible
+		if (RoomChecked[objp.id] == -1)
+		{
+			RoomChecked[objp.id] = VisibleRooms.size();
+			VisibleRooms.emplace_back(objp.id, window);
+			//and push it to the pending BFS list. 
+			PushRoom(objp.id, window);
+		}
 	}
 }
 
