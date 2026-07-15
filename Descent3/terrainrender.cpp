@@ -958,10 +958,10 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 		{
 			DisplayTerrainList(nt);
 		}
-	}
 
-	// Draw rooms
-	RenderTerrainRooms();
+		// Draw rooms
+		RenderTerrainRooms();
+	}
 
 	// Show objects
 	RenderAllTerrainObjects();

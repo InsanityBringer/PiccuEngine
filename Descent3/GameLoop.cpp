@@ -1836,7 +1836,7 @@ void GameRenderWorld(object* viewer, vector* viewer_eye, int viewer_roomnum, mat
 	ResetPostrenderList();
 
 	//Render!
-	if (ROOMNUM_OUTSIDE(viewer_roomnum))
+	if (ROOMNUM_OUTSIDE(viewer_roomnum) && !Render_use_newrender)
 		RenderTerrain(0);
 	else
 	{

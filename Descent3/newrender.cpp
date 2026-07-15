@@ -1247,6 +1247,12 @@ void RenderList::GatherVisible(vector& eye_pos, matrix& eye_orient, int viewroom
 
 void RenderList::Draw()
 {
+	//Render the terrain, if it was encountered
+	if (HasFoundTerrain)
+	{
+		RenderTerrain(true);
+	}
+
 	rend_SetColorModel(CM_MONO);
 	rend_SetLighting(LS_GOURAUD);
 	rend_SetWrapType(WT_WRAP);
@@ -1268,6 +1274,7 @@ void RenderList::Draw()
 	Room_IndexBuffer.Bind();
 
 	PreDraw();
+
 	DrawWorld(0);
 	DrawWorld(2);
 	DrawWorld(3);
