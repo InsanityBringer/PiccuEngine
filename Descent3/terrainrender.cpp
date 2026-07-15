@@ -298,7 +298,7 @@ void MeshTerrainCell(MeshBuilder& mesh, int x, int z)
 		
 		//Generate indicies
 		int firstvert = mesh.NumVertices();
-		int indicies[6] = { firstvert + 0, firstvert + 3, firstvert + 2, firstvert + 0, firstvert + 2, firstvert + 1 };
+		int indicies[6] = { firstvert + 0, firstvert + 2, firstvert + 3, firstvert + 0, firstvert + 1, firstvert + 2 };
 
 		//And add both
 		mesh.SetIndicies(6, indicies);
@@ -938,6 +938,7 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 		rend_SetAlphaType(ATF_CONSTANT + ATF_TEXTURE);
 		rend_SetLighting(LS_NONE);
 		rend_SetWrapType(WT_WRAP); //Should this be clamp? Requires smarter logic for the UV calculations to handle discontinuities. 
+		rend_SetCullFace(true);
 
 		Terrain_vertexbuffer.Bind();
 		Terrain_indexbuffer.Bind();
@@ -950,6 +951,7 @@ void RenderTerrain(ubyte from_mine, int left, int top, int right, int bot)
 		rendTEMP_UnbindVertexBuffer();
 
 		rend_EndShaderTest();
+		rend_SetCullFace(false);
 	}
 	else
 	{

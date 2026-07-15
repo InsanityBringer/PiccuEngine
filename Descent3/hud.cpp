@@ -1225,6 +1225,15 @@ void RenderHUDItems(tStatMask stat_mask)
 	{
 		RenderHUDText(HUD_COLOR, HUD_ALPHA, 0, 10, 120, "Position: %.2f %.2f %.2f", Viewer_object->pos.x, Viewer_object->pos.y, Viewer_object->pos.z);
 		RenderHUDText(HUD_COLOR, HUD_ALPHA, 0, 10, 132, "Forward:  %.2f %.2f %.2f", Viewer_object->orient.fvec.x, Viewer_object->orient.fvec.y, Viewer_object->orient.fvec.z);
+		int roomnum = Viewer_object->roomnum;
+		if (ROOMNUM_OUTSIDE(roomnum))
+		{
+			RenderHUDText(HUD_COLOR, HUD_ALPHA, 0, 10, 144, "Terrain cell: %d", CELLNUM(roomnum));
+		}
+		else
+		{
+			RenderHUDText(HUD_COLOR, HUD_ALPHA, 0, 10, 144, "Roomnum: %d", roomnum);
+		}
 	}
 
 	//	show timer
