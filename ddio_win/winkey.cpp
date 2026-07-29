@@ -25,7 +25,7 @@
 #include "mono.h"
 #include "ddio.h"
 #include "ddio_win.h"
-#include "Application.h"
+#include "application.h"
 
 #include <stdlib.h>
 #include <process.h>

@@ -65,6 +65,7 @@
 #include "manage.h"
 #include "ddio.h"
 #include "CFILE.H"
+#include "Macros.h"
 
 #include <stdlib.h>
 #include <stdio.h>

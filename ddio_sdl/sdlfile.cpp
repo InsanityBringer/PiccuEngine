@@ -28,6 +28,7 @@
 #elif defined(UNIX)
 #include <unistd.h>
 #include <utime.h>
+#include <signal.h>
 #endif
 
 #include "pserror.h"

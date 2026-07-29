@@ -17,7 +17,7 @@
 */
 
 #include "DDAccess.h"
-#include "Application.h"
+#include "application.h"
 #include "AppConsole.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -27,6 +27,8 @@
 #include <string.h>
 #include <process.h>
 #include <stdio.h>
+
+#include "Macros.h"
 
 #define CON_SCROLL_ROWS 25
 #define CON_SCROLL_COLS 80

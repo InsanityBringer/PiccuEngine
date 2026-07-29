@@ -473,6 +473,7 @@
 
 
 #include <stdlib.h>
+#include <ctype.h>
 #include <stdarg.h>
 
 char **DMFCStringTable;

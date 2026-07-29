@@ -51,7 +51,7 @@
 #include <string.h>
 
 #ifdef EDITOR
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 #endif
 
 //what darkening level to use when cloaked

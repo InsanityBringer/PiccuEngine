@@ -73,7 +73,7 @@
 #include "vibeinterface.h"
 
 #ifdef EDITOR
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 #endif
 
 /*

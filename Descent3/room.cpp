@@ -38,10 +38,10 @@
 #include "damage_external.h"
 #include "descent.h"
 #ifdef EDITOR
-#include "editor\editor_lighting.h"
+#include "editor/editor_lighting.h"
 #endif
 #ifdef NEWEDITOR
-#include "neweditor\editor_lighting.h"
+#include "neweditor/editor_lighting.h"
 #endif
 #include "bnode.h"
 

@@ -27,7 +27,7 @@
 #include "ddio.h"
 #include "joystick.h"
 #include "Macros.h"
-#include "inffile.h"
+#include "InfFile.h"
 
 //Sorry! This is needed for the semi-hacky mouselook support
 #include "descent.h"

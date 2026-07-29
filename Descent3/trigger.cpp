@@ -192,7 +192,7 @@ bool TriggerGetState(int trigger_num)
 
 #ifdef EDITOR
 
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 
 //
 // EDITOR functions follow

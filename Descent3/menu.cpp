@@ -16,6 +16,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <thread>
+#include <future>
 #include "menu.h"
 #include "mmItem.h"
 #include "game.h"

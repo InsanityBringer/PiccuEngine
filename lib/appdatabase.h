@@ -64,9 +64,9 @@ public:
 #define write_string(label,varp) write(label,varp,strlen(varp))
 
 #if defined(SDL3)
-#include "sdl\SDLDatabase.h"
+#include "sdl/SDLDatabase.h"
 #elif defined(WIN32)
-#include "win\Win32Database.h"
+#include "win/Win32Database.h"
 #elif defined(__LINUX__)
 #include "linux/lnxdatabase.h"
 #else

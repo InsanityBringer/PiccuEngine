@@ -20,8 +20,8 @@
 #define DOOR_H
 
 #ifdef NEWEDITOR /* only include tablefile header (manage stuff for NEWEDITOR) */
-#include "..\neweditor\ned_TableFile.h"
-#include "..\neweditor\ned_Door.h"
+#include "../neweditor/ned_TableFile.h"
+#include "../neweditor/ned_Door.h"
 #include "pstypes.h"
 #include "object.h"
 #else

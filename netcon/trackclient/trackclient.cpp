@@ -21,6 +21,7 @@
 #include <queue>
 #include <vector>
 #include <mutex>
+#include <thread>
 
 #include "ui.h"
 #include "newui.h"

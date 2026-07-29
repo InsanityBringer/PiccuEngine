@@ -17,7 +17,7 @@
 */
 
 #ifdef NEWEDITOR
-#include "neweditor\globals.h"
+#include "neweditor/globals.h"
 #else
 #include <stdlib.h>
 #endif
@@ -38,7 +38,7 @@
 #include "dedicated_server.h"
 #include "psrand.h"
 #ifdef EDITOR
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 #endif
 
 #define SKY_RADIUS	2500.0

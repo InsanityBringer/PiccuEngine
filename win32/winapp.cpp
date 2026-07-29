@@ -31,8 +31,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pserror.h"
-#include "win\directx\ddraw.h"
-#include "win\directx\dsound.h"
+#include "win/directx/ddraw.h"
+#include "win/directx/dsound.h"
 
 // taken from winuser.h
 #ifndef WHEEL_DELTA

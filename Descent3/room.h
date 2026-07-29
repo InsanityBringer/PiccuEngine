@@ -24,7 +24,7 @@
 #include "gametexture.h"
 
 #ifdef NEWEDITOR
-#include "..\neweditor\ned_GameTexture.h"
+#include "../neweditor/ned_GameTexture.h"
 #endif
 
 #include "room_external.h"

@@ -55,7 +55,7 @@
 #include "args.h"
 #include "newrender.h"
 #ifdef EDITOR
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 #endif
 #include "../renderer/gl_mesh.h"
 

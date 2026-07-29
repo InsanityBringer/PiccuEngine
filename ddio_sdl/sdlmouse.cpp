@@ -30,7 +30,7 @@
 #include "pserror.h"
 #include "mono.h"
 #include "ddio.h"
-#include "Application.h"
+#include "application.h"
 #include "psclass.h"
 #include "Macros.h"
 

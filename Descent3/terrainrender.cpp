@@ -20,7 +20,7 @@
 #include <vector>
 
 #ifdef NEWEDITOR
-#include "neweditor\globals.h"
+#include "neweditor/globals.h"
 void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain, bool render_all, bool outline, bool flat, prim* prim);
 #endif
 #include "terrain.h"
@@ -44,7 +44,7 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain, b
 #include "weather.h"
 #include "viseffect.h"
 #ifdef EDITOR
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 #endif
 #include "fireball.h"
 #include <string.h>

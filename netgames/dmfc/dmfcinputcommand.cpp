@@ -116,6 +116,8 @@
 
 
 #include "gamedll_header.h"
+#include <stdlib.h>
+#include <ctype.h>
 #include "DMFC.h"
 #include "dmfcinternal.h"
 

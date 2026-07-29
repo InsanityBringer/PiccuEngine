@@ -17,6 +17,7 @@
 */
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include <algorithm>
 #include "mono.h"
 #include "pserror.h"

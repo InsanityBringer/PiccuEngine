@@ -19,7 +19,7 @@
 #include "DDAccess.h"					// This module has access to machine-dependent variables.
 #include "pstypes.h"
 #include "pserror.h"
-#include "Application.h"
+#include "application.h"
 #include "renderer.h"
 #include "3d.h"
 #include "bitmap.h"

@@ -24,8 +24,8 @@
 #include "DeathInfo.h"
 
 #ifdef NEWEDITOR
-#include "..\neweditor\ned_Object.h"
-#include "..\neweditor\ned_Tablefile.h"
+#include "../neweditor/ned_Object.h"
+#include "../neweditor/ned_Tablefile.h"
 #endif
 
 //max sizes for inventory information in the objinfo

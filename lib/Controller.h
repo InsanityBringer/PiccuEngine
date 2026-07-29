@@ -20,6 +20,7 @@
 #define CONTROLLER_H
 
 #include "pstypes.h"
+#include "vecmat.h"
 #include "Macros.h"
 
 enum ct_format 

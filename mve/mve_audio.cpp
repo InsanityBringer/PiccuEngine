@@ -1,4 +1,5 @@
 #include <atomic>
+#include <string.h>
 #include "mve_audio.h"
 #include "ssl_lib.h"
 #include "mono.h"
