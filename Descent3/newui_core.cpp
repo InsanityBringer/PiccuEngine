@@ -1335,7 +1335,7 @@ void newuiSheet::Realize()
 			if (desc->title)
 			{
 				text = new UIText;
-				text->Create(m_parent, &UITextItem(MONITOR9_NEWUI_FONT, desc->title, NEWUI_MONITORFONT_COLOR), gx, gy);
+				text->Create(m_parent, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, desc->title, NEWUI_MONITORFONT_COLOR)), gx, gy);
 				desc->obj.gadget = text;
 
 				// determine pixel offset to first control if we stuffed the offset into desc->id (-1 = default)
@@ -1364,7 +1364,7 @@ void newuiSheet::Realize()
 
 		case GADGET_STATIC_TXT:
 			text = new UIText;
-			text->Create(m_parent, &UITextItem(MONITOR9_NEWUI_FONT, desc->title, NEWUI_MONITORFONT_COLOR), gx, gy);
+			text->Create(m_parent, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, desc->title, NEWUI_MONITORFONT_COLOR)), gx, gy);
 			if (horizontal_align) gx += text->W() + 2;
 			else gy += text->H();
 			desc->obj.gadget = text;
@@ -1372,7 +1372,7 @@ void newuiSheet::Realize()
 
 		case GADGET_CHANGEABLE_TXT:
 			text = new UIText;
-			text->Create(m_parent, &UITextItem(MONITOR9_NEWUI_FONT, (const char*)desc->parm.p, NEWUI_MONITORFONT_COLOR), gx, gy);
+			text->Create(m_parent, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, (const char*)desc->parm.p, NEWUI_MONITORFONT_COLOR)), gx, gy);
 			if (horizontal_align) gx += text->W() + 2;
 			else gy += text->H();
 			desc->obj.text = text;
@@ -1380,7 +1380,7 @@ void newuiSheet::Realize()
 
 		case GADGET_STATIC_BMP:
 			bmp = new UIStatic;
-			bmp->Create(m_parent, &UIBitmapItem(desc->parm.i), gx, gy, 10, 10);
+			bmp->Create(m_parent, UIItemPtr(UIBitmapItem(desc->parm.i)), gx, gy, 10, 10);
 			if (horizontal_align) gx += bmp->W() + 2;
 			else gy += bmp->H();
 			desc->obj.gadget = bmp;
@@ -1721,7 +1721,7 @@ void newuiSheet::UpdateChanges()
 			break;
 
 		case GADGET_CHANGEABLE_TXT:
-			desc->obj.text->SetTitle(&UITextItem(MONITOR9_NEWUI_FONT, (const char*)desc->parm.p, NEWUI_MONITORFONT_COLOR));
+			desc->obj.text->SetTitle(UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, (const char*)desc->parm.p, NEWUI_MONITORFONT_COLOR)));
 			break;
 		}
 		desc->changed = false;
@@ -2174,7 +2174,7 @@ newuiButton::newuiButton()
 
 void newuiButton::Create(UIWindow* menu, short id, const char* name, short x, short y, short flags)
 {
-	UIButton::Create(menu, id, &UITextItem(""), x, y, 10, 8, flags | UIF_FIT);
+	UIButton::Create(menu, id, UIItemPtr(UITextItem("")), x, y, 10, 8, flags | UIF_FIT);
 
 	if (flags & NEWUI_BTNF_FRAMED)
 	{
@@ -2513,7 +2513,7 @@ void newuiCheckBox::Create(UIWindow* wnd, short id, const char* name, short x, s
 	m_bkg = Newui_resources.Load(is_long ? NEWUI_LCHKBTN_FILE : NEWUI_CHKBTN_FILE);
 	m_litbkg = Newui_resources.Load(is_long ? NEWUI_LCHKBTNLIT_FILE : NEWUI_CHKBTNLIT_FILE);
 
-	UICheckBox::Create(wnd, id, &UITextItem(""), x, y, 10, 8, UIF_FIT);
+	UICheckBox::Create(wnd, id, UIItemPtr(UITextItem("")), x, y, 10, 8, UIF_FIT);
 	newuiButton::InitStates(name, is_long);
 }
 
@@ -2538,7 +2538,7 @@ void newuiRadioButton::Create(UIWindow* wnd, UIRadioButton* prev_rb, short id, c
 	m_bkg = Newui_resources.Load(is_long ? NEWUI_LBTN_FILE : NEWUI_BTN_FILE);
 	m_litbkg = Newui_resources.Load(is_long ? NEWUI_LCHKBTNLIT_FILE : NEWUI_CHKBTNLIT_FILE);
 
-	UIRadioButton::Create(wnd, prev_rb, id, &UITextItem(""), x, y, 10, 8, UIF_FIT);
+	UIRadioButton::Create(wnd, prev_rb, id, UIItemPtr(UITextItem("")), x, y, 10, 8, UIF_FIT);
 	newuiButton::InitStates(name, is_long);
 }
 

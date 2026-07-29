@@ -116,11 +116,11 @@ bool ConfigItem::Create(NewUIGameWindow* parentwnd, int type, int flags, int x, 
 	}
 
 	if (type == CIT_SLIDER)//slider's need to have the label centered vertically
-		m_tLabel.Create(parentwnd, &UITextItem(label, UICOL_TEXT_NORMAL), x, y + 7, UIF_FIT);
+		m_tLabel.Create(parentwnd, UIItemPtr(UITextItem(label, UICOL_TEXT_NORMAL)), x, y + 7, UIF_FIT);
 	else {
 		if (!(m_iFlags & CIF_USEGROUP)) {
 			//create a regular label
-			m_tLabel.Create(parentwnd, &UITextItem(label, UICOL_TEXT_NORMAL), x, y, UIF_FIT);
+			m_tLabel.Create(parentwnd, UIItemPtr(UITextItem(label, UICOL_TEXT_NORMAL)), x, y, UIF_FIT);
 		}
 		else {
 			//save the label text
@@ -562,7 +562,7 @@ void ConfigItem::UpdateSlider(int index, bool call_callback)
 	default:
 		Int3();//Get Jeff
 	}
-	m_tLabel2.SetTitle(&UITextItem(temp, UICOL_TEXT_NORMAL));
+	m_tLabel2.SetTitle(UIItemPtr(UITextItem(temp, UICOL_TEXT_NORMAL)));
 }
 
 void ConfigItem::UpdateOnOffButton(int index)
@@ -720,7 +720,7 @@ void ConfigItem::Add(int count, ...)
 				strcat(temp, "%");
 			break;
 		}
-		m_tLabel2.Create(m_hWnd, &UITextItem(temp, UICOL_TEXT_NORMAL), m_X + 155, m_Y + 7, UIF_FIT);
+		m_tLabel2.Create(m_hWnd, UIItemPtr(UITextItem(temp, UICOL_TEXT_NORMAL)), m_X + 155, m_Y + 7, UIF_FIT);
 		m_sList[0]->SetSelectChangeCallback(CISliderCallback, this);
 		break;
 	case CIT_ONOFFBUTTON:

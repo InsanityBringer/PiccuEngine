@@ -115,7 +115,7 @@ void UIGroup::OnDraw()
 
 	if(!m_bTextCreated){
 		m_bTextCreated = true;		
-		m_tLabel.Create(m_Wnd,&UITextItem((m_Label)?m_Label:"",m_LabelColor),m_X + top_edge_length + 3,m_Y);
+		m_tLabel.Create(m_Wnd, UIItemPtr(UITextItem((m_Label)?m_Label:"",m_LabelColor)),m_X + top_edge_length + 3,m_Y);
 	}
 }
 

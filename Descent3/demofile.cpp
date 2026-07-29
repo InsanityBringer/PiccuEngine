@@ -1472,20 +1472,20 @@ void DemoPostPlaybackMenu(void)
 
 
 	window.Create(0, 0, DEMO_MENU_WIDTH, DEMO_MENU_HEIGHT, UIF_PROCESS_MENU | UIF_CENTER | NUWF_TITLELARGE);
-	wndtitle.Create(&window, &UITextItem(TXT_DEMO_PLAY_OPTIONS), 0, cury, UIF_CENTER | UIF_FIT); cury += 30;
+	wndtitle.Create(&window, UIItemPtr(UITextItem(TXT_DEMO_PLAY_OPTIONS)), 0, cury, UIF_CENTER | UIF_FIT); cury += 30;
 	if (Demo_play_fast)
 	{
 		sprintf(sztemp, TXT_MINFPS, (float)1 / Max_frametime);
-		fps_min.Create(&window, &UITextItem(sztemp), 0, cury, UIF_CENTER | UIF_FIT); cury += 20;
+		fps_min.Create(&window, UIItemPtr(UITextItem(sztemp)), 0, cury, UIF_CENTER | UIF_FIT); cury += 20;
 		sprintf(sztemp, TXT_MAXFPS, (float)1 / Min_frametime);
-		fps_max.Create(&window, &UITextItem(sztemp), 0, cury, UIF_CENTER | UIF_FIT); cury += 20;
+		fps_max.Create(&window, UIItemPtr(UITextItem(sztemp)), 0, cury, UIF_CENTER | UIF_FIT); cury += 20;
 		sprintf(sztemp, TXT_AVGFSP, (float)1 / (Avg_frametime / Frames_counted));
-		fps_avg.Create(&window, &UITextItem(sztemp), 0, cury, UIF_CENTER | UIF_FIT); cury += 20;
+		fps_avg.Create(&window, UIItemPtr(UITextItem(sztemp)), 0, cury, UIF_CENTER | UIF_FIT); cury += 20;
 	}
 	//cury+=20;
-	loop_btn.Create(&window, UID_LOOPING, &UITextItem(TXT_PLAYLOOPING), 0, cury, BTN_WIDTH * 1.5, 32, UIF_CENTER | UIF_FIT); cury += 35;
+	loop_btn.Create(&window, UID_LOOPING, UIItemPtr(UITextItem(TXT_PLAYLOOPING)), 0, cury, BTN_WIDTH * 1.5, 32, UIF_CENTER | UIF_FIT); cury += 35;
 
-	ok_btn.Create(&window, UID_OK, &UITextItem(TXT_DONE), 0, DEMO_MENU_HEIGHT - 70, BTN_WIDTH, 32, UIF_CENTER | UIF_FIT);
+	ok_btn.Create(&window, UID_OK, UIItemPtr(UITextItem(TXT_DONE)), 0, DEMO_MENU_HEIGHT - 70, BTN_WIDTH, 32, UIF_CENTER | UIF_FIT);
 
 	window.Open();
 
