@@ -90,7 +90,7 @@
 #include "gamespy.h"
 
 #ifdef EDITOR
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 #endif
 
 extern bool Display_renderer_stats;

@@ -17,7 +17,7 @@
 */
 
 #ifdef NEWEDITOR
-#include "..\neweditor\stdafx.h"
+#include "../neweditor/stdafx.h"
 #endif
 
 #include <string.h>
@@ -33,9 +33,9 @@
 #include "gametexture.h"
 
 #ifdef NEWEDITOR
-#include "..\neweditor\ned_gametexture.h"
-#include "..\neweditor\ned_Object.h"
-#include "editor\Erooms.h"
+#include "../neweditor/ned_gametexture.h"
+#include "../neweditor/ned_Object.h"
+#include "editor/Erooms.h"
 #endif
 
 #include "trigger.h"
@@ -78,16 +78,16 @@
 #include "localization.h"
 
 #ifdef EDITOR
-#include "editor\d3edit.h"
-#include "editor\HFile.h"
-#include "editor\Erooms.h"
-#include "editor\moveworld.h"
-#include "editor\editor_lighting.h"
+#include "editor/d3edit.h"
+#include "editor/HFile.h"
+#include "editor/Erooms.h"
+#include "editor/moveworld.h"
+#include "editor/editor_lighting.h"
 #endif
 
 #ifdef NEWEDITOR
-#include "..\neweditor\neweditor.h"
-#include "..\neweditor\globals.h"
+#include "../neweditor/neweditor.h"
+#include "../neweditor/globals.h"
 #endif
 
 MD5* Level_md5 = NULL;
@@ -3064,7 +3064,7 @@ int LoadLevel(char* filename, void (*cb_fn)(const char*, int, int))
 					int n = chunk_size, r;
 					while (n) 
 					{
-						r = cf_ReadBytes(buf, min(n, sizeof(buf)), ifile);
+						r = cf_ReadBytes(buf, D3_MIN(n, sizeof(buf)), ifile);
 						cf_WriteBytes(buf, r, ofile);
 						n -= r;
 					}

@@ -22,8 +22,8 @@
 #define MAX_MSG_FUNCTIONS			64
 
 /*	Basic Application Win32 data types */
-typedef unsigned int HWnd;
-typedef unsigned int HInstance;
+typedef uintptr_t HWnd;
+typedef uintptr_t HInstance;
 
 //	This structure is used to retrieve and set 
 struct tWin32AppInfo 
@@ -75,7 +75,7 @@ tOEWin32MsgCallback:
 			endif
 */
 
-typedef int (*tOEWin32MsgCallback)(HWnd,unsigned,unsigned,long);
+typedef intptr_t (*tOEWin32MsgCallback)(HWnd,unsigned,uintptr_t,intptr_t);
 
 class oeWin32Application: public oeApplication
 {
@@ -140,7 +140,7 @@ public:
 	void set_flags(int newflags);
 
 //	returns -1 if we pass to default window handler.
-	virtual int WndProc( HWnd hwnd, unsigned msg, unsigned wParam, long lParam);
+	virtual intptr_t WndProc( HWnd hwnd, unsigned msg, uintptr_t wParam, intptr_t lParam);
 
 //	These functions allow you to add message handlers.
 	bool add_handler(unsigned msg, tOEWin32MsgCallback fn);
@@ -149,7 +149,7 @@ public:
 	bool remove_handler(unsigned msg, tOEWin32MsgCallback fn);
 
 // Run handler for message (added by add_handler)
-	bool run_handler(HWnd wnd, unsigned msg, unsigned wParam, long lParam);
+	bool run_handler(HWnd wnd, unsigned msg, uintptr_t wParam, intptr_t lParam);
 
 //	clears handler list
 	void clear_handlers();

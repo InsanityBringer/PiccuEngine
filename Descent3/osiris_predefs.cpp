@@ -3436,7 +3436,7 @@ void osipf_AIGoalValue(int obj_handle, char g_index, char op, char vtype, void* 
 		if (op == VF_GET)
 			ptr = g_ptr->g_info.scripted_data_ptr;
 		else if (op == VF_SET)
-			g_ptr->g_info.scripted_data_ptr = (void*)(*(int*)ptr);
+			g_ptr->g_info.scripted_data_ptr = (void*)(intptr_t)(*(intptr_t*)ptr);
 	}
 	break;
 	case AIGV_V_VEC_TO_TARGET:

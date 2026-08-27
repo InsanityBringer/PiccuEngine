@@ -426,7 +426,7 @@ void nw_InitNetworking (int iReadBufSizeOverride)
 			strcpy(ourargs,"");
 		}
 		strncpy(exewithpath,p,a);
-		exewithpath[a]=NULL;
+		exewithpath[a]=0;
 		ddio_SplitPath(exewithpath, exedir, exefile,exeext);
 		if(exedir[0]=='\"')
 		{
@@ -444,7 +444,7 @@ void nw_InitNetworking (int iReadBufSizeOverride)
 
 		if(exeext[pos]=='\"')
 		{
-			exeext[pos] = NULL;
+			exeext[pos] = 0;
 		}
 		strcat(exefile,exeext);
 		//dp_RegisterLobbyApplication("Descent 3",exefile,fixdir,ourargs,Base_directory,"Descent 3");

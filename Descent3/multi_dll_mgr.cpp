@@ -328,11 +328,11 @@ void GetMultiAPI(multi_api* api)
 	api->vp[25] = (int*)&Dedicated_server;
 	api->vp[26] = (int*)&TCP_active;
 	api->vp[27] = (int*)&IPX_active;
-	api->vp[28] = (int*)nw_ListenPort;
+	api->vp[28] = (int*)(intptr_t)nw_ListenPort;
 	api->vp[29] = (int*)&Multi_Gamelist_changed;
 	api->vp[30] = (int*)PXO_hosted_lobby_name;
 	api->vp[31] = (int*)&Supports_score_api;
-	api->vp[32] = (int*)PXOPort; 
+	api->vp[32] = (int*)(intptr_t)PXOPort; 
 	api->vp[33] = (int*)Descent3_temp_directory;
 	//Jeff: Linux dies if you try to free a DLL/so on 
 	//atexit, these should be freed during game sequencing
@@ -387,7 +387,7 @@ int LoadMultiDLL(char* name)
 	{
 		ddio_MakePath(tmp_dll_name, Base_directory, "online", name, NULL);
 		strcat(tmp_dll_name, ".piccucon");
-		Multi_conn_dll_name[0] = NULL;
+		Multi_conn_dll_name[0] = 0;
 		goto loaddll;
 	}
 	//get a temp file name

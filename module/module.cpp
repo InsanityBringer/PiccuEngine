@@ -398,7 +398,7 @@ bool CModFindFiles::Start(const char *wildcard, char *namebuf)
 
 	globindex = 0;
 	char ext[256];
-	dd_SplitPath(ffres.gl_pathv[0],NULL,namebuf,ext);
+	ddio_SplitPath(ffres.gl_pathv[0],NULL,namebuf,ext);
 	strcat(namebuf,ext);
 	return true;
 }

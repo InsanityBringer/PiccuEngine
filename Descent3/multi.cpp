@@ -7095,7 +7095,7 @@ void MultiSendClientCustomData(int slot,int whoto)
 	MultiAddShort (slot,data,&count);
 
 	//Send custom logo filename (all 0's if none)
-	csum_filename[0]=NULL;
+	csum_filename[0]=0;
 	if(NetPlayers[slot].ship_logo[0])
 	{
 		if(slot==Player_num)
@@ -7244,7 +7244,7 @@ char * GetFileNameFromPlayerAndID(short playernum,short id)
 {
 	static char rval[_MAX_PATH*2];
 
-	rval[0]=NULL;
+	rval[0]=0;
 
 	if(playernum>=MAX_NET_PLAYERS)
 	{
@@ -7293,12 +7293,12 @@ char * GetFileNameFromPlayerAndID(short playernum,short id)
 		if(!cfp)
 		{
 			mprintf((0,"Multiplayer file xfer File does not exist, not using file %d for player %d!\n",id,playernum));
-			//rval[0] = NULL;
+			//rval[0] = 0;
 		}
 		else if(32768<cfilelength(cfp))
 		{
 			mprintf((0,"Multiplayer file xfer File to long, not using file %d for player %d!\n",id,playernum));
-			rval[0] = NULL;
+			rval[0] = 0;
 		}
 		if(cfp)
 			cfclose(cfp);

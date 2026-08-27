@@ -968,7 +968,7 @@ int bm_w(int handle, int miplevel)
 	}
 	if (GameBitmaps[handle].flags & BF_NOT_RESIDENT)
 		if (!bm_MakeBitmapResident(handle))
-			return NULL;
+			return 0;
 	if (!(GameBitmaps[handle].flags & BF_MIPMAPPED))
 		miplevel = 0;
 	w = GameBitmaps[handle].width;
@@ -988,7 +988,7 @@ int bm_h(int handle, int miplevel)
 	// If this bitmap is not page in, do so!
 	if (GameBitmaps[handle].flags & BF_NOT_RESIDENT)
 		if (!bm_MakeBitmapResident(handle))
-			return NULL;
+			return 0;
 	if (!(GameBitmaps[handle].flags & BF_MIPMAPPED))
 		miplevel = 0;
 	h = GameBitmaps[handle].height;
@@ -1011,7 +1011,7 @@ int bm_miplevels(int handle)
 	// If this bitmap is not page in, do so!
 	if (GameBitmaps[handle].flags & BF_NOT_RESIDENT)
 		if (!bm_MakeBitmapResident(handle))
-			return NULL;
+			return 0;
 	if (GameBitmaps[handle].flags & BF_MIPMAPPED) {
 		for (int tmp = GameBitmaps[handle].width; tmp > 0; tmp = tmp >> 1) {
 			levels++;
@@ -1032,7 +1032,7 @@ int bm_mipped(int handle)
 	// If this bitmap is not page in, do so!
 	if (GameBitmaps[handle].flags & BF_NOT_RESIDENT)
 		if (!bm_MakeBitmapResident(handle))
-			return NULL;
+			return 0;
 	if (GameBitmaps[handle].flags & BF_MIPMAPPED)
 		return  1;
 	return 0;
@@ -1455,7 +1455,7 @@ bool bm_CreateChunkedBitmap(int bm_handle, chunked_bitmap* chunk)
 	float fopt = 128.0f;
 	int iopt;
 	//find the smallest dimension and base off that
-	int smallest = min(bw, bh);
+	int smallest = D3_MIN(bw, bh);
 	if (smallest <= 32)
 		fopt = 32;
 	else
@@ -1598,6 +1598,6 @@ int bm_format(int handle)
 	}
 	if (GameBitmaps[handle].flags & BF_NOT_RESIDENT)
 		if (!bm_MakeBitmapResident(handle))
-			return NULL;
+			return 0;
 	return (GameBitmaps[handle].format);
 }

@@ -356,7 +356,7 @@ int GL3Renderer::Setup(HDC glhdc)
 	{
 		Int3();
 		//FreeLibrary(opengl_dll_handle);
-		return NULL;
+		return 0;
 	}
 
 	mprintf((0, "Choose pixel format successful!\n"));
@@ -367,7 +367,7 @@ int GL3Renderer::Setup(HDC glhdc)
 		DWORD ret = GetLastError();
 		Int3();
 		//FreeLibrary(opengl_dll_handle);
-		return NULL;
+		return 0;
 	}
 
 	mprintf((0, "SetPixelFormat successful!\n"));
@@ -377,7 +377,7 @@ int GL3Renderer::Setup(HDC glhdc)
 	{
 		Int3();
 		//FreeLibrary(opengl_dll_handle);
-		return NULL;
+		return 0;
 	}
 
 	// Check the returned PFD to see if it is hardware accelerated
@@ -385,7 +385,7 @@ int GL3Renderer::Setup(HDC glhdc)
 	{
 		Int3();
 		//FreeLibrary(opengl_dll_handle);
-		return NULL;
+		return 0;
 	}
 
 	GLint attribs[] =
@@ -407,7 +407,7 @@ int GL3Renderer::Setup(HDC glhdc)
 		DWORD ret = GetLastError();
 		//FreeLibrary(opengl_dll_handle);
 		Int3();
-		return NULL;
+		return 0;
 	}
 
 	ASSERT(ResourceContext != NULL);
@@ -502,7 +502,7 @@ int GL3Renderer::Init(oeApplication* app, renderer_preferred_state* pref_state)
 	*               WINDOWS OPENGL
 	***********************************************************
 	*/
-	static HWnd hwnd = NULL;
+	static HWnd hwnd = 0;
 	if (ParentApplication != NULL)
 	{
 		hwnd = static_cast<HWnd>(reinterpret_cast<oeWin32Application*>(ParentApplication)->m_hWnd);

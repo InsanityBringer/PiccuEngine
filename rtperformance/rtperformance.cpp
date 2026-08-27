@@ -65,6 +65,7 @@
 #include "manage.h"
 #include "ddio.h"
 #include "CFILE.H"
+#include "Macros.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -104,7 +105,7 @@ void rtp_WriteBufferLog(void)
 	unsigned int counter;
 	char buffer[4096];
 
-	Num_frames = min(Runtime_performance_counter,MAX_RTP_SAMPLES);
+	Num_frames = D3_MIN(Runtime_performance_counter,MAX_RTP_SAMPLES);
 
 	// Open the log file for writing
 	ddio_MakePath(buffer,User_directory,"D3Performance.txt",NULL);	

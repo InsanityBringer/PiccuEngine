@@ -109,7 +109,7 @@ void Remote_Initialize(void)
 {
 	// initialize encryption keys
 	void *data = malloc(1);
-	srand((uint)data);
+	srand((uint)(uintptr_t)data);
 	free(data);
 
 	int i,j;

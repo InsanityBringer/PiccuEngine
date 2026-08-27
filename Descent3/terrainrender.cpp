@@ -20,7 +20,7 @@
 #include <vector>
 
 #ifdef NEWEDITOR
-#include "neweditor\globals.h"
+#include "neweditor/globals.h"
 void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain, bool render_all, bool outline, bool flat, prim* prim);
 #endif
 #include "terrain.h"
@@ -44,7 +44,7 @@ void RenderMine(int viewer_roomnum, int flag_automap, int called_from_terrain, b
 #include "weather.h"
 #include "viseffect.h"
 #ifdef EDITOR
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 #endif
 #include "fireball.h"
 #include <string.h>
@@ -1696,8 +1696,8 @@ void DrawSky(vector* veye, matrix* vorient)
 			float str = Terrain_sky.satellite_r[i];
 			float stg = Terrain_sky.satellite_g[i];
 			float stb = Terrain_sky.satellite_b[i];
-			float maxc = max(str, stg);
-			maxc = max(stb, maxc);
+			float maxc = D3_MAX(str, stg);
+			maxc = D3_MAX(stb, maxc);
 			float r, g, b;
 			if (maxc > 1.0)
 			{

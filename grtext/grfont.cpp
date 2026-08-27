@@ -221,7 +221,7 @@ int grfont_Load(char *fname)
 	FONTFILE ff = OPEN_FONT(fname);
 	if (!ff) 
 		return false;
-	else if (ff == (FONTFILE)0xffffffff) 
+	else if (ff == (FONTFILE)(-1)) 
 	{
 		mprintf((0,"Illegal font file: %s.\n", fname));
 		return false;
@@ -387,7 +387,7 @@ bool grfont_LoadTemplate(char *fname, tFontTemplate *ft)
 	FONTFILE ff = OPEN_FONT(fname);
 	if (!ff)
 		Error("Unable to open font %s.\n", fname);
-	else if (ff == (FONTFILE)0xffffffff)
+	else if (ff == (FONTFILE)(-1))
 		Error("Illegal font file: %s.\n", fname);
 
 	//read header information
@@ -482,7 +482,7 @@ bool grfont_SetTemplate(const char *pathname, const tFontTemplate *ft)
 	FONTFILE ffin = OPEN_FONT((char *)pathname);
 	if (!ffin)
 		return false;
-	else if (ffin == (FONTFILE)0xffffffff) 
+	else if (ffin == (FONTFILE)(-1)) 
 	{
 		mprintf((0, "Illegal font file %s\n", pathname));
 		return false;

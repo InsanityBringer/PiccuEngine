@@ -237,7 +237,7 @@ void UIEdit::GetText(char *buffer, int len)
 //	ASSERT(strlen(m_TextBuf) < (unsigned)len);
 	if(!m_TextBuf) 
 	{
-		buffer[0] = NULL;
+		buffer[0] = 0;
 		return;
 	}
 	strncpy(buffer, m_TextBuf,len-1);

@@ -870,7 +870,7 @@
 #ifndef NED_PHYSICS
 #include "gametexture.h"
 #else
-#include "..\neweditor\ned_GameTexture.h"
+#include "../neweditor/ned_GameTexture.h"
 #endif
 
 #include "BOA.h"

@@ -17,10 +17,10 @@
 */
 
 #ifdef EDITOR
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 #endif
 #ifdef NEWEDITOR
-#include "neweditor\globals.h"
+#include "neweditor/globals.h"
 #endif
 
 #include "BOA.h"

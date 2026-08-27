@@ -958,7 +958,7 @@ void ListenDedicatedSocket(void)
 		new_socket->prev = NULL;
 		Head_sock = new_socket;
 		memcpy(&new_socket->addr, &conn_addr, sizeof(new_socket->addr));
-		new_socket->input[0] = NULL;
+		new_socket->input[0] = 0;
 		new_socket->sock = incoming_socket;
 		new_socket->validated = false;
 		//Give the new connection the login prompt
@@ -982,7 +982,7 @@ void DedicatedSocketputs(char* str)
 		else
 		{
 			buf[0] = str[i];
-			buf[1] = NULL;
+			buf[1] = 0;
 			strcat(newstr, buf);
 		}
 	}
@@ -1052,7 +1052,7 @@ void DedicatedReadTelnet(void)
 			}
 			else if (bytesread > 0)
 			{
-				buf[1] = NULL;
+				buf[1] = 0;
 				//When we see a CR, process the line
 				if ((buf[0] == 0x0a) || (buf[0] == 0x0d))
 				{
@@ -1079,12 +1079,12 @@ void DedicatedReadTelnet(void)
 							{
 								DLLInfo.input_string = conn->input;
 								CallGameDLL(EVT_CLIENT_INPUT_STRING, &DLLInfo);
-								conn->input[0] = NULL;
+								conn->input[0] = 0;
 								return;
 							}
 
 							ParseLine(conn->input, command, operand, 255, 255);
-							conn->input[0] = NULL;
+							conn->input[0] = 0;
 							if (!command[0])
 								return;
 
@@ -1111,7 +1111,7 @@ void DedicatedReadTelnet(void)
 							send(conn->sock, "\r\n", strlen("\r\n") + 1, 0);
 							PrintDedicatedMessage(TXT_DS_REMOTELOGGEDIN, inet_ntoa(conn->addr.sin_addr));
 							PrintDedicatedMessage("\n");
-							conn->input[0] = NULL;
+							conn->input[0] = 0;
 						}
 						else
 						{
@@ -1135,9 +1135,9 @@ void DedicatedReadTelnet(void)
 						delstr[0] = 8;
 						delstr[1] = ' ';
 						delstr[2] = 8;
-						delstr[3] = NULL;
-						conn->input[strlen(conn->input) - 1] = NULL;
-						buf[1] = NULL;
+						delstr[3] = 0;
+						conn->input[strlen(conn->input) - 1] = 0;
+						buf[1] = 0;
 						send(conn->sock, delstr, strlen(delstr), 0);
 					}
 					else

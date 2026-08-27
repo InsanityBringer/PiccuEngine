@@ -206,7 +206,7 @@ void ChttpGet::GetFile(const char *URL,const char *localfile)
 	PrepSocket(URL);
 
 #ifdef WIN32
-	if(NULL==_beginthread(HTTPObjThread,0,this))
+	if(0==_beginthread(HTTPObjThread,0,this))
 	{
 		m_State = HTTP_STATE_INTERNAL_ERROR;
 		return;

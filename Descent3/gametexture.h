@@ -20,8 +20,8 @@
 #define GAMETEXTURE_H
 
 #ifdef NEWEDITOR /* only include tablefile header (manage stuff for NEWEDITOR) */
-#include "..\neweditor\ned_TableFile.h"
-#include "..\neweditor\ned_GameTexture.h"
+#include "../neweditor/ned_TableFile.h"
+#include "../neweditor/ned_GameTexture.h"
 #else
 
 #include "manage.h"

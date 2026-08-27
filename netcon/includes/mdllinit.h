@@ -173,7 +173,7 @@
 	DLLDedicated_server = (bool *)API.vp[25];
 	DLLTCP_active = (BOOL)*API.vp[26];
 	DLLIPX_active = (BOOL)*API.vp[27];
-        DLLnw_ListenPort = (unsigned short)((int)API.vp[28]&0xffff);
+        DLLnw_ListenPort = (unsigned short)((intptr_t)API.vp[28]&0xffff);
 	DLLMulti_Gamelist_changed = (bool *)API.vp[29];
 	DLLPXO_hosted_lobby_name = (char *)API.vp[30];
 	DLLSupports_score_api = (bool *)API.vp[31];

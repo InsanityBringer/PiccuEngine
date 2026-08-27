@@ -17,7 +17,7 @@
 */
 
 #include "DDAccess.h"
-#include "Application.h"
+#include "application.h"
 #include "AppConsole.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -27,6 +27,8 @@
 #include <string.h>
 #include <process.h>
 #include <stdio.h>
+
+#include "Macros.h"
 
 #define CON_SCROLL_ROWS 25
 #define CON_SCROLL_COLS 80
@@ -47,8 +49,8 @@ void con_Paint(HWND hWnd);
 void con_Destroy(HWND hWnd);
 void con_Puts(const char *str);
 void con_Scroll();
-int con_KeyDown(HWND hWnd, UINT vkey);
-int con_Char(HWND hWnd, UINT vkey);
+int con_KeyDown(HWND hWnd, UINT_PTR vkey);
+int con_Char(HWND hWnd, UINT_PTR vkey);
 
 
 void con_Printf(const char *fmt, ...)
@@ -127,7 +129,7 @@ void con_Defer()
 
 
 // console window.
-LRESULT WINAPI MyConProc( HWND hWnd,UINT msg,UINT wParam,LPARAM lParam)
+LRESULT WINAPI MyConProc( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam)
 {
 	HDC hdc;
 
@@ -325,7 +327,7 @@ void con_Scroll()
 }
 
 
-int con_KeyDown(HWND hWnd, UINT vkey)
+int con_KeyDown(HWND hWnd, UINT_PTR vkey)
 {
 	//HDC hdc;
 	int x;
@@ -334,13 +336,13 @@ int con_KeyDown(HWND hWnd, UINT vkey)
 	switch (vkey) 
 	{ 
 	case VK_LEFT:       // Left arrow 
-  		Con_col = max(Con_col - 1, 0); 
-		Con_inp_pos = max(Con_inp_pos-1,0);
+  		Con_col = D3_MAX(Con_col - 1, 0); 
+		Con_inp_pos = D3_MAX(Con_inp_pos-1,0);
   		break; 
 
 	case VK_RIGHT:      // Right arrow 
-  		Con_col = min(Con_col+1, CON_SCROLL_COLS-1);
-  		Con_inp_pos = min(Con_inp_pos+1, CON_SCROLL_COLS-1);
+  		Con_col = D3_MIN(Con_col+1, CON_SCROLL_COLS-1);
+  		Con_inp_pos = D3_MIN(Con_inp_pos+1, CON_SCROLL_COLS-1);
   		break; 
 
 	case VK_UP:			// Up arrow
@@ -402,7 +404,7 @@ int con_KeyDown(HWND hWnd, UINT vkey)
 }
 
 
-int con_Char(HWND hWnd, UINT vkey)
+int con_Char(HWND hWnd, UINT_PTR vkey)
 {
 	HDC hdc;
 	char *ptr = &Con_buffer[Con_row * (CON_SCROLL_COLS+1)];

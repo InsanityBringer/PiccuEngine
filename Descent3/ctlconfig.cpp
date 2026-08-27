@@ -265,8 +265,8 @@ void key_cfg_screen::realize()
 	m_reset_btn.Create(m_menu, UID_RESETDEFAULTS, TXT_RESETTODEFAULT, KEYCFG_EXTRAS_X+m_sheet->X(),KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
 	m_key_settings.Create(m_menu, UID_CFGSETTINGS, TXT_ADJUSTSETTINGS, KEYCFG_EXTRAS_X+m_sheet->X()+KEYCFG_EXTRAS_W, KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
 	m_revert_btn.Create(m_menu, UID_REVERT, TXT_REVERTCONTROLS, KEYCFG_EXTRAS_X+m_sheet->X()+KEYCFG_EXTRAS_W*2, KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
-	m_help1_txt.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_KEYCFGSCREENHELP1, NEWUI_MONITORFONT_COLOR), 280, 30);
-	m_help2_txt.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_CFGSCREENHELP, NEWUI_MONITORFONT_COLOR), 280, 40);
+	m_help1_txt.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_KEYCFGSCREENHELP1, NEWUI_MONITORFONT_COLOR)), 280, 30);
+	m_help2_txt.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_CFGSCREENHELP, NEWUI_MONITORFONT_COLOR)), 280, 40);
 	for (i = 0; i < N_KEY_CFG_FN; i++)
 	{
 		if (cfg_elem->fn_id == -1) {
@@ -386,8 +386,8 @@ void joy_cfg_screen::realize()
 	m_reset_btn.Create(m_menu, UID_RESETDEFAULTS, TXT_RESETTODEFAULT, KEYCFG_EXTRAS_X+m_sheet->X(),KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
 	m_controller_settings.Create(m_menu, UID_CFGSETTINGS, TXT_ADJUSTSETTINGS, KEYCFG_EXTRAS_X+m_sheet->X()+KEYCFG_EXTRAS_W, KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
 	m_revert_btn.Create(m_menu, UID_REVERT, TXT_REVERTCONTROLS, KEYCFG_EXTRAS_X+m_sheet->X()+KEYCFG_EXTRAS_W*2, KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
-	m_help1_txt.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_JOYCFGSCREENHELP1, NEWUI_MONITORFONT_COLOR), 280, 30);
-	m_help2_txt.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_CFGSCREENHELP, NEWUI_MONITORFONT_COLOR), 280, 40);
+	m_help1_txt.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_JOYCFGSCREENHELP1, NEWUI_MONITORFONT_COLOR)), 280, 30);
+	m_help2_txt.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_CFGSCREENHELP, NEWUI_MONITORFONT_COLOR)), 280, 40);
 	for (i = 0; i < N_JOY_CFG_FN; i++)
 	{
 		if (cfg_elem->fn_id == -1) 
@@ -561,7 +561,7 @@ void wpnsel_cfg_screen::process(int res)
 				}
 				if (!m_weapon_choose.IsCreated()) {
 					UIGadget *focused_gadget = m_menu->GetFocus();
-					m_weapon_choose.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_WPNCFGHELP2, GR_RGB(240,240,0)), WPNSEL_PRIMARY_X, WPNSEL_PRIMARY_Y- 48);
+				m_weapon_choose.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_WPNCFGHELP2, GR_RGB(240,240,0))), WPNSEL_PRIMARY_X, WPNSEL_PRIMARY_Y- 48);
 					if (focused_gadget) m_menu->SetFocusOnGadget(focused_gadget);
 				}
 			}
@@ -638,10 +638,10 @@ void wpnsel_cfg_screen::realize()
 	m_switch_slot = -1;
 	
 	m_reset_btn.Create(m_menu, UID_RESETDEFAULTS, TXT_RESETTODEFAULT, KEYCFG_EXTRAS_X+m_sheet->X(),KEYCFG_EXTRAS_Y+m_sheet->Y(), NEWUI_BTNF_LONG);
-	m_primary_title.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_PRIMARY), WPNSEL_PRIMARY_X, WPNSEL_PRIMARY_Y - 28);
-	m_secondary_title.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_SECONDARY), WPNSEL_SECONDARY_X, WPNSEL_SECONDARY_Y - 28);
-	m_primary_low.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_LOWPRIORITY), WPNSEL_PRIMARY_X, WPNSEL_SECONDARY_Y - 11);
-	m_secondary_low.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_LOWPRIORITY), WPNSEL_SECONDARY_X, WPNSEL_SECONDARY_Y - 11);
+	m_primary_title.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_PRIMARY)), WPNSEL_PRIMARY_X, WPNSEL_PRIMARY_Y - 28);
+	m_secondary_title.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_SECONDARY)), WPNSEL_SECONDARY_X, WPNSEL_SECONDARY_Y - 28);
+	m_primary_low.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_LOWPRIORITY)), WPNSEL_PRIMARY_X, WPNSEL_SECONDARY_Y - 11);
+	m_secondary_low.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_LOWPRIORITY)), WPNSEL_SECONDARY_X, WPNSEL_SECONDARY_Y - 11);
 	for (i = 0; i < MAX_PRIMARY_WEAPONS; i++)
 	{
 		int wpnidx;
@@ -677,8 +677,8 @@ void wpnsel_cfg_screen::realize()
 			m_secondary_buttons[i].Create(m_menu, UID_SECONDARY_WPN+i, str, WPNSEL_SECONDARY_X+28, WPNSEL_SECONDARY_Y+i*12, NEWUI_BTNF_LONG);
 		}
 	}
-	m_primary_high.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_HIGHPRIORITY), WPNSEL_PRIMARY_X, WPNSEL_PRIMARY_Y+i*12+2);
-	m_secondary_high.Create(m_menu, &UITextItem(MONITOR9_NEWUI_FONT, TXT_HIGHPRIORITY), WPNSEL_SECONDARY_X, WPNSEL_SECONDARY_Y+i*12+2);
+	m_primary_high.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_HIGHPRIORITY)), WPNSEL_PRIMARY_X, WPNSEL_PRIMARY_Y+i*12+2);
+	m_secondary_high.Create(m_menu, UIItemPtr(UITextItem(MONITOR9_NEWUI_FONT, TXT_HIGHPRIORITY)), WPNSEL_SECONDARY_X, WPNSEL_SECONDARY_Y+i*12+2);
 // add accelerator keys
 	m_menu->AddAcceleratorKey(KEY_CTRLED+KEY_C, UID_CLEAR_SLOT);
 }

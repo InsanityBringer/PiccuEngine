@@ -19,8 +19,8 @@
 #ifdef _DEBUG
 
 #ifdef EDITOR
-#include "editor\mainfrm.h"
-#include "editor\d3edit.h"
+#include "editor/mainfrm.h"
+#include "editor/d3edit.h"
 #endif
 
 #include <stdlib.h>

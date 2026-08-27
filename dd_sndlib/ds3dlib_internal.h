@@ -65,7 +65,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#include "win\directx\dsound.h"
+#include "win/directx/dsound.h"
 #include "ssl_lib.h"
 
 // Sound Library Internal Error Codes

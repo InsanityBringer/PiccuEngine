@@ -17,6 +17,7 @@
 */
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include <algorithm>
 #include "mono.h"
 #include "pserror.h"
@@ -976,7 +977,7 @@ void llsOpenAL::InitSource3D(uint32_t handle, sound_info* soundInfo, pos_state* 
 	alSourcei(handle, AL_LOOPING, AL_FALSE);
 
 	if (EffectsSupported)
-		alSource3i(handle, AL_AUXILIARY_SEND_FILTER, AuxEffectSlot, 0, NULL);
+		alSource3i(handle, AL_AUXILIARY_SEND_FILTER, AuxEffectSlot, 0, 0);
 	ALErrorCheck("Setting 3D sound source effect.");
 }
 
@@ -1036,7 +1037,7 @@ void llsOpenAL::SoundCleanup(int soundID)
 	//Clear the sound's send filter, if it has one. 
 	if (EffectsSupported)
 	{
-		alSource3i(SoundEntries[soundID].handle, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, NULL);
+		alSource3i(SoundEntries[soundID].handle, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, 0);
 		ALErrorCheck("Clearing source send filter");
 	}
 

@@ -19,6 +19,7 @@
 #ifndef WIN32DATABASE
 #define WIN32DATABASE
 
+#include <stdint.h>
 
 /* oeWin32AppDatabase
 	to get info about the application from a managed database (or a custom info file)
@@ -27,8 +28,8 @@
 
 class oeWin32AppDatabase: public oeAppDatabase
 {
-	unsigned hBaseKey;							// look up from this key.
-	unsigned hCurKey;							// current key for lookup
+	uintptr_t hBaseKey;							// look up from this key.
+	uintptr_t hCurKey;							// current key for lookup
 
 protected:
 	char m_Basepath[256];

@@ -535,34 +535,34 @@ void ApplyLightingToExternalRoom(vector* pos, int roomnum, float light_dist, flo
 				if (red_scale < 0)
 				{
 					// we are subtracting light
-					r = max(0, r + (scalar * red_scale * 31));
+					r = D3_MAX(0, r + (scalar * red_scale * 31));
 				}
 				else
 				{
 					if (r < red_limit)
-						r = min(red_limit, r + (scalar * red_scale * 31));
+						r = D3_MIN(red_limit, r + (scalar * red_scale * 31));
 				}
 
 				if (green_scale < 0)
 				{
 					// we are subtracting light
-					g = max(0, g + (scalar * green_scale * 31));
+					g = D3_MAX(0, g + (scalar * green_scale * 31));
 				}
 				else
 				{
 					if (g < green_limit)
-						g = min(green_limit, g + (scalar * green_scale * 31));
+						g = D3_MIN(green_limit, g + (scalar * green_scale * 31));
 				}
 
 				if (blue_scale < 0)
 				{
 					// we are subtracting light
-					b = max(0, b + (scalar * blue_scale * 31));
+					b = D3_MAX(0, b + (scalar * blue_scale * 31));
 				}
 				else
 				{
 					if (b < blue_limit)
-						b = min(blue_limit, b + (scalar * blue_scale * 31));
+						b = D3_MIN(blue_limit, b + (scalar * blue_scale * 31));
 				}
 
 				lightmap_texel = OPAQUE_FLAG | (r << 10) | (g << 5) | b;
@@ -918,32 +918,32 @@ void ApplyLightingToSubmodel(object* obj, poly_model* pm, bsp_info* sm, float li
 
 				if (red_scale < 0)
 				{
-					r = max(0, r + (scalar * red_scale * 31));
+					r = D3_MAX(0, r + (scalar * red_scale * 31));
 				}
 				else
 				{
 					if (r < red_limit)
-						r = min(red_limit, r + (scalar * red_scale * 31));
+						r = D3_MIN(red_limit, r + (scalar * red_scale * 31));
 				}
 
 				if (green_scale < 0)
 				{
-					g = max(0, g + (scalar * green_scale * 31));
+					g = D3_MAX(0, g + (scalar * green_scale * 31));
 				}
 				else
 				{
 					if (g < green_limit)
-						g = min(green_limit, g + (scalar * green_scale * 31));
+						g = D3_MIN(green_limit, g + (scalar * green_scale * 31));
 				}
 
 				if (blue_scale < 0)
 				{
-					b = max(0, b + (scalar * blue_scale * 31));
+					b = D3_MAX(0, b + (scalar * blue_scale * 31));
 				}
 				else
 				{
 					if (b < blue_limit)
-						b = min(blue_limit, b + (scalar * blue_scale * 31));
+						b = D3_MIN(blue_limit, b + (scalar * blue_scale * 31));
 				}
 
 				lightmap_texel = OPAQUE_FLAG | (r << 10) | (g << 5) | b;
@@ -979,7 +979,7 @@ void ApplySpecularLightingToWall (room *rp,face *fp,vector *pos,float light_dist
 		sf->strength=0;
 	}
 
-	float norm=min(1.0,(light_dist/dist_from_plane)*2.0);
+	float norm=D3_MIN(1.0,(light_dist/dist_from_plane)*2.0);
 	float strength=((red_scale*.33)+(green_scale*.33)+(blue_scale*.33))*light_dist;
 
 	if (strength>sf->strength)
@@ -1051,9 +1051,9 @@ void ApplyVolumeLightToObject(vector* pos, object* obj, float light_dist, float 
 
 	if (obj->effect_info->type_flags & EF_VOLUME_LIT)
 	{
-		obj->effect_info->dynamic_red = min(1, obj->effect_info->dynamic_red + (scalar * red_scale));
-		obj->effect_info->dynamic_green = min(1, obj->effect_info->dynamic_green + (scalar * green_scale));
-		obj->effect_info->dynamic_blue = min(1, obj->effect_info->dynamic_blue + (scalar * blue_scale));
+		obj->effect_info->dynamic_red = D3_MIN(1, obj->effect_info->dynamic_red + (scalar * red_scale));
+		obj->effect_info->dynamic_green = D3_MIN(1, obj->effect_info->dynamic_green + (scalar * green_scale));
+		obj->effect_info->dynamic_blue = D3_MIN(1, obj->effect_info->dynamic_blue + (scalar * blue_scale));
 	}
 }
 
@@ -1416,36 +1416,36 @@ void ApplyLightingToRooms(vector* pos, int roomnum, float light_dist, float red_
 				if (red_scale < 0)
 				{
 					// we are subtracting light
-					r = max(0, r + (scalar * red_scale * 31));
+					r = D3_MAX(0, r + (scalar * red_scale * 31));
 				}
 				else
 				{
 					// we are adding light
 					if (r < red_limit)
-						r = min(red_limit, r + (scalar * red_scale * 31));
+						r = D3_MIN(red_limit, r + (scalar * red_scale * 31));
 				}
 
 				if (green_scale < 0)
 				{
 					// we are subtracting light
-					g = max(0, g + (scalar * green_scale * 31));
+					g = D3_MAX(0, g + (scalar * green_scale * 31));
 				}
 				else
 				{
 					// we are adding light
 					if (g < green_limit)
-						g = min(green_limit, g + (scalar * green_scale * 31));
+						g = D3_MIN(green_limit, g + (scalar * green_scale * 31));
 				}
 
 				if (blue_scale < 0)
 				{
 					// we are subtracting light
-					b = max(0, b + (scalar * blue_scale * 31));
+					b = D3_MAX(0, b + (scalar * blue_scale * 31));
 				}
 				else
 				{
 					if (b < blue_limit)
-						b = min(blue_limit, b + (scalar * blue_scale * 31));
+						b = D3_MIN(blue_limit, b + (scalar * blue_scale * 31));
 				}
 
 				lightmap_texel = OPAQUE_FLAG | (r << 10) | (g << 5) | b;
@@ -1711,34 +1711,34 @@ void ApplyLightingToTerrain(vector* pos, int cellnum, float light_dist, float re
 		if (red_scale < 0)
 		{
 			// we are subtracting light
-			tseg->r = max(0, r + (scalar * red_scale * 255));
+			tseg->r = D3_MAX(0, r + (scalar * red_scale * 255));
 		}
 		else
 		{
 			if (r < red_limit)
-				tseg->r = min(red_limit, r + (scalar * red_scale * 255));
+				tseg->r = D3_MIN(red_limit, r + (scalar * red_scale * 255));
 		}
 
 		if (green_scale < 0)
 		{
 			// we are subtracting light
-			tseg->g = max(0, g + (scalar * green_scale * 255));
+			tseg->g = D3_MAX(0, g + (scalar * green_scale * 255));
 		}
 		else
 		{
 			if (g < green_limit)
-				tseg->g = min(green_limit, g + (scalar * green_scale * 255));
+				tseg->g = D3_MIN(green_limit, g + (scalar * green_scale * 255));
 		}
 
 		if (blue_scale < 0)
 		{
 			// we are subtracting light
-			tseg->b = max(0, b + (scalar * blue_scale * 255));
+			tseg->b = D3_MAX(0, b + (scalar * blue_scale * 255));
 		}
 		else
 		{
 			if (b < blue_limit)
-				tseg->b = min(blue_limit, b + (scalar * blue_scale * 255));
+				tseg->b = D3_MIN(blue_limit, b + (scalar * blue_scale * 255));
 		}
 
 		ushort color = OPAQUE_FLAG | GR_RGB16(tseg->r, tseg->g, tseg->b);
@@ -1919,9 +1919,9 @@ int GetSpecularLightmapForFace (vector *pos,room *rp,face *fp)
 					g*=val*gscale;
 					b*=val*bscale;
 
-					r=min(31,old_r+r);
-					g=min(31,old_g+g);
-					b=min(31,old_b+b);
+					r=D3_MIN(31,old_r+r);
+					g=D3_MIN(31,old_g+g);
+					b=D3_MIN(31,old_b+b);
 
 
 					dest_data[lightmap_texel_num]=OPAQUE_FLAG|(r<<10)|(g<<5)|(b);
@@ -2125,9 +2125,9 @@ int GetSpecularLightmapForFace (vector *pos,room *rp,face *fp)
 					g*=val*base_g;
 					b*=val*base_b;
 
-					r=min(31,old_r+r);
-					g=min(31,old_g+g);
-					b=min(31,old_b+b);
+					r=D3_MIN(31,old_r+r);
+					g=D3_MIN(31,old_g+g);
+					b=D3_MIN(31,old_b+b);
 
 
 					dest_data[lightmap_texel_num]=OPAQUE_FLAG|(r<<10)|(g<<5)|(b);
@@ -2163,8 +2163,8 @@ void DestroyLight(int roomnum, int facenum)
 	b = GameTextures[destroy_fp->tmap].b * mul;
 
 	// Get highest component
-	float rmax = max(r, g);
-	rmax = max(rmax, b);
+	float rmax = D3_MAX(r, g);
+	rmax = D3_MAX(rmax, b);
 
 	// Get the normalized color that this face emits
 	float red_scale = r / rmax;
@@ -2357,13 +2357,13 @@ void DestroyLight(int roomnum, int facenum)
 				int b = lightmap_texel & 0x1f;
 
 				if (r > 0)
-					r = max(0, r - (scalar * red_scale * 31));
+					r = D3_MAX(0, r - (scalar * red_scale * 31));
 
 				if (g > 0)
-					g = max(0, g - (scalar * green_scale * 31));
+					g = D3_MAX(0, g - (scalar * green_scale * 31));
 
 				if (b > 0)
-					b = max(0, b - (scalar * blue_scale * 31));
+					b = D3_MAX(0, b - (scalar * blue_scale * 31));
 
 				lightmap_texel = OPAQUE_FLAG | (r << 10) | (g << 5) | b;
 

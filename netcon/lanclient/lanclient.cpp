@@ -300,7 +300,7 @@ int MainMultiplayerMenu ()
 						net_game_txt_items[k] = DLLCreateNewUITextItem(fmtline,GR_LIGHTGRAY);
 					}
 
-					selgame[20] = NULL;
+					selgame[20] = 0;
 					if(strncmp(selgame,DLLNetwork_games[k].name,19)==0)
 					{
 						selti = net_game_txt_items[k];
@@ -326,7 +326,7 @@ int MainMultiplayerMenu ()
 			if(selno>=0)
 				strcpy(selgame,DLLNetwork_games[selno].name);
 			else
-				selgame[0]=NULL;
+				selgame[0]=0;
 		}
 		res = DLLPollUI();
 
@@ -406,7 +406,7 @@ int MainMultiplayerMenu ()
 			if(selno>=0)
 				strcpy(selgame,DLLNetwork_games[selno].name);
 			else
-				selgame[0]=NULL;
+				selgame[0]=0;
 
 			DLLSearchForLocalGamesTCP(0xffffffffl,htons(DEFAULT_GAME_PORT));
 			DLLListRemoveAll(main_list);
@@ -427,7 +427,7 @@ int MainMultiplayerMenu ()
 				char *pport = strchr(szdip,':');
 				if(pport)
 				{
-					*pport = NULL;
+					*pport = 0;
 					pport++;
 					iport = atoi(pport);
 				}

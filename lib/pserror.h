@@ -94,7 +94,7 @@ inline void SetDebugBreakHandlers(void (*stop)(), void (*resume)()) {
 			
 	#define ASSERT(x) \
 		do { \
-			if (!(unsigned)(x)) { \
+			if (!(uintptr_t)(x)) { \
 				mprintf((0, "Assertion failed (%s) in %s line %d.\n", #x, __FILE__, __LINE__)); \
 				if (Debug_break)	\
 					DEBUG_BREAK(); \

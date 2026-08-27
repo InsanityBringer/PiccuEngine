@@ -1027,7 +1027,7 @@ void msafe_CallFunction(ubyte type, msafe_struct* mstruct)
 				obj->effect_info->damage_time += damage_time;
 				//NOTE: commented out because lava rocks need to go burning for awhile...
 				//so we trust that someone doesn't do something stupid
-				//obj->effect_info->damage_time=min(10.0f,obj->effect_info->damage_time);
+				//obj->effect_info->damage_time=D3_MIN(10.0f,obj->effect_info->damage_time);
 				obj->effect_info->damage_per_second = d_per_sec;
 				if (Gametime - obj->effect_info->last_damage_time > 1.0f)
 					obj->effect_info->last_damage_time = 0;
@@ -2067,7 +2067,7 @@ int AddWeaponAmmo(int slot, int weap_index, int ammo)
 	if ((weap_index >= SECONDARY_INDEX) || wb->ammo_usage)
 	{
 		//figure out much ammo to add
-		int added = min(ship->max_ammo[weap_index] - player->weapon_ammo[weap_index], ammo);
+		int added = D3_MIN(ship->max_ammo[weap_index] - player->weapon_ammo[weap_index], ammo);
 		//now add it
 		player->weapon_ammo[weap_index] += added;
 		return added;
@@ -2088,7 +2088,7 @@ bool AddPowerupEnergyToPlayer(int id)
 	if (Players[id].energy >= MAX_ENERGY)
 		return false;
 	float amount = 10.0f * Diff_general_scalar[DIFF_LEVEL];
-	curr_energy = min(MAX_ENERGY, curr_energy + amount);
+	curr_energy = D3_MIN(MAX_ENERGY, curr_energy + amount);
 	Players[id].energy = curr_energy;
 	return true;
 }
@@ -2403,7 +2403,7 @@ bool HandleCommonPowerups(char* pname, msafe_struct* mstruct, ubyte* pickup)
 	{
 		handled = true;
 		float addval = ENERGY_BONUS * Diff_shield_energy_scalar[DIFF_LEVEL];
-		addval = min(addval, MAX_ENERGY - Players[pnum].energy);
+		addval = D3_MIN(addval, MAX_ENERGY - Players[pnum].energy);
 		Players[pnum].energy += addval;
 
 		//Pick up if multiplayer or added

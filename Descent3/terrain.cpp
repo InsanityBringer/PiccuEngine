@@ -17,7 +17,7 @@
 */
 
 #ifdef NEWEDITOR
-#include "neweditor\globals.h"
+#include "neweditor/globals.h"
 #else
 #include <stdlib.h>
 #endif
@@ -38,7 +38,7 @@
 #include "dedicated_server.h"
 #include "psrand.h"
 #ifdef EDITOR
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 #endif
 
 #define SKY_RADIUS	2500.0
@@ -453,14 +453,14 @@ void DeformTerrainPoint(int x, int z, int change_height)
 
 	change_height += tseg->ypos;
 
-	change_height = min(255, change_height);
-	change_height = max(0, change_height);
+	change_height = D3_MIN(255, change_height);
+	change_height = D3_MAX(0, change_height);
 
 	tseg->ypos = change_height;
 	tseg->y = tseg->ypos * TERRAIN_HEIGHT_INCREMENT;
 
-	int sx = max(0, x - 1);
-	int sz = max(0, z - 1);
+	int sx = D3_MAX(0, x - 1);
+	int sz = D3_MAX(0, z - 1);
 
 	// Update min/max
 	for (i = 0; i < 7; i++)
@@ -541,10 +541,10 @@ void DeformTerrain(vector* pos, int depth, float size)
 	endx = (pos->x / TERRAIN_SIZE) + (size / TERRAIN_SIZE);
 	endz = (pos->z / TERRAIN_SIZE) + (size / TERRAIN_SIZE);
 
-	startx = max(0, startx);
-	startz = max(0, startz);
-	endx = min(TERRAIN_WIDTH - 1, endx);
-	endz = min(TERRAIN_DEPTH - 1, endz);
+	startx = D3_MAX(0, startx);
+	startz = D3_MAX(0, startz);
+	endx = D3_MIN(TERRAIN_WIDTH - 1, endx);
+	endz = D3_MIN(TERRAIN_DEPTH - 1, endz);
 
 	int i, t;
 
@@ -578,9 +578,9 @@ void DeformTerrain(vector* pos, int depth, float size)
 
 			DeformTerrainPoint(t, i, height_change);
 
-			tseg->r = max(0, tseg->r + light_change);
-			tseg->g = max(0, tseg->g + light_change);
-			tseg->b = max(0, tseg->b + light_change);
+			tseg->r = D3_MAX(0, tseg->r + light_change);
+			tseg->g = D3_MAX(0, tseg->g + light_change);
+			tseg->b = D3_MAX(0, tseg->b + light_change);
 
 			int which = ((i / 128) * 2) + (t / 128);
 			changed[which] = 1;
@@ -844,8 +844,8 @@ void SetupSky(float radius, int flags, ubyte randit)
 		float ynorm = starvec.y / (Terrain_sky.radius * 500);
 
 		float color_norm = ynorm * 2;
-		color_norm = min(1.0, color_norm);
-		color_norm = max(.2, color_norm);
+		color_norm = D3_MIN(1.0, color_norm);
+		color_norm = D3_MAX(.2, color_norm);
 		int color = ps_rand() % 6;
 		int r, g, b;
 

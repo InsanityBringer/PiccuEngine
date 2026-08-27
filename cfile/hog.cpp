@@ -62,7 +62,7 @@ bool FileCopy(FILE *ofp,FILE *ifp,int length)
 	while (length) 
 	{
 		size_t n,read_len;
-		read_len = min(length,(int)BUFFER_SIZE);
+		read_len = D3_MIN(length,(int)BUFFER_SIZE);
 		n = fread( buffer, 1, read_len, ifp );
 		if ( n != read_len )	
 		{

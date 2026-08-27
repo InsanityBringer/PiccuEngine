@@ -587,7 +587,7 @@ int AddWeaponToPlayer(int slot, int weap_index, int ammo)
 	if ((weap_index >= SECONDARY_INDEX) || wb->ammo_usage)
 	{
 		//figure out much ammo to add
-		int added = min(ship->max_ammo[weap_index] - Players[slot].weapon_ammo[weap_index], ammo);
+		int added = D3_MIN(ship->max_ammo[weap_index] - Players[slot].weapon_ammo[weap_index], ammo);
 
 		//now add it
 		Players[slot].weapon_ammo[weap_index] += (ushort)added;

@@ -745,7 +745,7 @@ redisplay_list:
 				}
 
 				//clip the string to the width
-				basethis->ClipString(min(width_to_use,(PLIST_WIN_X+PLIST_WIN_W - curr_x-5)),buffer,false);
+				basethis->ClipString(D3_MIN(width_to_use,(PLIST_WIN_X+PLIST_WIN_W - curr_x-5)),buffer,false);
 
 				//print out string
 				ddgr_color color;
@@ -1144,7 +1144,7 @@ skip_line:
 		if(m_DColInfo[c].type!=DSCOL_BMP){
 				
 			//clip the string to the width
-			basethis->ClipString(min(m_DColInfo[c].width,(DLIST_WIN_X+DLIST_WIN_W - curr_x-5)),buffer,false);
+			basethis->ClipString(D3_MIN(m_DColInfo[c].width,(DLIST_WIN_X+DLIST_WIN_W - curr_x-5)),buffer,false);
 
 			//print out string
 			ddgr_color color;
@@ -1299,7 +1299,7 @@ skip_line:
 		float x,y,w,h;
 		x = (float)DLIST_WIN_X + 2;
 		y = (float)curr_y;
-		h = w = (float)min(DLIST_WIN_W-4,(DLIST_WIN_Y+DLIST_WIN_H-curr_y)-4);
+		h = w = (float)D3_MIN(DLIST_WIN_W-4,(DLIST_WIN_Y+DLIST_WIN_H-curr_y)-4);
 		object *obj_view = &basethis->Objects[basethis->Players[pr->pnum].objnum];
 
 		x *= *basethis->Hud_aspect_x;
@@ -1433,7 +1433,7 @@ get_disconnected_people:
 		memcpy(m_translate,temp_array,sizeof(int)*MAX_PLAYER_RECORDS);
 	}
 
-	m_MaxCount = min(high_count,min(count,index));
+	m_MaxCount = D3_MIN(high_count,D3_MIN(count,index));
 
 	pr = PRec_GetPRecord(m_selected_prec);
 	if( !pr || pr->state!=last_state){

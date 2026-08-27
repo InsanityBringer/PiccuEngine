@@ -32,7 +32,7 @@ oeWin32AppDatabase::oeWin32AppDatabase()
 
 	hCurKey = 0;
 
-	hBaseKey = (unsigned)HKEY_CURRENT_USER;
+	hBaseKey = (uintptr_t)HKEY_CURRENT_USER;
 
 //	create outrage entertainment key
 	lstrcpy(m_Basepath, "SOFTWARE\\Outrage");
@@ -81,7 +81,7 @@ bool oeWin32AppDatabase::create_record(const char *pathname)
 		return 0;
 	}
 
-	hCurKey = (unsigned)hkey;
+	hCurKey = (uintptr_t)hkey;
 
 	return 1;
 }
@@ -105,7 +105,7 @@ bool oeWin32AppDatabase::lookup_record(const char *pathname)
 		return 0;
 	}
 
-	hCurKey = (unsigned)hkey;
+	hCurKey = (uintptr_t)hkey;
 
 	return 1;
 }

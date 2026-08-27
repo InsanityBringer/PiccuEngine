@@ -411,7 +411,7 @@ void grtext_Puts(int x, int y, const char* str)
 		for (int a = 0; a < slen; a++)
 			lowerstr[a] = tolower(str[a]);
 
-		lowerstr[slen] = NULL;
+		lowerstr[slen] = 0;
 
 		for (int i = 0; i < NUM_BAD_WORDS; i++)
 		{

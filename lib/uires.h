@@ -62,6 +62,18 @@ public:
 	virtual UIItem *CopyUIItem() { return NULL; };
 };
 
+template <typename T>
+inline T *UIItemPtr(T &item)
+{
+	return &item;
+}
+
+template <typename T>
+inline T *UIItemPtr(const T &item)
+{
+	return const_cast<T *>(&item);
+}
+
 
 //	UITextItem
 //		used by user interface system, contains information about how to render

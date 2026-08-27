@@ -23,8 +23,8 @@
 #include "linux/dyna_xext.h"
 #include "lnxscreenmode.h"
 #include <X11/Xatom.h>
-#define min(a,b) (((a)<(b))?(a):(b))
-#define max(a,b) (((a)>(b))?(a):(b))
+#define D3_MIN(a,b) (((a)<(b))?(a):(b))
+#define D3_MAX(a,b) (((a)>(b))?(a):(b))
 #else
 #endif
 
@@ -1717,7 +1717,7 @@ void opengl_DrawMultitexturePolygon (int handle,g3Point **p,int nv,int map_type)
 		vertp->y=pnt->p3_sy+y_add;
 		
 		//@@vertp->z=-((pnt->p3_z+Z_bias)/OpenGL_state.cur_far_z);
-		vertp->z = -max(0,min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
+		vertp->z = -D3_MAX(0,D3_MIN(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
 		
 	}
 
@@ -1806,7 +1806,7 @@ void opengl_DrawFlatPolygon (g3Point **p,int nv)
 				
 		// Finally, specify a vertex
 		//@@dglVertex3f (pnt->p3_sx+x_add,pnt->p3_sy+y_add,-(pnt->p3_z/OpenGL_state.cur_far_z));
-		float z = max(0,min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
+		float z = D3_MAX(0,D3_MIN(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
 		dglVertex3f (pnt->p3_sx+x_add,pnt->p3_sy+y_add,-z);
 	}
 
@@ -1974,7 +1974,7 @@ void opengl_DrawPolygon (int handle,g3Point **p,int nv,int map_type)
 		vertp->y=pnt->p3_sy+y_add;
 
 		//@@float z=(pnt->p3_z+Z_bias)/OpenGL_state.cur_far_z;
-		float z = max(0,min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
+		float z = D3_MAX(0,D3_MIN(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
 		vertp->z=-z;
 	}
 	
@@ -2344,8 +2344,8 @@ void opengl_SetFogBorders (float nearz,float farz)
 {
 	float fog_start,fog_end;
 
-	fog_start = max(0,min(1.0,1.0-(1.0/nearz)));
-	fog_end = max(0,min(1.0,1.0-(1.0/farz)));
+	fog_start = D3_MAX(0,D3_MIN(1.0,1.0-(1.0/nearz)));
+	fog_end = D3_MAX(0,D3_MIN(1.0,1.0-(1.0/farz)));
 
 	OpenGL_state.cur_fog_start=fog_start;
 	OpenGL_state.cur_fog_end=fog_end;
@@ -2624,7 +2624,7 @@ void opengl_DrawSpecialLine (g3Point *p0,g3Point *p1)
 		
 		// Finally, specify a vertex
 		//@@float z=(pnt->p3_z+Z_bias)/OpenGL_state.cur_far_z;
-		float z = max(0,min(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
+		float z = D3_MAX(0,D3_MIN(1.0,1.0-(1.0/(pnt->p3_z+Z_bias))));
 		dglVertex3f (pnt->p3_sx+x_add,pnt->p3_sy+y_add,-z);
 	}
 
@@ -2669,7 +2669,7 @@ void opengl_SetGammaValue (float val)
 
 		newval*=65535;
 		
-		newval=min(65535,newval);
+		newval=D3_MIN(65535,newval);
 		
 		rampvals[i]=newval;
 		rampvals[i+256]=newval;
@@ -2753,7 +2753,7 @@ void opengl_ChangeChunkedBitmap(int bm_handle, chunked_bitmap *chunk)
 	int iopt;
 
 	//find the smallest dimension and base off that
-	int smallest = min(bw,bh);
+	int smallest = D3_MIN(bw,bh);
 
 	if(smallest<=32)
 		fopt=32;

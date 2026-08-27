@@ -25,7 +25,7 @@
 #include "mono.h"
 #include "ddio.h"
 #include "ddio_win.h"
-#include "Application.h"
+#include "application.h"
 
 #include <stdlib.h>
 #include <process.h>
@@ -84,7 +84,7 @@ static		int				DDIO_key_language = KBLANG_AMERICAN;
 bool ddio_Win_KeyInit();
 void ddio_Win_KeyClose();
 
-int ddio_KeyHandler(HWnd wnd, unsigned msg, unsigned wParam, long lParam);
+intptr_t ddio_KeyHandler(HWnd wnd, unsigned msg, uintptr_t wParam, intptr_t lParam);
 
 LRESULT CALLBACK KeyboardProc( int code, WPARAM wParam, LPARAM lParam);
 
@@ -283,7 +283,7 @@ LRESULT CALLBACK KeyboardProc( int code, WPARAM wParam, LPARAM lParam)
 }
 
 
-int ddio_KeyHandler(HWnd wnd, unsigned msg, unsigned wParam, long lParam)
+intptr_t ddio_KeyHandler(HWnd wnd, unsigned msg, uintptr_t wParam, intptr_t lParam)
 {
 	ubyte scan_code;
 	float timer = timer_GetTime();

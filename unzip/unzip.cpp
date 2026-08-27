@@ -44,7 +44,7 @@
 
 #define INFLATE_INPUT_BUFFER_MAX 16384
 #define DATA_CHUNK_SIZE	1024
-#define min(a,b)	( (a) < (b) ) ? (a) : (b)
+#define D3_MIN(a,b)	( (a) < (b) ) ? (a) : (b)
 
 // ECD Offsets
 #define ECD_ESIG		0x00
@@ -545,7 +545,7 @@ int ZIP::ReadZipDataToFile(zipentry* ent,FILE *file)
 
 	while(size_remaining>0)
 	{
-		amount = min(size_remaining,DATA_CHUNK_SIZE);
+		amount = D3_MIN(size_remaining,DATA_CHUNK_SIZE);
 
 		if(fread(data,amount,1,m_fp)!=1)
 		{
@@ -627,7 +627,7 @@ int ZIP::InflateFile(FILE* in_file,unsigned in_size,ubyte* out_data,unsigned out
 			return -1;
 		}
 		d_stream.next_in  = in_buffer;
-		d_stream.avail_in = fread(in_buffer, 1, min(in_size, INFLATE_INPUT_BUFFER_MAX), in_file);
+		d_stream.avail_in = fread(in_buffer, 1, D3_MIN(in_size, INFLATE_INPUT_BUFFER_MAX), in_file);
 		in_size -= d_stream.avail_in;
 		if(in_size == 0)
 			d_stream.avail_in++; // add dummy byte at end of compressed data
@@ -711,7 +711,7 @@ int ZIP::InflateFileToFile(FILE* in_file,unsigned in_size,FILE *file,unsigned ou
 		if(d_stream.avail_out==0)
 		{
 			d_stream.next_out = out_data;
-			d_stream.avail_out = min(out_size,DATA_CHUNK_SIZE);
+			d_stream.avail_out = D3_MIN(out_size,DATA_CHUNK_SIZE);
 			out_size -= d_stream.avail_out;
 			next_out = d_stream.next_out;
 		}
@@ -719,7 +719,7 @@ int ZIP::InflateFileToFile(FILE* in_file,unsigned in_size,FILE *file,unsigned ou
 		if(d_stream.avail_in==0 && in_size>0)
 		{
 			d_stream.next_in  = in_buffer;
-			d_stream.avail_in = fread(in_buffer, 1, min(in_size, DATA_CHUNK_SIZE), in_file);
+			d_stream.avail_in = fread(in_buffer, 1, D3_MIN(in_size, DATA_CHUNK_SIZE), in_file);
 			in_size -= d_stream.avail_in;
 			if(in_size == 0)
 				d_stream.avail_in++; // add dummy byte at end of compressed data

@@ -30,7 +30,7 @@ int MultiSaveSettings(char* filename)
 	int i;
 	cf = cfopen(filename, "wt");
 	if (!cf)
-		return NULL;
+		return 0;
 	sprintf(szoutput, "NAME\t%s", Netgame.name);
 	cf_WriteString(cf, szoutput);
 	sprintf(szoutput, "MISSION\t%s", Netgame.mission);
@@ -102,7 +102,7 @@ int MultiLoadSettings(char* filename)
 	int objid;
 	cf = cfopen(filename, "rt");
 	if (!cf)
-		return NULL;
+		return 0;
 
 	while (cf_ReadString(szinput, MAX_MPS_LINE_LEN - 1, cf))
 	{

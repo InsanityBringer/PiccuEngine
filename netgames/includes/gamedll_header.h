@@ -102,7 +102,7 @@ typedef struct
 		float fRet;
 	};
 	float fParam;
-	int iParam;
+	intptr_t iParam;
 	game_collide_info collide_info;
 	int newseg,oldseg;
 } dllinfo;

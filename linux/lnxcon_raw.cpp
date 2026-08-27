@@ -29,8 +29,8 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#define min(x,y) (((x)<(y))?(x):(y))
-#define max(x,y) (((x)>(y))?(x):(y))
+#define D3_MIN(x,y) (((x)<(y))?(x):(y))
+#define D3_MAX(x,y) (((x)>(y))?(x):(y))
 
 
 static char *Con_raw_read_buf = NULL;					//The next buffer of text from user input

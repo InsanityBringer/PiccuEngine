@@ -376,7 +376,7 @@ bool PPic_GetPilot(ushort pilot_id, char* pilot_name, int buffersize)
 		return false;
 	}
 
-	int toread = min(name_size, buffersize - 1);
+	int toread = D3_MIN(name_size, buffersize - 1);
 	cf_ReadBytes((ubyte*)pilot_name, toread, PilotPic_database_index_handle);
 	pilot_name[toread] = '\0';
 

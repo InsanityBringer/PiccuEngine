@@ -206,7 +206,7 @@ int dp_SelectDirectPlayConnection(char *name)
 		{
 			mem_free(dpconns[i].conn);
 			dpconns[i].conn = NULL;
-			dpconns[i].name[0]=NULL;
+			dpconns[i].name[0]=0;
 		}
 	}
 	
@@ -866,7 +866,7 @@ void dp_ShutdownDirectPlay()
 		{
 			mem_free(dpconns[i].conn);
 			dpconns[i].conn = NULL;
-			dpconns[i].name[0]=NULL;
+			dpconns[i].name[0]=0;
 		}
 	}
 	if(lpdplconnection)
@@ -969,7 +969,7 @@ int dp_GetModemChoices(char *buffer,unsigned long *size)
 			{
 				mem_free(dpconns[i].conn);
 				dpconns[i].conn = NULL;
-				dpconns[i].name[0]=NULL;
+				dpconns[i].name[0]=0;
 			}
 		}
 		

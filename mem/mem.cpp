@@ -231,7 +231,7 @@
 int Total_mem_used=0;
 int Mem_high_water_mark = 0;
 
-#define MEM_NO_MEMORY_PTR	0xdeadbeef
+#define MEM_NO_MEMORY_PTR	((uintptr_t)0xdeadbeef)
 #define MEM_MAX_MALLOCS		199999
 #define MEM_GAURDIAN_SIG	0x2bad
 #define MEM_MALLOC_TO_SORT	10000
@@ -1183,7 +1183,7 @@ hashTableIndex hash(T data) {
    /***********************************
     *  hash function applied to data  *
     ***********************************/
-	unsigned int hval = (unsigned int)data->ptr;
+	uintptr_t hval = (uintptr_t)data->ptr;
     return (hval % MEM_MAX_MALLOCS);
 }
 Node *insertNode(T data) 

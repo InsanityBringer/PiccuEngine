@@ -796,7 +796,7 @@ void InitIOSystems(bool editor)
 		{
 			if(i=='\\')
 			{
-				Base_directory[i] = NULL;
+				Base_directory[i] = 0;
 			}
 		}
 		mprintf((0,"Using working directory of %s\n",Base_directory));
@@ -1387,7 +1387,7 @@ bool CheckCdForValidity(int cd);
 			pport = strchr(ipparse,':');
 			if(pport)
 			{
-				*pport = NULL;
+				*pport = 0;
 				pport++;
 				port = atoi(pport);
 			}

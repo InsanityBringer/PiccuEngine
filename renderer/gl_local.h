@@ -26,6 +26,7 @@
 #include <Windows.h>
 #endif
 #include <algorithm>
+#include <string.h>
 #include <glad/gl.h>
 #if defined(WIN32) && !defined(SDL3)
 #include "wglext.h"

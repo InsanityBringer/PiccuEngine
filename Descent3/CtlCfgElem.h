@@ -19,6 +19,7 @@
 #ifndef CTLCFGELEM_H
 #define CTLCFGELEM_H
 
+#include "vecmat.h"
 #include "newui.h"
 #include "Controller.h"
 #include "controls.h"

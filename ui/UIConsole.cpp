@@ -312,7 +312,8 @@ UIConsole::~UIConsole()
 void UIConsole::Create(int x, int y, int font, int cols, int rows)
 {
 	UIWindow::Create(x,y,10,10);
-	UIWindow::SetBackItem(&UIPrimativeItem(GR_BLACK));
+	UIPrimativeItem back_item(GR_BLACK);
+	UIWindow::SetBackItem(&back_item);
 
 	m_Console.Create(this, -1, 0, 0, font, cols, rows);
 	

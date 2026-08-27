@@ -27,7 +27,7 @@
 #include "mono.h"
 #include "ddio.h"
 #include "ddio_win.h"
-#include "Application.h"
+#include "application.h"
 #include "psclass.h"
 #include "Macros.h"
 
@@ -276,7 +276,7 @@ void ddio_InternalMouseFrame() {
 
 void MouseError() { MessageBoxA(nullptr, "Failed to init raw input for mouse", "Error", MB_ICONERROR); }
 
-int RawInputHandler(HWND hWnd, unsigned int msg, unsigned int wParam, long lParam) {
+intptr_t RawInputHandler(HWnd hWnd, unsigned int msg, uintptr_t wParam, intptr_t lParam) {
     unsigned int buttons;
     t_mse_event ev;
     float curtime = timer_GetTime();
@@ -447,11 +447,11 @@ int RawInputHandler(HWND hWnd, unsigned int msg, unsigned int wParam, long lPara
                 POINT mousept;
                 if (!GetCursorPos(&mousept))
                     Int3();
-                if (!ScreenToClient(hWnd, &mousept))
+                if (!ScreenToClient((HWND)hWnd, &mousept))
                     Int3();
                 //Get the client rectangle of the window and map brect to it. 
                 RECT clientrect;
-                if (!GetClientRect(hWnd, &clientrect))
+                if (!GetClientRect((HWND)hWnd, &clientrect))
                     Int3();
 
                 int brectwidth = DDIO_mouse_state.brect.right - DDIO_mouse_state.brect.left;
@@ -483,12 +483,12 @@ int RawInputHandler(HWND hWnd, unsigned int msg, unsigned int wParam, long lPara
                 DDIO_mouse_state.y += rawinput->data.mouse.lLastY;
 
                 RECT clientrect;
-                if (!GetClientRect(hWnd, &clientrect))
+                if (!GetClientRect((HWND)hWnd, &clientrect))
                     Int3();
                 else
                 {
                     POINT pt = { clientrect.right / 2, clientrect.bottom / 2 };
-                    ClientToScreen(hWnd, &pt);
+                    ClientToScreen((HWND)hWnd, &pt);
                     SetCursorPos(pt.x, pt.y);
                 }
                 
@@ -549,7 +549,7 @@ bool InitNewMouse()
             DispatchMessageA(&msg);
         }
 
-        DInputData.app->add_handler(WM_INPUT, (tOEWin32MsgCallback)&RawInputHandler);
+        DInputData.app->add_handler(WM_INPUT, &RawInputHandler);
 
         DDIO_mouse_state.timer = timer_GetTime();
         DDIO_mouse_state.naxis = 2;

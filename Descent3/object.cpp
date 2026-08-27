@@ -73,7 +73,7 @@
 #include "vibeinterface.h"
 
 #ifdef EDITOR
-#include "editor\d3edit.h"
+#include "editor/d3edit.h"
 #endif
 
 /*
@@ -1227,7 +1227,7 @@ void DoPlayerAfterburnControl(game_controls* controls, object* objp)
 					useage = Frametime;
 
 				Players[slot].afterburn_time_left += useage;
-				Players[slot].afterburn_time_left = min(AFTERBURN_TIME, Players[slot].afterburn_time_left);
+				Players[slot].afterburn_time_left = D3_MIN(AFTERBURN_TIME, Players[slot].afterburn_time_left);
 
 				Players[slot].energy -= (useage);
 			}

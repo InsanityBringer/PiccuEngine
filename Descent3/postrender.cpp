@@ -17,7 +17,7 @@
 */
 
 #ifdef NEWEDITOR //include first to get rid of ugly warning message about macro redfinitions
-#include "..\neweditor\globals.h"
+#include "../neweditor/globals.h"
 #endif
 
 #include <stdlib.h>

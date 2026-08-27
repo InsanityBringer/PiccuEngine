@@ -184,7 +184,7 @@ CFtpGet::CFtpGet(const char *URL, const char *localfile, const char *Username,co
 	//At this point we should have a nice host,dir and filename
 
 #ifdef WIN32	
-	if(NULL==_beginthread(FTPObjThread,0,this))
+	if(0==_beginthread(FTPObjThread,0,this))
 	{
 		m_State = FTP_STATE_INTERNAL_ERROR;
 		return;
