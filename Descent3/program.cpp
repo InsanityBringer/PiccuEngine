@@ -72,7 +72,7 @@ void ProgramVersion(int version_type, ubyte major, ubyte minor, ubyte build)
 		Int3();				// NO NO NO			
 	}
 
-	//[ISB] ensure the Version key is conditionally written. 
+	//[ISB] ensure the Version key is unconditionally written. 
 	if (!dbase.lookup_record("Version"))
 	{
 		if (!dbase.create_record("Version"))
