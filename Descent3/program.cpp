@@ -72,14 +72,16 @@ void ProgramVersion(int version_type, ubyte major, ubyte minor, ubyte build)
 		Int3();				// NO NO NO			
 	}
 
-	if (dbase.lookup_record("Version"))
+	//[ISB] ensure the Version key is conditionally written. 
+	if (!dbase.lookup_record("Version"))
 	{
-		dbase.write("Major", Program_version.major);
-		dbase.write("Minor", Program_version.minor);
-		dbase.write("Build", Program_version.build);
+		if (!dbase.create_record("Version"))
+		{
+			Error("Can't create version key in config. " ENGINE_NAME" data directory might be write protected.");
+		}
 	}
-	else
-	{
-		Error("Unable to find version key for %s", PRODUCT_NAME);
-	}
+
+	dbase.write("Major", Program_version.major);
+	dbase.write("Minor", Program_version.minor);
+	dbase.write("Build", Program_version.build);
 }
